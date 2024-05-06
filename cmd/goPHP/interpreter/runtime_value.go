@@ -5,6 +5,7 @@ type ValueType string
 const (
 	VoidValue     ValueType = "Void"
 	NullValue     ValueType = "Null"
+	BooleanValue  ValueType = "Boolean"
 	IntegerValue  ValueType = "Integer"
 	FloatingValue ValueType = "Floating"
 	StringValue   ValueType = "String"
@@ -38,6 +39,35 @@ func NewVoidRuntimeValue() *RuntimeValue {
 
 func NewNullRuntimeValue() *RuntimeValue {
 	return &RuntimeValue{valueType: NullValue}
+}
+
+// BooleanRuntimeValue
+
+type IBooleanRuntimeValue interface {
+	IRuntimeValue
+	GetValue() bool
+}
+
+type BooleanRuntimeValue struct {
+	runtimeValue *RuntimeValue
+	value        bool
+}
+
+func NewBooleanRuntimeValue(value bool) *BooleanRuntimeValue {
+	return &BooleanRuntimeValue{runtimeValue: NewRuntimeValue(BooleanValue), value: value}
+}
+
+func (runtimeValue *BooleanRuntimeValue) GetType() ValueType {
+	return runtimeValue.runtimeValue.valueType
+}
+
+func (runtimeValue *BooleanRuntimeValue) GetValue() bool {
+	return runtimeValue.value
+}
+
+func runtimeValToBoolRuntimeVal(runtimeValue IRuntimeValue) IBooleanRuntimeValue {
+	var i interface{} = runtimeValue
+	return i.(IBooleanRuntimeValue)
 }
 
 // IntegerRuntimeValue

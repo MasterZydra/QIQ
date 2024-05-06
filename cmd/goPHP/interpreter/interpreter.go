@@ -40,8 +40,8 @@ func (interpreter *Interpreter) process(stmt ast.IStatement) (IRuntimeValue, err
 	case ast.EchoStmt:
 		return interpreter.processEchoStatement(ast.StmtToEchoStatement(stmt))
 
-		// Expressions
-	case ast.IntegerLiteralExpr, ast.FloatingLiteralExpr, ast.StringLiteralExpr:
+	// Expressions
+	case ast.BooleanLiteralExpr, ast.IntegerLiteralExpr, ast.FloatingLiteralExpr, ast.StringLiteralExpr:
 		return exprToRuntimeValue(stmt)
 	case ast.TextNode:
 		interpreter.print(ast.ExprToTextExpr(stmt).GetValue())
@@ -50,6 +50,10 @@ func (interpreter *Interpreter) process(stmt ast.IStatement) (IRuntimeValue, err
 		return interpreter.processSimpleVariableExpression(ast.ExprToSimpleVarExpr(stmt))
 	case ast.SimpleAssignmentExpr:
 		return interpreter.processSimpleAssignmentExpression(ast.ExprToSimpleAssignExpr(stmt))
+	case ast.CompoundAssignmentExpr:
+		return interpreter.processCompoundAssignmentExpression(ast.ExprToCompoundAssignExpr(stmt))
+	case ast.ConditionalExpr:
+		return interpreter.processConditionalExpression(ast.ExprToCondExpr(stmt))
 
 	default:
 		return NewVoidRuntimeValue(), fmt.Errorf("Interpreter error: Unsupported statement or expression: %s", stmt)
@@ -98,4 +102,49 @@ func (interpreter *Interpreter) processSimpleAssignmentExpression(expr ast.ISimp
 	}
 
 	return interpreter.env.declareVariable(variableName, value)
+}
+
+func (interpreter *Interpreter) processCompoundAssignmentExpression(expr ast.ICompoundAssignmentExpression) (IRuntimeValue, error) {
+	if !ast.IsVariableExpression(expr.GetVariable()) {
+		return NewVoidRuntimeValue(),
+			fmt.Errorf("Interpreter error: processCompoundAssignmentExpression: Invalid variable: %s", expr.GetVariable())
+	}
+
+	operand1, err := interpreter.process(expr.GetVariable())
+	if err != nil {
+		return NewVoidRuntimeValue(), err
+	}
+
+	operand2, err := interpreter.process(expr.GetValue())
+	if err != nil {
+		return NewVoidRuntimeValue(), err
+	}
+
+	newValue, err := calculate(operand1, expr.GetOperator(), operand2)
+	if err != nil {
+		return NewVoidRuntimeValue(), err
+	}
+
+	variableName, err := interpreter.varExprToVarName(expr.GetVariable())
+	if err != nil {
+		return NewVoidRuntimeValue(), err
+	}
+
+	return interpreter.env.declareVariable(variableName, newValue)
+}
+
+func (interpreter *Interpreter) processConditionalExpression(expr ast.IConditionalExpression) (IRuntimeValue, error) {
+	isConditionTrue, err := interpreter.processCondition(expr.GetCondition())
+	if err != nil {
+		return NewVoidRuntimeValue(), err
+	}
+
+	if !isConditionTrue {
+		return interpreter.process(expr.GetElseExpr())
+	}
+	if expr.GetIfExpr() == nil {
+		return interpreter.process(expr.GetCondition())
+	} else {
+		return interpreter.process(expr.GetIfExpr())
+	}
 }

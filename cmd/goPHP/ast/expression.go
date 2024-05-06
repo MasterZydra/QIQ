@@ -127,6 +127,39 @@ func ExprToSimpleVarExpr(expr IExpression) ISimpleVariableExpression {
 	return i.(ISimpleVariableExpression)
 }
 
+// ------------------- MARK: BooleanLiteralExpression -------------------
+
+type IBooleanLiteralExpression interface {
+	IExpression
+	GetValue() bool
+}
+
+type BooleanLiteralExpression struct {
+	expr  IExpression
+	value bool
+}
+
+func NewBooleanLiteralExpression(value bool) *BooleanLiteralExpression {
+	return &BooleanLiteralExpression{expr: NewExpression(BooleanLiteralExpr), value: value}
+}
+
+func (expr *BooleanLiteralExpression) GetKind() NodeType {
+	return expr.expr.GetKind()
+}
+
+func (expr *BooleanLiteralExpression) GetValue() bool {
+	return expr.value
+}
+
+func (expr *BooleanLiteralExpression) String() string {
+	return fmt.Sprintf("{%s - value: %t }", expr.GetKind(), expr.value)
+}
+
+func ExprToBoolLitExpr(expr IExpression) IBooleanLiteralExpression {
+	var i interface{} = expr
+	return i.(IBooleanLiteralExpression)
+}
+
 // ------------------- MARK: IntegerLiteralExpression -------------------
 
 type IIntegerLiteralExpression interface {
@@ -270,10 +303,105 @@ func (expr *SimpleAssignmentExpression) GetValue() IExpression {
 }
 
 func (expr *SimpleAssignmentExpression) String() string {
-	return fmt.Sprintf("{%s - value: %s }", expr.GetKind(), expr.value)
+	return fmt.Sprintf("{%s - variable: %s, value: %s }", expr.GetKind(), expr.variable, expr.value)
 }
 
 func ExprToSimpleAssignExpr(expr IExpression) ISimpleAssignmentExpression {
 	var i interface{} = expr
 	return i.(ISimpleAssignmentExpression)
+}
+
+// ------------------- MARK: CompoundAssignmentExpression -------------------
+
+type ICompoundAssignmentExpression interface {
+	IExpression
+	GetVariable() IExpression
+	GetOperator() string
+	GetValue() IExpression
+}
+
+type CompoundAssignmentExpression struct {
+	expr     IExpression
+	variable IExpression
+	operator string
+	value    IExpression
+}
+
+func NewCompoundAssignmentExpression(variable IExpression, operator string, value IExpression) *CompoundAssignmentExpression {
+	return &CompoundAssignmentExpression{
+		expr: NewExpression(CompoundAssignmentExpr), variable: variable, operator: operator, value: value,
+	}
+}
+
+func (expr *CompoundAssignmentExpression) GetKind() NodeType {
+	return expr.expr.GetKind()
+}
+
+func (expr *CompoundAssignmentExpression) GetVariable() IExpression {
+	return expr.variable
+}
+
+func (expr *CompoundAssignmentExpression) GetOperator() string {
+	return expr.operator
+}
+
+func (expr *CompoundAssignmentExpression) GetValue() IExpression {
+	return expr.value
+}
+
+func (expr *CompoundAssignmentExpression) String() string {
+	return fmt.Sprintf(
+		"{%s - variable: %s, operator: \"%s\", value: %s }",
+		expr.GetKind(), expr.variable, expr.operator, expr.value,
+	)
+}
+
+func ExprToCompoundAssignExpr(expr IExpression) ICompoundAssignmentExpression {
+	var i interface{} = expr
+	return i.(ICompoundAssignmentExpression)
+}
+
+// ------------------- MARK: ConditionalExpression -------------------
+
+type IConditionalExpression interface {
+	IExpression
+	GetCondition() IExpression
+	GetIfExpr() IExpression
+	GetElseExpr() IExpression
+}
+
+type ConditionalExpression struct {
+	expr     IExpression
+	cond     IExpression
+	ifExpr   IExpression
+	elseExpr IExpression
+}
+
+func NewConditionalExpression(cond IExpression, ifExpr IExpression, elseExpr IExpression) *ConditionalExpression {
+	return &ConditionalExpression{expr: NewExpression(ConditionalExpr), cond: cond, ifExpr: ifExpr, elseExpr: elseExpr}
+}
+
+func (expr *ConditionalExpression) GetKind() NodeType {
+	return expr.expr.GetKind()
+}
+
+func (expr *ConditionalExpression) GetCondition() IExpression {
+	return expr.cond
+}
+
+func (expr *ConditionalExpression) GetIfExpr() IExpression {
+	return expr.ifExpr
+}
+
+func (expr *ConditionalExpression) GetElseExpr() IExpression {
+	return expr.elseExpr
+}
+
+func (expr *ConditionalExpression) String() string {
+	return fmt.Sprintf("{%s - condition: %s, ifExpr: %s, elseExpr: %s }", expr.GetKind(), expr.cond, expr.ifExpr, expr.elseExpr)
+}
+
+func ExprToCondExpr(expr IExpression) IConditionalExpression {
+	var i interface{} = expr
+	return i.(IConditionalExpression)
 }

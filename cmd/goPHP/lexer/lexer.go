@@ -248,7 +248,7 @@ func (lexer *Lexer) tokenizeToken() error {
 			if name := lexer.getName(false); name != "" {
 				lexer.getName(true)
 
-				// https://phplang.org/spec/09-lexical-structure.html#keywords
+				// Spec: https://phplang.org/spec/09-lexical-structure.html#keywords
 				// Note carefully that yield from is a single token that contains whitespace. However, comments are not permitted in
 				// that whitespace.
 				oldPos := lexer.currPos

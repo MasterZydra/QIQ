@@ -6,7 +6,11 @@ import (
 )
 
 func TestText(t *testing.T) {
-	program, _ := NewParser().ProduceAST("<html>")
+	program, err := NewParser().ProduceAST("<html>")
+	if err != nil {
+		t.Errorf("Unexpected error: \"%s\"", err)
+		return
+	}
 	expected := ast.NewTextExpression("<html>")
 	actual := ast.ExprToTextExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() || expected.GetValue() != actual.GetValue() {
@@ -15,14 +19,22 @@ func TestText(t *testing.T) {
 }
 
 func TestVariableName(t *testing.T) {
-	program, _ := NewParser().ProduceAST("<?php $myVar;")
+	program, err := NewParser().ProduceAST("<?php $myVar;")
+	if err != nil {
+		t.Errorf("Unexpected error: \"%s\"", err)
+		return
+	}
 	expected := ast.NewSimpleVariableExpression(ast.NewVariableNameExpression("$myVar"))
 	actual := ast.ExprToSimpleVarExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
 	}
 
-	program, _ = NewParser().ProduceAST("<?php $$myVar;")
+	program, err = NewParser().ProduceAST("<?php $$myVar;")
+	if err != nil {
+		t.Errorf("Unexpected error: \"%s\"", err)
+		return
+	}
 	expected = ast.NewSimpleVariableExpression(ast.NewSimpleVariableExpression(ast.NewVariableNameExpression("$myVar")))
 	actual = ast.ExprToSimpleVarExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() {
@@ -30,9 +42,37 @@ func TestVariableName(t *testing.T) {
 	}
 }
 
+func TestBooleanLiteral(t *testing.T) {
+	program, err := NewParser().ProduceAST("<?php true;")
+	if err != nil {
+		t.Errorf("Unexpected error: \"%s\"", err)
+		return
+	}
+	expected := ast.NewBooleanLiteralExpression(true)
+	actual := ast.ExprToBoolLitExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
+	if expected.String() != actual.String() || expected.GetValue() != actual.GetValue() {
+		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
+	}
+
+	program, err = NewParser().ProduceAST("<?php false;")
+	if err != nil {
+		t.Errorf("Unexpected error: \"%s\"", err)
+		return
+	}
+	expected = ast.NewBooleanLiteralExpression(false)
+	actual = ast.ExprToBoolLitExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
+	if expected.String() != actual.String() || expected.GetValue() != actual.GetValue() {
+		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
+	}
+}
+
 func TestIntegerLiteral(t *testing.T) {
 	// decimal-literal
-	program, _ := NewParser().ProduceAST("<?php 42;")
+	program, err := NewParser().ProduceAST("<?php 42;")
+	if err != nil {
+		t.Errorf("Unexpected error: \"%s\"", err)
+		return
+	}
 	expected := ast.NewIntegerLiteralExpression(42)
 	actual := ast.ExprToIntLitExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() || expected.GetValue() != actual.GetValue() {
@@ -40,7 +80,11 @@ func TestIntegerLiteral(t *testing.T) {
 	}
 
 	// octal-literal
-	program, _ = NewParser().ProduceAST("<?php 042;")
+	program, err = NewParser().ProduceAST("<?php 042;")
+	if err != nil {
+		t.Errorf("Unexpected error: \"%s\"", err)
+		return
+	}
 	expected = ast.NewIntegerLiteralExpression(34)
 	actual = ast.ExprToIntLitExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() || expected.GetValue() != actual.GetValue() {
@@ -48,7 +92,11 @@ func TestIntegerLiteral(t *testing.T) {
 	}
 
 	// hexadecimal-literal
-	program, _ = NewParser().ProduceAST("<?php 0x42;")
+	program, err = NewParser().ProduceAST("<?php 0x42;")
+	if err != nil {
+		t.Errorf("Unexpected error: \"%s\"", err)
+		return
+	}
 	expected = ast.NewIntegerLiteralExpression(66)
 	actual = ast.ExprToIntLitExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() || expected.GetValue() != actual.GetValue() {
@@ -56,7 +104,11 @@ func TestIntegerLiteral(t *testing.T) {
 	}
 
 	// binary-literal
-	program, _ = NewParser().ProduceAST("<?php 0b110110101;")
+	program, err = NewParser().ProduceAST("<?php 0b110110101;")
+	if err != nil {
+		t.Errorf("Unexpected error: \"%s\"", err)
+		return
+	}
 	expected = ast.NewIntegerLiteralExpression(437)
 	actual = ast.ExprToIntLitExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() || expected.GetValue() != actual.GetValue() {
@@ -65,35 +117,55 @@ func TestIntegerLiteral(t *testing.T) {
 }
 
 func TestFloatingLiteral(t *testing.T) {
-	program, _ := NewParser().ProduceAST("<?php .5;")
+	program, err := NewParser().ProduceAST("<?php .5;")
+	if err != nil {
+		t.Errorf("Unexpected error: \"%s\"", err)
+		return
+	}
 	expected := ast.NewFloatingLiteralExpression(0.5)
 	actual := ast.ExprToFloatLitExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() || expected.GetValue() != actual.GetValue() {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
 	}
 
-	program, _ = NewParser().ProduceAST("<?php 1.2;")
+	program, err = NewParser().ProduceAST("<?php 1.2;")
+	if err != nil {
+		t.Errorf("Unexpected error: \"%s\"", err)
+		return
+	}
 	expected = ast.NewFloatingLiteralExpression(1.2)
 	actual = ast.ExprToFloatLitExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() || expected.GetValue() != actual.GetValue() {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
 	}
 
-	program, _ = NewParser().ProduceAST("<?php .5e-4;")
+	program, err = NewParser().ProduceAST("<?php .5e-4;")
+	if err != nil {
+		t.Errorf("Unexpected error: \"%s\"", err)
+		return
+	}
 	expected = ast.NewFloatingLiteralExpression(0.5e-4)
 	actual = ast.ExprToFloatLitExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() || expected.GetValue() != actual.GetValue() {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
 	}
 
-	program, _ = NewParser().ProduceAST("<?php 2.5e+4;")
+	program, err = NewParser().ProduceAST("<?php 2.5e+4;")
+	if err != nil {
+		t.Errorf("Unexpected error: \"%s\"", err)
+		return
+	}
 	expected = ast.NewFloatingLiteralExpression(2.5e+4)
 	actual = ast.ExprToFloatLitExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() || expected.GetValue() != actual.GetValue() {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
 	}
 
-	program, _ = NewParser().ProduceAST("<?php 2e4;")
+	program, err = NewParser().ProduceAST("<?php 2e4;")
+	if err != nil {
+		t.Errorf("Unexpected error: \"%s\"", err)
+		return
+	}
 	expected = ast.NewFloatingLiteralExpression(2e4)
 	actual = ast.ExprToFloatLitExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() || expected.GetValue() != actual.GetValue() {
@@ -102,7 +174,11 @@ func TestFloatingLiteral(t *testing.T) {
 }
 
 func TestStringLiteral(t *testing.T) {
-	program, _ := NewParser().ProduceAST(`<?php b'A "single quoted" \'string\'';`)
+	program, err := NewParser().ProduceAST(`<?php b'A "single quoted" \'string\'';`)
+	if err != nil {
+		t.Errorf("Unexpected error: \"%s\"", err)
+		return
+	}
 	expected := ast.NewStringLiteralExpression(`A "single quoted" \'string\'`, ast.SingleQuotedString)
 	actual := ast.ExprToStrLitExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() ||
@@ -110,7 +186,11 @@ func TestStringLiteral(t *testing.T) {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
 	}
 
-	program, _ = NewParser().ProduceAST(`<?php 'A "single quoted" \'string\'';`)
+	program, err = NewParser().ProduceAST(`<?php 'A "single quoted" \'string\'';`)
+	if err != nil {
+		t.Errorf("Unexpected error: \"%s\"", err)
+		return
+	}
 	expected = ast.NewStringLiteralExpression(`A "single quoted" \'string\'`, ast.SingleQuotedString)
 	actual = ast.ExprToStrLitExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() ||
@@ -118,7 +198,11 @@ func TestStringLiteral(t *testing.T) {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
 	}
 
-	program, _ = NewParser().ProduceAST(`<?php b"A \"single quoted\" 'string'";`)
+	program, err = NewParser().ProduceAST(`<?php b"A \"single quoted\" 'string'";`)
+	if err != nil {
+		t.Errorf("Unexpected error: \"%s\"", err)
+		return
+	}
 	expected = ast.NewStringLiteralExpression(`A \"single quoted\" 'string'`, ast.DoubleQuotedString)
 	actual = ast.ExprToStrLitExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() ||
@@ -126,7 +210,11 @@ func TestStringLiteral(t *testing.T) {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
 	}
 
-	program, _ = NewParser().ProduceAST(`<?php "A \"single quoted\" 'string'";`)
+	program, err = NewParser().ProduceAST(`<?php "A \"single quoted\" 'string'";`)
+	if err != nil {
+		t.Errorf("Unexpected error: \"%s\"", err)
+		return
+	}
 	expected = ast.NewStringLiteralExpression(`A \"single quoted\" 'string'`, ast.DoubleQuotedString)
 	actual = ast.ExprToStrLitExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() ||
@@ -136,7 +224,11 @@ func TestStringLiteral(t *testing.T) {
 }
 
 func TestEchoStatement(t *testing.T) {
-	program, _ := NewParser().ProduceAST(`<?php echo 12, "abc", $var;`)
+	program, err := NewParser().ProduceAST(`<?php echo 12, "abc", $var;`)
+	if err != nil {
+		t.Errorf("Unexpected error: \"%s\"", err)
+		return
+	}
 
 	expected := ast.NewIntegerLiteralExpression(12)
 	actual := ast.ExprToIntLitExpr(ast.StmtToEchoStatement(program.GetStatements()[0]).GetExpressions()[0])
@@ -158,12 +250,84 @@ func TestEchoStatement(t *testing.T) {
 	}
 }
 
-// TODO continue here
-// func TestVariableDeclaration(t *testing.T) {
-// 	program, _ := NewParser().ProduceAST(`<?php $variable = "abc";`)
-// 	expected := ast.NewIntegerLiteralExpression(12)
-// 	actual := ast.ExprToIntLitExpr(ast.StmtToEchoStatement(program.GetStatements()[0]).GetExpressions()[0])
-// 	if expected.String() != actual.String() || expected.GetValue() != actual.GetValue() {
-// 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
-// 	}
-// }
+func TestAssignmentExpression(t *testing.T) {
+	// SimpleAssignmentExpression
+	program, err := NewParser().ProduceAST(`<?php $variable = "abc";`)
+	if err != nil {
+		t.Errorf("Unexpected error: \"%s\"", err)
+		return
+	}
+	expected := ast.NewSimpleAssignmentExpression(
+		ast.NewSimpleVariableExpression(ast.NewVariableNameExpression("$variable")),
+		ast.NewStringLiteralExpression("abc", ast.DoubleQuotedString),
+	)
+	actual := ast.ExprToSimpleAssignExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
+	if expected.String() != actual.String() {
+		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
+	}
+
+	// CompoundAssignmentExpression
+	program, err = NewParser().ProduceAST(`<?php $a = 42; $a += 2;`)
+	if err != nil {
+		t.Errorf("Unexpected error: \"%s\"", err)
+		return
+	}
+	expected1 := ast.NewCompoundAssignmentExpression(
+		ast.NewSimpleVariableExpression(ast.NewVariableNameExpression("$a")),
+		"+",
+		ast.NewIntegerLiteralExpression(2),
+	)
+	actual1 := ast.ExprToCompoundAssignExpr(ast.StmtToExprStatement(program.GetStatements()[1]).GetExpression())
+	if expected1.String() != actual1.String() || expected1.GetOperator() != "+" {
+		t.Errorf("Expected: \"%s\", Got \"%s\"", expected1, actual1)
+	}
+
+	// ConditionalExpression
+	program, err = NewParser().ProduceAST(`<?php 1 ? "a" : "b";`)
+	if err != nil {
+		t.Errorf("Unexpected error: \"%s\"", err)
+		return
+	}
+	expected2 := ast.NewConditionalExpression(
+		ast.NewIntegerLiteralExpression(1),
+		ast.NewStringLiteralExpression("a", ast.DoubleQuotedString),
+		ast.NewStringLiteralExpression("b", ast.DoubleQuotedString),
+	)
+	actual2 := ast.ExprToCondExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
+	if expected2.String() != actual2.String() {
+		t.Errorf("Expected: \"%s\", Got \"%s\"", expected2, actual2)
+	}
+
+	program, err = NewParser().ProduceAST(`<?php 1 ?: "b";`)
+	if err != nil {
+		t.Errorf("Unexpected error: \"%s\"", err)
+		return
+	}
+	expected2 = ast.NewConditionalExpression(
+		ast.NewIntegerLiteralExpression(1),
+		nil,
+		ast.NewStringLiteralExpression("b", ast.DoubleQuotedString),
+	)
+	actual2 = ast.ExprToCondExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
+	if expected2.String() != actual2.String() {
+		t.Errorf("Expected: \"%s\", Got \"%s\"", expected2, actual2)
+	}
+}
+
+func TestConstDeclaration(t *testing.T) {
+	program, err := NewParser().ProduceAST(`<?php const PI = 3.141, ZERO = 0;`)
+	if err != nil {
+		t.Errorf("Unexpected error: \"%s\"", err)
+		return
+	}
+	expected := ast.NewConstDeclarationStatement("PI", ast.NewFloatingLiteralExpression(3.141))
+	actual := ast.StmtToConstDeclStatement(program.GetStatements()[0])
+	if expected.String() != actual.String() || expected.GetName() != actual.GetName() {
+		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
+	}
+	expected = ast.NewConstDeclarationStatement("ZERO", ast.NewIntegerLiteralExpression(0))
+	actual = ast.StmtToConstDeclStatement(program.GetStatements()[1])
+	if expected.String() != actual.String() || expected.GetName() != actual.GetName() {
+		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
+	}
+}

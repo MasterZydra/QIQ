@@ -5,9 +5,12 @@ import (
 	"GoPHP/cmd/goPHP/common"
 	"GoPHP/cmd/goPHP/lexer"
 	"fmt"
+	"slices"
+	"strings"
 )
 
 type Parser struct {
+	program *ast.Program
 	lexer   *lexer.Lexer
 	tokens  []*lexer.Token
 	currPos int
@@ -18,6 +21,7 @@ func NewParser() *Parser {
 }
 
 func (parser *Parser) init() {
+	parser.program = ast.NewProgram()
 	parser.lexer = lexer.NewLexer()
 	parser.currPos = 0
 }
@@ -25,27 +29,24 @@ func (parser *Parser) init() {
 func (parser *Parser) ProduceAST(sourceCode string) (*ast.Program, error) {
 	parser.init()
 
-	program := ast.NewProgram()
-
 	var err error
 	parser.tokens, err = parser.lexer.Tokenize(sourceCode)
 	if err != nil {
-		return program, err
+		return parser.program, err
 	}
 
 	for !parser.isEof() {
-		if parser.at().TokenType == lexer.StartTagToken || parser.at().TokenType == lexer.EndTagToken {
-			parser.eat()
+		if parser.isTokenType(lexer.StartTagToken, true) || parser.isTokenType(lexer.EndTagToken, true) {
 			continue
 		}
 		stmt, err := parser.parseStatement()
 		if err != nil {
-			return program, err
+			return parser.program, err
 		}
-		program.Append(stmt)
+		parser.program.Append(stmt)
 	}
 
-	return program, err
+	return parser.program, err
 }
 
 func (parser *Parser) parseStatement() (ast.IStatement, error) {
@@ -72,7 +73,7 @@ func (parser *Parser) parseStatement() (ast.IStatement, error) {
 	//    global-declaration
 	//    function-static-declaration
 
-	if parser.at().TokenType == lexer.TextToken {
+	if parser.isTokenType(lexer.TextToken, false) {
 		return ast.NewExpressionStatement(ast.NewTextExpression(parser.eat().Value)), nil
 	}
 
@@ -95,9 +96,7 @@ func (parser *Parser) parseStatement() (ast.IStatement, error) {
 	//    expression
 	//    expression-list   ,   expression
 
-	if parser.at().TokenType == lexer.KeywordToken && parser.at().Value == "echo" {
-		parser.eat()
-
+	if parser.isToken(lexer.KeywordToken, "echo", true) {
 		expressions := make([]ast.IExpression, 0)
 		for {
 			expr, err := parser.parseExpression()
@@ -107,12 +106,10 @@ func (parser *Parser) parseStatement() (ast.IStatement, error) {
 
 			expressions = append(expressions, expr)
 
-			if parser.at().TokenType == lexer.OperatorOrPunctuatorToken && parser.at().Value == "," {
-				parser.eat()
+			if parser.isToken(lexer.OperatorOrPunctuatorToken, ",", true) {
 				continue
 			}
-			if parser.at().TokenType == lexer.OperatorOrPunctuatorToken && parser.at().Value == ";" {
-				parser.eat()
+			if parser.isToken(lexer.OperatorOrPunctuatorToken, ";", true) {
 				break
 			}
 			return ast.NewEmptyStatement(), fmt.Errorf("Parser error: Invalid echo statement detected")
@@ -145,15 +142,12 @@ func (parser *Parser) parseStatement() (ast.IStatement, error) {
 
 	// If present, expression is evaluated for its side effects, if any, and any resulting value is discarded.
 	// If expression is omitted, the statement is a null statement, which has no effect on execution.
-	if parser.at().TokenType == lexer.OperatorOrPunctuatorToken && parser.at().Value == ";" {
-		parser.eat()
-	}
+	parser.isToken(lexer.OperatorOrPunctuatorToken, ";", true)
 
 	if expr, err := parser.parseExpression(); err != nil {
 		return ast.NewEmptyExpression(), err
 	} else {
-		if parser.at().TokenType == lexer.OperatorOrPunctuatorToken && parser.at().Value == ";" {
-			parser.eat()
+		if parser.isToken(lexer.OperatorOrPunctuatorToken, ";", true) {
 			return ast.NewExpressionStatement(expr), nil
 		}
 		return ast.NewEmptyExpression(), fmt.Errorf("Parser error: Statement must end with a semicolon")
@@ -161,7 +155,117 @@ func (parser *Parser) parseStatement() (ast.IStatement, error) {
 }
 
 func (parser *Parser) parseExpression() (ast.IExpression, error) {
-	// Spec: https://phplang.org/spec/10-expressions.html#general-1
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-expression
+
+	// expression:
+	//    logical-inc-OR-expression-2
+	//    include-expression
+	//    include-once-expression
+	//    require-expression
+	//    require-once-expression
+	// Spec-Fix: So that by following assignment-expression the primary-expression is reachable
+	//    assignment-expression
+
+	// TODO logical-inc-OR-expression-2
+	// TODO include-expression
+	// TODO include-once-expression
+	// TODO require-expression
+	// TODO require-once-expression
+
+	// assignment-expression
+	return parser.parseAssignmentExpression()
+}
+
+func (parser *Parser) parseAssignmentExpression() (ast.IExpression, error) {
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-assignment-expression
+
+	// assignment-expression:
+	//    conditional-expression
+	//    simple-assignment-expression
+	//    compound-assignment-expression
+
+	// conditional-expression
+
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-conditional-expression
+
+	// conditional-expression:
+	//    coalesce-expression
+	//    conditional-expression   ?   expression(opt)   :   coalesce-expression
+
+	// coalesce-expression
+	expr, err := parser.parsePrimaryExpression()
+	if err != nil {
+		return ast.NewEmptyExpression(), err
+	}
+
+	// conditional-expression   ?   expression(opt)   :   coalesce-expression
+	if parser.isToken(lexer.OperatorOrPunctuatorToken, "?", true) {
+		var ifExpr ast.IExpression = nil
+		if !parser.isToken(lexer.OperatorOrPunctuatorToken, ":", false) {
+			ifExpr, err = parser.parseExpression()
+			if err != nil {
+				return ast.NewEmptyExpression(), err
+			}
+		}
+		if err := parser.expect(lexer.OperatorOrPunctuatorToken, ":", true); err != nil {
+			return ast.NewEmptyExpression(), err
+		}
+		elseExpr, err := parser.parseExpression()
+		if err != nil {
+			return ast.NewEmptyExpression(), err
+		}
+		return ast.NewConditionalExpression(expr, ifExpr, elseExpr), nil
+	}
+
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-simple-assignment-expression
+
+	// simple-assignment-expression:
+	//    variable   =   assignment-expression
+	//    list-intrinsic   =   assignment-expression
+
+	// TODO simple-assignment-expression - list-intrinsic
+	if ast.IsVariableExpression(expr) && parser.isToken(lexer.OperatorOrPunctuatorToken, "=", true) {
+		value, err := parser.parseAssignmentExpression()
+		if err != nil {
+			return ast.NewEmptyExpression(), nil
+		}
+		return ast.NewSimpleAssignmentExpression(expr, value), nil
+	}
+
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-compound-assignment-expression
+
+	// compound-assignment-expression:
+	//    variable   compound-assignment-operator   assignment-expression
+
+	// compound-assignment-operator: one of
+	//    **=   *=   /=   %=   +=   -=   .=   <<=   >>=   &=   ^=   |=
+
+	if ast.IsVariableExpression(expr) &&
+		parser.isTokenType(lexer.OperatorOrPunctuatorToken, false) && common.IsCompoundAssignmentOperator(parser.at().Value) {
+		operatorStr := strings.ReplaceAll(parser.eat().Value, "=", "")
+		value, err := parser.parseAssignmentExpression()
+		if err != nil {
+			return ast.NewEmptyExpression(), nil
+		}
+		return ast.NewCompoundAssignmentExpression(expr, operatorStr, value), nil
+	}
+
+	return expr, nil
+}
+
+func (parser *Parser) parseCoalesceExpression() (ast.IExpression, error) {
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-coalesce-expression
+
+	// coalesce-expression:
+	//    logical-inc-OR-expression-1
+	//    logical-inc-OR-expression-1   ??   coalesce-expression
+
+	// TODO parseLogicalIncOrExpression1()
+	return parser.parsePrimaryExpression()
+}
+
+func (parser *Parser) parsePrimaryExpression() (ast.IExpression, error) {
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-primary-expression
 
 	// primary-expression:
 	//    variable
@@ -179,6 +283,7 @@ func (parser *Parser) parseExpression() (ast.IExpression, error) {
 	//    byref-assignment-expression
 	//    shell-command-expression
 	//    (   expression   )
+	// Spec-Fix: Added
 
 	// ------------------- MARK: variable -------------------
 
@@ -187,7 +292,7 @@ func (parser *Parser) parseExpression() (ast.IExpression, error) {
 	// simple-variable:
 	//    variable-name
 
-	if parser.at().TokenType == lexer.VariableNameToken {
+	if parser.isTokenType(lexer.VariableNameToken, false) {
 		return ast.NewSimpleVariableExpression(ast.NewVariableNameExpression(parser.eat().Value)), nil
 	}
 
@@ -197,11 +302,11 @@ func (parser *Parser) parseExpression() (ast.IExpression, error) {
 	//    variable-name
 	//    $   {   expression   }
 
-	if parser.at().TokenType == lexer.OperatorOrPunctuatorToken && parser.at().Value == "$" &&
+	if parser.isToken(lexer.OperatorOrPunctuatorToken, "$", false) &&
 		parser.next(0).TokenType == lexer.OperatorOrPunctuatorToken && parser.next(0).Value == "{" {
 		parser.eatN(2)
 		// Get expression
-		expr, err := parser.parseExpression()
+		expr, err := parser.parsePrimaryExpression()
 		if err != nil {
 			return ast.NewEmptyExpression(), err
 		}
@@ -220,9 +325,8 @@ func (parser *Parser) parseExpression() (ast.IExpression, error) {
 	//    variable-name
 	//    $   simple-variable
 
-	if parser.at().TokenType == lexer.OperatorOrPunctuatorToken && parser.at().Value == "$" {
-		parser.eat()
-		if expr, err := parser.parseExpression(); err != nil {
+	if parser.isToken(lexer.OperatorOrPunctuatorToken, "$", true) {
+		if expr, err := parser.parsePrimaryExpression(); err != nil {
 			return ast.NewEmptyExpression(), err
 		} else {
 			return ast.NewSimpleVariableExpression(expr), nil
@@ -243,8 +347,16 @@ func (parser *Parser) parseExpression() (ast.IExpression, error) {
 
 	// A literal evaluates to its value, as specified in the lexical specification for literals.
 
+	// boolean-literal
+	if parser.isToken(lexer.KeywordToken, "FALSE", true) {
+		return ast.NewBooleanLiteralExpression(false), nil
+	}
+	if parser.isToken(lexer.KeywordToken, "TRUE", true) {
+		return ast.NewBooleanLiteralExpression(true), nil
+	}
+
 	// integer-literal
-	if parser.at().TokenType == lexer.IntegerLiteralToken {
+	if parser.isTokenType(lexer.IntegerLiteralToken, false) {
 		// decimal-literal
 		if common.IsDecimalLiteral(parser.at().Value) {
 			return ast.NewIntegerLiteralExpression(common.DecimalLiteralToInt64(parser.eat().Value)), nil
@@ -269,7 +381,7 @@ func (parser *Parser) parseExpression() (ast.IExpression, error) {
 	}
 
 	// floating-literal
-	if parser.at().TokenType == lexer.FloatingLiteralToken {
+	if parser.isTokenType(lexer.FloatingLiteralToken, false) {
 		if common.IsFloatingLiteral(parser.at().Value) {
 			return ast.NewFloatingLiteralExpression(common.FloatingLiteralToFloat64(parser.eat().Value)), nil
 		}
@@ -278,7 +390,7 @@ func (parser *Parser) parseExpression() (ast.IExpression, error) {
 	}
 
 	// string-literal
-	if parser.at().TokenType == lexer.StringLiteralToken {
+	if parser.isTokenType(lexer.StringLiteralToken, false) {
 		// single-quoted-string-literal
 		if common.IsSingleQuotedStringLiteral(parser.at().Value) {
 			return ast.NewStringLiteralExpression(
@@ -308,6 +420,42 @@ func (parser *Parser) parseExpression() (ast.IExpression, error) {
 	// TODO byref-assignment-expression
 	// TODO shell-command-expression
 	// TODO (   expression   )
+
+	// ------------------- MARK: unary-expression -------------------
+
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-unary-expression
+
+	// unary-expression:
+	//    exponentiation-expression
+	//    unary-op-expression
+	//    error-control-expression
+	//    cast-expression
+
+	// These operators associate right-to-left.
+
+	// TODO unary-expression is a "instanceof Operator" - https://phplang.org/spec/10-expressions.html#grammar-instanceof-expression
+
+	// TODO exponentiation-expression
+
+	// unary-op-expression
+
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-unary-op-expression
+
+	// unary-op-expression:
+	//    unary-operator   unary-expression
+
+	// unary-operator: one of
+	//    +   -   ~
+
+	// TODO unary-op-expression - constraints
+	if parser.isTokenType(lexer.OperatorOrPunctuatorToken, false) && slices.Contains([]string{"+", "-", "~"}, parser.at().Value) {
+
+	}
+
+	// TODO unary-op-expression
+
+	// TODO error-control-expression
+	// TODO cast-expression
 
 	return ast.NewEmptyExpression(), fmt.Errorf("Parser error: Unsupported expression type: %s", parser.at())
 }
