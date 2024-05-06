@@ -2,7 +2,7 @@ package ast
 
 import "fmt"
 
-// Expression
+// ------------------- MARK: Expression -------------------
 
 type IExpression interface {
 	IStatement
@@ -28,7 +28,7 @@ func NewEmptyExpression() *Expression {
 	return NewExpression(EmptyNode)
 }
 
-// TextExpression
+// ------------------- MARK: TextExpression -------------------
 
 type ITextExpression interface {
 	IExpression
@@ -61,7 +61,7 @@ func ExprToTextExpr(expr IExpression) ITextExpression {
 	return i.(ITextExpression)
 }
 
-// VariableNameExpression
+// ------------------- MARK: VariableNameExpression -------------------
 
 type IVariableNameExpression interface {
 	IExpression
@@ -94,7 +94,7 @@ func ExprToVarNameExpr(expr IExpression) IVariableNameExpression {
 	return i.(IVariableNameExpression)
 }
 
-// SimpleVariableExpression
+// ------------------- MARK: SimpleVariableExpression -------------------
 
 type ISimpleVariableExpression interface {
 	IExpression
@@ -127,7 +127,7 @@ func ExprToSimpleVarExpr(expr IExpression) ISimpleVariableExpression {
 	return i.(ISimpleVariableExpression)
 }
 
-// IntegerLiteralExpression
+// ------------------- MARK: IntegerLiteralExpression -------------------
 
 type IIntegerLiteralExpression interface {
 	IExpression
@@ -160,7 +160,7 @@ func ExprToIntLitExpr(expr IExpression) IIntegerLiteralExpression {
 	return i.(IIntegerLiteralExpression)
 }
 
-// FloatingLiteralExpression
+// ------------------- MARK: FloatingLiteralExpression -------------------
 
 type IFloatingLiteralExpression interface {
 	IExpression
@@ -193,7 +193,7 @@ func ExprToFloatLitExpr(expr IExpression) IFloatingLiteralExpression {
 	return i.(IFloatingLiteralExpression)
 }
 
-// StringLiteralExpression
+// ------------------- MARK: StringLiteralExpression -------------------
 
 type StringType string
 
@@ -237,4 +237,43 @@ func (expr *StringLiteralExpression) String() string {
 func ExprToStrLitExpr(expr IExpression) IStringLiteralExpression {
 	var i interface{} = expr
 	return i.(IStringLiteralExpression)
+}
+
+// ------------------- MARK: SimpleAssignmentExpression -------------------
+
+type ISimpleAssignmentExpression interface {
+	IExpression
+	GetVariable() IExpression
+	GetValue() IExpression
+}
+
+type SimpleAssignmentExpression struct {
+	expr     IExpression
+	variable IExpression
+	value    IExpression
+}
+
+func NewSimpleAssignmentExpression(variable IExpression, value IExpression) *SimpleAssignmentExpression {
+	return &SimpleAssignmentExpression{expr: NewExpression(SimpleAssignmentExpr), variable: variable, value: value}
+}
+
+func (expr *SimpleAssignmentExpression) GetKind() NodeType {
+	return expr.expr.GetKind()
+}
+
+func (expr *SimpleAssignmentExpression) GetVariable() IExpression {
+	return expr.variable
+}
+
+func (expr *SimpleAssignmentExpression) GetValue() IExpression {
+	return expr.value
+}
+
+func (expr *SimpleAssignmentExpression) String() string {
+	return fmt.Sprintf("{%s - value: %s }", expr.GetKind(), expr.value)
+}
+
+func ExprToSimpleAssignExpr(expr IExpression) ISimpleAssignmentExpression {
+	var i interface{} = expr
+	return i.(ISimpleAssignmentExpression)
 }

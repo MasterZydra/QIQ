@@ -7,11 +7,12 @@ const (
 	ProgramNode NodeType = "Program"
 	TextNode    NodeType = "Text"
 	// Expressions
-	VariableNameExpr    NodeType = "VariableNameExpression"
-	SimpleVariableExpr  NodeType = "SimpleVariableExpression"
-	IntegerLiteralExpr  NodeType = "IntegerLiteralExpression"
-	FloatingLiteralExpr NodeType = "FloatingLiteralExpression"
-	StringLiteralExpr   NodeType = "StringLiteralExpression"
+	IntegerLiteralExpr   NodeType = "IntegerLiteralExpression"
+	FloatingLiteralExpr  NodeType = "FloatingLiteralExpression"
+	StringLiteralExpr    NodeType = "StringLiteralExpression"
+	VariableNameExpr     NodeType = "VariableNameExpression"
+	SimpleVariableExpr   NodeType = "SimpleVariableExpression"
+	SimpleAssignmentExpr NodeType = "SimpleAssignmentExpression"
 	// Statements
 	EchoStmt       NodeType = "EchoStatement"
 	ExpressionStmt NodeType = "ExpressionStatement"

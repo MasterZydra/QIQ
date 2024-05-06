@@ -1,7 +1,7 @@
 package main
 
 import (
-	"GoPHP/cmd/goPHP/lexer"
+	"GoPHP/cmd/goPHP/interpreter"
 	"bufio"
 	"fmt"
 	"os"
@@ -22,10 +22,23 @@ func main() {
 		fmt.Println("Error:", err)
 	}
 
-	lexer := lexer.NewLexer()
-	tokens, err := lexer.Tokenize(fileContent)
+	// lexer := lexer.NewLexer()
+	// tokens, err := lexer.Tokenize(fileContent)
+	// if err != nil {
+	// 	fmt.Println("Error:", err)
+	// }
+	// fmt.Printf("Tokens:   %s\n", tokens)
+
+	// parser := parser.NewParser()
+	// program, err := parser.ProduceAST(fileContent)
+	// if err != nil {
+	// 	fmt.Println("Error:", err)
+	// }
+
+	interpreter := interpreter.NewInterpreter()
+	result, err := interpreter.Process(fileContent)
+	fmt.Println(result)
 	if err != nil {
 		fmt.Println("Error:", err)
 	}
-	fmt.Printf("Tokens:   %s\n", tokens)
 }
