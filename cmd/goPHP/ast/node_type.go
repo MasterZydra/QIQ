@@ -14,9 +14,11 @@ const (
 	VariableNameExpr       NodeType = "VariableNameExpression"
 	SimpleVariableExpr     NodeType = "SimpleVariableExpression"
 	SimpleAssignmentExpr   NodeType = "SimpleAssignmentExpression"
+	ConstantAccessExpr     NodeType = "ConstantAccessExpression"
 	CompoundAssignmentExpr NodeType = "CompoundAssignmentExpression"
 	ConditionalExpr        NodeType = "ConditionalExpression"
 	// Statements
-	EchoStmt       NodeType = "EchoStatement"
-	ExpressionStmt NodeType = "ExpressionStatement"
+	EchoStmt             NodeType = "EchoStatement"
+	ConstDeclarationStmt NodeType = "ConstDeclarationStatement"
+	ExpressionStmt       NodeType = "ExpressionStatement"
 )

@@ -127,6 +127,39 @@ func ExprToSimpleVarExpr(expr IExpression) ISimpleVariableExpression {
 	return i.(ISimpleVariableExpression)
 }
 
+// ------------------- MARK: ConstantAccessExpression -------------------
+
+type IConstantAccessExpression interface {
+	IExpression
+	GetConstantName() string
+}
+
+type ConstantAccessExpression struct {
+	expr         IExpression
+	constantName string
+}
+
+func NewConstantAccessExpression(constantName string) *ConstantAccessExpression {
+	return &ConstantAccessExpression{expr: NewExpression(ConstantAccessExpr), constantName: constantName}
+}
+
+func (expr *ConstantAccessExpression) GetKind() NodeType {
+	return expr.expr.GetKind()
+}
+
+func (expr *ConstantAccessExpression) GetConstantName() string {
+	return expr.constantName
+}
+
+func (expr *ConstantAccessExpression) String() string {
+	return fmt.Sprintf("{%s - constantName: %s}", expr.GetKind(), expr.constantName)
+}
+
+func ExprToConstAccessExpr(expr IExpression) IConstantAccessExpression {
+	var i interface{} = expr
+	return i.(IConstantAccessExpression)
+}
+
 // ------------------- MARK: BooleanLiteralExpression -------------------
 
 type IBooleanLiteralExpression interface {

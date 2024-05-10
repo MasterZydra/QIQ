@@ -35,6 +35,8 @@ func (interpreter *Interpreter) Process(sourceCode string) (string, error) {
 func (interpreter *Interpreter) process(stmt ast.IStatement) (IRuntimeValue, error) {
 	switch stmt.GetKind() {
 	// Statements
+	case ast.ConstDeclarationStmt:
+		return interpreter.processConstDeclarationStatement(ast.StmtToConstDeclStatement(stmt))
 	case ast.ExpressionStmt:
 		return interpreter.process(ast.StmtToExprStatement(stmt).GetExpression())
 	case ast.EchoStmt:
@@ -50,6 +52,8 @@ func (interpreter *Interpreter) process(stmt ast.IStatement) (IRuntimeValue, err
 		return interpreter.processSimpleVariableExpression(ast.ExprToSimpleVarExpr(stmt))
 	case ast.SimpleAssignmentExpr:
 		return interpreter.processSimpleAssignmentExpression(ast.ExprToSimpleAssignExpr(stmt))
+	case ast.ConstantAccessExpr:
+		return interpreter.processConstantAccessExpression(ast.ExprToConstAccessExpr(stmt))
 	case ast.CompoundAssignmentExpr:
 		return interpreter.processCompoundAssignmentExpression(ast.ExprToCompoundAssignExpr(stmt))
 	case ast.ConditionalExpr:
@@ -58,6 +62,14 @@ func (interpreter *Interpreter) process(stmt ast.IStatement) (IRuntimeValue, err
 	default:
 		return NewVoidRuntimeValue(), fmt.Errorf("Interpreter error: Unsupported statement or expression: %s", stmt)
 	}
+}
+
+func (interpreter *Interpreter) processConstDeclarationStatement(stmt ast.IConstDeclarationStatement) (IRuntimeValue, error) {
+	value, err := interpreter.process(stmt.GetValue())
+	if err != nil {
+		return NewVoidRuntimeValue(), err
+	}
+	return interpreter.env.declareConstant(stmt.GetName(), value)
 }
 
 func (interpreter *Interpreter) processEchoStatement(stmt ast.IEchoStatement) (IRuntimeValue, error) {
@@ -102,6 +114,10 @@ func (interpreter *Interpreter) processSimpleAssignmentExpression(expr ast.ISimp
 	}
 
 	return interpreter.env.declareVariable(variableName, value)
+}
+
+func (interpreter *Interpreter) processConstantAccessExpression(expr ast.IConstantAccessExpression) (IRuntimeValue, error) {
+	return interpreter.env.lookupConstant(expr.GetConstantName())
 }
 
 func (interpreter *Interpreter) processCompoundAssignmentExpression(expr ast.ICompoundAssignmentExpression) (IRuntimeValue, error) {

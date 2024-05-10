@@ -123,7 +123,48 @@ func (parser *Parser) parseStatement() (ast.IStatement, error) {
 	}
 
 	// TODO unset-statement
-	// TODO const-declaration
+
+	// ------------------- MARK: const-declaration -------------------
+
+	// Spec: https://phplang.org/spec/14-classes.html#grammar-const-declaration
+
+	// const-declaration:
+	//    const   const-elements   ;
+
+	// const-elements:
+	//    const-element
+	//    const-elements   ,   const-element
+
+	// const-element:
+	//    name   =   constant-expression
+
+	if parser.isToken(lexer.KeywordToken, "const", true) {
+		if err := parser.expectTokenType(lexer.NameToken, false); err != nil {
+			return ast.NewEmptyStatement(), err
+		}
+		for {
+			name := parser.eat().Value
+			if err := parser.expect(lexer.OperatorOrPunctuatorToken, "=", true); err != nil {
+				return ast.NewEmptyStatement(), err
+			}
+			// TODO parse constant-expression
+			value, err := parser.parseExpression()
+			if err != nil {
+				return ast.NewEmptyStatement(), err
+			}
+
+			stmt := ast.NewConstDeclarationStatement(name, value)
+			if parser.isToken(lexer.OperatorOrPunctuatorToken, ",", true) {
+				parser.program.Append(stmt)
+				continue
+			}
+			if parser.isToken(lexer.OperatorOrPunctuatorToken, ";", true) {
+				return stmt, nil
+			}
+			return ast.NewEmptyStatement(), fmt.Errorf("Parser error: Const declaration - unexpected token %s", parser.at())
+		}
+	}
+
 	// TODO function-definition
 	// TODO class-declaration
 	// TODO interface-declaration
@@ -334,7 +375,26 @@ func (parser *Parser) parsePrimaryExpression() (ast.IExpression, error) {
 	}
 
 	// TODO class-constant-access-expression
-	// TODO constant-access-expression
+
+	// ------------------- MARK: constant-access-expression -------------------
+
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-constant-access-expression
+
+	// constant-access-expression:
+	//    qualified-name
+
+	// A constant-access-expression evaluates to the value of the constant with name qualified-name.
+
+	// Spec: https://phplang.org/spec/09-lexical-structure.html#grammar-qualified-name
+
+	// qualified-name::
+	//    namespace-name-as-a-prefix(opt)   name
+
+	if parser.isTokenType(lexer.NameToken, false) {
+		// TODO constant-access-expression - namespace-name-as-a-prefix
+		// TODO constant-access-expression - check if name is a defined constant here or in interpreter
+		return ast.NewConstantAccessExpression(parser.eat().Value), nil
+	}
 
 	// ------------------- MARK: literal -------------------
 

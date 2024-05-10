@@ -4,314 +4,131 @@ import (
 	"testing"
 )
 
-func compareTokens(t1 *Token, t2 *Token) bool {
-	return t1.Value == t2.Value && t1.TokenType == t2.TokenType
+func testTokenize(t *testing.T, php string, expected []*Token) {
+	compareTokens := func(t1 *Token, t2 *Token) bool {
+		return t1.Value == t2.Value && t1.TokenType == t2.TokenType
+	}
+
+	tokens, err := NewLexer().Tokenize(php)
+	if err != nil {
+		t.Errorf("Unexpected error: \"%s\"", err)
+		return
+	}
+	for index, token := range expected {
+		if !compareTokens(token, tokens[index]) {
+			t.Errorf("Expected: \"%s\", Got \"%s\"", token, tokens[index])
+			return
+		}
+	}
 }
 
 func TestText(t *testing.T) {
-	tokens, _ := NewLexer().Tokenize("Hello world")
-	if expected := NewToken(TextToken, "Hello world"); !compareTokens(expected, tokens[0]) {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, tokens[0])
-	}
+	testTokenize(t, "Hello world", []*Token{NewToken(TextToken, "Hello world")})
 }
 
 func TestStartTag(t *testing.T) {
-	tokens, _ := NewLexer().Tokenize("<?php")
-	if expected := NewToken(StartTagToken, ""); !compareTokens(expected, tokens[0]) {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, tokens[0])
-	}
-
-	tokens, _ = NewLexer().Tokenize("<?=")
-	if expected := NewToken(StartTagToken, ""); !compareTokens(expected, tokens[0]) {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, tokens[0])
-	}
-	if expected := NewToken(KeywordToken, "echo"); !compareTokens(expected, tokens[1]) {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, tokens[1])
-	}
+	testTokenize(t, "<?php", []*Token{NewToken(StartTagToken, "")})
+	testTokenize(t, "<?=", []*Token{NewToken(StartTagToken, ""), NewToken(KeywordToken, "echo")})
 }
 
 func TestEndTag(t *testing.T) {
-	tokens, _ := NewLexer().Tokenize("<?php ?>")
-	if expected := NewToken(StartTagToken, ""); !compareTokens(expected, tokens[0]) {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, tokens[0])
-	}
-	if expected := NewToken(OperatorOrPunctuatorToken, ";"); !compareTokens(expected, tokens[1]) {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, tokens[1])
-	}
-	if expected := NewToken(EndTagToken, ""); !compareTokens(expected, tokens[2]) {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, tokens[2])
-	}
+	testTokenize(t,
+		"<?php ?>",
+		[]*Token{NewToken(StartTagToken, ""), NewToken(OperatorOrPunctuatorToken, ";"), NewToken(EndTagToken, "")},
+	)
 
-	tokens, _ = NewLexer().Tokenize("<?= ?>")
-	if expected := NewToken(StartTagToken, ""); !compareTokens(expected, tokens[0]) {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, tokens[0])
-	}
-	if expected := NewToken(OperatorOrPunctuatorToken, ";"); !compareTokens(expected, tokens[2]) {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, tokens[2])
-	}
-	if expected := NewToken(EndTagToken, ""); !compareTokens(expected, tokens[3]) {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, tokens[3])
-	}
+	testTokenize(t,
+		"<?= ?>",
+		[]*Token{NewToken(StartTagToken, ""),
+			NewToken(KeywordToken, "echo"),
+			NewToken(OperatorOrPunctuatorToken, ";"),
+			NewToken(EndTagToken, "")},
+	)
 
-	tokens, _ = NewLexer().Tokenize("<?php ?> ?>")
-	if expected := NewToken(StartTagToken, ""); !compareTokens(expected, tokens[0]) {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, tokens[0])
-	}
-	if expected := NewToken(OperatorOrPunctuatorToken, ";"); !compareTokens(expected, tokens[1]) {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, tokens[1])
-	}
-	if expected := NewToken(EndTagToken, ""); !compareTokens(expected, tokens[2]) {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, tokens[2])
-	}
-	if expected := NewToken(TextToken, " ?>"); !compareTokens(expected, tokens[3]) {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, tokens[3])
-	}
+	testTokenize(t,
+		"<?php ?> ?>",
+		[]*Token{NewToken(StartTagToken, ""),
+			NewToken(OperatorOrPunctuatorToken, ";"),
+			NewToken(EndTagToken, ""),
+			NewToken(TextToken, " ?>")},
+	)
 }
 
 func TestIntegerLiteral(t *testing.T) {
 	// binary-literal
-
-	tokens, _ := NewLexer().Tokenize("<?php 0b1010")
-	if expected := NewToken(IntegerLiteralToken, "0b1010"); !compareTokens(expected, tokens[1]) {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, tokens[1])
-	}
-
-	tokens, _ = NewLexer().Tokenize("<?php 0B1010")
-	if expected := NewToken(IntegerLiteralToken, "0B1010"); !compareTokens(expected, tokens[1]) {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, tokens[1])
-	}
+	testTokenize(t, "<?php 0b1010", []*Token{NewToken(StartTagToken, ""), NewToken(IntegerLiteralToken, "0b1010")})
+	testTokenize(t, "<?php 0B1010", []*Token{NewToken(StartTagToken, ""), NewToken(IntegerLiteralToken, "0B1010")})
 
 	// hexadecimal-literal
-
-	tokens, _ = NewLexer().Tokenize("<?php 0x0123456789AbCdEf")
-	if expected := NewToken(IntegerLiteralToken, "0x0123456789AbCdEf"); !compareTokens(expected, tokens[1]) {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, tokens[1])
-	}
-
-	tokens, _ = NewLexer().Tokenize("<?php 0X0123456789AbCdEf")
-	if expected := NewToken(IntegerLiteralToken, "0X0123456789AbCdEf"); !compareTokens(expected, tokens[1]) {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, tokens[1])
-	}
+	testTokenize(t, "<?php 0x0123456789AbCdEf",
+		[]*Token{NewToken(StartTagToken, ""), NewToken(IntegerLiteralToken, "0x0123456789AbCdEf")})
+	testTokenize(t, "<?php 0X0123456789AbCdEf",
+		[]*Token{NewToken(StartTagToken, ""), NewToken(IntegerLiteralToken, "0X0123456789AbCdEf")})
 
 	// decimal-literal
-
-	tokens, _ = NewLexer().Tokenize("<?php 124")
-	if expected := NewToken(IntegerLiteralToken, "124"); !compareTokens(expected, tokens[1]) {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, tokens[1])
-	}
+	testTokenize(t, "<?php 124", []*Token{NewToken(StartTagToken, ""), NewToken(IntegerLiteralToken, "124")})
 
 	// octal-literal
-
-	tokens, _ = NewLexer().Tokenize("<?php 047")
-	if expected := NewToken(IntegerLiteralToken, "047"); !compareTokens(expected, tokens[1]) {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, tokens[1])
-	}
+	testTokenize(t, "<?php 047", []*Token{NewToken(StartTagToken, ""), NewToken(IntegerLiteralToken, "047")})
 }
 
 func TestFloatingLiteral(t *testing.T) {
-	tokens, _ := NewLexer().Tokenize("<?php .5")
-	if expected := NewToken(FloatingLiteralToken, ".5"); !compareTokens(expected, tokens[1]) {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, tokens[1])
-	}
-
-	tokens, _ = NewLexer().Tokenize("<?php 1.2")
-	if expected := NewToken(FloatingLiteralToken, "1.2"); !compareTokens(expected, tokens[1]) {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, tokens[1])
-	}
-
-	tokens, _ = NewLexer().Tokenize("<?php .5e-4")
-	if expected := NewToken(FloatingLiteralToken, ".5e-4"); !compareTokens(expected, tokens[1]) {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, tokens[1])
-	}
-
-	tokens, _ = NewLexer().Tokenize("<?php 2.5E+4")
-	if expected := NewToken(FloatingLiteralToken, "2.5E+4"); !compareTokens(expected, tokens[1]) {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, tokens[1])
-	}
-
-	tokens, _ = NewLexer().Tokenize("<?php 2e4")
-	if expected := NewToken(FloatingLiteralToken, "2e4"); !compareTokens(expected, tokens[1]) {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, tokens[1])
-	}
+	testTokenize(t, "<?php .5", []*Token{NewToken(StartTagToken, ""), NewToken(FloatingLiteralToken, ".5")})
+	testTokenize(t, "<?php 1.2", []*Token{NewToken(StartTagToken, ""), NewToken(FloatingLiteralToken, "1.2")})
+	testTokenize(t, "<?php .5e-4", []*Token{NewToken(StartTagToken, ""), NewToken(FloatingLiteralToken, ".5e-4")})
+	testTokenize(t, "<?php 2.5e-4", []*Token{NewToken(StartTagToken, ""), NewToken(FloatingLiteralToken, "2.5e-4")})
+	testTokenize(t, "<?php 2e4", []*Token{NewToken(StartTagToken, ""), NewToken(FloatingLiteralToken, "2e4")})
 }
 
-func TestStringLiteralSingleQuote(t *testing.T) {
-	tokens, _ := NewLexer().Tokenize("<?php b''")
-	if expected := NewToken(StringLiteralToken, "b''"); !compareTokens(expected, tokens[1]) {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, tokens[1])
-	}
+func TestStringLiteral(t *testing.T) {
+	// Single quote
+	testTokenize(t, "<?php b''", []*Token{NewToken(StartTagToken, ""), NewToken(StringLiteralToken, "b''")})
+	testTokenize(t, "<?php B''", []*Token{NewToken(StartTagToken, ""), NewToken(StringLiteralToken, "B''")})
+	testTokenize(t, "<?php ''", []*Token{NewToken(StartTagToken, ""), NewToken(StringLiteralToken, "''")})
+	testTokenize(t, "<?php 'abc'", []*Token{NewToken(StartTagToken, ""), NewToken(StringLiteralToken, "'abc'")})
+	testTokenize(t, `<?php '\'abc\\'`, []*Token{NewToken(StartTagToken, ""), NewToken(StringLiteralToken, `'\'abc\\'`)})
 
-	tokens, _ = NewLexer().Tokenize("<?php B''")
-	if expected := NewToken(StringLiteralToken, "B''"); !compareTokens(expected, tokens[1]) {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, tokens[1])
-	}
-
-	tokens, _ = NewLexer().Tokenize("<?php ''")
-	if expected := NewToken(StringLiteralToken, "''"); !compareTokens(expected, tokens[1]) {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, tokens[1])
-	}
-
-	tokens, _ = NewLexer().Tokenize("<?php 'abc'")
-	if expected := NewToken(StringLiteralToken, "'abc'"); !compareTokens(expected, tokens[1]) {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, tokens[1])
-	}
-
-	tokens, _ = NewLexer().Tokenize(`<?php '\'abc\\'`)
-	if expected := NewToken(StringLiteralToken, `'\'abc\\'`); !compareTokens(expected, tokens[1]) {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, tokens[1])
-	}
-}
-
-func TestStringLiteralDoubleQuote(t *testing.T) {
-	tokens, _ := NewLexer().Tokenize(`<?php b""`)
-	if expected := NewToken(StringLiteralToken, `b""`); !compareTokens(expected, tokens[1]) {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, tokens[1])
-	}
-
-	tokens, _ = NewLexer().Tokenize(`<?php B""`)
-	if expected := NewToken(StringLiteralToken, `B""`); !compareTokens(expected, tokens[1]) {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, tokens[1])
-	}
-
-	tokens, _ = NewLexer().Tokenize(`<?php ""`)
-	if expected := NewToken(StringLiteralToken, `""`); !compareTokens(expected, tokens[1]) {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, tokens[1])
-	}
-
-	tokens, _ = NewLexer().Tokenize(`<?php "abc"`)
-	if expected := NewToken(StringLiteralToken, `"abc"`); !compareTokens(expected, tokens[1]) {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, tokens[1])
-	}
-
-	tokens, _ = NewLexer().Tokenize(`<?php "\"abc\\\n\$"`)
-	if expected := NewToken(StringLiteralToken, `"\"abc\\\n\$"`); !compareTokens(expected, tokens[1]) {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, tokens[1])
-	}
+	// Double quote
+	testTokenize(t, `<?php b""`, []*Token{NewToken(StartTagToken, ""), NewToken(StringLiteralToken, `b""`)})
+	testTokenize(t, `<?php B""`, []*Token{NewToken(StartTagToken, ""), NewToken(StringLiteralToken, `B""`)})
+	testTokenize(t, `<?php ""`, []*Token{NewToken(StartTagToken, ""), NewToken(StringLiteralToken, `""`)})
+	testTokenize(t, `<?php "abc"`, []*Token{NewToken(StartTagToken, ""), NewToken(StringLiteralToken, `"abc"`)})
+	testTokenize(t, `<?php "\"abc\\\n\$"`, []*Token{NewToken(StartTagToken, ""), NewToken(StringLiteralToken, `"\"abc\\\n\$"`)})
 }
 
 func TestOperatorOrPunctuator(t *testing.T) {
-	tokens, _ := NewLexer().Tokenize("<?php a === 1")
-	if expected := NewToken(OperatorOrPunctuatorToken, "==="); !compareTokens(expected, tokens[2]) {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, tokens[2])
-	}
+	testTokenize(t, "<?php a === 1",
+		[]*Token{NewToken(StartTagToken, ""), NewToken(NameToken, "a"), NewToken(OperatorOrPunctuatorToken, "===")})
 
-	tokens, _ = NewLexer().Tokenize("<?php a == 1")
-	if expected := NewToken(OperatorOrPunctuatorToken, "=="); !compareTokens(expected, tokens[2]) {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, tokens[2])
-	}
+	testTokenize(t, "<?php a == 1",
+		[]*Token{NewToken(StartTagToken, ""), NewToken(NameToken, "a"), NewToken(OperatorOrPunctuatorToken, "==")})
 
-	tokens, _ = NewLexer().Tokenize("<?php a = 1")
-	if expected := NewToken(OperatorOrPunctuatorToken, "="); !compareTokens(expected, tokens[2]) {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, tokens[2])
-	}
+	testTokenize(t, "<?php a = 1",
+		[]*Token{NewToken(StartTagToken, ""), NewToken(NameToken, "a"), NewToken(OperatorOrPunctuatorToken, "=")})
 }
 
 func TestVariableVarname(t *testing.T) {
-	tokens, _ := NewLexer().Tokenize(`<?php $$var = "someValue";`)
-	tokenIndex := 0
-	if expected := NewToken(StartTagToken, ""); !compareTokens(expected, tokens[tokenIndex]) {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, tokens[tokenIndex])
-	}
-	tokenIndex += 1
-	if expected := NewToken(OperatorOrPunctuatorToken, "$"); !compareTokens(expected, tokens[tokenIndex]) {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, tokens[tokenIndex])
-	}
-	tokenIndex += 1
-	if expected := NewToken(VariableNameToken, "$var"); !compareTokens(expected, tokens[tokenIndex]) {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, tokens[tokenIndex])
-	}
-	tokenIndex += 1
-	if expected := NewToken(OperatorOrPunctuatorToken, "="); !compareTokens(expected, tokens[tokenIndex]) {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, tokens[tokenIndex])
-	}
-	tokenIndex += 1
-	if expected := NewToken(StringLiteralToken, `"someValue"`); !compareTokens(expected, tokens[tokenIndex]) {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, tokens[tokenIndex])
-	}
-	tokenIndex += 1
-	if expected := NewToken(OperatorOrPunctuatorToken, ";"); !compareTokens(expected, tokens[tokenIndex]) {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, tokens[tokenIndex])
-	}
+	testTokenize(t, `<?php $$var = "someValue";`,
+		[]*Token{
+			NewToken(StartTagToken, ""), NewToken(OperatorOrPunctuatorToken, "$"), NewToken(VariableNameToken, "$var"),
+			NewToken(OperatorOrPunctuatorToken, "="), NewToken(StringLiteralToken, `"someValue"`),
+			NewToken(OperatorOrPunctuatorToken, ";"),
+		})
 
-	tokens, _ = NewLexer().Tokenize(`<?php echo 12, $var;`)
-	tokenIndex = 0
-	if expected := NewToken(StartTagToken, ""); !compareTokens(expected, tokens[tokenIndex]) {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, tokens[tokenIndex])
-	}
-	tokenIndex += 1
-	if expected := NewToken(KeywordToken, "echo"); !compareTokens(expected, tokens[tokenIndex]) {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, tokens[tokenIndex])
-	}
-	tokenIndex += 1
-	if expected := NewToken(IntegerLiteralToken, "12"); !compareTokens(expected, tokens[tokenIndex]) {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, tokens[tokenIndex])
-	}
-	tokenIndex += 1
-	if expected := NewToken(OperatorOrPunctuatorToken, ","); !compareTokens(expected, tokens[tokenIndex]) {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, tokens[tokenIndex])
-	}
-	tokenIndex += 1
-	if expected := NewToken(VariableNameToken, "$var"); !compareTokens(expected, tokens[tokenIndex]) {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, tokens[tokenIndex])
-	}
+	testTokenize(t, `<?php echo 12, $var;`,
+		[]*Token{
+			NewToken(StartTagToken, ""), NewToken(KeywordToken, "echo"), NewToken(IntegerLiteralToken, "12"),
+			NewToken(OperatorOrPunctuatorToken, ","), NewToken(VariableNameToken, "$var"),
+		})
 }
 
 func TestHtmlAndPhp(t *testing.T) {
-	tokenIndex := 0
-	tokens, _ := NewLexer().Tokenize(`<body><?php $heading = "My Heading"; ?><h1><?= $heading ?></h1>`)
-	if expected := NewToken(TextToken, "<body>"); !compareTokens(expected, tokens[tokenIndex]) {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, tokens[tokenIndex])
-	}
-	tokenIndex += 1
-	if expected := NewToken(StartTagToken, ""); !compareTokens(expected, tokens[tokenIndex]) {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, tokens[tokenIndex])
-	}
-	tokenIndex += 1
-	if expected := NewToken(VariableNameToken, "$heading"); !compareTokens(expected, tokens[tokenIndex]) {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, tokens[tokenIndex])
-	}
-	tokenIndex += 1
-	if expected := NewToken(OperatorOrPunctuatorToken, "="); !compareTokens(expected, tokens[tokenIndex]) {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, tokens[tokenIndex])
-	}
-	tokenIndex += 1
-	if expected := NewToken(StringLiteralToken, `"My Heading"`); !compareTokens(expected, tokens[tokenIndex]) {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, tokens[tokenIndex])
-	}
-	tokenIndex += 1
-	if expected := NewToken(OperatorOrPunctuatorToken, ";"); !compareTokens(expected, tokens[tokenIndex]) {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, tokens[tokenIndex])
-	}
-	tokenIndex += 1
-	if expected := NewToken(EndTagToken, ""); !compareTokens(expected, tokens[tokenIndex]) {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, tokens[tokenIndex])
-	}
-	tokenIndex += 1
-	if expected := NewToken(TextToken, "<h1>"); !compareTokens(expected, tokens[tokenIndex]) {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, tokens[tokenIndex])
-	}
-	tokenIndex += 1
-	if expected := NewToken(StartTagToken, ""); !compareTokens(expected, tokens[tokenIndex]) {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, tokens[tokenIndex])
-	}
-	tokenIndex += 1
-	if expected := NewToken(KeywordToken, "echo"); !compareTokens(expected, tokens[tokenIndex]) {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, tokens[tokenIndex])
-	}
-	tokenIndex += 1
-	if expected := NewToken(VariableNameToken, "$heading"); !compareTokens(expected, tokens[tokenIndex]) {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, tokens[tokenIndex])
-	}
-	tokenIndex += 1
-	if expected := NewToken(OperatorOrPunctuatorToken, ";"); !compareTokens(expected, tokens[tokenIndex]) {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, tokens[tokenIndex])
-	}
-	tokenIndex += 1
-	if expected := NewToken(EndTagToken, ""); !compareTokens(expected, tokens[tokenIndex]) {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, tokens[tokenIndex])
-	}
-	tokenIndex += 1
-	if expected := NewToken(TextToken, "</h1>"); !compareTokens(expected, tokens[tokenIndex]) {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, tokens[tokenIndex])
-	}
+	testTokenize(t, `<body><?php $heading = "My Heading"; ?><h1><?= $heading ?></h1>`,
+		[]*Token{
+			NewToken(TextToken, "<body>"), NewToken(StartTagToken, ""), NewToken(VariableNameToken, "$heading"),
+			NewToken(OperatorOrPunctuatorToken, "="), NewToken(StringLiteralToken, `"My Heading"`),
+			NewToken(OperatorOrPunctuatorToken, ";"), NewToken(EndTagToken, ""), NewToken(TextToken, "<h1>"),
+			NewToken(StartTagToken, ""), NewToken(KeywordToken, "echo"), NewToken(VariableNameToken, "$heading"),
+			NewToken(OperatorOrPunctuatorToken, ";"), NewToken(EndTagToken, ""), NewToken(TextToken, "</h1>"),
+		})
 }

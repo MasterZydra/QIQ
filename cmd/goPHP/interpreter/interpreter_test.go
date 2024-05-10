@@ -5,41 +5,7 @@ import (
 	"testing"
 )
 
-func TestText(t *testing.T) {
-	actual, err := NewInterpreter().Process("<html>...</html>")
-	if err != nil {
-		t.Errorf("Unexpected error: \"%s\"", err)
-		return
-	}
-	expected := "<html>...</html>"
-	if actual != expected {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
-	}
-}
-
-func TestEchoShortTag(t *testing.T) {
-	actual, err := NewInterpreter().Process(`<html><?= "abc" ?><?= 42; ?></html>`)
-	if err != nil {
-		t.Errorf("Unexpected error: \"%s\"", err)
-		return
-	}
-	expected := "<html>abc42</html>"
-	if actual != expected {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
-	}
-}
-
-func TestEchoExpression(t *testing.T) {
-	actual, err := NewInterpreter().Process(`<html><?php echo "abc", 42 ?><?php echo "def", 24; ?></html>`)
-	if err != nil {
-		t.Errorf("Unexpected error: \"%s\"", err)
-		return
-	}
-	expected := "<html>abc42def24</html>"
-	if actual != expected {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
-	}
-}
+// ------------------- MARK: function tests -------------------
 
 func TestVariableExprToVariableName(t *testing.T) {
 	// simple-variable-expression
@@ -90,226 +56,106 @@ func TestVariableExprToVariableName(t *testing.T) {
 }
 
 func TestRuntimeValueToBool(t *testing.T) {
+	doTest := func(runtimeValue IRuntimeValue, expected bool) {
+		actual, err := runtimeValueToBool(runtimeValue)
+		if err != nil {
+			t.Errorf("Unexpected error: \"%s\"", err)
+			return
+		}
+		if actual != expected {
+			t.Errorf("Expected: \"%t\", Got \"%t\"", expected, actual)
+		}
+	}
 	// boolean to boolean
-	actual, err := runtimeValueToBool(NewBooleanRuntimeValue(true))
-	if err != nil {
-		t.Errorf("Unexpected error: \"%s\"", err)
-		return
-	}
-	expected := true
-	if actual != expected {
-		t.Errorf("Expected: \"%t\", Got \"%t\"", expected, actual)
-	}
-
-	actual, err = runtimeValueToBool(NewBooleanRuntimeValue(false))
-	if err != nil {
-		t.Errorf("Unexpected error: \"%s\"", err)
-		return
-	}
-	expected = false
-	if actual != expected {
-		t.Errorf("Expected: \"%t\", Got \"%t\"", expected, actual)
-	}
+	doTest(NewBooleanRuntimeValue(true), true)
+	doTest(NewBooleanRuntimeValue(false), false)
 
 	// integer to boolean
-	actual, err = runtimeValueToBool(NewIntegerRuntimeValue(0))
-	if err != nil {
-		t.Errorf("Unexpected error: \"%s\"", err)
-		return
-	}
-	expected = false
-	if actual != expected {
-		t.Errorf("Expected: \"%t\", Got \"%t\"", expected, actual)
-	}
-
-	actual, err = runtimeValueToBool(NewIntegerRuntimeValue(-0))
-	if err != nil {
-		t.Errorf("Unexpected error: \"%s\"", err)
-		return
-	}
-	expected = false
-	if actual != expected {
-		t.Errorf("Expected: \"%t\", Got \"%t\"", expected, actual)
-	}
-
-	actual, err = runtimeValueToBool(NewIntegerRuntimeValue(1))
-	if err != nil {
-		t.Errorf("Unexpected error: \"%s\"", err)
-		return
-	}
-	expected = true
-	if actual != expected {
-		t.Errorf("Expected: \"%t\", Got \"%t\"", expected, actual)
-	}
-
-	actual, err = runtimeValueToBool(NewIntegerRuntimeValue(42))
-	if err != nil {
-		t.Errorf("Unexpected error: \"%s\"", err)
-		return
-	}
-	expected = true
-	if actual != expected {
-		t.Errorf("Expected: \"%t\", Got \"%t\"", expected, actual)
-	}
-
-	actual, err = runtimeValueToBool(NewIntegerRuntimeValue(-2))
-	if err != nil {
-		t.Errorf("Unexpected error: \"%s\"", err)
-		return
-	}
-	expected = true
-	if actual != expected {
-		t.Errorf("Expected: \"%t\", Got \"%t\"", expected, actual)
-	}
+	doTest(NewIntegerRuntimeValue(0), false)
+	doTest(NewIntegerRuntimeValue(-0), false)
+	doTest(NewIntegerRuntimeValue(1), true)
+	doTest(NewIntegerRuntimeValue(42), true)
+	doTest(NewIntegerRuntimeValue(-2), true)
 
 	// floating to boolean
-	actual, err = runtimeValueToBool(NewFloatingRuntimeValue(0.0))
-	if err != nil {
-		t.Errorf("Unexpected error: \"%s\"", err)
-		return
-	}
-	expected = false
-	if actual != expected {
-		t.Errorf("Expected: \"%t\", Got \"%t\"", expected, actual)
-	}
-
-	actual, err = runtimeValueToBool(NewFloatingRuntimeValue(-0.0))
-	if err != nil {
-		t.Errorf("Unexpected error: \"%s\"", err)
-		return
-	}
-	expected = false
-	if actual != expected {
-		t.Errorf("Expected: \"%t\", Got \"%t\"", expected, actual)
-	}
-
-	actual, err = runtimeValueToBool(NewFloatingRuntimeValue(1.5))
-	if err != nil {
-		t.Errorf("Unexpected error: \"%s\"", err)
-		return
-	}
-	expected = true
-	if actual != expected {
-		t.Errorf("Expected: \"%t\", Got \"%t\"", expected, actual)
-	}
-
-	actual, err = runtimeValueToBool(NewFloatingRuntimeValue(42.0))
-	if err != nil {
-		t.Errorf("Unexpected error: \"%s\"", err)
-		return
-	}
-	expected = true
-	if actual != expected {
-		t.Errorf("Expected: \"%t\", Got \"%t\"", expected, actual)
-	}
-
-	actual, err = runtimeValueToBool(NewFloatingRuntimeValue(-2.0))
-	if err != nil {
-		t.Errorf("Unexpected error: \"%s\"", err)
-		return
-	}
-	expected = true
-	if actual != expected {
-		t.Errorf("Expected: \"%t\", Got \"%t\"", expected, actual)
-	}
+	doTest(NewFloatingRuntimeValue(0.0), false)
+	doTest(NewFloatingRuntimeValue(1.5), true)
+	doTest(NewFloatingRuntimeValue(42.0), true)
+	doTest(NewFloatingRuntimeValue(-2.0), true)
 
 	// string to boolean
-	actual, err = runtimeValueToBool(NewStringRuntimeValue(""))
-	if err != nil {
-		t.Errorf("Unexpected error: \"%s\"", err)
-		return
-	}
-	expected = false
-	if actual != expected {
-		t.Errorf("Expected: \"%t\", Got \"%t\"", expected, actual)
-	}
-
-	actual, err = runtimeValueToBool(NewStringRuntimeValue("0"))
-	if err != nil {
-		t.Errorf("Unexpected error: \"%s\"", err)
-		return
-	}
-	expected = false
-	if actual != expected {
-		t.Errorf("Expected: \"%t\", Got \"%t\"", expected, actual)
-	}
-
-	actual, err = runtimeValueToBool(NewStringRuntimeValue("Hi"))
-	if err != nil {
-		t.Errorf("Unexpected error: \"%s\"", err)
-		return
-	}
-	expected = true
-	if actual != expected {
-		t.Errorf("Expected: \"%t\", Got \"%t\"", expected, actual)
-	}
+	doTest(NewStringRuntimeValue(""), false)
+	doTest(NewStringRuntimeValue("0"), false)
+	doTest(NewStringRuntimeValue("Hi"), true)
 
 	// null to boolean
-	actual, err = runtimeValueToBool(NewNullRuntimeValue())
+	doTest(NewNullRuntimeValue(), false)
+}
+
+// ------------------- MARK: input output tests -------------------
+
+func testInputOutput(t *testing.T, php string, output string) {
+	actual, err := NewInterpreter().Process(php)
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
 	}
-	expected = false
-	if actual != expected {
-		t.Errorf("Expected: \"%t\", Got \"%t\"", expected, actual)
+	if actual != output {
+		t.Errorf("Expected: \"%s\", Got \"%s\"", output, actual)
 	}
+}
+
+func TestText(t *testing.T) {
+	testInputOutput(t, "<html>...</html>", "<html>...</html>")
+}
+
+func TestEchoShortTag(t *testing.T) {
+	testInputOutput(t, `<html><?= "abc" ?><?= 42; ?></html>`, "<html>abc42</html>")
+}
+
+func TestEchoExpression(t *testing.T) {
+	testInputOutput(t,
+		`<html><?php echo "abc", 42 ?><?php echo "def", 24; ?></html>`,
+		"<html>abc42def24</html>",
+	)
 }
 
 func TestVariableDeclaration(t *testing.T) {
 	// Simple variable
-	actual, err := NewInterpreter().Process(`<?php $var = "hi"; $var = "hello"; echo $var, " world";`)
-	if err != nil {
-		t.Errorf("Unexpected error: \"%s\"", err)
-		return
-	}
-	expected := "hello world"
-	if actual != expected {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
-	}
+	testInputOutput(t,
+		`<?php $var = "hi"; $var = "hello"; echo $var, " world";`,
+		"hello world",
+	)
 
 	// Variable variable name
-	actual, err = NewInterpreter().Process(`<?php $var = "hi"; $$var = "hello"; echo $hi, " world";`)
-	if err != nil {
-		t.Errorf("Unexpected error: \"%s\"", err)
-		return
-	}
-	expected = "hello world"
-	if actual != expected {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
-	}
+	testInputOutput(t,
+		`<?php $var = "hi"; $$var = "hello"; echo $hi, " world";`,
+		"hello world",
+	)
 
 	// Chained variable declarations
-	actual, err = NewInterpreter().Process(`<?php $a = $b = $c = 42; echo $a, $b, $c;`)
-	if err != nil {
-		t.Errorf("Unexpected error: \"%s\"", err)
-		return
-	}
-	expected = "424242"
-	if actual != expected {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
-	}
+	testInputOutput(t,
+		`<?php $a = $b = $c = 42; echo $a, $b, $c;`,
+		"424242",
+	)
 
 	// Compound assignment
-	actual, err = NewInterpreter().Process(`<?php $a = 42; echo $a; $a += 2; echo $a; $a += $a; echo $a;`)
-	if err != nil {
-		t.Errorf("Unexpected error: \"%s\"", err)
-		return
-	}
-	expected = "424488"
-	if actual != expected {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
-	}
+	testInputOutput(t,
+		`<?php $a = 42; echo $a; $a += 2; echo $a; $a += $a; echo $a;`,
+		"424488",
+	)
+}
+
+func TestConstantDeclaration(t *testing.T) {
+	testInputOutput(t,
+		`<?php const TRUTH = 42; const PI = "3.141";echo TRUTH, PI;`,
+		"423.141",
+	)
 }
 
 func TestConditional(t *testing.T) {
-	actual, err := NewInterpreter().Process(`<?php echo 1 ? "a" : "b"; echo 0 ? "b" : "a"; echo false ?: "a";`)
-	if err != nil {
-		t.Errorf("Unexpected error: \"%s\"", err)
-		return
-	}
-	expected := "aaa"
-	if actual != expected {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
-	}
+	testInputOutput(t,
+		`<?php echo 1 ? "a" : "b"; echo 0 ? "b" : "a"; echo false ?: "a";`,
+		"aaa",
+	)
 }

@@ -2,7 +2,7 @@ package ast
 
 import "fmt"
 
-// Statement
+// ------------------- MARK: Statement -------------------
 
 type IStatement interface {
 	GetKind() NodeType
@@ -29,7 +29,7 @@ func NewEmptyStatement() *Statement {
 	return &Statement{kind: EmptyNode}
 }
 
-// EchoStatement
+// ------------------- MARK: EchoStatement -------------------
 
 type IEchoStatement interface {
 	IStatement
@@ -62,7 +62,46 @@ func StmtToEchoStatement(stmt IStatement) IEchoStatement {
 	return i.(IEchoStatement)
 }
 
-// ExpressionStatement
+// ------------------- MARK: ConstDeclarationStatement -------------------
+
+type IConstDeclarationStatement interface {
+	IStatement
+	GetName() string
+	GetValue() IExpression
+}
+
+type ConstDeclarationStatement struct {
+	stmt  IStatement
+	name  string
+	value IExpression
+}
+
+func NewConstDeclarationStatement(name string, value IExpression) *ConstDeclarationStatement {
+	return &ConstDeclarationStatement{stmt: NewStatement(ConstDeclarationStmt), name: name, value: value}
+}
+
+func (stmt *ConstDeclarationStatement) GetKind() NodeType {
+	return stmt.stmt.GetKind()
+}
+
+func (stmt *ConstDeclarationStatement) GetName() string {
+	return stmt.name
+}
+
+func (stmt *ConstDeclarationStatement) GetValue() IExpression {
+	return stmt.value
+}
+
+func (stmt *ConstDeclarationStatement) String() string {
+	return fmt.Sprintf("{%s - name: \"%s\" value: %s}", stmt.GetKind(), stmt.name, stmt.value)
+}
+
+func StmtToConstDeclStatement(stmt IStatement) IConstDeclarationStatement {
+	var i interface{} = stmt
+	return i.(IConstDeclarationStatement)
+}
+
+// ------------------- MARK: ExpressionStatement -------------------
 
 type IExpressionStatement interface {
 	IStatement
