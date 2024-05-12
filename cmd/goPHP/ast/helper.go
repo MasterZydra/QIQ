@@ -1,5 +1,14 @@
 package ast
 
+import (
+	"slices"
+)
+
+// Spec: https://phplang.org/spec/10-expressions.html#grammar-variable
+var variableExpressions = []NodeType{
+	SimpleVariableExpr, FunctionCallExpr,
+}
+
 func IsVariableExpression(expr IExpression) bool {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-variable
 
@@ -14,6 +23,5 @@ func IsVariableExpression(expr IExpression) bool {
 	//    member-call-expression
 	//    scoped-call-expression
 	//    function-call-expression
-
-	return expr.GetKind() == SimpleVariableExpr
+	return slices.Contains(variableExpressions, expr.GetKind())
 }

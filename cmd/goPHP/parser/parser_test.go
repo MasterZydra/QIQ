@@ -42,6 +42,32 @@ func TestVariableName(t *testing.T) {
 	}
 }
 
+func TestFunctionCall(t *testing.T) {
+	// Without argument
+	program, err := NewParser().ProduceAST("<?php func();")
+	if err != nil {
+		t.Errorf("Unexpected error: \"%s\"", err)
+		return
+	}
+	expected := ast.NewFunctionCallExpression("func", []ast.IExpression{})
+	actual := ast.ExprToFuncCallExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
+	if expected.String() != actual.String() || expected.GetFunctionName() != actual.GetFunctionName() {
+		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
+	}
+
+	// With argument
+	program, err = NewParser().ProduceAST("<?php func(42);")
+	if err != nil {
+		t.Errorf("Unexpected error: \"%s\"", err)
+		return
+	}
+	expected = ast.NewFunctionCallExpression("func", []ast.IExpression{ast.NewIntegerLiteralExpression(42)})
+	actual = ast.ExprToFuncCallExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
+	if expected.String() != actual.String() || expected.GetFunctionName() != actual.GetFunctionName() {
+		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
+	}
+}
+
 func TestBooleanLiteral(t *testing.T) {
 	program, err := NewParser().ProduceAST("<?php true;")
 	if err != nil {

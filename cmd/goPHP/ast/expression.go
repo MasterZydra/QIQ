@@ -127,6 +127,45 @@ func ExprToSimpleVarExpr(expr IExpression) ISimpleVariableExpression {
 	return i.(ISimpleVariableExpression)
 }
 
+// ------------------- MARK: FunctionCallExpression -------------------
+
+type IFunctionCallExpression interface {
+	IExpression
+	GetFunctionName() string
+	GetArguments() []IExpression
+}
+
+type FunctionCallExpression struct {
+	expr         IExpression
+	functionName string
+	arguments    []IExpression
+}
+
+func NewFunctionCallExpression(functionName string, arguments []IExpression) *FunctionCallExpression {
+	return &FunctionCallExpression{expr: NewExpression(FunctionCallExpr), functionName: functionName, arguments: arguments}
+}
+
+func (expr *FunctionCallExpression) GetKind() NodeType {
+	return expr.expr.GetKind()
+}
+
+func (expr *FunctionCallExpression) GetFunctionName() string {
+	return expr.functionName
+}
+
+func (expr *FunctionCallExpression) GetArguments() []IExpression {
+	return expr.arguments
+}
+
+func (expr *FunctionCallExpression) String() string {
+	return fmt.Sprintf("{%s - functionName: \"%s\" arguments: %s}", expr.GetKind(), expr.functionName, expr.arguments)
+}
+
+func ExprToFuncCallExpr(expr IExpression) IFunctionCallExpression {
+	var i interface{} = expr
+	return i.(IFunctionCallExpression)
+}
+
 // ------------------- MARK: ConstantAccessExpression -------------------
 
 type IConstantAccessExpression interface {

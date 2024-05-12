@@ -1,19 +1,32 @@
 package interpreter
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 type Environment struct {
 	parent    *Environment
 	variables map[string]IRuntimeValue
 	constants map[string]IRuntimeValue
+	// StdLib
+	nativeFunctions map[string]nativeFunction
 }
 
 func NewEnvironment(parentEnv *Environment) *Environment {
-	return &Environment{
+	env := &Environment{
 		parent:    parentEnv,
 		variables: make(map[string]IRuntimeValue),
 		constants: make(map[string]IRuntimeValue),
+		// StdLib
+		nativeFunctions: make(map[string]nativeFunction),
 	}
+
+	if parentEnv == nil {
+		registerNativeFunctions(env)
+	}
+
+	return env
 }
 
 // ------------------- MARK: Variables -------------------
@@ -37,11 +50,11 @@ func (env *Environment) resolveVariable(variableName string) (*Environment, erro
 }
 
 func (env *Environment) lookupVariable(variableName string) (IRuntimeValue, error) {
-	_, err := env.resolveVariable(variableName)
+	environment, err := env.resolveVariable(variableName)
 	if err != nil {
 		return NewVoidRuntimeValue(), err
 	}
-	value, ok := env.variables[variableName]
+	value, ok := environment.variables[variableName]
 	if !ok {
 		return NewVoidRuntimeValue(), fmt.Errorf("Interpreter error: Undeclared variable \"%s\"", variableName)
 	}
@@ -73,13 +86,42 @@ func (env *Environment) resolveConstant(constantName string) (*Environment, erro
 }
 
 func (env *Environment) lookupConstant(constantName string) (IRuntimeValue, error) {
-	_, err := env.resolveConstant(constantName)
+	environment, err := env.resolveConstant(constantName)
 	if err != nil {
 		return NewVoidRuntimeValue(), err
 	}
-	value, ok := env.constants[constantName]
+	value, ok := environment.constants[constantName]
 	if !ok {
 		return NewVoidRuntimeValue(), fmt.Errorf("Interpreter error: Undefined constant \"%s\"", constantName)
+	}
+	return value, nil
+}
+
+// ------------------- MARK: Native functions -------------------
+
+func (env *Environment) resolveNativeFunction(functionName string) (*Environment, error) {
+	if _, ok := env.nativeFunctions[functionName]; ok {
+		return env, nil
+	}
+
+	if env.parent == nil {
+		return nil, fmt.Errorf("Interpreter error: Cannot resolve native function \"%s\" as it does not exist", functionName)
+	}
+
+	return env.parent.resolveNativeFunction(functionName)
+}
+
+func (env *Environment) lookupNativeFunction(functionName string) (nativeFunction, error) {
+	functionName = strings.ToLower(functionName)
+
+	environment, err := env.resolveNativeFunction(functionName)
+	if err != nil {
+		return nil, err
+	}
+
+	value, ok := environment.nativeFunctions[functionName]
+	if !ok {
+		return nil, fmt.Errorf("Cannot call undefined function %s()", functionName)
 	}
 	return value, nil
 }

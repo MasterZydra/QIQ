@@ -354,6 +354,26 @@ func (parser *Parser) parsePrimaryExpression() (ast.IExpression, error) {
 
 	// ------------------- MARK: variable -------------------
 
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-variable
+
+	// variable:
+	//    callable-variable
+	//    scoped-property-access-expression
+	//    member-access-expression
+
+	// ------------------- MARK: callable-variable -------------------
+
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-callable-variable
+
+	// callable-variable:
+	//    simple-variable
+	//    subscript-expression
+	//    member-call-expression
+	//    scoped-call-expression
+	//    function-call-expression
+
+	// ------------------- MARK: simple-variable -------------------
+
 	// Spec: https://phplang.org/spec/10-expressions.html#simple-variable
 
 	// simple-variable:
@@ -400,6 +420,61 @@ func (parser *Parser) parsePrimaryExpression() (ast.IExpression, error) {
 		}
 	}
 
+	// TODO subscript-expression
+	// TODO member-call-expression
+	// TODO scoped-call-expression
+
+	// ------------------- MARK: function-call-expression -------------------
+
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-function-call-expression
+
+	// function-call-expression:
+	//    qualified-name   (   argument-expression-list(opt)   )
+	//    qualified-name   (   argument-expression-list   ,   )
+	//    callable-expression   (   argument-expression-list(opt)   )
+	//    callable-expression   (   argument-expression-list   ,   )
+
+	// argument-expression-list:
+	//    argument-expression
+	//    argument-expression-list   ,   argument-expression
+
+	// argument-expression:
+	//    variadic-unpacking
+	//    expression
+
+	// variadic-unpacking:
+	//    ...   expression
+
+	if parser.isTokenType(lexer.NameToken, false) &&
+		parser.next(0).TokenType == lexer.OperatorOrPunctuatorToken && parser.next(0).Value == "(" {
+		functionName := parser.eat().Value
+		args := []ast.IExpression{}
+		parser.eat() // Eat opening parentheses
+		for {
+			if parser.isToken(lexer.OperatorOrPunctuatorToken, ")", true) {
+				break
+			}
+
+			arg, err := parser.parseExpression()
+			if err != nil {
+				return ast.NewEmptyExpression(), err
+			}
+			args = append(args, arg)
+
+			if parser.isToken(lexer.OperatorOrPunctuatorToken, ",", true) ||
+				parser.isToken(lexer.OperatorOrPunctuatorToken, ")", false) {
+				continue
+			}
+			return ast.NewEmptyExpression(), fmt.Errorf("Expected \",\" or \")\". Got: %s", parser.at())
+		}
+		return ast.NewFunctionCallExpression(functionName, args), nil
+	}
+	// TODO function-call-expression
+	// TODO function-call-expression - qualified-name
+
+	// TODO scoped-property-access-expression
+	// TODO member-access-expression
+
 	// TODO class-constant-access-expression
 
 	// ------------------- MARK: constant-access-expression -------------------
@@ -424,6 +499,64 @@ func (parser *Parser) parsePrimaryExpression() (ast.IExpression, error) {
 
 	// ------------------- MARK: literal -------------------
 
+	if parser.isToken(lexer.KeywordToken, "FALSE", false) || parser.isToken(lexer.KeywordToken, "TRUE", false) ||
+		parser.isTokenType(lexer.IntegerLiteralToken, false) || parser.isTokenType(lexer.FloatingLiteralToken, false) ||
+		parser.isTokenType(lexer.StringLiteralToken, false) || parser.isToken(lexer.KeywordToken, "NULL", false) {
+		return parser.parseLiteral()
+	}
+
+	// TODO array-creation-expression
+	// TODO intrinsic
+	// TODO anonymous-function-creation-expression
+	// TODO object-creation-expression
+	// TODO postfix-increment-expression
+	// TODO postfix-decrement-expression
+	// TODO prefix-increment-expression
+	// TODO prefix-decrement-expression
+	// TODO byref-assignment-expression
+	// TODO shell-command-expression
+	// TODO (   expression   )
+
+	// ------------------- MARK: unary-expression -------------------
+
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-unary-expression
+
+	// unary-expression:
+	//    exponentiation-expression
+	//    unary-op-expression
+	//    error-control-expression
+	//    cast-expression
+
+	// These operators associate right-to-left.
+
+	// TODO unary-expression is a "instanceof Operator" - https://phplang.org/spec/10-expressions.html#grammar-instanceof-expression
+
+	// TODO exponentiation-expression
+
+	// unary-op-expression
+
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-unary-op-expression
+
+	// unary-op-expression:
+	//    unary-operator   unary-expression
+
+	// unary-operator: one of
+	//    +   -   ~
+
+	// TODO unary-op-expression - constraints
+	if parser.isTokenType(lexer.OperatorOrPunctuatorToken, false) && slices.Contains([]string{"+", "-", "~"}, parser.at().Value) {
+
+	}
+
+	// TODO unary-op-expression
+
+	// TODO error-control-expression
+	// TODO cast-expression
+
+	return ast.NewEmptyExpression(), fmt.Errorf("Parser error: Unsupported expression type: %s", parser.at())
+}
+
+func (parser *Parser) parseLiteral() (ast.IExpression, error) {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-literal
 
 	// literal:
@@ -500,53 +633,5 @@ func (parser *Parser) parsePrimaryExpression() (ast.IExpression, error) {
 		return ast.NewNullLiteralExpression(), nil
 	}
 
-	// TODO array-creation-expression
-	// TODO intrinsic
-	// TODO anonymous-function-creation-expression
-	// TODO object-creation-expression
-	// TODO postfix-increment-expression
-	// TODO postfix-decrement-expression
-	// TODO prefix-increment-expression
-	// TODO prefix-decrement-expression
-	// TODO byref-assignment-expression
-	// TODO shell-command-expression
-	// TODO (   expression   )
-
-	// ------------------- MARK: unary-expression -------------------
-
-	// Spec: https://phplang.org/spec/10-expressions.html#grammar-unary-expression
-
-	// unary-expression:
-	//    exponentiation-expression
-	//    unary-op-expression
-	//    error-control-expression
-	//    cast-expression
-
-	// These operators associate right-to-left.
-
-	// TODO unary-expression is a "instanceof Operator" - https://phplang.org/spec/10-expressions.html#grammar-instanceof-expression
-
-	// TODO exponentiation-expression
-
-	// unary-op-expression
-
-	// Spec: https://phplang.org/spec/10-expressions.html#grammar-unary-op-expression
-
-	// unary-op-expression:
-	//    unary-operator   unary-expression
-
-	// unary-operator: one of
-	//    +   -   ~
-
-	// TODO unary-op-expression - constraints
-	if parser.isTokenType(lexer.OperatorOrPunctuatorToken, false) && slices.Contains([]string{"+", "-", "~"}, parser.at().Value) {
-
-	}
-
-	// TODO unary-op-expression
-
-	// TODO error-control-expression
-	// TODO cast-expression
-
-	return ast.NewEmptyExpression(), fmt.Errorf("Parser error: Unsupported expression type: %s", parser.at())
+	return ast.NewEmptyExpression(), fmt.Errorf("parseLiteral: Unsupported literal: %s", parser.at())
 }

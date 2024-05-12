@@ -14,6 +14,7 @@ const (
 	NullLiteralExpr        NodeType = "NullLiteralExpression"
 	VariableNameExpr       NodeType = "VariableNameExpression"
 	SimpleVariableExpr     NodeType = "SimpleVariableExpression"
+	FunctionCallExpr       NodeType = "FunctionCallExpression"
 	SimpleAssignmentExpr   NodeType = "SimpleAssignmentExpression"
 	ConstantAccessExpr     NodeType = "ConstantAccessExpression"
 	CompoundAssignmentExpr NodeType = "CompoundAssignmentExpression"

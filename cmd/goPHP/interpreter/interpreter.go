@@ -52,6 +52,8 @@ func (interpreter *Interpreter) process(stmt ast.IStatement) (IRuntimeValue, err
 		return interpreter.processSimpleVariableExpression(ast.ExprToSimpleVarExpr(stmt))
 	case ast.SimpleAssignmentExpr:
 		return interpreter.processSimpleAssignmentExpression(ast.ExprToSimpleAssignExpr(stmt))
+	case ast.FunctionCallExpr:
+		return interpreter.processFunctionCallExpression(ast.ExprToFuncCallExpr(stmt))
 	case ast.ConstantAccessExpr:
 		return interpreter.processConstantAccessExpression(ast.ExprToConstAccessExpr(stmt))
 	case ast.CompoundAssignmentExpr:
@@ -80,7 +82,7 @@ func (interpreter *Interpreter) processEchoStatement(stmt ast.IEchoStatement) (I
 			return NewVoidRuntimeValue(), err
 		} else {
 			var str string
-			str, err = runtimeValueToString(runtimeValue)
+			str, err = lib_strval(runtimeValue)
 			if err != nil {
 				return NewVoidRuntimeValue(), err
 			}
@@ -116,6 +118,23 @@ func (interpreter *Interpreter) processSimpleAssignmentExpression(expr ast.ISimp
 	}
 
 	return interpreter.env.declareVariable(variableName, value)
+}
+
+func (interpreter *Interpreter) processFunctionCallExpression(expr ast.IFunctionCallExpression) (IRuntimeValue, error) {
+	nativeFunction, err := interpreter.env.lookupNativeFunction(expr.GetFunctionName())
+	if err != nil {
+		return NewVoidRuntimeValue(), err
+	}
+
+	functionArguments := make([]IRuntimeValue, len(expr.GetArguments()))
+	for index, arg := range expr.GetArguments() {
+		runtimeValue, err := interpreter.process(arg)
+		if err != nil {
+			return NewVoidRuntimeValue(), err
+		}
+		functionArguments[index] = runtimeValue
+	}
+	return nativeFunction(functionArguments, interpreter.env)
 }
 
 func (interpreter *Interpreter) processConstantAccessExpression(expr ast.IConstantAccessExpression) (IRuntimeValue, error) {
@@ -203,4 +222,5 @@ func (interpreter *Interpreter) processCoalesceExpression(expr ast.ICoalesceExpr
 	// TODO processCoalesceExpression - handle uninitialized variables
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-coalesce-expression
 	// Note that the semantics of ?? is similar to isset so that uninitialized variables will not produce warnings when used in e1.
+	// TODO use isset here
 }

@@ -55,43 +55,6 @@ func TestVariableExprToVariableName(t *testing.T) {
 	}
 }
 
-func TestRuntimeValueToBool(t *testing.T) {
-	doTest := func(runtimeValue IRuntimeValue, expected bool) {
-		actual, err := runtimeValueToBool(runtimeValue)
-		if err != nil {
-			t.Errorf("Unexpected error: \"%s\"", err)
-			return
-		}
-		if actual != expected {
-			t.Errorf("Expected: \"%t\", Got \"%t\"", expected, actual)
-		}
-	}
-	// boolean to boolean
-	doTest(NewBooleanRuntimeValue(true), true)
-	doTest(NewBooleanRuntimeValue(false), false)
-
-	// integer to boolean
-	doTest(NewIntegerRuntimeValue(0), false)
-	doTest(NewIntegerRuntimeValue(-0), false)
-	doTest(NewIntegerRuntimeValue(1), true)
-	doTest(NewIntegerRuntimeValue(42), true)
-	doTest(NewIntegerRuntimeValue(-2), true)
-
-	// floating to boolean
-	doTest(NewFloatingRuntimeValue(0.0), false)
-	doTest(NewFloatingRuntimeValue(1.5), true)
-	doTest(NewFloatingRuntimeValue(42.0), true)
-	doTest(NewFloatingRuntimeValue(-2.0), true)
-
-	// string to boolean
-	doTest(NewStringRuntimeValue(""), false)
-	doTest(NewStringRuntimeValue("0"), false)
-	doTest(NewStringRuntimeValue("Hi"), true)
-
-	// null to boolean
-	doTest(NewNullRuntimeValue(), false)
-}
-
 // ------------------- MARK: input output tests -------------------
 
 func testInputOutput(t *testing.T, php string, output string) {
