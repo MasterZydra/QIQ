@@ -146,6 +146,24 @@ func TestVariableDeclaration(t *testing.T) {
 	)
 }
 
+func TestCalculation(t *testing.T) {
+	// TODO additive and multiplicative expressions
+	// Integer
+	testInputOutput(t, `<?php $a = 42; echo $a += 1;`, "43")
+	testInputOutput(t, `<?php $a = 42; echo $a -= 1;`, "41")
+	testInputOutput(t, `<?php $a = 42; echo $a *= 2;`, "84")
+	testInputOutput(t, `<?php $a = 42; echo $a /= 2;`, "21")
+	testInputOutput(t, `<?php $a = 42; echo $a %= 5;`, "2")
+	testInputOutput(t, `<?php $a = 2; echo $a **= 4;`, "16")
+
+	// Floating
+	testInputOutput(t, `<?php $a = 42.0; echo $a += 1;`, "43")
+	testInputOutput(t, `<?php $a = 42.0; echo $a -= 1;`, "41")
+	testInputOutput(t, `<?php $a = 42.0; echo $a *= 2;`, "84")
+	testInputOutput(t, `<?php $a = 42.0; echo $a /= 2;`, "21")
+	testInputOutput(t, `<?php $a = 2.0; echo $a **= 4;`, "16")
+}
+
 func TestConstantDeclaration(t *testing.T) {
 	testInputOutput(t,
 		`<?php const TRUTH = 42; const PI = "3.141";echo TRUTH, PI;`,
@@ -157,5 +175,12 @@ func TestConditional(t *testing.T) {
 	testInputOutput(t,
 		`<?php echo 1 ? "a" : "b"; echo 0 ? "b" : "a"; echo false ?: "a";`,
 		"aaa",
+	)
+}
+
+func TestCoalesce(t *testing.T) {
+	testInputOutput(t,
+		`<?php $a = null; echo $a ?? "a"; $a = "b"; echo $a ?? "a"; echo "c" ?? "d";`,
+		"abc",
 	)
 }

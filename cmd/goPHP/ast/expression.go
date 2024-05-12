@@ -305,6 +305,21 @@ func ExprToStrLitExpr(expr IExpression) IStringLiteralExpression {
 	return i.(IStringLiteralExpression)
 }
 
+// ------------------- MARK: NullLiteralExpression -------------------
+
+type INullLiteralExpression interface {
+	IExpression
+}
+
+func NewNullLiteralExpression() *Expression {
+	return NewExpression(NullLiteralExpr)
+}
+
+func ExprToNullLitExpr(expr IExpression) INullLiteralExpression {
+	var i interface{} = expr
+	return i.(INullLiteralExpression)
+}
+
 // ------------------- MARK: SimpleAssignmentExpression -------------------
 
 type ISimpleAssignmentExpression interface {
@@ -437,4 +452,43 @@ func (expr *ConditionalExpression) String() string {
 func ExprToCondExpr(expr IExpression) IConditionalExpression {
 	var i interface{} = expr
 	return i.(IConditionalExpression)
+}
+
+// ------------------- MARK: CoalesceExpression -------------------
+
+type ICoalesceExpression interface {
+	IExpression
+	GetCondition() IExpression
+	GetElseExpr() IExpression
+}
+
+type CoalesceExpression struct {
+	expr     IExpression
+	cond     IExpression
+	elseExpr IExpression
+}
+
+func NewCoalesceExpression(cond IExpression, elseExpr IExpression) *CoalesceExpression {
+	return &CoalesceExpression{expr: NewExpression(CoalesceExpr), cond: cond, elseExpr: elseExpr}
+}
+
+func (expr *CoalesceExpression) GetKind() NodeType {
+	return expr.expr.GetKind()
+}
+
+func (expr *CoalesceExpression) GetCondition() IExpression {
+	return expr.cond
+}
+
+func (expr *CoalesceExpression) GetElseExpr() IExpression {
+	return expr.elseExpr
+}
+
+func (expr *CoalesceExpression) String() string {
+	return fmt.Sprintf("{%s - condition: %s, elseExpr: %s }", expr.GetKind(), expr.cond, expr.elseExpr)
+}
+
+func ExprToCoalesceExpr(expr IExpression) ICoalesceExpression {
+	var i interface{} = expr
+	return i.(ICoalesceExpression)
 }

@@ -314,6 +314,22 @@ func TestAssignmentExpression(t *testing.T) {
 	}
 }
 
+func TestCoalesceExpression(t *testing.T) {
+	program, err := NewParser().ProduceAST(`<?php "a" ?? "b";`)
+	if err != nil {
+		t.Errorf("Unexpected error: \"%s\"", err)
+		return
+	}
+	expected := ast.NewCoalesceExpression(
+		ast.NewStringLiteralExpression("a", ast.DoubleQuotedString),
+		ast.NewStringLiteralExpression("b", ast.DoubleQuotedString),
+	)
+	actual := ast.ExprToCoalesceExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
+	if expected.String() != actual.String() {
+		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
+	}
+}
+
 func TestConstDeclaration(t *testing.T) {
 	program, err := NewParser().ProduceAST(`<?php const PI = 3.141, ZERO = 0;`)
 	if err != nil {

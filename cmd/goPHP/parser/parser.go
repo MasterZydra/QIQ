@@ -234,7 +234,7 @@ func (parser *Parser) parseAssignmentExpression() (ast.IExpression, error) {
 	//    conditional-expression   ?   expression(opt)   :   coalesce-expression
 
 	// coalesce-expression
-	expr, err := parser.parsePrimaryExpression()
+	expr, err := parser.parseCoalesceExpression()
 	if err != nil {
 		return ast.NewEmptyExpression(), err
 	}
@@ -268,7 +268,7 @@ func (parser *Parser) parseAssignmentExpression() (ast.IExpression, error) {
 	if ast.IsVariableExpression(expr) && parser.isToken(lexer.OperatorOrPunctuatorToken, "=", true) {
 		value, err := parser.parseAssignmentExpression()
 		if err != nil {
-			return ast.NewEmptyExpression(), nil
+			return ast.NewEmptyExpression(), err
 		}
 		return ast.NewSimpleAssignmentExpression(expr, value), nil
 	}
@@ -301,7 +301,33 @@ func (parser *Parser) parseCoalesceExpression() (ast.IExpression, error) {
 	//    logical-inc-OR-expression-1
 	//    logical-inc-OR-expression-1   ??   coalesce-expression
 
-	// TODO parseLogicalIncOrExpression1()
+	// logical-inc-OR-expression-1
+	expr, err := parser.parseLogicalIncOrExpression1()
+	if err != nil {
+		return ast.NewEmptyExpression(), err
+	}
+
+	// logical-inc-OR-expression-1   ??   coalesce-expression
+	if parser.isToken(lexer.OperatorOrPunctuatorToken, "??", true) {
+		elseExpr, err := parser.parseCoalesceExpression()
+		if err != nil {
+			return ast.NewEmptyExpression(), err
+		}
+
+		return ast.NewCoalesceExpression(expr, elseExpr), nil
+	}
+
+	return expr, nil
+}
+
+func (parser *Parser) parseLogicalIncOrExpression1() (ast.IExpression, error) {
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-logical-inc-OR-expression-1
+
+	// logical-inc-OR-expression-1:
+	//    logical-AND-expression-1
+	//    logical-inc-OR-expression-1   ||   logical-AND-expression-1
+
+	// TODO logical-inc-OR-expression-1
 	return parser.parsePrimaryExpression()
 }
 
@@ -467,6 +493,11 @@ func (parser *Parser) parsePrimaryExpression() (ast.IExpression, error) {
 
 		// TODO heredoc-string-literal
 		// TODO nowdoc-string-literal
+	}
+
+	// null-literal
+	if parser.isToken(lexer.KeywordToken, "NULL", true) {
+		return ast.NewNullLiteralExpression(), nil
 	}
 
 	// TODO array-creation-expression

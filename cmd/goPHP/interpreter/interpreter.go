@@ -43,7 +43,7 @@ func (interpreter *Interpreter) process(stmt ast.IStatement) (IRuntimeValue, err
 		return interpreter.processEchoStatement(ast.StmtToEchoStatement(stmt))
 
 	// Expressions
-	case ast.BooleanLiteralExpr, ast.IntegerLiteralExpr, ast.FloatingLiteralExpr, ast.StringLiteralExpr:
+	case ast.BooleanLiteralExpr, ast.IntegerLiteralExpr, ast.FloatingLiteralExpr, ast.StringLiteralExpr, ast.NullLiteralExpr:
 		return exprToRuntimeValue(stmt)
 	case ast.TextNode:
 		interpreter.print(ast.ExprToTextExpr(stmt).GetValue())
@@ -58,6 +58,8 @@ func (interpreter *Interpreter) process(stmt ast.IStatement) (IRuntimeValue, err
 		return interpreter.processCompoundAssignmentExpression(ast.ExprToCompoundAssignExpr(stmt))
 	case ast.ConditionalExpr:
 		return interpreter.processConditionalExpression(ast.ExprToCondExpr(stmt))
+	case ast.CoalesceExpr:
+		return interpreter.processCoalesceExpression(ast.ExprToCoalesceExpr(stmt))
 
 	default:
 		return NewVoidRuntimeValue(), fmt.Errorf("Interpreter error: Unsupported statement or expression: %s", stmt)
@@ -150,17 +152,55 @@ func (interpreter *Interpreter) processCompoundAssignmentExpression(expr ast.ICo
 }
 
 func (interpreter *Interpreter) processConditionalExpression(expr ast.IConditionalExpression) (IRuntimeValue, error) {
-	isConditionTrue, err := interpreter.processCondition(expr.GetCondition())
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-conditional-expression
+
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-conditional-expression
+	// Given the expression "e1 ? e2 : e3", e1 is evaluated first and converted to bool if it has another type.
+	runtimeValue, isConditionTrue, err := interpreter.processCondition(expr.GetCondition())
 	if err != nil {
 		return NewVoidRuntimeValue(), err
 	}
 
-	if !isConditionTrue {
+	if isConditionTrue {
+		if expr.GetIfExpr() != nil {
+			// Spec: https://phplang.org/spec/10-expressions.html#grammar-conditional-expression
+			// If the result is TRUE, then and only then is e2 evaluated, and the result and its type become the result
+			// and type of the whole expression.
+			return interpreter.process(expr.GetIfExpr())
+		} else {
+			// Spec: https://phplang.org/spec/10-expressions.html#grammar-conditional-expression
+			// There is a sequence point after the evaluation of e1.
+			// If e2 is omitted, the result and type of the whole expression is the value
+			// and type of e1 (before the conversion to bool).
+			return runtimeValue, nil
+		}
+	} else {
+		// Spec: https://phplang.org/spec/10-expressions.html#grammar-conditional-expression
+		// Otherwise, then and only then is e3 evaluated, and the result and its type become the result
+		// and type of the whole expression.
 		return interpreter.process(expr.GetElseExpr())
 	}
-	if expr.GetIfExpr() == nil {
-		return interpreter.process(expr.GetCondition())
-	} else {
-		return interpreter.process(expr.GetIfExpr())
+}
+
+func (interpreter *Interpreter) processCoalesceExpression(expr ast.ICoalesceExpression) (IRuntimeValue, error) {
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-coalesce-expression
+
+	cond, err := interpreter.process(expr.GetCondition())
+	if err != nil {
+		return NewVoidRuntimeValue(), err
 	}
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-coalesce-expression
+	// Given the expression e1 ?? e2, if e1 is set and not NULL (i.e. TRUE for isset), then the result is e1.
+	if cond.GetType() != NullValue {
+		return cond, nil
+	}
+
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-coalesce-expression
+	// Otherwise, then and only then is e2 evaluated, and the result becomes the result of the whole expression.
+	// There is a sequence point after the evaluation of e1.
+	return interpreter.process(expr.GetElseExpr())
+
+	// TODO processCoalesceExpression - handle uninitialized variables
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-coalesce-expression
+	// Note that the semantics of ?? is similar to isset so that uninitialized variables will not produce warnings when used in e1.
 }
