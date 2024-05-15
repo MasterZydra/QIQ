@@ -588,3 +588,48 @@ func NewAdditiveExpression(lhs IExpression, operator string, rhs IExpression) *E
 func NewMultiplicativeExpression(lhs IExpression, operator string, rhs IExpression) *EqualityExpression {
 	return &EqualityExpression{expr: NewExpression(MultiplicativeExpr), lhs: lhs, operator: operator, rhs: rhs}
 }
+
+// ------------------- MARK: UnaryOpExpression -------------------
+
+type IUnaryOpExpression interface {
+	IExpression
+	GetOperator() string
+	GetExpression() IExpression
+}
+
+type UnaryOpExpression struct {
+	expr       IExpression
+	operator   string
+	expression IExpression
+}
+
+func NewUnaryOpExpression(operator string, expression IExpression) *UnaryOpExpression {
+	return &UnaryOpExpression{expr: NewExpression(UnaryOpExpr), operator: operator, expression: expression}
+}
+
+func (expr *UnaryOpExpression) GetKind() NodeType {
+	return expr.expr.GetKind()
+}
+
+func (expr *UnaryOpExpression) GetOperator() string {
+	return expr.operator
+}
+
+func (expr *UnaryOpExpression) GetExpression() IExpression {
+	return expr.expression
+}
+
+func (expr *UnaryOpExpression) String() string {
+	return fmt.Sprintf("{%s - operator: \"%s\" expression: %s }", expr.GetKind(), expr.operator, expr.expression)
+}
+
+func ExprToUnaryOpExpr(expr IExpression) IUnaryOpExpression {
+	var i interface{} = expr
+	return i.(IUnaryOpExpression)
+}
+
+// ------------------- MARK: LogicalNotExpression -------------------
+
+func NewLogicalNotExpression(expression IExpression) *UnaryOpExpression {
+	return &UnaryOpExpression{expr: NewExpression(LogicalNotExpr), operator: "!", expression: expression}
+}

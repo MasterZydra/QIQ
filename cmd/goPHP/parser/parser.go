@@ -5,7 +5,6 @@ import (
 	"GoPHP/cmd/goPHP/common"
 	"GoPHP/cmd/goPHP/lexer"
 	"fmt"
-	"slices"
 	"strings"
 )
 
@@ -240,7 +239,7 @@ func (parser *Parser) parseAssignmentExpression() (ast.IExpression, error) {
 	}
 
 	// conditional-expression   ?   expression(opt)   :   coalesce-expression
-	if parser.isToken(lexer.OperatorOrPunctuatorToken, "?", true) {
+	for parser.isToken(lexer.OperatorOrPunctuatorToken, "?", true) {
 		var ifExpr ast.IExpression = nil
 		if !parser.isToken(lexer.OperatorOrPunctuatorToken, ":", false) {
 			ifExpr, err = parser.parseExpression()
@@ -255,7 +254,7 @@ func (parser *Parser) parseAssignmentExpression() (ast.IExpression, error) {
 		if err != nil {
 			return ast.NewEmptyExpression(), err
 		}
-		return ast.NewConditionalExpression(expr, ifExpr, elseExpr), nil
+		expr = ast.NewConditionalExpression(expr, ifExpr, elseExpr)
 	}
 
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-simple-assignment-expression
@@ -391,13 +390,13 @@ func (parser *Parser) parseEqualityExpression() (ast.IExpression, error) {
 		return ast.NewEmptyExpression(), err
 	}
 
-	if parser.isTokenType(lexer.OperatorOrPunctuatorToken, false) && common.IsEqualityOperator(parser.at().Value) {
+	for parser.isTokenType(lexer.OperatorOrPunctuatorToken, false) && common.IsEqualityOperator(parser.at().Value) {
 		operator := parser.eat().Value
 		rhs, err := parser.parserRelationalExpression()
 		if err != nil {
 			return ast.NewEmptyExpression(), err
 		}
-		return ast.NewEqualityExpression(lhs, operator, rhs), nil
+		lhs = ast.NewEqualityExpression(lhs, operator, rhs)
 	}
 	return lhs, nil
 }
@@ -443,14 +442,15 @@ func (parser *Parser) parseAdditiveExpression() (ast.IExpression, error) {
 		return ast.NewEmptyExpression(), err
 	}
 
-	if parser.isTokenType(lexer.OperatorOrPunctuatorToken, false) && common.IsAdditiveOperator(parser.at().Value) {
+	for parser.isTokenType(lexer.OperatorOrPunctuatorToken, false) && common.IsAdditiveOperator(parser.at().Value) {
 		operator := parser.eat().Value
 		rhs, err := parser.parseMultiplicativeExpression()
 		if err != nil {
 			return ast.NewEmptyExpression(), err
 		}
-		return ast.NewAdditiveExpression(lhs, operator, rhs), nil
+		lhs = ast.NewAdditiveExpression(lhs, operator, rhs)
 	}
+
 	return lhs, nil
 }
 
@@ -468,13 +468,13 @@ func (parser *Parser) parseMultiplicativeExpression() (ast.IExpression, error) {
 		return ast.NewEmptyExpression(), err
 	}
 
-	if parser.isTokenType(lexer.OperatorOrPunctuatorToken, false) && common.IsMultiplicativeOperator(parser.at().Value) {
+	for parser.isTokenType(lexer.OperatorOrPunctuatorToken, false) && common.IsMultiplicativeOperator(parser.at().Value) {
 		operator := parser.eat().Value
 		rhs, err := parser.parseLogicalNotExpression()
 		if err != nil {
 			return ast.NewEmptyExpression(), err
 		}
-		return ast.NewMultiplicativeExpression(lhs, operator, rhs), nil
+		lhs = ast.NewMultiplicativeExpression(lhs, operator, rhs)
 	}
 	return lhs, nil
 }
@@ -486,7 +486,64 @@ func (parser *Parser) parseLogicalNotExpression() (ast.IExpression, error) {
 	//    instanceof-expression
 	//    !   instanceof-expression
 
-	// TODO logical-NOT-expression
+	isNotExpression := parser.isToken(lexer.OperatorOrPunctuatorToken, "!", true)
+
+	expr, err := parser.parseInstanceofExpression()
+	if err != nil {
+		return ast.NewEmptyExpression(), err
+	}
+
+	if isNotExpression {
+		return ast.NewLogicalNotExpression(expr), nil
+	}
+	return expr, nil
+}
+
+func (parser *Parser) parseInstanceofExpression() (ast.IExpression, error) {
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-instanceof-expression
+
+	// instanceof-expression:
+	//    unary-expression
+	//    instanceof-subject   instanceof   class-type-designator
+
+	// instanceof-subject:
+	//    instanceof-expression
+
+	// TODO instanceof-expression
+	return parser.parseUnaryExpression()
+}
+
+func (parser *Parser) parseUnaryExpression() (ast.IExpression, error) {
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-unary-expression
+
+	// unary-expression:
+	//    exponentiation-expression
+	//    unary-op-expression
+	//    error-control-expression
+	//    cast-expression
+
+	// These operators associate right-to-left.
+
+	// TODO exponentiation-expression
+
+	// unary-op-expression
+
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-unary-op-expression
+
+	// unary-op-expression:
+	//    unary-operator   unary-expression
+
+	// unary-operator: one of
+	//    +   -   ~
+
+	// TODO unary-op-expression - constraints
+	if parser.isTokenType(lexer.OperatorOrPunctuatorToken, false) && common.IsUnaryOperator(parser.at().Value) {
+		// TODO unary-op-expression
+	}
+
+	// TODO error-control-expression
+	// TODO cast-expression
+
 	return parser.parsePrimaryExpression()
 }
 
@@ -509,7 +566,6 @@ func (parser *Parser) parsePrimaryExpression() (ast.IExpression, error) {
 	//    byref-assignment-expression
 	//    shell-command-expression
 	//    (   expression   )
-	// Spec-Fix: Added
 
 	// ------------------- MARK: variable -------------------
 
@@ -675,42 +731,6 @@ func (parser *Parser) parsePrimaryExpression() (ast.IExpression, error) {
 	// TODO byref-assignment-expression
 	// TODO shell-command-expression
 	// TODO (   expression   )
-
-	// ------------------- MARK: unary-expression -------------------
-
-	// Spec: https://phplang.org/spec/10-expressions.html#grammar-unary-expression
-
-	// unary-expression:
-	//    exponentiation-expression
-	//    unary-op-expression
-	//    error-control-expression
-	//    cast-expression
-
-	// These operators associate right-to-left.
-
-	// TODO unary-expression is a "instanceof Operator" - https://phplang.org/spec/10-expressions.html#grammar-instanceof-expression
-
-	// TODO exponentiation-expression
-
-	// unary-op-expression
-
-	// Spec: https://phplang.org/spec/10-expressions.html#grammar-unary-op-expression
-
-	// unary-op-expression:
-	//    unary-operator   unary-expression
-
-	// unary-operator: one of
-	//    +   -   ~
-
-	// TODO unary-op-expression - constraints
-	if parser.isTokenType(lexer.OperatorOrPunctuatorToken, false) && slices.Contains([]string{"+", "-", "~"}, parser.at().Value) {
-
-	}
-
-	// TODO unary-op-expression
-
-	// TODO error-control-expression
-	// TODO cast-expression
 
 	return ast.NewEmptyExpression(), fmt.Errorf("Parser error: Unsupported expression type: %s", parser.at())
 }

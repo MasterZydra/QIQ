@@ -338,6 +338,25 @@ func TestAssignmentExpression(t *testing.T) {
 	if expected2.String() != actual2.String() {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected2, actual2)
 	}
+
+	program, err = NewParser().ProduceAST(`<?php 1 ? "a" : 2 ? "b": "c";`)
+	if err != nil {
+		t.Errorf("Unexpected error: \"%s\"", err)
+		return
+	}
+	expected2 = ast.NewConditionalExpression(
+		ast.NewIntegerLiteralExpression(1),
+		ast.NewStringLiteralExpression("a", ast.DoubleQuotedString),
+		ast.NewConditionalExpression(
+			ast.NewIntegerLiteralExpression(2),
+			ast.NewStringLiteralExpression("b", ast.DoubleQuotedString),
+			ast.NewStringLiteralExpression("c", ast.DoubleQuotedString),
+		),
+	)
+	actual2 = ast.ExprToCondExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
+	if expected2.String() != actual2.String() {
+		t.Errorf("Expected: \"%s\", Got \"%s\"", expected2, actual2)
+	}
 }
 
 func TestCoalesceExpression(t *testing.T) {
@@ -351,6 +370,23 @@ func TestCoalesceExpression(t *testing.T) {
 		ast.NewStringLiteralExpression("b", ast.DoubleQuotedString),
 	)
 	actual := ast.ExprToCoalesceExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
+	if expected.String() != actual.String() {
+		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
+	}
+
+	program, err = NewParser().ProduceAST(`<?php "a" ?? "b" ?? "c";`)
+	if err != nil {
+		t.Errorf("Unexpected error: \"%s\"", err)
+		return
+	}
+	expected = ast.NewCoalesceExpression(
+		ast.NewStringLiteralExpression("a", ast.DoubleQuotedString),
+		ast.NewCoalesceExpression(
+			ast.NewStringLiteralExpression("b", ast.DoubleQuotedString),
+			ast.NewStringLiteralExpression("c", ast.DoubleQuotedString),
+		),
+	)
+	actual = ast.ExprToCoalesceExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
 	}
@@ -414,6 +450,19 @@ func TestMultiplicativeExpression(t *testing.T) {
 		ast.NewStringLiteralExpression("234", ast.DoubleQuotedString), "*", ast.NewIntegerLiteralExpression(12),
 	)
 	actual := ast.ExprToEqualExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
+	if expected.String() != actual.String() || expected.GetOperator() != actual.GetOperator() {
+		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
+	}
+}
+
+func TestLogicalNotExpression(t *testing.T) {
+	program, err := NewParser().ProduceAST(`<?php !true;`)
+	if err != nil {
+		t.Errorf("Unexpected error: \"%s\"", err)
+		return
+	}
+	expected := ast.NewLogicalNotExpression(ast.NewBooleanLiteralExpression(true))
+	actual := ast.ExprToUnaryOpExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() || expected.GetOperator() != actual.GetOperator() {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
 	}

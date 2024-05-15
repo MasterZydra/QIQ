@@ -125,6 +125,13 @@ func TestCalculation(t *testing.T) {
 	// testInputOutput(t, `<?php echo 2 ** 4;`, "16")
 	testInputOutput(t, `<?php $a = 2; echo $a **= 4;`, "16")
 
+	// Combined additions and multiplications
+	testInputOutput(t, `<?php echo 31 + 21 + 11;`, "63")
+	testInputOutput(t, `<?php echo 4 * 3 * 2;`, "24")
+	testInputOutput(t, `<?php echo 2 + 3 * 4;`, "14")
+	testInputOutput(t, `<?php echo 2 * 3 + 4 * 5 + 6;`, "32")
+	testInputOutput(t, `<?php echo 2 + 3 * 4 + 5 * 6;`, "44")
+
 	// Floating
 	testInputOutput(t, `<?php echo 42.0 + 1.5;`, "43.5")
 	testInputOutput(t, `<?php $a = 42.0; echo $a += 1.5;`, "43.5")
@@ -172,4 +179,11 @@ func TestComparison(t *testing.T) {
 	testInputOutput(t, `<?php echo "abc" === "abcd" ? "a" : "b";`, "b")
 	testInputOutput(t, `<?php echo "123" !== 123 ? "a" : "b";`, "a")
 	testInputOutput(t, `<?php echo "123" === 123 ? "a" : "b";`, "b")
+}
+
+func TestLogicalExpression(t *testing.T) {
+	// Not
+	testInputOutput(t, `<?php echo !true ? "a" : "b";`, "b")
+	testInputOutput(t, `<?php echo !false ? "a" : "b";`, "a")
+	testInputOutput(t, `<?php echo !42 ? "a" : "b";`, "b")
 }

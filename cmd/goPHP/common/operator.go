@@ -37,3 +37,11 @@ func IsMultiplicativeOperator(op string) bool {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-multiplicative-expression
 	return slices.Contains(multiplicativeOperators, op)
 }
+
+// Spec: https://phplang.org/spec/10-expressions.html#grammar-unary-operator
+var unaryOperators = []string{"+", "-", "~"}
+
+func IsUnaryOperator(op string) bool {
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-unary-operator
+	return slices.Contains(unaryOperators, op)
+}

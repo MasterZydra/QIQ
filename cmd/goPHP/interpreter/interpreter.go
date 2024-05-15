@@ -68,6 +68,8 @@ func (interpreter *Interpreter) process(stmt ast.IStatement) (IRuntimeValue, err
 		return interpreter.processAdditiveExpression(ast.ExprToEqualExpr(stmt))
 	case ast.MultiplicativeExpr:
 		return interpreter.processMultiplicativeExpression(ast.ExprToEqualExpr(stmt))
+	case ast.LogicalNotExpr:
+		return interpreter.processLogicalNotExpression(ast.ExprToUnaryOpExpr(stmt))
 
 	default:
 		return NewVoidRuntimeValue(), fmt.Errorf("Interpreter error: Unsupported statement or expression: %s", stmt)
@@ -259,4 +261,16 @@ func (interpreter *Interpreter) processAdditiveExpression(expr ast.IEqualityExpr
 
 func (interpreter *Interpreter) processMultiplicativeExpression(expr ast.IEqualityExpression) (IRuntimeValue, error) {
 	return interpreter.processAdditiveExpression(expr)
+}
+
+func (interpreter *Interpreter) processLogicalNotExpression(expr ast.IUnaryOpExpression) (IRuntimeValue, error) {
+	runtimeValue, err := interpreter.process(expr.GetExpression())
+	if err != nil {
+		return NewVoidRuntimeValue(), err
+	}
+	runtimeValue, err = runtimeValueToValueType(BooleanValue, runtimeValue)
+	if err != nil {
+		return NewVoidRuntimeValue(), err
+	}
+	return NewBooleanRuntimeValue(!runtimeValToBoolRuntimeVal(runtimeValue).GetValue()), nil
 }

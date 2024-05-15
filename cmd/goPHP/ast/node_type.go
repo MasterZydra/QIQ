@@ -23,6 +23,8 @@ const (
 	EqualityExpr           NodeType = "EqualityExpression"
 	AdditiveExpr           NodeType = "AdditiveExpression"
 	MultiplicativeExpr     NodeType = "MultiplicativeExpression"
+	UnaryOpExpr            NodeType = "UnaryOpExpression"
+	LogicalNotExpr         NodeType = "LogicalNotExpression"
 	// Statements
 	EchoStmt             NodeType = "EchoStatement"
 	ConstDeclarationStmt NodeType = "ConstDeclarationStatement"
