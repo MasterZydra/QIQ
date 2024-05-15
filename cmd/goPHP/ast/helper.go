@@ -23,5 +23,6 @@ func IsVariableExpression(expr IExpression) bool {
 	//    member-call-expression
 	//    scoped-call-expression
 	//    function-call-expression
+
 	return slices.Contains(variableExpressions, expr.GetKind())
 }

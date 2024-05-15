@@ -531,3 +531,60 @@ func ExprToCoalesceExpr(expr IExpression) ICoalesceExpression {
 	var i interface{} = expr
 	return i.(ICoalesceExpression)
 }
+
+// ------------------- MARK: EqualityExpression -------------------
+
+type IEqualityExpression interface {
+	IExpression
+	GetLHS() IExpression
+	GetOperator() string
+	GetRHS() IExpression
+}
+
+type EqualityExpression struct {
+	expr     IExpression
+	lhs      IExpression
+	operator string
+	rhs      IExpression
+}
+
+func NewEqualityExpression(lhs IExpression, operator string, rhs IExpression) *EqualityExpression {
+	return &EqualityExpression{expr: NewExpression(EqualityExpr), lhs: lhs, operator: operator, rhs: rhs}
+}
+
+func (expr *EqualityExpression) GetKind() NodeType {
+	return expr.expr.GetKind()
+}
+
+func (expr *EqualityExpression) GetLHS() IExpression {
+	return expr.lhs
+}
+
+func (expr *EqualityExpression) GetOperator() string {
+	return expr.operator
+}
+
+func (expr *EqualityExpression) GetRHS() IExpression {
+	return expr.rhs
+}
+
+func (expr *EqualityExpression) String() string {
+	return fmt.Sprintf("{%s - lhs: %s, operator: \"%s\" rhs: %s }", expr.GetKind(), expr.lhs, expr.operator, expr.rhs)
+}
+
+func ExprToEqualExpr(expr IExpression) IEqualityExpression {
+	var i interface{} = expr
+	return i.(IEqualityExpression)
+}
+
+// ------------------- MARK: AdditiveExpression -------------------
+
+func NewAdditiveExpression(lhs IExpression, operator string, rhs IExpression) *EqualityExpression {
+	return &EqualityExpression{expr: NewExpression(AdditiveExpr), lhs: lhs, operator: operator, rhs: rhs}
+}
+
+// ------------------- MARK: MultiplicativeExpression -------------------
+
+func NewMultiplicativeExpression(lhs IExpression, operator string, rhs IExpression) *EqualityExpression {
+	return &EqualityExpression{expr: NewExpression(MultiplicativeExpr), lhs: lhs, operator: operator, rhs: rhs}
+}

@@ -62,6 +62,12 @@ func (interpreter *Interpreter) process(stmt ast.IStatement) (IRuntimeValue, err
 		return interpreter.processConditionalExpression(ast.ExprToCondExpr(stmt))
 	case ast.CoalesceExpr:
 		return interpreter.processCoalesceExpression(ast.ExprToCoalesceExpr(stmt))
+	case ast.EqualityExpr:
+		return interpreter.processEqualityExpression(ast.ExprToEqualExpr(stmt))
+	case ast.AdditiveExpr:
+		return interpreter.processAdditiveExpression(ast.ExprToEqualExpr(stmt))
+	case ast.MultiplicativeExpr:
+		return interpreter.processMultiplicativeExpression(ast.ExprToEqualExpr(stmt))
 
 	default:
 		return NewVoidRuntimeValue(), fmt.Errorf("Interpreter error: Unsupported statement or expression: %s", stmt)
@@ -223,4 +229,34 @@ func (interpreter *Interpreter) processCoalesceExpression(expr ast.ICoalesceExpr
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-coalesce-expression
 	// Note that the semantics of ?? is similar to isset so that uninitialized variables will not produce warnings when used in e1.
 	// TODO use isset here
+}
+
+func (interpreter *Interpreter) processEqualityExpression(expr ast.IEqualityExpression) (IRuntimeValue, error) {
+	lhs, err := interpreter.process(expr.GetLHS())
+	if err != nil {
+		return NewVoidRuntimeValue(), err
+	}
+
+	rhs, err := interpreter.process(expr.GetRHS())
+	if err != nil {
+		return NewVoidRuntimeValue(), err
+	}
+	return compare(lhs, expr.GetOperator(), rhs)
+}
+
+func (interpreter *Interpreter) processAdditiveExpression(expr ast.IEqualityExpression) (IRuntimeValue, error) {
+	lhs, err := interpreter.process(expr.GetLHS())
+	if err != nil {
+		return NewVoidRuntimeValue(), err
+	}
+
+	rhs, err := interpreter.process(expr.GetRHS())
+	if err != nil {
+		return NewVoidRuntimeValue(), err
+	}
+	return calculate(lhs, expr.GetOperator(), rhs)
+}
+
+func (interpreter *Interpreter) processMultiplicativeExpression(expr ast.IEqualityExpression) (IRuntimeValue, error) {
+	return interpreter.processAdditiveExpression(expr)
 }

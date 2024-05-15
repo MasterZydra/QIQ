@@ -328,6 +328,165 @@ func (parser *Parser) parseLogicalIncOrExpression1() (ast.IExpression, error) {
 	//    logical-inc-OR-expression-1   ||   logical-AND-expression-1
 
 	// TODO logical-inc-OR-expression-1
+	return parser.parseLogicalAndExpression1()
+}
+
+func (parser *Parser) parseLogicalAndExpression1() (ast.IExpression, error) {
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-logical-AND-expression-1
+
+	// logical-AND-expression-1:
+	//    bitwise-inc-OR-expression
+	//    logical-AND-expression-1   &&   bitwise-inc-OR-expression
+
+	// TODO logical-AND-expression-1
+	return parser.parseBitwiseIncOrExpression()
+}
+
+func (parser *Parser) parseBitwiseIncOrExpression() (ast.IExpression, error) {
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-bitwise-inc-OR-expression
+
+	// bitwise-inc-OR-expression:
+	//    bitwise-exc-OR-expression
+	//    bitwise-inc-OR-expression   |   bitwise-exc-OR-expression
+
+	// TODO bitwise-inc-OR-expression
+	return parser.parseBitwiseExcOrExpression()
+}
+
+func (parser *Parser) parseBitwiseExcOrExpression() (ast.IExpression, error) {
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-bitwise-exc-OR-expression
+
+	// bitwise-exc-OR-expression:
+	//    bitwise-AND-expression
+	//    bitwise-exc-OR-expression   ^   bitwise-AND-expression
+
+	// TODO bitwise-exc-OR-expression
+	return parser.parseBitwiseAndExpression()
+}
+
+func (parser *Parser) parseBitwiseAndExpression() (ast.IExpression, error) {
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-bitwise-AND-expression
+
+	// bitwise-AND-expression:
+	//    equality-expression
+	//    bitwise-AND-expression   &   equality-expression
+
+	// TODO bitwise-AND-expression
+	return parser.parseEqualityExpression()
+}
+
+func (parser *Parser) parseEqualityExpression() (ast.IExpression, error) {
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-equality-expression
+
+	// equality-expression:
+	//    relational-expression
+	//    equality-expression   ==   relational-expression
+	//    equality-expression   !=   relational-expression
+	//    equality-expression   <>   relational-expression
+	//    equality-expression   ===   relational-expression
+	//    equality-expression   !==   relational-expression
+
+	lhs, err := parser.parserRelationalExpression()
+	if err != nil {
+		return ast.NewEmptyExpression(), err
+	}
+
+	if parser.isTokenType(lexer.OperatorOrPunctuatorToken, false) && common.IsEqualityOperator(parser.at().Value) {
+		operator := parser.eat().Value
+		rhs, err := parser.parserRelationalExpression()
+		if err != nil {
+			return ast.NewEmptyExpression(), err
+		}
+		return ast.NewEqualityExpression(lhs, operator, rhs), nil
+	}
+	return lhs, nil
+}
+
+func (parser *Parser) parserRelationalExpression() (ast.IExpression, error) {
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-relational-expression
+
+	// relational-expression:
+	//    shift-expression
+	//    relational-expression   <   shift-expression
+	//    relational-expression   >   shift-expression
+	//    relational-expression   <=   shift-expression
+	//    relational-expression   >=   shift-expression
+	//    relational-expression   <=>   shift-expression
+
+	// TODO relational-expression
+	return parser.parseShiftExpression()
+}
+
+func (parser *Parser) parseShiftExpression() (ast.IExpression, error) {
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-shift-expression
+
+	// shift-expression:
+	//    additive-expression
+	//    shift-expression   <<   additive-expression
+	//    shift-expression   >>   additive-expression
+
+	// TODO shift-expression
+	return parser.parseAdditiveExpression()
+}
+
+func (parser *Parser) parseAdditiveExpression() (ast.IExpression, error) {
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-additive-expression
+
+	// additive-expression:
+	//    multiplicative-expression
+	//    additive-expression   +   multiplicative-expression
+	//    additive-expression   -   multiplicative-expression
+	//    additive-expression   .   multiplicative-expression
+
+	lhs, err := parser.parseMultiplicativeExpression()
+	if err != nil {
+		return ast.NewEmptyExpression(), err
+	}
+
+	if parser.isTokenType(lexer.OperatorOrPunctuatorToken, false) && common.IsAdditiveOperator(parser.at().Value) {
+		operator := parser.eat().Value
+		rhs, err := parser.parseMultiplicativeExpression()
+		if err != nil {
+			return ast.NewEmptyExpression(), err
+		}
+		return ast.NewAdditiveExpression(lhs, operator, rhs), nil
+	}
+	return lhs, nil
+}
+
+func (parser *Parser) parseMultiplicativeExpression() (ast.IExpression, error) {
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-multiplicative-expression
+
+	// multiplicative-expression:
+	//    logical-NOT-expression
+	//    multiplicative-expression   *   logical-NOT-expression
+	//    multiplicative-expression   /   logical-NOT-expression
+	//    multiplicative-expression   %   logical-NOT-expression
+
+	lhs, err := parser.parseLogicalNotExpression()
+	if err != nil {
+		return ast.NewEmptyExpression(), err
+	}
+
+	if parser.isTokenType(lexer.OperatorOrPunctuatorToken, false) && common.IsMultiplicativeOperator(parser.at().Value) {
+		operator := parser.eat().Value
+		rhs, err := parser.parseLogicalNotExpression()
+		if err != nil {
+			return ast.NewEmptyExpression(), err
+		}
+		return ast.NewMultiplicativeExpression(lhs, operator, rhs), nil
+	}
+	return lhs, nil
+}
+
+func (parser *Parser) parseLogicalNotExpression() (ast.IExpression, error) {
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-logical-NOT-expression
+
+	// logical-NOT-expression:
+	//    instanceof-expression
+	//    !   instanceof-expression
+
+	// TODO logical-NOT-expression
 	return parser.parsePrimaryExpression()
 }
 

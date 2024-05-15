@@ -123,6 +123,8 @@ func calculate(operand1 IRuntimeValue, operator string, operand2 IRuntimeValue) 
 		return calculateInteger(runtimeValToIntRuntimeVal(operand1), operator, runtimeValToIntRuntimeVal(operand2))
 	case FloatingValue:
 		return calculateFloating(runtimeValToFloatRuntimeVal(operand1), operator, runtimeValToFloatRuntimeVal(operand2))
+	case StringValue:
+		return calculateString(runtimeValToStrRuntimeVal(operand1), operator, runtimeValToStrRuntimeVal(operand2))
 	default:
 		return NewVoidRuntimeValue(), fmt.Errorf("calculate: Type \"%s\" not implemented", operator)
 	}
@@ -162,4 +164,58 @@ func calculateInteger(operand1 IIntegerRuntimeValue, operator string, operand2 I
 	default:
 		return NewIntegerRuntimeValue(0), fmt.Errorf("calculateInteger: Operator \"%s\" not implemented", operator)
 	}
+}
+
+func calculateString(operand1 IStringRuntimeValue, operator string, operand2 IStringRuntimeValue) (IStringRuntimeValue, error) {
+	switch operator {
+	case ".":
+		return NewStringRuntimeValue(operand1.GetValue() + operand2.GetValue()), nil
+	default:
+		return NewStringRuntimeValue(""), fmt.Errorf("calculateString: Operator \"%s\" not implemented", operator)
+	}
+}
+
+// ------------------- MARK: comparison -------------------
+
+func compare(lhs IRuntimeValue, operator string, rhs IRuntimeValue) (IBooleanRuntimeValue, error) {
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-equality-expression
+
+	// TODO compare - "==", "!=", "<>"
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-equality-expression
+	// Operator == represents value equality, operators != and <> are equivalent and represent value inequality.
+	// For operators ==, !=, and <>, the operands of different types are converted and compared according to the same rules as in relational operators. Two objects of different types are always not equal.
+
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-equality-expression
+	// Operator === represents same type and value equality, or identity, comparison,
+	// and operator !== represents the opposite of ===.
+	// The values are considered identical if they have the same type and compare as equal, with the additional conditions below:
+	//    When comparing two objects, identity operators check to see if the two operands are the exact same object,
+	//    not two different objects of the same type and value.
+	//    Arrays must have the same elements in the same order to be considered identical.
+	//    Strings are identical if they contain the same characters, unlike value comparison operators no conversions are performed for numeric strings.
+	if operator == "===" || operator == "!==" {
+		result := lhs.GetType() == rhs.GetType()
+		if result {
+			switch lhs.GetType() {
+			case BooleanValue:
+				result = runtimeValToBoolRuntimeVal(lhs).GetValue() == runtimeValToBoolRuntimeVal(rhs).GetValue()
+			case FloatingValue:
+				result = runtimeValToFloatRuntimeVal(lhs).GetValue() == runtimeValToFloatRuntimeVal(rhs).GetValue()
+			case IntegerValue:
+				result = runtimeValToIntRuntimeVal(lhs).GetValue() == runtimeValToIntRuntimeVal(rhs).GetValue()
+			case StringValue:
+				result = runtimeValToStrRuntimeVal(lhs).GetValue() == runtimeValToStrRuntimeVal(rhs).GetValue()
+			default:
+				return NewBooleanRuntimeValue(false), fmt.Errorf("compare: Runtime type %s for operator \"===\" not implemented", lhs.GetType())
+			}
+		}
+
+		if operator == "!==" {
+			return NewBooleanRuntimeValue(!result), nil
+		} else {
+			return NewBooleanRuntimeValue(result), nil
+		}
+	}
+
+	return NewBooleanRuntimeValue(false), fmt.Errorf("compare: Operator \"%s\" not implemented", operator)
 }

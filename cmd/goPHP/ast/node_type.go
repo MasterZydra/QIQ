@@ -20,6 +20,9 @@ const (
 	CompoundAssignmentExpr NodeType = "CompoundAssignmentExpression"
 	ConditionalExpr        NodeType = "ConditionalExpression"
 	CoalesceExpr           NodeType = "CoalesceExpression"
+	EqualityExpr           NodeType = "EqualityExpression"
+	AdditiveExpr           NodeType = "AdditiveExpression"
+	MultiplicativeExpr     NodeType = "MultiplicativeExpression"
 	// Statements
 	EchoStmt             NodeType = "EchoStatement"
 	ConstDeclarationStmt NodeType = "ConstDeclarationStatement"

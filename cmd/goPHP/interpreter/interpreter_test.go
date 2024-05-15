@@ -110,21 +110,37 @@ func TestVariableDeclaration(t *testing.T) {
 }
 
 func TestCalculation(t *testing.T) {
-	// TODO additive and multiplicative expressions
 	// Integer
+	testInputOutput(t, `<?php echo 42 + 1;`, "43")
 	testInputOutput(t, `<?php $a = 42; echo $a += 1;`, "43")
+	testInputOutput(t, `<?php echo 42 - 1;`, "41")
 	testInputOutput(t, `<?php $a = 42; echo $a -= 1;`, "41")
+	testInputOutput(t, `<?php echo 42 * 2;`, "84")
 	testInputOutput(t, `<?php $a = 42; echo $a *= 2;`, "84")
+	testInputOutput(t, `<?php echo 42 / 2;`, "21")
 	testInputOutput(t, `<?php $a = 42; echo $a /= 2;`, "21")
+	testInputOutput(t, `<?php echo 42 % 5;`, "2")
 	testInputOutput(t, `<?php $a = 42; echo $a %= 5;`, "2")
+	// TODO exponentiation-expression
+	// testInputOutput(t, `<?php echo 2 ** 4;`, "16")
 	testInputOutput(t, `<?php $a = 2; echo $a **= 4;`, "16")
 
 	// Floating
-	testInputOutput(t, `<?php $a = 42.0; echo $a += 1;`, "43")
-	testInputOutput(t, `<?php $a = 42.0; echo $a -= 1;`, "41")
-	testInputOutput(t, `<?php $a = 42.0; echo $a *= 2;`, "84")
-	testInputOutput(t, `<?php $a = 42.0; echo $a /= 2;`, "21")
+	testInputOutput(t, `<?php echo 42.0 + 1.5;`, "43.5")
+	testInputOutput(t, `<?php $a = 42.0; echo $a += 1.5;`, "43.5")
+	testInputOutput(t, `<?php echo 42 - 1.5;`, "40.5")
+	testInputOutput(t, `<?php $a = 42.0; echo $a -= 1.5;`, "40.5")
+	testInputOutput(t, `<?php echo 42.1 * 2;`, "84.2")
+	testInputOutput(t, `<?php $a = 42.1; echo $a *= 2;`, "84.2")
+	testInputOutput(t, `<?php echo 43.0 / 2;`, "21.5")
+	testInputOutput(t, `<?php $a = 43.0; echo $a /= 2;`, "21.5")
+	// TODO exponentiation-expression
+	// testInputOutput(t, `<?php echo 2.0 ** 4;`, "16")
 	testInputOutput(t, `<?php $a = 2.0; echo $a **= 4;`, "16")
+
+	// String
+	testInputOutput(t, `<?php echo "a" . "bc";`, "abc")
+	testInputOutput(t, `<?php $a = "a"; echo $a .= "bc";`, "abc")
 }
 
 func TestConstantDeclaration(t *testing.T) {
@@ -146,4 +162,14 @@ func TestCoalesce(t *testing.T) {
 		`<?php $a = null; echo $a ?? "a"; $a = "b"; echo $a ?? "a"; echo "c" ?? "d";`,
 		"abc",
 	)
+}
+
+func TestComparison(t *testing.T) {
+	// ===
+	testInputOutput(t, `<?php echo "abc" === "abc" ? "a" : "b";`, "a")
+	testInputOutput(t, `<?php echo "abc" !== "abc" ? "a" : "b";`, "b")
+	testInputOutput(t, `<?php echo "abc" !== "abcd" ? "a" : "b";`, "a")
+	testInputOutput(t, `<?php echo "abc" === "abcd" ? "a" : "b";`, "b")
+	testInputOutput(t, `<?php echo "123" !== 123 ? "a" : "b";`, "a")
+	testInputOutput(t, `<?php echo "123" === 123 ? "a" : "b";`, "b")
 }
