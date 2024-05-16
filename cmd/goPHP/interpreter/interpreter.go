@@ -268,9 +268,9 @@ func (interpreter *Interpreter) processLogicalNotExpression(expr ast.IUnaryOpExp
 	if err != nil {
 		return NewVoidRuntimeValue(), err
 	}
-	runtimeValue, err = runtimeValueToValueType(BooleanValue, runtimeValue)
+	boolValue, err := lib_boolval(runtimeValue)
 	if err != nil {
 		return NewVoidRuntimeValue(), err
 	}
-	return NewBooleanRuntimeValue(!runtimeValToBoolRuntimeVal(runtimeValue).GetValue()), nil
+	return NewBooleanRuntimeValue(!boolValue), nil
 }

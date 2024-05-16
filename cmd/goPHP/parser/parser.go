@@ -730,7 +730,20 @@ func (parser *Parser) parsePrimaryExpression() (ast.IExpression, error) {
 	// TODO prefix-decrement-expression
 	// TODO byref-assignment-expression
 	// TODO shell-command-expression
-	// TODO (   expression   )
+
+	// ------------------- MARK: (   expression   ) -------------------
+
+	if parser.isToken(lexer.OperatorOrPunctuatorToken, "(", true) {
+		expr, err := parser.parseExpression()
+		if err != nil {
+			return ast.NewEmptyExpression(), err
+		}
+		if parser.isToken(lexer.OperatorOrPunctuatorToken, ")", true) {
+			return expr, nil
+		} else {
+			return ast.NewEmptyExpression(), fmt.Errorf("Parser error: Expected \")\". Got: %s", parser.at())
+		}
+	}
 
 	return ast.NewEmptyExpression(), fmt.Errorf("Parser error: Unsupported expression type: %s", parser.at())
 }

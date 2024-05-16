@@ -129,7 +129,9 @@ func TestCalculation(t *testing.T) {
 	testInputOutput(t, `<?php echo 31 + 21 + 11;`, "63")
 	testInputOutput(t, `<?php echo 4 * 3 * 2;`, "24")
 	testInputOutput(t, `<?php echo 2 + 3 * 4;`, "14")
+	testInputOutput(t, `<?php echo (2 + 3) * 4;`, "20")
 	testInputOutput(t, `<?php echo 2 * 3 + 4 * 5 + 6;`, "32")
+	testInputOutput(t, `<?php echo 2 * (3 + 4) * 5 + 6;`, "76")
 	testInputOutput(t, `<?php echo 2 + 3 * 4 + 5 * 6;`, "44")
 
 	// Floating

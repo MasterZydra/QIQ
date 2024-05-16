@@ -75,13 +75,17 @@ func exprToRuntimeValue(expr ast.IExpression) (IRuntimeValue, error) {
 func runtimeValueToValueType(valueType ValueType, runtimeValue IRuntimeValue) (IRuntimeValue, error) {
 	switch valueType {
 	case BooleanValue:
-		return nativeFn_boolval([]IRuntimeValue{runtimeValue}, nil)
+		boolean, err := lib_boolval(runtimeValue)
+		return NewBooleanRuntimeValue(boolean), err
 	case FloatingValue:
-		return nativeFn_floatval([]IRuntimeValue{runtimeValue}, nil)
+		floating, err := lib_floatval(runtimeValue)
+		return NewFloatingRuntimeValue(floating), err
 	case IntegerValue:
-		return nativeFn_intval([]IRuntimeValue{runtimeValue}, nil)
+		integer, err := lib_intval(runtimeValue)
+		return NewIntegerRuntimeValue(integer), err
 	case StringValue:
-		return nativeFn_strval([]IRuntimeValue{runtimeValue}, nil)
+		str, err := lib_strval(runtimeValue)
+		return NewStringRuntimeValue(str), err
 	default:
 		return NewVoidRuntimeValue(), fmt.Errorf("runtimeValueToValueType: Unsupported runtime value: %s", valueType)
 	}

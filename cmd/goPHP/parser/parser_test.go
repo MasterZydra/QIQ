@@ -467,3 +467,20 @@ func TestLogicalNotExpression(t *testing.T) {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
 	}
 }
+
+func TestParenthesizedExpression(t *testing.T) {
+	program, err := NewParser().ProduceAST(`<?php (1+2);`)
+	if err != nil {
+		t.Errorf("Unexpected error: \"%s\"", err)
+		return
+	}
+	expected := ast.NewAdditiveExpression(
+		ast.NewIntegerLiteralExpression(1),
+		"+",
+		ast.NewIntegerLiteralExpression(2),
+	)
+	actual := ast.ExprToEqualExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
+	if expected.String() != actual.String() || expected.GetOperator() != actual.GetOperator() {
+		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
+	}
+}
