@@ -23,6 +23,7 @@ const (
 	EqualityExpr           NodeType = "EqualityExpression"
 	AdditiveExpr           NodeType = "AdditiveExpression"
 	MultiplicativeExpr     NodeType = "MultiplicativeExpression"
+	ExponentiationExpr     NodeType = "ExponentiationExpression"
 	UnaryOpExpr            NodeType = "UnaryOpExpression"
 	LogicalNotExpr         NodeType = "LogicalNotExpression"
 	// Statements

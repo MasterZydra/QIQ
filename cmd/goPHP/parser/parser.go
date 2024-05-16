@@ -524,8 +524,6 @@ func (parser *Parser) parseUnaryExpression() (ast.IExpression, error) {
 
 	// These operators associate right-to-left.
 
-	// TODO exponentiation-expression
-
 	// unary-op-expression
 
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-unary-op-expression
@@ -543,7 +541,38 @@ func (parser *Parser) parseUnaryExpression() (ast.IExpression, error) {
 
 	// TODO error-control-expression
 	// TODO cast-expression
+	return parser.parseExponentiationExpression()
+}
 
+func (parser *Parser) parseExponentiationExpression() (ast.IExpression, error) {
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-exponentiation-expression
+
+	// exponentiation-expression:
+	//    clone-expression
+	//    clone-expression   **   exponentiation-expression
+
+	lhs, err := parser.parseCloneExpression()
+	if err != nil {
+		return ast.NewEmptyExpression(), err
+	}
+	if parser.isToken(lexer.OperatorOrPunctuatorToken, "**", true) {
+		rhs, err := parser.parseExponentiationExpression()
+		if err != nil {
+			return ast.NewEmptyExpression(), err
+		}
+		return ast.NewExponentiationExpression(lhs, rhs), nil
+	}
+	return lhs, nil
+}
+
+func (parser *Parser) parseCloneExpression() (ast.IExpression, error) {
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-clone-expression
+
+	// clone-expression:
+	//	primary-expression
+	//	clone   primary-expression
+
+	// TODO clone-expression
 	return parser.parsePrimaryExpression()
 }
 

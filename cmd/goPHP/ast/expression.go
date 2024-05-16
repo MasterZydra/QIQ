@@ -589,6 +589,12 @@ func NewMultiplicativeExpression(lhs IExpression, operator string, rhs IExpressi
 	return &EqualityExpression{expr: NewExpression(MultiplicativeExpr), lhs: lhs, operator: operator, rhs: rhs}
 }
 
+// ------------------- MARK: ExponentiationExpression -------------------
+
+func NewExponentiationExpression(lhs IExpression, rhs IExpression) *EqualityExpression {
+	return &EqualityExpression{expr: NewExpression(ExponentiationExpr), lhs: lhs, operator: "**", rhs: rhs}
+}
+
 // ------------------- MARK: UnaryOpExpression -------------------
 
 type IUnaryOpExpression interface {

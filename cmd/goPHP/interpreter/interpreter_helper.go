@@ -145,7 +145,7 @@ func calculateFloating(operand1 IFloatingRuntimeValue, operator string, operand2
 	case "/":
 		return NewFloatingRuntimeValue(operand1.GetValue() / operand2.GetValue()), nil
 	case "**":
-		return NewFloatingRuntimeValue(math.Pow(operand1.GetValue(), float64(operand2.GetValue()))), nil
+		return NewFloatingRuntimeValue(math.Pow(operand1.GetValue(), operand2.GetValue())), nil
 	default:
 		return NewFloatingRuntimeValue(0), fmt.Errorf("calculateInteger: Operator \"%s\" not implemented", operator)
 	}

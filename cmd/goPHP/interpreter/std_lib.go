@@ -5,8 +5,6 @@ import (
 	"math"
 )
 
-// Executing function -> not case sensitive
-
 func registerNativeFunctions(environment *Environment) {
 	environment.nativeFunctions["boolval"] = nativeFn_boolval
 	environment.nativeFunctions["floatval"] = nativeFn_floatval

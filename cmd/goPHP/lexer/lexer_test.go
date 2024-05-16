@@ -105,6 +105,9 @@ func TestOperatorOrPunctuator(t *testing.T) {
 
 	testTokenize(t, "<?php a = 1",
 		[]*Token{NewToken(StartTagToken, ""), NewToken(NameToken, "a"), NewToken(OperatorOrPunctuatorToken, "=")})
+
+	testTokenize(t, "<?php a ** 1",
+		[]*Token{NewToken(StartTagToken, ""), NewToken(NameToken, "a"), NewToken(OperatorOrPunctuatorToken, "**")})
 }
 
 func TestVariableVarname(t *testing.T) {

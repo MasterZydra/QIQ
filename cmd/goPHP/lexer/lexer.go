@@ -740,7 +740,7 @@ func (lexer *Lexer) getOperatorOrPunctuator(eat bool) string {
 		return op
 	}
 	if op := lexer.nextN(2); slices.Contains([]string{
-		"->", "++", "--", "** <<", ">>", "<=", ">=", "==", "!=", "&&",
+		"->", "++", "--", "**", "<<", ">>", "<=", ">=", "==", "!=", "&&",
 		"||", "*=", "/=", "%=", "+=", "-=", ".=", "&=", "^=", "|=", "??",
 	}, op) {
 		if eat {

@@ -64,10 +64,8 @@ func (interpreter *Interpreter) process(stmt ast.IStatement) (IRuntimeValue, err
 		return interpreter.processCoalesceExpression(ast.ExprToCoalesceExpr(stmt))
 	case ast.EqualityExpr:
 		return interpreter.processEqualityExpression(ast.ExprToEqualExpr(stmt))
-	case ast.AdditiveExpr:
+	case ast.AdditiveExpr, ast.MultiplicativeExpr, ast.ExponentiationExpr:
 		return interpreter.processAdditiveExpression(ast.ExprToEqualExpr(stmt))
-	case ast.MultiplicativeExpr:
-		return interpreter.processMultiplicativeExpression(ast.ExprToEqualExpr(stmt))
 	case ast.LogicalNotExpr:
 		return interpreter.processLogicalNotExpression(ast.ExprToUnaryOpExpr(stmt))
 
@@ -257,10 +255,6 @@ func (interpreter *Interpreter) processAdditiveExpression(expr ast.IEqualityExpr
 		return NewVoidRuntimeValue(), err
 	}
 	return calculate(lhs, expr.GetOperator(), rhs)
-}
-
-func (interpreter *Interpreter) processMultiplicativeExpression(expr ast.IEqualityExpression) (IRuntimeValue, error) {
-	return interpreter.processAdditiveExpression(expr)
 }
 
 func (interpreter *Interpreter) processLogicalNotExpression(expr ast.IUnaryOpExpression) (IRuntimeValue, error) {

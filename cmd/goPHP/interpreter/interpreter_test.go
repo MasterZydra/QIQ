@@ -121,8 +121,7 @@ func TestCalculation(t *testing.T) {
 	testInputOutput(t, `<?php $a = 42; echo $a /= 2;`, "21")
 	testInputOutput(t, `<?php echo 42 % 5;`, "2")
 	testInputOutput(t, `<?php $a = 42; echo $a %= 5;`, "2")
-	// TODO exponentiation-expression
-	// testInputOutput(t, `<?php echo 2 ** 4;`, "16")
+	testInputOutput(t, `<?php echo 2 ** 4;`, "16")
 	testInputOutput(t, `<?php $a = 2; echo $a **= 4;`, "16")
 
 	// Combined additions and multiplications
@@ -143,8 +142,7 @@ func TestCalculation(t *testing.T) {
 	testInputOutput(t, `<?php $a = 42.1; echo $a *= 2;`, "84.2")
 	testInputOutput(t, `<?php echo 43.0 / 2;`, "21.5")
 	testInputOutput(t, `<?php $a = 43.0; echo $a /= 2;`, "21.5")
-	// TODO exponentiation-expression
-	// testInputOutput(t, `<?php echo 2.0 ** 4;`, "16")
+	testInputOutput(t, `<?php echo 2.0 ** 4;`, "16")
 	testInputOutput(t, `<?php $a = 2.0; echo $a **= 4;`, "16")
 
 	// String
