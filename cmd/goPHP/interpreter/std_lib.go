@@ -9,6 +9,7 @@ func registerNativeFunctions(environment *Environment) {
 	environment.nativeFunctions["boolval"] = nativeFn_boolval
 	environment.nativeFunctions["floatval"] = nativeFn_floatval
 	environment.nativeFunctions["intval"] = nativeFn_intval
+	environment.nativeFunctions["is_null"] = nativeFn_is_null
 	environment.nativeFunctions["strval"] = nativeFn_strval
 }
 
@@ -164,6 +165,21 @@ func lib_intval(runtimeValue IRuntimeValue) (int64, error) {
 	// TODO lib_intval - resource
 	// Spec: https://phplang.org/spec/08-conversions.html#converting-to-integer-type
 	// If the source is a resource, the result is the resource’s unique ID.
+}
+
+// ------------------- MARK: is_null -------------------
+
+func nativeFn_is_null(args []IRuntimeValue, env *Environment) (IRuntimeValue, error) {
+	if len(args) != 1 {
+		return NewVoidRuntimeValue(), fmt.Errorf("Uncaught ArgumentCountError: is_null() expects exactly 1 argument, 0 given")
+	}
+
+	return NewBooleanRuntimeValue(lib_is_null(args[0])), nil
+}
+
+func lib_is_null(runtimeValue IRuntimeValue) bool {
+	// Spec: https://www.php.net/manual/en/function.is-null.php
+	return runtimeValue.GetType() == NullValue
 }
 
 // ------------------- MARK: strval -------------------

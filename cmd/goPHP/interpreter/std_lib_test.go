@@ -116,6 +116,17 @@ func TestLibIntval(t *testing.T) {
 	doTest(NewNullRuntimeValue(), 0)
 }
 
+func TestLibIsNull(t *testing.T) {
+	actual := lib_is_null(NewNullRuntimeValue())
+	if expected := true; actual != expected {
+		t.Errorf("Expected: \"%t\", Got \"%t\"", expected, actual)
+	}
+	actual = lib_is_null(NewIntegerRuntimeValue(42))
+	if expected := false; actual != expected {
+		t.Errorf("Expected: \"%t\", Got \"%t\"", expected, actual)
+	}
+}
+
 func TestLibStrval(t *testing.T) {
 	doTest := func(runtimeValue IRuntimeValue, expected string) {
 		actual, err := lib_strval(runtimeValue)

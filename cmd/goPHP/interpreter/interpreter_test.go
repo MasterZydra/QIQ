@@ -187,3 +187,20 @@ func TestLogicalExpression(t *testing.T) {
 	testInputOutput(t, `<?php echo !false ? "a" : "b";`, "a")
 	testInputOutput(t, `<?php echo !42 ? "a" : "b";`, "b")
 }
+
+func TestWarningUndefinedVariable(t *testing.T) {
+	testInputOutput(t,
+		`<?php echo is_null($a) ? "a" : "b";`,
+		"Warning: Undefined variable $a\na",
+	)
+
+	testInputOutput(t,
+		`<?php echo intval($a);`,
+		"Warning: Undefined variable $a\n0",
+	)
+
+	testInputOutput(t,
+		`<?php echo intval($$a);`,
+		"Warning: Undefined variable $a\nWarning: Undefined variable $\n0",
+	)
+}

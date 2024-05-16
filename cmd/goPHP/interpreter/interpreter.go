@@ -104,7 +104,13 @@ func (interpreter *Interpreter) processSimpleVariableExpression(expr ast.ISimple
 		return NewVoidRuntimeValue(), err
 	}
 
-	return interpreter.env.lookupVariable(variableName)
+	runtimeValue, err := interpreter.env.lookupVariable(variableName)
+	if err != nil {
+		// TODO only if E_ALL | E_WARNING
+		// TODO own error struct? With "type" -> warning, notice, error
+		interpreter.println(err.Error())
+	}
+	return runtimeValue, nil
 }
 
 func (interpreter *Interpreter) processSimpleAssignmentExpression(expr ast.ISimpleAssignmentExpression) (IRuntimeValue, error) {

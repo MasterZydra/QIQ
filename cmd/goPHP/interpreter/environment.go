@@ -52,11 +52,11 @@ func (env *Environment) resolveVariable(variableName string) (*Environment, erro
 func (env *Environment) lookupVariable(variableName string) (IRuntimeValue, error) {
 	environment, err := env.resolveVariable(variableName)
 	if err != nil {
-		return NewVoidRuntimeValue(), err
+		return NewNullRuntimeValue(), fmt.Errorf("Warning: Undefined variable %s", variableName)
 	}
 	value, ok := environment.variables[variableName]
 	if !ok {
-		return NewVoidRuntimeValue(), fmt.Errorf("Interpreter error: Undeclared variable \"%s\"", variableName)
+		return NewNullRuntimeValue(), fmt.Errorf("Warning: Undefined variable %s", variableName)
 	}
 	return value, nil
 }

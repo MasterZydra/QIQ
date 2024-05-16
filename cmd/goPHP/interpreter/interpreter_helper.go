@@ -11,6 +11,10 @@ func (interpreter *Interpreter) print(str string) {
 	interpreter.result += str
 }
 
+func (interpreter *Interpreter) println(str string) {
+	interpreter.print(str + "\n")
+}
+
 func (interpreter *Interpreter) processCondition(expr ast.IExpression) (IRuntimeValue, bool, error) {
 	runtimeValue, err := interpreter.process(expr)
 	if err != nil {
@@ -38,7 +42,7 @@ func (interpreter *Interpreter) varExprToVarName(expr ast.IExpression) (string, 
 			}
 			runtimeValue, err := interpreter.env.lookupVariable(variableName)
 			if err != nil {
-				return "", err
+				interpreter.println(err.Error())
 			}
 			valueStr, err := lib_strval(runtimeValue)
 			if err != nil {
