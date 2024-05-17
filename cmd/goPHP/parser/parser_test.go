@@ -499,3 +499,29 @@ func TestParenthesizedExpression(t *testing.T) {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
 	}
 }
+
+func TestEmptyIntrinsic(t *testing.T) {
+	program, err := NewParser().ProduceAST(`<?php empty(false);`)
+	if err != nil {
+		t.Errorf("Unexpected error: \"%s\"", err)
+		return
+	}
+	expected := ast.NewEmptyIntrinsic(ast.NewBooleanLiteralExpression(false))
+	actual := ast.ExprToFuncCallExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
+	if expected.String() != actual.String() {
+		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
+	}
+}
+
+func TestIssetIntrinsic(t *testing.T) {
+	program, err := NewParser().ProduceAST(`<?php isset($a);`)
+	if err != nil {
+		t.Errorf("Unexpected error: \"%s\"", err)
+		return
+	}
+	expected := ast.NewIssetIntrinsic([]ast.IExpression{ast.NewSimpleVariableExpression(ast.NewVariableNameExpression("$a"))})
+	actual := ast.ExprToFuncCallExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
+	if expected.String() != actual.String() {
+		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
+	}
+}

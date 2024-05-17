@@ -54,6 +54,10 @@ func (interpreter *Interpreter) process(stmt ast.IStatement) (IRuntimeValue, err
 		return interpreter.processSimpleAssignmentExpression(ast.ExprToSimpleAssignExpr(stmt))
 	case ast.FunctionCallExpr:
 		return interpreter.processFunctionCallExpression(ast.ExprToFuncCallExpr(stmt))
+	case ast.EmptyIntrinsicExpr:
+		return interpreter.processEmptyIntrinsicExpression(ast.ExprToFuncCallExpr(stmt))
+	case ast.IssetIntrinsicExpr:
+		return interpreter.processIssetExpression(ast.ExprToFuncCallExpr(stmt))
 	case ast.ConstantAccessExpr:
 		return interpreter.processConstantAccessExpression(ast.ExprToConstAccessExpr(stmt))
 	case ast.CompoundAssignmentExpr:
@@ -99,12 +103,7 @@ func (interpreter *Interpreter) processEchoStatement(stmt ast.IEchoStatement) (I
 }
 
 func (interpreter *Interpreter) processSimpleVariableExpression(expr ast.ISimpleVariableExpression) (IRuntimeValue, error) {
-	variableName, err := interpreter.varExprToVarName(expr)
-	if err != nil {
-		return NewVoidRuntimeValue(), err
-	}
-
-	runtimeValue, err := interpreter.env.lookupVariable(variableName)
+	runtimeValue, err := interpreter.lookupVariable(expr, interpreter.env)
 	if err != nil {
 		// TODO only if E_ALL | E_WARNING
 		// TODO own error struct? With "type" -> warning, notice, error
@@ -147,6 +146,64 @@ func (interpreter *Interpreter) processFunctionCallExpression(expr ast.IFunction
 		functionArguments[index] = runtimeValue
 	}
 	return nativeFunction(functionArguments, interpreter.env)
+}
+
+func (interpreter *Interpreter) processEmptyIntrinsicExpression(expr ast.IFunctionCallExpression) (IRuntimeValue, error) {
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-empty-intrinsic
+
+	// This intrinsic returns TRUE if the variable or value designated by expression is empty,
+	// where empty means that the variable designated by it does not exist, or it exists and its value compares equal to FALSE.
+	// Otherwise, the intrinsic returns FALSE.
+
+	// The following values are considered empty:
+	// FALSE, 0, 0.0, "" (empty string), "0", NULL, an empty array, and any uninitialized variable.
+
+	// If this intrinsic is used with an expression that designates a dynamic property,
+	// then if the class of that property has an __isset, that method is called.
+	// If that method returns TRUE, the value of the property is retrieved (which may call __get if defined)
+	// and compared to FALSE as described above. Otherwise, the result is FALSE.
+
+	var runtimeValue IRuntimeValue
+	var err error
+	if ast.IsVariableExpression(expr.GetArguments()[0]) {
+		runtimeValue, err = interpreter.lookupVariable(expr.GetArguments()[0], interpreter.env)
+		if err != nil {
+			return NewBooleanRuntimeValue(true), nil
+		}
+	} else {
+		runtimeValue, err = interpreter.process(expr.GetArguments()[0])
+		if err != nil {
+			return NewVoidRuntimeValue(), err
+		}
+	}
+
+	boolean, err := lib_boolval(runtimeValue)
+	if err != nil {
+		return NewVoidRuntimeValue(), err
+	}
+	return NewBooleanRuntimeValue(!boolean), nil
+
+	// TODO processEmptyIntrinsicExpression - array - implement in lib_boolval
+}
+
+func (interpreter *Interpreter) processIssetExpression(expr ast.IFunctionCallExpression) (IRuntimeValue, error) {
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-isset-intrinsic
+
+	// This intrinsic returns TRUE if all the variables designated by variabless are set and their values are not NULL.
+	// Otherwise, it returns FALSE.
+
+	// If this intrinsic is used with an expression that designate a dynamic property,
+	// then if the class of that property has an __isset, that method is called.
+	// If that method returns TRUE, the value of the property is retrieved (which may call __get if defined)
+	// and if it is not NULL, the result is TRUE. Otherwise, the result is FALSE.
+
+	for _, arg := range expr.GetArguments() {
+		runtimeValue, _ := interpreter.lookupVariable(arg, interpreter.env)
+		if runtimeValue.GetType() == NullValue {
+			return NewBooleanRuntimeValue(false), nil
+		}
+	}
+	return NewBooleanRuntimeValue(true), nil
 }
 
 func (interpreter *Interpreter) processConstantAccessExpression(expr ast.IConstantAccessExpression) (IRuntimeValue, error) {

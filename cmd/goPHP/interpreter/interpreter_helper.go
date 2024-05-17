@@ -25,6 +25,15 @@ func (interpreter *Interpreter) processCondition(expr ast.IExpression) (IRuntime
 	return runtimeValue, boolean, err
 }
 
+func (interpreter *Interpreter) lookupVariable(expr ast.IExpression, env *Environment) (IRuntimeValue, error) {
+	variableName, err := interpreter.varExprToVarName(expr)
+	if err != nil {
+		return NewVoidRuntimeValue(), err
+	}
+
+	return env.lookupVariable(variableName)
+}
+
 // Convert a variable expression into the interpreted variable name
 func (interpreter *Interpreter) varExprToVarName(expr ast.IExpression) (string, error) {
 	switch expr.GetKind() {

@@ -750,7 +750,15 @@ func (parser *Parser) parsePrimaryExpression() (ast.IExpression, error) {
 	}
 
 	// TODO array-creation-expression
-	// TODO intrinsic
+
+	// ------------------- MARK: intrinsic -------------------
+
+	if parser.isToken(lexer.KeywordToken, "empty", false) || parser.isToken(lexer.KeywordToken, "eval", false) ||
+		parser.isToken(lexer.KeywordToken, "exit", false) || parser.isToken(lexer.KeywordToken, "die", false) ||
+		parser.isToken(lexer.KeywordToken, "isset", false) {
+		return parser.parseIntrinsic()
+	}
+
 	// TODO anonymous-function-creation-expression
 	// TODO object-creation-expression
 	// TODO postfix-increment-expression
@@ -855,4 +863,79 @@ func (parser *Parser) parseLiteral() (ast.IExpression, error) {
 	}
 
 	return ast.NewEmptyExpression(), fmt.Errorf("parseLiteral: Unsupported literal: %s", parser.at())
+}
+
+func (parser *Parser) parseIntrinsic() (ast.IExpression, error) {
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-intrinsic
+
+	// intrinsic:
+	//    empty-intrinsic
+	//    eval-intrinsic
+	//    exit-intrinsic
+	//    isset-intrinsic
+
+	// ------------------- MARK: empty-intrinsic -------------------
+
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-empty-intrinsic
+
+	// empty-intrinsic:
+	//    empty   (   expression   )
+
+	if parser.isToken(lexer.KeywordToken, "empty", true) {
+		if !parser.isToken(lexer.OperatorOrPunctuatorToken, "(", true) {
+			return ast.NewEmptyExpression(), fmt.Errorf("Expected \"(\". Got: \"%s\"", parser.at())
+		}
+		expr, err := parser.parseExpression()
+		if err != nil {
+			return ast.NewEmptyExpression(), err
+		}
+		if !parser.isToken(lexer.OperatorOrPunctuatorToken, ")", true) {
+			return ast.NewEmptyExpression(), fmt.Errorf("Expected \")\". Got: \"%s\"", parser.at())
+		}
+		return ast.NewEmptyIntrinsic(expr), nil
+	}
+
+	// TODO eval-intrinsic
+	// TODO exit-intrinsic
+
+	// ------------------- MARK: isset-intrinsic -------------------
+
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-isset-intrinsic
+
+	// isset-intrinsic:
+	//    isset   (   variable-list   ,(opt)   )
+
+	// variable-list:
+	//    variable
+	//    variable-list   ,   variable
+
+	if parser.isToken(lexer.KeywordToken, "isset", true) {
+		if !parser.isToken(lexer.OperatorOrPunctuatorToken, "(", true) {
+			return ast.NewEmptyExpression(), fmt.Errorf("Expected \"(\". Got: \"%s\"", parser.at())
+		}
+		args := []ast.IExpression{}
+		for {
+			if parser.isToken(lexer.OperatorOrPunctuatorToken, ")", true) {
+				break
+			}
+
+			arg, err := parser.parseExpression()
+			if err != nil {
+				return ast.NewEmptyExpression(), err
+			}
+			if !ast.IsVariableExpression(arg) {
+				return ast.NewEmptyExpression(), fmt.Errorf("Fatal error: Cannot use isset() on the result of an expression")
+			}
+			args = append(args, arg)
+
+			if parser.isToken(lexer.OperatorOrPunctuatorToken, ",", true) ||
+				parser.isToken(lexer.OperatorOrPunctuatorToken, ")", false) {
+				continue
+			}
+			return ast.NewEmptyExpression(), fmt.Errorf("Expected \",\" or \")\". Got: %s", parser.at())
+		}
+		return ast.NewIssetIntrinsic(args), nil
+	}
+
+	return ast.NewEmptyExpression(), fmt.Errorf("Parser error: Unsupported intrinsic: %s", parser.at())
 }

@@ -166,6 +166,22 @@ func ExprToFuncCallExpr(expr IExpression) IFunctionCallExpression {
 	return i.(IFunctionCallExpression)
 }
 
+// ------------------- MARK: EmptyIntrinsic -------------------
+
+func NewEmptyIntrinsic(expression IExpression) *FunctionCallExpression {
+	return &FunctionCallExpression{expr: NewExpression(EmptyIntrinsicExpr),
+		functionName: "empty", arguments: []IExpression{expression},
+	}
+}
+
+// ------------------- MARK: IssetIntrinsic -------------------
+
+func NewIssetIntrinsic(arguments []IExpression) *FunctionCallExpression {
+	return &FunctionCallExpression{expr: NewExpression(IssetIntrinsicExpr),
+		functionName: "isset", arguments: arguments,
+	}
+}
+
 // ------------------- MARK: ConstantAccessExpression -------------------
 
 type IConstantAccessExpression interface {

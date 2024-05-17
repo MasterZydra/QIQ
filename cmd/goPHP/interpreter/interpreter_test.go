@@ -204,3 +204,26 @@ func TestWarningUndefinedVariable(t *testing.T) {
 		"Warning: Undefined variable $a\nWarning: Undefined variable $\n0",
 	)
 }
+
+func TestIntrinsic(t *testing.T) {
+	// Empty
+	testInputOutput(t, `<?php echo empty(false) ? "a" : "b";`, "a")
+	testInputOutput(t, `<?php echo empty(true) ? "a" : "b";`, "b")
+	testInputOutput(t, `<?php echo empty(0) ? "a" : "b";`, "a")
+	testInputOutput(t, `<?php echo empty(1) ? "a" : "b";`, "b")
+	testInputOutput(t, `<?php echo empty(0.0) ? "a" : "b";`, "a")
+	testInputOutput(t, `<?php echo empty(2.0) ? "a" : "b";`, "b")
+	testInputOutput(t, `<?php echo empty("") ? "a" : "b";`, "a")
+	testInputOutput(t, `<?php echo empty("0") ? "a" : "b";`, "a")
+	testInputOutput(t, `<?php echo empty("1") ? "a" : "b";`, "b")
+	testInputOutput(t, `<?php echo empty("00") ? "a" : "b";`, "b")
+	testInputOutput(t, `<?php echo empty(null) ? "a" : "b";`, "a")
+	testInputOutput(t, `<?php echo empty($a) ? "a" : "b";`, "a")
+	testInputOutput(t, `<?php $a = 1; echo empty($a) ? "a" : "b";`, "b")
+
+	// Isset
+	testInputOutput(t, `<?php $a = 1; echo isset($a) ? "a" : "b";`, "a")
+	testInputOutput(t, `<?php echo isset($a) ? "a" : "b";`, "b")
+	testInputOutput(t, `<?php $a = 1; echo isset($a, $b) ? "a" : "b";`, "b")
+	testInputOutput(t, `<?php echo isset($a, $b) ? "a" : "b";`, "b")
+}
