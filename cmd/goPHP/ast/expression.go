@@ -215,6 +215,39 @@ func ExprToConstAccessExpr(expr IExpression) IConstantAccessExpression {
 	return i.(IConstantAccessExpression)
 }
 
+// ------------------- MARK: ArrayLiteralExpression -------------------
+
+type IArrayLiteralExpression interface {
+	IExpression
+	GetElements() map[IExpression]IExpression
+}
+
+type ArrayLiteralExpression struct {
+	expr     IExpression
+	elements map[IExpression]IExpression
+}
+
+func NewArrayLiteralExpression(elements map[IExpression]IExpression) *ArrayLiteralExpression {
+	return &ArrayLiteralExpression{expr: NewExpression(ArrayLiteralExpr), elements: elements}
+}
+
+func (expr *ArrayLiteralExpression) GetKind() NodeType {
+	return expr.expr.GetKind()
+}
+
+func (expr *ArrayLiteralExpression) GetElements() map[IExpression]IExpression {
+	return expr.elements
+}
+
+func (expr *ArrayLiteralExpression) String() string {
+	return fmt.Sprintf("{%s - elements: %s }", expr.GetKind(), expr.elements)
+}
+
+func ExprToArrayLitExpr(expr IExpression) IArrayLiteralExpression {
+	var i interface{} = expr
+	return i.(IArrayLiteralExpression)
+}
+
 // ------------------- MARK: BooleanLiteralExpression -------------------
 
 type IBooleanLiteralExpression interface {

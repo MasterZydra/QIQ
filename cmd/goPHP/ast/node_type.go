@@ -7,6 +7,7 @@ const (
 	ProgramNode NodeType = "Program"
 	TextNode    NodeType = "Text"
 	// Expressions
+	ArrayLiteralExpr       NodeType = "ArrayLiteralExpression"
 	BooleanLiteralExpr     NodeType = "BooleanLiteralExpression"
 	IntegerLiteralExpr     NodeType = "IntegerLiteralExpression"
 	FloatingLiteralExpr    NodeType = "FloatingLiteralExpression"

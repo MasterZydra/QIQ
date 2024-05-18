@@ -14,6 +14,10 @@ func TestLibBoolval(t *testing.T) {
 		}
 	}
 
+	// array to boolean
+	doTest(NewArrayRuntimeValue(map[IRuntimeValue]IRuntimeValue{}), false)
+	doTest(NewArrayRuntimeValue(map[IRuntimeValue]IRuntimeValue{NewIntegerRuntimeValue(0): NewIntegerRuntimeValue(42)}), true)
+
 	// boolean to boolean
 	doTest(NewBooleanRuntimeValue(true), true)
 	doTest(NewBooleanRuntimeValue(false), false)
@@ -90,6 +94,10 @@ func TestLibIntval(t *testing.T) {
 		}
 	}
 
+	// array to integer
+	doTest(NewArrayRuntimeValue(map[IRuntimeValue]IRuntimeValue{}), 0)
+	doTest(NewArrayRuntimeValue(map[IRuntimeValue]IRuntimeValue{NewIntegerRuntimeValue(0): NewIntegerRuntimeValue(42)}), 1)
+
 	// boolean to integer
 	doTest(NewBooleanRuntimeValue(true), 1)
 	doTest(NewBooleanRuntimeValue(false), 0)
@@ -138,6 +146,9 @@ func TestLibStrval(t *testing.T) {
 			t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
 		}
 	}
+
+	// array to string
+	doTest(NewArrayRuntimeValue(map[IRuntimeValue]IRuntimeValue{}), "Array")
 
 	// boolean to string
 	doTest(NewBooleanRuntimeValue(true), "1")

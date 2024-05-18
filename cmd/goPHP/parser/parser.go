@@ -741,18 +741,21 @@ func (parser *Parser) parsePrimaryExpression() (ast.IExpression, error) {
 		return ast.NewConstantAccessExpression(parser.eat().Value), nil
 	}
 
-	// ------------------- MARK: literal -------------------
-
+	// literal
 	if parser.isToken(lexer.KeywordToken, "FALSE", false) || parser.isToken(lexer.KeywordToken, "TRUE", false) ||
 		parser.isTokenType(lexer.IntegerLiteralToken, false) || parser.isTokenType(lexer.FloatingLiteralToken, false) ||
 		parser.isTokenType(lexer.StringLiteralToken, false) || parser.isToken(lexer.KeywordToken, "NULL", false) {
 		return parser.parseLiteral()
 	}
 
-	// TODO array-creation-expression
+	// array-creation-expression
+	if (parser.isToken(lexer.KeywordToken, "array", false) &&
+		parser.next(0).TokenType == lexer.OperatorOrPunctuatorToken && parser.next(0).Value == "(") ||
+		parser.isToken(lexer.OperatorOrPunctuatorToken, "[", false) {
+		return parser.parseArrayCreationExpression()
+	}
 
-	// ------------------- MARK: intrinsic -------------------
-
+	// intrinsic
 	if parser.isToken(lexer.KeywordToken, "empty", false) || parser.isToken(lexer.KeywordToken, "eval", false) ||
 		parser.isToken(lexer.KeywordToken, "exit", false) || parser.isToken(lexer.KeywordToken, "die", false) ||
 		parser.isToken(lexer.KeywordToken, "isset", false) {
@@ -786,6 +789,8 @@ func (parser *Parser) parsePrimaryExpression() (ast.IExpression, error) {
 }
 
 func (parser *Parser) parseLiteral() (ast.IExpression, error) {
+	// ------------------- MARK: literal -------------------
+
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-literal
 
 	// literal:
@@ -865,7 +870,78 @@ func (parser *Parser) parseLiteral() (ast.IExpression, error) {
 	return ast.NewEmptyExpression(), fmt.Errorf("parseLiteral: Unsupported literal: %s", parser.at())
 }
 
+func (parser *Parser) parseArrayCreationExpression() (ast.IExpression, error) {
+	// ------------------- MARK: array-creation-expression -------------------
+
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-array-creation-expression
+
+	// array-creation-expression:
+	//    array   (   array-initializer(opt)   )
+	//    [   array-initializer(opt)   ]
+
+	// array-initializer:
+	//    array-initializer-list   ,(opt)
+
+	// array-initializer-list:
+	//    array-element-initializer
+	//    array-element-initializer   ,   array-initializer-list
+
+	// array-element-initializer:
+	//    &(opt)   element-value
+	//    element-key   =>   &(opt)   element-value
+
+	// element-key:
+	//    expression
+
+	// element-value:
+	//    expression
+
+	if !((parser.isToken(lexer.KeywordToken, "array", false) &&
+		parser.next(0).TokenType == lexer.OperatorOrPunctuatorToken && parser.next(0).Value == "(") ||
+		parser.isToken(lexer.OperatorOrPunctuatorToken, "[", true)) {
+		return ast.NewEmptyExpression(), fmt.Errorf("Parser error: Unsupported array creation: %s", parser.at())
+	}
+
+	isShortSyntax := true
+	if parser.isToken(lexer.KeywordToken, "array", false) &&
+		parser.next(0).TokenType == lexer.OperatorOrPunctuatorToken && parser.next(0).Value == "(" {
+		parser.eatN(2)
+		isShortSyntax = false
+	}
+
+	var index int64 = 0
+	elements := map[ast.IExpression]ast.IExpression{}
+	for {
+		if (!isShortSyntax && parser.isToken(lexer.OperatorOrPunctuatorToken, ")", true)) ||
+			(isShortSyntax && parser.isToken(lexer.OperatorOrPunctuatorToken, "]", true)) {
+			break
+		}
+
+		// TODO array-creation-expression - "key => value"
+		element, err := parser.parseExpression()
+		if err != nil {
+			return ast.NewEmptyExpression(), err
+		}
+		elements[ast.NewIntegerLiteralExpression(index)] = element
+		index++
+
+		if parser.isToken(lexer.OperatorOrPunctuatorToken, ",", true) ||
+			(!isShortSyntax && parser.isToken(lexer.OperatorOrPunctuatorToken, ")", false)) ||
+			(isShortSyntax && parser.isToken(lexer.OperatorOrPunctuatorToken, "]", false)) {
+			continue
+		}
+		if isShortSyntax {
+			return ast.NewEmptyExpression(), fmt.Errorf("Expected \",\" or \"]\". Got: %s", parser.at())
+		} else {
+			return ast.NewEmptyExpression(), fmt.Errorf("Expected \",\" or \")\". Got: %s", parser.at())
+		}
+	}
+	return ast.NewArrayLiteralExpression(elements), nil
+}
+
 func (parser *Parser) parseIntrinsic() (ast.IExpression, error) {
+	// ------------------- MARK: intrinsic -------------------
+
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-intrinsic
 
 	// intrinsic:

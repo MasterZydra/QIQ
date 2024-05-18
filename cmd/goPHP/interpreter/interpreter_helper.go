@@ -68,8 +68,22 @@ func (interpreter *Interpreter) varExprToVarName(expr ast.IExpression) (string, 
 
 // ------------------- MARK: RuntimeValue -------------------
 
-func exprToRuntimeValue(expr ast.IExpression) (IRuntimeValue, error) {
+func (interpreter *Interpreter) exprToRuntimeValue(expr ast.IExpression) (IRuntimeValue, error) {
 	switch expr.GetKind() {
+	case ast.ArrayLiteralExpr:
+		elements := map[IRuntimeValue]IRuntimeValue{}
+		for key, element := range ast.ExprToArrayLitExpr(expr).GetElements() {
+			keyValue, err := interpreter.process(key)
+			if err != nil {
+				return NewVoidRuntimeValue(), err
+			}
+			elementValue, err := interpreter.process(element)
+			if err != nil {
+				return NewVoidRuntimeValue(), err
+			}
+			elements[keyValue] = elementValue
+		}
+		return NewArrayRuntimeValue(elements), nil
 	case ast.BooleanLiteralExpr:
 		return NewBooleanRuntimeValue(ast.ExprToBoolLitExpr(expr).GetValue()), nil
 	case ast.IntegerLiteralExpr:

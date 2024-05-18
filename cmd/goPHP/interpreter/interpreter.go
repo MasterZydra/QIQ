@@ -43,8 +43,9 @@ func (interpreter *Interpreter) process(stmt ast.IStatement) (IRuntimeValue, err
 		return interpreter.processEchoStatement(ast.StmtToEchoStatement(stmt))
 
 	// Expressions
-	case ast.BooleanLiteralExpr, ast.IntegerLiteralExpr, ast.FloatingLiteralExpr, ast.StringLiteralExpr, ast.NullLiteralExpr:
-		return exprToRuntimeValue(stmt)
+	case ast.ArrayLiteralExpr, ast.BooleanLiteralExpr, ast.IntegerLiteralExpr, ast.FloatingLiteralExpr, ast.StringLiteralExpr,
+		ast.NullLiteralExpr:
+		return interpreter.exprToRuntimeValue(stmt)
 	case ast.TextNode:
 		interpreter.print(ast.ExprToTextExpr(stmt).GetValue())
 		return NewVoidRuntimeValue(), nil
@@ -182,8 +183,6 @@ func (interpreter *Interpreter) processEmptyIntrinsicExpression(expr ast.IFuncti
 		return NewVoidRuntimeValue(), err
 	}
 	return NewBooleanRuntimeValue(!boolean), nil
-
-	// TODO processEmptyIntrinsicExpression - array - implement in lib_boolval
 }
 
 func (interpreter *Interpreter) processIssetExpression(expr ast.IFunctionCallExpression) (IRuntimeValue, error) {

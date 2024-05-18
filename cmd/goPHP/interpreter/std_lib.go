@@ -30,6 +30,10 @@ func lib_boolval(runtimeValue IRuntimeValue) (bool, error) {
 	// Spec: https://phplang.org/spec/08-conversions.html#converting-to-boolean-type
 
 	switch runtimeValue.GetType() {
+	case ArrayValue:
+		// Spec: https://phplang.org/spec/08-conversions.html#converting-to-boolean-type
+		// If the source is an array with zero elements, the result value is FALSE; otherwise, the result value is TRUE.
+		return len(runtimeValToArrayRuntimeVal(runtimeValue).GetElements()) != 0, nil
 	case BooleanValue:
 		return runtimeValToBoolRuntimeVal(runtimeValue).GetValue(), nil
 	case IntegerValue:
@@ -54,9 +58,6 @@ func lib_boolval(runtimeValue IRuntimeValue) (bool, error) {
 	default:
 		return false, fmt.Errorf("boolval: Unsupported runtime value %s", runtimeValue.GetType())
 	}
-	// TODO boolval - array
-	// Spec: https://phplang.org/spec/08-conversions.html#converting-to-boolean-type
-	// If the source is an array with zero elements, the result value is FALSE; otherwise, the result value is TRUE.
 
 	// TODO boolval - object
 	// Spec: https://phplang.org/spec/08-conversions.html#converting-to-boolean-type
@@ -125,6 +126,13 @@ func lib_intval(runtimeValue IRuntimeValue) (int64, error) {
 	// Spec: https://phplang.org/spec/08-conversions.html#converting-to-integer-type
 
 	switch runtimeValue.GetType() {
+	case ArrayValue:
+		// Spec: https://phplang.org/spec/08-conversions.html#converting-to-integer-type
+		// If the source is an array with zero elements, the result value is 0; otherwise, the result value is 1.
+		if len(runtimeValToArrayRuntimeVal(runtimeValue).GetElements()) == 0 {
+			return 0, nil
+		}
+		return 1, nil
 	case BooleanValue:
 		// Spec: https://phplang.org/spec/08-conversions.html#converting-to-integer-type
 		// If the source type is bool, then if the source value is FALSE, the result value is 0; otherwise, the result value is 1.
@@ -153,10 +161,6 @@ func lib_intval(runtimeValue IRuntimeValue) (int64, error) {
 	// TODO lib_intval - string
 	// Spec: https://phplang.org/spec/08-conversions.html#converting-to-integer-type
 	// If the source is a numeric string or leading-numeric string having integer format, if the precision can be preserved the result value is that string’s integer value; otherwise, the result is undefined. If the source is a numeric string or leading-numeric string having floating-point format, the string’s floating-point value is treated as described above for a conversion from float. The trailing non-numeric characters in leading-numeric strings are ignored. For any other string, the result value is 0.
-
-	// TODO lib_intval - array
-	// Spec: https://phplang.org/spec/08-conversions.html#converting-to-integer-type
-	// If the source is an array with zero elements, the result value is 0; otherwise, the result value is 1.
 
 	// TODO lib_intval - object
 	// Spec: https://phplang.org/spec/08-conversions.html#converting-to-integer-type
@@ -197,6 +201,11 @@ func lib_strval(runtimeValue IRuntimeValue) (string, error) {
 	// Spec: https://phplang.org/spec/08-conversions.html#converting-to-string-type
 
 	switch runtimeValue.GetType() {
+	case ArrayValue:
+		// Spec: https://phplang.org/spec/08-conversions.html#converting-to-string-type
+		// If the source is an array, the conversion is invalid. The result value is the string “Array” and a non-fatal error is produced.
+		return "Array", nil
+		// TODO lib_strval - array non-fatal error: "Warning: Array to string conversion in /home/user/scripts/code.php on line 2" - only if E_ALL | E_WARNING
 	case BooleanValue:
 		// Spec: https://phplang.org/spec/08-conversions.html#converting-to-string-type
 		// If the source type is bool, then if the source value is FALSE, the result value is the empty string;
@@ -224,10 +233,6 @@ func lib_strval(runtimeValue IRuntimeValue) (string, error) {
 	default:
 		return "", fmt.Errorf("lib_strval: Unsupported runtime value %s", runtimeValue.GetType())
 	}
-
-	// TODO lib_strval - array
-	// Spec: https://phplang.org/spec/08-conversions.html#converting-to-string-type
-	// If the source is an array, the conversion is invalid. The result value is the string “Array” and a non-fatal error is produced.
 
 	// TODO lib_strval - object
 	// Spec: https://phplang.org/spec/08-conversions.html#converting-to-string-type
