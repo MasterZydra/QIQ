@@ -18,6 +18,7 @@ const (
 	FunctionCallExpr       NodeType = "FunctionCallExpression"
 	EmptyIntrinsicExpr     NodeType = "EmptyIntrinsicExpression"
 	IssetIntrinsicExpr     NodeType = "IssetIntrinsicExpression"
+	UnsetIntrinsicExpr     NodeType = "UnsetIntrinsicExpression"
 	SimpleAssignmentExpr   NodeType = "SimpleAssignmentExpression"
 	ConstantAccessExpr     NodeType = "ConstantAccessExpression"
 	CompoundAssignmentExpr NodeType = "CompoundAssignmentExpression"

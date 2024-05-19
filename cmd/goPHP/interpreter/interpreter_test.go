@@ -226,4 +226,8 @@ func TestIntrinsic(t *testing.T) {
 	testInputOutput(t, `<?php echo isset($a) ? "a" : "b";`, "b")
 	testInputOutput(t, `<?php $a = 1; echo isset($a, $b) ? "a" : "b";`, "b")
 	testInputOutput(t, `<?php echo isset($a, $b) ? "a" : "b";`, "b")
+
+	// Unset
+	testInputOutput(t, `<?php $a = 1; echo isset($a) ? "y" : "n"; unset($a); echo isset($a) ? "y" : "n";`, "yn")
+	testInputOutput(t, `<?php echo isset($a) ? "y" : "n"; unset($a); echo isset($a) ? "y" : "n";`, "nn")
 }

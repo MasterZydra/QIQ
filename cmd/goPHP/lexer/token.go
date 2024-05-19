@@ -20,6 +20,7 @@ func (token *Token) String() string {
 type TokenType string
 
 const (
+	EndOfFileToken TokenType = "EOF"
 	// Spec: https://phplang.org/spec/04-basic-concepts.html#grammar-start-tag
 	TextToken     TokenType = "Text"
 	StartTagToken TokenType = "StartTag"

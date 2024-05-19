@@ -182,6 +182,14 @@ func NewIssetIntrinsic(arguments []IExpression) *FunctionCallExpression {
 	}
 }
 
+// ------------------- MARK: UnsetIntrinsic -------------------
+
+func NewUnsetIntrinsic(arguments []IExpression) *FunctionCallExpression {
+	return &FunctionCallExpression{expr: NewExpression(UnsetIntrinsicExpr),
+		functionName: "unset", arguments: arguments,
+	}
+}
+
 // ------------------- MARK: ConstantAccessExpression -------------------
 
 type IConstantAccessExpression interface {

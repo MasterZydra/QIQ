@@ -59,6 +59,8 @@ func (interpreter *Interpreter) process(stmt ast.IStatement) (IRuntimeValue, err
 		return interpreter.processEmptyIntrinsicExpression(ast.ExprToFuncCallExpr(stmt))
 	case ast.IssetIntrinsicExpr:
 		return interpreter.processIssetExpression(ast.ExprToFuncCallExpr(stmt))
+	case ast.UnsetIntrinsicExpr:
+		return interpreter.processUnsetExpression(ast.ExprToFuncCallExpr(stmt))
 	case ast.ConstantAccessExpr:
 		return interpreter.processConstantAccessExpression(ast.ExprToConstAccessExpr(stmt))
 	case ast.CompoundAssignmentExpr:
@@ -203,6 +205,22 @@ func (interpreter *Interpreter) processIssetExpression(expr ast.IFunctionCallExp
 		}
 	}
 	return NewBooleanRuntimeValue(true), nil
+}
+
+func (interpreter *Interpreter) processUnsetExpression(expr ast.IFunctionCallExpression) (IRuntimeValue, error) {
+	// Spec: https://phplang.org/spec/11-statements.html#grammar-unset-statement
+
+	// This statement unsets the variables designated by each variable in variable-list. No value is returned.
+	// An attempt to unset a non-existent variable (such as a non-existent element in an array) is ignored.
+
+	for _, arg := range expr.GetArguments() {
+		variableName, err := interpreter.varExprToVarName(arg)
+		if err != nil {
+			return NewVoidRuntimeValue(), err
+		}
+		interpreter.env.unsetVariable(variableName)
+	}
+	return NewVoidRuntimeValue(), nil
 }
 
 func (interpreter *Interpreter) processConstantAccessExpression(expr ast.IConstantAccessExpression) (IRuntimeValue, error) {

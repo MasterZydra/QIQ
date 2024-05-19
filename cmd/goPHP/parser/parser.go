@@ -121,7 +121,47 @@ func (parser *Parser) parseStatement() (ast.IStatement, error) {
 		return ast.NewEchoStatement(expressions), nil
 	}
 
-	// TODO unset-statement
+	// ------------------- MARK: unset-statement -------------------
+
+	// Spec: https://phplang.org/spec/11-statements.html#grammar-unset-statement
+
+	// unset-statement:
+	//    unset   (   variable-list   ,opt   )   ;
+
+	// variable-list:
+	//    variable
+	//    variable-list   ,   variable
+
+	if parser.isToken(lexer.KeywordToken, "unset", true) {
+		if !parser.isToken(lexer.OperatorOrPunctuatorToken, "(", true) {
+			return ast.NewEmptyStatement(), fmt.Errorf("Expected \"(\". Got: \"%s\"", parser.at())
+		}
+		args := []ast.IExpression{}
+		for {
+			if len(args) > 0 && parser.isToken(lexer.OperatorOrPunctuatorToken, ")", true) {
+				break
+			}
+
+			arg, err := parser.parseExpression()
+			if err != nil {
+				return ast.NewEmptyStatement(), err
+			}
+			if !ast.IsVariableExpression(arg) {
+				return ast.NewEmptyStatement(), fmt.Errorf("Fatal error: Cannot use unset() on the result of an expression")
+			}
+			args = append(args, arg)
+
+			if parser.isToken(lexer.OperatorOrPunctuatorToken, ",", true) ||
+				parser.isToken(lexer.OperatorOrPunctuatorToken, ")", false) {
+				continue
+			}
+			return ast.NewEmptyStatement(), fmt.Errorf("Expected \",\" or \")\". Got: %s", parser.at())
+		}
+		if !parser.isToken(lexer.OperatorOrPunctuatorToken, ";", true) {
+			return ast.NewEmptyStatement(), fmt.Errorf("Expected \";\". Got: \"%s\"", parser.at())
+		}
+		return ast.NewExpressionStatement(ast.NewUnsetIntrinsic(args)), nil
+	}
 
 	// ------------------- MARK: const-declaration -------------------
 
@@ -991,7 +1031,7 @@ func (parser *Parser) parseIntrinsic() (ast.IExpression, error) {
 		}
 		args := []ast.IExpression{}
 		for {
-			if parser.isToken(lexer.OperatorOrPunctuatorToken, ")", true) {
+			if len(args) > 0 && parser.isToken(lexer.OperatorOrPunctuatorToken, ")", true) {
 				break
 			}
 

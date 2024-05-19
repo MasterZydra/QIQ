@@ -11,7 +11,7 @@ func (parser *Parser) isEof() bool {
 
 func (parser *Parser) at() *lexer.Token {
 	if parser.isEof() {
-		return nil
+		return lexer.NewToken(lexer.EndOfFileToken, "")
 	}
 
 	return parser.tokens[parser.currPos]
@@ -28,7 +28,7 @@ func (parser *Parser) next(offset int) *lexer.Token {
 
 func (parser *Parser) eat() *lexer.Token {
 	if parser.isEof() {
-		return nil
+		return lexer.NewToken(lexer.EndOfFileToken, "")
 	}
 
 	result := parser.at()

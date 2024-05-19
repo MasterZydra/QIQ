@@ -61,6 +61,14 @@ func (env *Environment) lookupVariable(variableName string) (IRuntimeValue, erro
 	return value, nil
 }
 
+func (env *Environment) unsetVariable(variableName string) {
+	environment, err := env.resolveVariable(variableName)
+	if err != nil {
+		return
+	}
+	delete(environment.variables, variableName)
+}
+
 // ------------------- MARK: Constants -------------------
 
 func (env *Environment) declareConstant(constantName string, value IRuntimeValue) (IRuntimeValue, error) {

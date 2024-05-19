@@ -557,3 +557,16 @@ func TestIssetIntrinsic(t *testing.T) {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
 	}
 }
+
+func TestUnsetIntrinsic(t *testing.T) {
+	program, err := NewParser().ProduceAST(`<?php unset($a);`)
+	if err != nil {
+		t.Errorf("Unexpected error: \"%s\"", err)
+		return
+	}
+	expected := ast.NewUnsetIntrinsic([]ast.IExpression{ast.NewSimpleVariableExpression(ast.NewVariableNameExpression("$a"))})
+	actual := ast.ExprToFuncCallExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
+	if expected.String() != actual.String() {
+		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
+	}
+}
