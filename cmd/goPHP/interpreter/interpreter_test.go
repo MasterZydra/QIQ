@@ -12,7 +12,7 @@ func TestVariableExprToVariableName(t *testing.T) {
 
 	// $var
 	interpreter := NewInterpreter(&Request{})
-	actual, err := interpreter.varExprToVarName(ast.NewSimpleVariableExpression(ast.NewVariableNameExpression("$var")))
+	actual, err := interpreter.varExprToVarName(ast.NewSimpleVariableExpression(ast.NewVariableNameExpression("$var")), interpreter.env)
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -27,7 +27,7 @@ func TestVariableExprToVariableName(t *testing.T) {
 	interpreter.env.declareVariable("$var", NewStringRuntimeValue("hi"))
 	actual, err = interpreter.varExprToVarName(
 		ast.NewSimpleVariableExpression(
-			ast.NewSimpleVariableExpression(ast.NewVariableNameExpression("$var"))))
+			ast.NewSimpleVariableExpression(ast.NewVariableNameExpression("$var"))), interpreter.env)
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -44,7 +44,7 @@ func TestVariableExprToVariableName(t *testing.T) {
 	actual, err = interpreter.varExprToVarName(
 		ast.NewSimpleVariableExpression(
 			ast.NewSimpleVariableExpression(
-				ast.NewSimpleVariableExpression(ast.NewVariableNameExpression("$var")))))
+				ast.NewSimpleVariableExpression(ast.NewVariableNameExpression("$var")))), interpreter.env)
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -81,6 +81,10 @@ func TestEchoExpression(t *testing.T) {
 		`<html><?php echo "abc", 42 ?><?php echo "def", 24; ?></html>`,
 		"<html>abc42def24</html>",
 	)
+}
+
+func TestStringVariableSubstitution(t *testing.T) {
+	testInputOutput(t, `<?php $a = 42; echo "a{$a}b";`, "a42b")
 }
 
 func TestVariableDeclaration(t *testing.T) {

@@ -9,6 +9,7 @@ import (
 func registerNativeFunctions(environment *Environment) {
 	environment.nativeFunctions["array_key_exits"] = nativeFn_array_key_exists
 	environment.nativeFunctions["boolval"] = nativeFn_boolval
+	environment.nativeFunctions["error_reporting"] = nativeFn_error_reporting
 	environment.nativeFunctions["floatval"] = nativeFn_floatval
 	environment.nativeFunctions["intval"] = nativeFn_intval
 	environment.nativeFunctions["is_null"] = nativeFn_is_null
@@ -102,6 +103,15 @@ func lib_boolval(runtimeValue IRuntimeValue) (bool, error) {
 	// TODO boolval - resource
 	// Spec: https://phplang.org/spec/08-conversions.html#converting-to-boolean-type
 	// If the source is a resource, the result value is TRUE.
+}
+
+// ------------------- MARK: error_reporting -------------------
+
+func nativeFn_error_reporting(args []IRuntimeValue, env *Environment) (IRuntimeValue, error) {
+	// Spec: https://www.php.net/manual/en/function.error-reporting.php
+
+	// TODO implement nativeFn_error_reporting after adding configuration for error level
+	return NewIntegerRuntimeValue(0), nil
 }
 
 // ------------------- MARK: floatval -------------------

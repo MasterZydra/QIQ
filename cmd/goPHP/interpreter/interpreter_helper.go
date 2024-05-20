@@ -4,7 +4,9 @@ import (
 	"GoPHP/cmd/goPHP/ast"
 	"fmt"
 	"math"
+	"regexp"
 	"slices"
+	"strings"
 )
 
 func (interpreter *Interpreter) print(str string) {
@@ -15,8 +17,8 @@ func (interpreter *Interpreter) println(str string) {
 	interpreter.print(str + "\n")
 }
 
-func (interpreter *Interpreter) processCondition(expr ast.IExpression) (IRuntimeValue, bool, error) {
-	runtimeValue, err := interpreter.process(expr)
+func (interpreter *Interpreter) processCondition(expr ast.IExpression, env *Environment) (IRuntimeValue, bool, error) {
+	runtimeValue, err := interpreter.processStmt(expr, env)
 	if err != nil {
 		return runtimeValue, false, err
 	}
@@ -26,7 +28,7 @@ func (interpreter *Interpreter) processCondition(expr ast.IExpression) (IRuntime
 }
 
 func (interpreter *Interpreter) lookupVariable(expr ast.IExpression, env *Environment) (IRuntimeValue, error) {
-	variableName, err := interpreter.varExprToVarName(expr)
+	variableName, err := interpreter.varExprToVarName(expr, env)
 	if err != nil {
 		return NewVoidRuntimeValue(), err
 	}
@@ -35,7 +37,7 @@ func (interpreter *Interpreter) lookupVariable(expr ast.IExpression, env *Enviro
 }
 
 // Convert a variable expression into the interpreted variable name
-func (interpreter *Interpreter) varExprToVarName(expr ast.IExpression) (string, error) {
+func (interpreter *Interpreter) varExprToVarName(expr ast.IExpression, env *Environment) (string, error) {
 	switch expr.GetKind() {
 	case ast.SimpleVariableExpr:
 		variableNameExpr := ast.ExprToSimpleVarExpr(expr).GetVariableName()
@@ -45,11 +47,11 @@ func (interpreter *Interpreter) varExprToVarName(expr ast.IExpression) (string, 
 		}
 
 		if variableNameExpr.GetKind() == ast.SimpleVariableExpr {
-			variableName, err := interpreter.varExprToVarName(variableNameExpr)
+			variableName, err := interpreter.varExprToVarName(variableNameExpr, env)
 			if err != nil {
 				return "", err
 			}
-			runtimeValue, err := interpreter.env.lookupVariable(variableName)
+			runtimeValue, err := env.lookupVariable(variableName)
 			if err != nil {
 				interpreter.println(err.Error())
 			}
@@ -68,16 +70,16 @@ func (interpreter *Interpreter) varExprToVarName(expr ast.IExpression) (string, 
 
 // ------------------- MARK: RuntimeValue -------------------
 
-func (interpreter *Interpreter) exprToRuntimeValue(expr ast.IExpression) (IRuntimeValue, error) {
+func (interpreter *Interpreter) exprToRuntimeValue(expr ast.IExpression, env *Environment) (IRuntimeValue, error) {
 	switch expr.GetKind() {
 	case ast.ArrayLiteralExpr:
 		elements := map[IRuntimeValue]IRuntimeValue{}
 		for key, element := range ast.ExprToArrayLitExpr(expr).GetElements() {
-			keyValue, err := interpreter.process(key)
+			keyValue, err := interpreter.processStmt(key, env)
 			if err != nil {
 				return NewVoidRuntimeValue(), err
 			}
-			elementValue, err := interpreter.process(element)
+			elementValue, err := interpreter.processStmt(element, env)
 			if err != nil {
 				return NewVoidRuntimeValue(), err
 			}
@@ -91,7 +93,21 @@ func (interpreter *Interpreter) exprToRuntimeValue(expr ast.IExpression) (IRunti
 	case ast.FloatingLiteralExpr:
 		return NewFloatingRuntimeValue(ast.ExprToFloatLitExpr(expr).GetValue()), nil
 	case ast.StringLiteralExpr:
-		return NewStringRuntimeValue(ast.ExprToStrLitExpr(expr).GetValue()), nil
+		str := ast.ExprToStrLitExpr(expr).GetValue()
+		// variable substitution
+		if ast.ExprToStrLitExpr(expr).GetStringType() == ast.DoubleQuotedString {
+			r, _ := regexp.Compile(`{\$[A-Za-z1-9_][A-Za-z0-9_]*(\[['A-Za-z]*\])?}`)
+			matches := r.FindAllString(str, -1)
+			for _, match := range matches {
+				exprStr := "<?= " + match[1:len(match)-1] + ";"
+				result, err := NewInterpreter(interpreter.request).process(exprStr, env)
+				if err != nil {
+					return NewVoidRuntimeValue(), err
+				}
+				str = strings.Replace(str, match, result, 1)
+			}
+		}
+		return NewStringRuntimeValue(str), nil
 	case ast.NullLiteralExpr:
 		return NewNullRuntimeValue(), nil
 	default:
