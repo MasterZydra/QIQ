@@ -7,12 +7,12 @@ import (
 )
 
 func registerNativeFunctions(environment *Environment) {
-	// environment.nativeFunctions["array_key_exits"] = nativeFn_boolval
+	environment.nativeFunctions["array_key_exits"] = nativeFn_array_key_exists
 	environment.nativeFunctions["boolval"] = nativeFn_boolval
 	environment.nativeFunctions["floatval"] = nativeFn_floatval
 	environment.nativeFunctions["intval"] = nativeFn_intval
 	environment.nativeFunctions["is_null"] = nativeFn_is_null
-	// environment.nativeFunctions["key_exits"] = nativeFn_boolval
+	environment.nativeFunctions["key_exits"] = nativeFn_array_key_exists
 	environment.nativeFunctions["strval"] = nativeFn_strval
 }
 
@@ -20,7 +20,20 @@ type nativeFunction func([]IRuntimeValue, *Environment) (IRuntimeValue, error)
 
 // ------------------- MARK: array_key_exits -------------------
 
-// TODO nativeFn_array_key_exists
+func nativeFn_array_key_exists(args []IRuntimeValue, env *Environment) (IRuntimeValue, error) {
+	if len(args) != 2 {
+		return NewVoidRuntimeValue(), fmt.Errorf(
+			"Uncaught ArgumentCountError: array_key_exists() expects exactly 2 arguments, %d given", len(args),
+		)
+	}
+
+	if args[1].GetType() != ArrayValue {
+		return NewVoidRuntimeValue(), fmt.Errorf("Uncaught TypeError: $array must be of type array")
+	}
+
+	boolean, err := lib_array_key_exists(args[0], runtimeValToArrayRuntimeVal(args[1]))
+	return NewBooleanRuntimeValue(boolean), err
+}
 
 func lib_array_key_exists(key IRuntimeValue, array IArrayRuntimeValue) (bool, error) {
 	// Spec: https://www.php.net/manual/en/function.array-key-exists.php
@@ -40,7 +53,9 @@ func lib_array_key_exists(key IRuntimeValue, array IArrayRuntimeValue) (bool, er
 
 func nativeFn_boolval(args []IRuntimeValue, env *Environment) (IRuntimeValue, error) {
 	if len(args) != 1 {
-		return NewVoidRuntimeValue(), fmt.Errorf("Uncaught ArgumentCountError: boolval() expects exactly 1 argument, 0 given")
+		return NewVoidRuntimeValue(), fmt.Errorf(
+			"Uncaught ArgumentCountError: boolval() expects exactly 1 argument, %d given", len(args),
+		)
 	}
 
 	boolean, err := lib_boolval(args[0])
@@ -93,7 +108,9 @@ func lib_boolval(runtimeValue IRuntimeValue) (bool, error) {
 
 func nativeFn_floatval(args []IRuntimeValue, env *Environment) (IRuntimeValue, error) {
 	if len(args) != 1 {
-		return NewVoidRuntimeValue(), fmt.Errorf("Uncaught ArgumentCountError: floatval() expects exactly 1 argument, 0 given")
+		return NewVoidRuntimeValue(), fmt.Errorf(
+			"Uncaught ArgumentCountError: floatval() expects exactly 1 argument, %d given", len(args),
+		)
 	}
 
 	floating, err := lib_floatval(args[0])
@@ -136,7 +153,9 @@ func lib_floatval(runtimeValue IRuntimeValue) (float64, error) {
 
 func nativeFn_intval(args []IRuntimeValue, env *Environment) (IRuntimeValue, error) {
 	if len(args) != 1 {
-		return NewVoidRuntimeValue(), fmt.Errorf("Uncaught ArgumentCountError: intval() expects exactly 1 argument, 0 given")
+		return NewVoidRuntimeValue(), fmt.Errorf(
+			"Uncaught ArgumentCountError: intval() expects exactly 1 argument, %d given", len(args),
+		)
 	}
 
 	integer, err := lib_intval(args[0])
@@ -196,7 +215,9 @@ func lib_intval(runtimeValue IRuntimeValue) (int64, error) {
 
 func nativeFn_is_null(args []IRuntimeValue, env *Environment) (IRuntimeValue, error) {
 	if len(args) != 1 {
-		return NewVoidRuntimeValue(), fmt.Errorf("Uncaught ArgumentCountError: is_null() expects exactly 1 argument, 0 given")
+		return NewVoidRuntimeValue(), fmt.Errorf(
+			"Uncaught ArgumentCountError: is_null() expects exactly 1 argument, %d given", len(args),
+		)
 	}
 
 	return NewBooleanRuntimeValue(lib_is_null(args[0])), nil
@@ -211,7 +232,9 @@ func lib_is_null(runtimeValue IRuntimeValue) bool {
 
 func nativeFn_strval(args []IRuntimeValue, env *Environment) (IRuntimeValue, error) {
 	if len(args) != 1 {
-		return NewVoidRuntimeValue(), fmt.Errorf("Uncaught ArgumentCountError: strval() expects exactly 1 argument, 0 given")
+		return NewVoidRuntimeValue(), fmt.Errorf(
+			"Uncaught ArgumentCountError: strval() expects exactly 1 argument,  %d given", len(args),
+		)
 	}
 
 	str, err := lib_strval(args[0])

@@ -2,6 +2,18 @@ package interpreter
 
 import "testing"
 
+func TestArrayKeyExists(t *testing.T) {
+	array := NewArrayRuntimeValue(map[IRuntimeValue]IRuntimeValue{
+		NewIntegerRuntimeValue(0): NewIntegerRuntimeValue(42),
+	})
+	if actual, _ := lib_array_key_exists(NewIntegerRuntimeValue(0), array); !actual {
+		t.Errorf("Expected: \"%t\", Got \"%t\"", true, actual)
+	}
+	if actual, _ := lib_array_key_exists(NewIntegerRuntimeValue(1), array); actual {
+		t.Errorf("Expected: \"%t\", Got \"%t\"", false, actual)
+	}
+}
+
 func TestLibBoolval(t *testing.T) {
 	doTest := func(runtimeValue IRuntimeValue, expected bool) {
 		actual, err := lib_boolval(runtimeValue)
