@@ -29,6 +29,8 @@ const (
 	AdditiveExpr           NodeType = "AdditiveExpression"
 	MultiplicativeExpr     NodeType = "MultiplicativeExpression"
 	ExponentiationExpr     NodeType = "ExponentiationExpression"
+	BitwiseIncOrExpr       NodeType = "BitwiseIncOrExpression"
+	BitwiseAndExpr         NodeType = "BitwiseAndExpression"
 	UnaryOpExpr            NodeType = "UnaryOpExpression"
 	LogicalNotExpr         NodeType = "LogicalNotExpression"
 	// Statements

@@ -388,8 +388,19 @@ func (parser *Parser) parseBitwiseIncOrExpression() (ast.IExpression, error) {
 	//    bitwise-exc-OR-expression
 	//    bitwise-inc-OR-expression   |   bitwise-exc-OR-expression
 
-	// TODO bitwise-inc-OR-expression
-	return parser.parseBitwiseExcOrExpression()
+	lhs, err := parser.parseBitwiseExcOrExpression()
+	if err != nil {
+		return ast.NewEmptyExpression(), err
+	}
+
+	for parser.isToken(lexer.OperatorOrPunctuatorToken, "|", true) {
+		rhs, err := parser.parseBitwiseIncOrExpression()
+		if err != nil {
+			return ast.NewEmptyExpression(), err
+		}
+		lhs = ast.NewBitwiseIncOrExpression(lhs, rhs)
+	}
+	return lhs, nil
 }
 
 func (parser *Parser) parseBitwiseExcOrExpression() (ast.IExpression, error) {
@@ -410,8 +421,19 @@ func (parser *Parser) parseBitwiseAndExpression() (ast.IExpression, error) {
 	//    equality-expression
 	//    bitwise-AND-expression   &   equality-expression
 
-	// TODO bitwise-AND-expression
-	return parser.parseEqualityExpression()
+	lhs, err := parser.parseEqualityExpression()
+	if err != nil {
+		return ast.NewEmptyExpression(), err
+	}
+
+	for parser.isToken(lexer.OperatorOrPunctuatorToken, "&", true) {
+		rhs, err := parser.parseBitwiseAndExpression()
+		if err != nil {
+			return ast.NewEmptyExpression(), err
+		}
+		lhs = ast.NewBitwiseAndExpression(lhs, rhs)
+	}
+	return lhs, nil
 }
 
 func (parser *Parser) parseEqualityExpression() (ast.IExpression, error) {

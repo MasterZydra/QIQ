@@ -691,6 +691,18 @@ func NewExponentiationExpression(lhs IExpression, rhs IExpression) *EqualityExpr
 	return &EqualityExpression{expr: NewExpression(ExponentiationExpr), lhs: lhs, operator: "**", rhs: rhs}
 }
 
+// ------------------- MARK: BitwiseIncOrExpression -------------------
+
+func NewBitwiseIncOrExpression(lhs IExpression, rhs IExpression) *EqualityExpression {
+	return &EqualityExpression{expr: NewExpression(BitwiseIncOrExpr), lhs: lhs, operator: "|", rhs: rhs}
+}
+
+// ------------------- MARK: BitwiseAndExpression -------------------
+
+func NewBitwiseAndExpression(lhs IExpression, rhs IExpression) *EqualityExpression {
+	return &EqualityExpression{expr: NewExpression(BitwiseAndExpr), lhs: lhs, operator: "&", rhs: rhs}
+}
+
 // ------------------- MARK: UnaryOpExpression -------------------
 
 type IUnaryOpExpression interface {

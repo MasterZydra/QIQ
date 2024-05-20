@@ -120,6 +120,12 @@ func TestArray(t *testing.T) {
 
 func TestCalculation(t *testing.T) {
 	// Integer
+	testInputOutput(t, `<?php echo 4 | 4;`, "4")
+	testInputOutput(t, `<?php echo 8 | 4;`, "12")
+	testInputOutput(t, `<?php $a = 8; echo $a |= 4;`, "12")
+	testInputOutput(t, `<?php echo 8 & 4;`, "0")
+	testInputOutput(t, `<?php echo 12 & 8;`, "8")
+	testInputOutput(t, `<?php $a = 12; echo $a &= 4;`, "4")
 	testInputOutput(t, `<?php echo 42 + 1;`, "43")
 	testInputOutput(t, `<?php $a = 42; echo $a += 1;`, "43")
 	testInputOutput(t, `<?php echo 42 - 1;`, "41")

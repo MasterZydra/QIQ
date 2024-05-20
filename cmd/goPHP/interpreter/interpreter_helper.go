@@ -196,6 +196,10 @@ func calculateFloating(operand1 IFloatingRuntimeValue, operator string, operand2
 
 func calculateInteger(operand1 IIntegerRuntimeValue, operator string, operand2 IIntegerRuntimeValue) (IIntegerRuntimeValue, error) {
 	switch operator {
+	case "|":
+		return NewIntegerRuntimeValue(operand1.GetValue() | operand2.GetValue()), nil
+	case "&":
+		return NewIntegerRuntimeValue(operand1.GetValue() & operand2.GetValue()), nil
 	case "+":
 		return NewIntegerRuntimeValue(operand1.GetValue() + operand2.GetValue()), nil
 	case "-":
