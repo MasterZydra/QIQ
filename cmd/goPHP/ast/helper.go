@@ -6,7 +6,7 @@ import (
 
 // Spec: https://phplang.org/spec/10-expressions.html#grammar-variable
 var variableExpressions = []NodeType{
-	SimpleVariableExpr, FunctionCallExpr,
+	SimpleVariableExpr, SubscriptExpr, FunctionCallExpr,
 }
 
 func IsVariableExpression(expr IExpression) bool {
@@ -23,6 +23,10 @@ func IsVariableExpression(expr IExpression) bool {
 	//    member-call-expression
 	//    scoped-call-expression
 	//    function-call-expression
+
+	if expr == nil {
+		return false
+	}
 
 	return slices.Contains(variableExpressions, expr.GetKind())
 }

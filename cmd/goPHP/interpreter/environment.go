@@ -10,23 +10,31 @@ type Environment struct {
 	variables map[string]IRuntimeValue
 	constants map[string]IRuntimeValue
 	// StdLib
-	nativeFunctions map[string]nativeFunction
+	predefinedVariables map[string]IRuntimeValue
+	nativeFunctions     map[string]nativeFunction
 }
 
-func NewEnvironment(parentEnv *Environment) *Environment {
+func NewEnvironment(parentEnv *Environment, request *Request) *Environment {
 	env := &Environment{
 		parent:    parentEnv,
 		variables: make(map[string]IRuntimeValue),
 		constants: make(map[string]IRuntimeValue),
 		// StdLib
-		nativeFunctions: make(map[string]nativeFunction),
+		predefinedVariables: make(map[string]IRuntimeValue),
+		nativeFunctions:     make(map[string]nativeFunction),
 	}
 
 	if parentEnv == nil {
 		registerNativeFunctions(env)
+		registerPredefinedVariables(env, request)
 	}
 
 	return env
+}
+
+func registerPredefinedVariables(environment *Environment, request *Request) {
+	environment.predefinedVariables["$_GET"] = NewArrayRuntimeValue(request.GetParams)
+	environment.predefinedVariables["$_POST"] = NewArrayRuntimeValue(request.PostParams)
 }
 
 // ------------------- MARK: Variables -------------------
@@ -38,6 +46,9 @@ func (env *Environment) declareVariable(variableName string, value IRuntimeValue
 }
 
 func (env *Environment) resolveVariable(variableName string) (*Environment, error) {
+	if _, ok := env.predefinedVariables[variableName]; ok {
+		return env, nil
+	}
 	if _, ok := env.variables[variableName]; ok {
 		return env, nil
 	}
@@ -54,11 +65,13 @@ func (env *Environment) lookupVariable(variableName string) (IRuntimeValue, erro
 	if err != nil {
 		return NewNullRuntimeValue(), fmt.Errorf("Warning: Undefined variable %s", variableName)
 	}
-	value, ok := environment.variables[variableName]
-	if !ok {
-		return NewNullRuntimeValue(), fmt.Errorf("Warning: Undefined variable %s", variableName)
+	if value, ok := environment.predefinedVariables[variableName]; ok {
+		return value, nil
 	}
-	return value, nil
+	if value, ok := environment.variables[variableName]; ok {
+		return value, nil
+	}
+	return NewNullRuntimeValue(), fmt.Errorf("Warning: Undefined variable %s", variableName)
 }
 
 func (env *Environment) unsetVariable(variableName string) {

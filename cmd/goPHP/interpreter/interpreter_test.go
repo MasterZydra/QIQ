@@ -11,7 +11,7 @@ func TestVariableExprToVariableName(t *testing.T) {
 	// simple-variable-expression
 
 	// $var
-	interpreter := NewInterpreter()
+	interpreter := NewInterpreter(&Request{})
 	actual, err := interpreter.varExprToVarName(ast.NewSimpleVariableExpression(ast.NewVariableNameExpression("$var")))
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
@@ -23,7 +23,7 @@ func TestVariableExprToVariableName(t *testing.T) {
 	}
 
 	// $$var
-	interpreter = NewInterpreter()
+	interpreter = NewInterpreter(&Request{})
 	interpreter.env.declareVariable("$var", NewStringRuntimeValue("hi"))
 	actual, err = interpreter.varExprToVarName(
 		ast.NewSimpleVariableExpression(
@@ -38,7 +38,7 @@ func TestVariableExprToVariableName(t *testing.T) {
 	}
 
 	// $$$var
-	interpreter = NewInterpreter()
+	interpreter = NewInterpreter(&Request{})
 	interpreter.env.declareVariable("$var1", NewStringRuntimeValue("hi"))
 	interpreter.env.declareVariable("$var", NewStringRuntimeValue("var1"))
 	actual, err = interpreter.varExprToVarName(
@@ -58,7 +58,7 @@ func TestVariableExprToVariableName(t *testing.T) {
 // ------------------- MARK: input output tests -------------------
 
 func testInputOutput(t *testing.T, php string, output string) {
-	actual, err := NewInterpreter().Process(php)
+	actual, err := NewInterpreter(&Request{}).Process(php)
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -107,6 +107,11 @@ func TestVariableDeclaration(t *testing.T) {
 		`<?php $a = 42; echo $a; $a += 2; echo $a; $a += $a; echo $a;`,
 		"424488",
 	)
+}
+
+func TestArray(t *testing.T) {
+	testInputOutput(t, `<?php $a = [0, 1, 2]; echo $a[0] === null ? "y" : "n";`, "n")
+	testInputOutput(t, `<?php $a = [0, 1, 2]; echo $a[3] === null ? "y" : "n";`, "y")
 }
 
 func TestCalculation(t *testing.T) {

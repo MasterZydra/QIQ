@@ -3,17 +3,38 @@ package interpreter
 import (
 	"fmt"
 	"math"
+	"slices"
 )
 
 func registerNativeFunctions(environment *Environment) {
+	// environment.nativeFunctions["array_key_exits"] = nativeFn_boolval
 	environment.nativeFunctions["boolval"] = nativeFn_boolval
 	environment.nativeFunctions["floatval"] = nativeFn_floatval
 	environment.nativeFunctions["intval"] = nativeFn_intval
 	environment.nativeFunctions["is_null"] = nativeFn_is_null
+	// environment.nativeFunctions["key_exits"] = nativeFn_boolval
 	environment.nativeFunctions["strval"] = nativeFn_strval
 }
 
 type nativeFunction func([]IRuntimeValue, *Environment) (IRuntimeValue, error)
+
+// ------------------- MARK: array_key_exits -------------------
+
+// TODO nativeFn_array_key_exists
+
+func lib_array_key_exists(key IRuntimeValue, array IArrayRuntimeValue) (bool, error) {
+	// Spec: https://www.php.net/manual/en/function.array-key-exists.php
+
+	// TODO lib_array_key_exists - allowedKeyTypes - resource
+	allowedKeyTypes := []ValueType{StringValue, IntegerValue, FloatingValue, BooleanValue, NullValue}
+
+	if !slices.Contains(allowedKeyTypes, key.GetType()) {
+		return false, fmt.Errorf("Values of type %s are not allowed as array key", key.GetType())
+	}
+
+	_, ok := array.GetElement(key)
+	return ok, nil
+}
 
 // ------------------- MARK: boolval -------------------
 

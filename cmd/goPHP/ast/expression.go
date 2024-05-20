@@ -127,6 +127,45 @@ func ExprToSimpleVarExpr(expr IExpression) ISimpleVariableExpression {
 	return i.(ISimpleVariableExpression)
 }
 
+// ------------------- MARK: SubscriptExpression -------------------
+
+type ISubscriptExpression interface {
+	IExpression
+	GetVariable() IExpression
+	GetIndex() IExpression
+}
+
+type SubscriptExpression struct {
+	expr     IExpression
+	variable IExpression
+	index    IExpression
+}
+
+func NewSubscriptExpression(variable IExpression, index IExpression) *SubscriptExpression {
+	return &SubscriptExpression{expr: NewExpression(SubscriptExpr), variable: variable, index: index}
+}
+
+func (expr *SubscriptExpression) GetKind() NodeType {
+	return expr.expr.GetKind()
+}
+
+func (expr *SubscriptExpression) GetVariable() IExpression {
+	return expr.variable
+}
+
+func (expr *SubscriptExpression) GetIndex() IExpression {
+	return expr.index
+}
+
+func (expr *SubscriptExpression) String() string {
+	return fmt.Sprintf("{%s - variable: %s, index: \"%s\" }", expr.GetKind(), expr.variable, expr.index)
+}
+
+func ExprToSubscriptExpr(expr IExpression) ISubscriptExpression {
+	var i interface{} = expr
+	return i.(ISubscriptExpression)
+}
+
 // ------------------- MARK: FunctionCallExpression -------------------
 
 type IFunctionCallExpression interface {

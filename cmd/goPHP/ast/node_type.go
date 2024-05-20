@@ -15,6 +15,7 @@ const (
 	NullLiteralExpr        NodeType = "NullLiteralExpression"
 	VariableNameExpr       NodeType = "VariableNameExpression"
 	SimpleVariableExpr     NodeType = "SimpleVariableExpression"
+	SubscriptExpr          NodeType = "SubscriptExpression"
 	FunctionCallExpr       NodeType = "FunctionCallExpression"
 	EmptyIntrinsicExpr     NodeType = "EmptyIntrinsicExpression"
 	IssetIntrinsicExpr     NodeType = "IssetIntrinsicExpression"

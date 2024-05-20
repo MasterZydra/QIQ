@@ -234,6 +234,8 @@ func compare(lhs IRuntimeValue, operator string, rhs IRuntimeValue) (IBooleanRun
 				result = runtimeValToFloatRuntimeVal(lhs).GetValue() == runtimeValToFloatRuntimeVal(rhs).GetValue()
 			case IntegerValue:
 				result = runtimeValToIntRuntimeVal(lhs).GetValue() == runtimeValToIntRuntimeVal(rhs).GetValue()
+			case NullValue:
+				result = true
 			case StringValue:
 				result = runtimeValToStrRuntimeVal(lhs).GetValue() == runtimeValToStrRuntimeVal(rhs).GetValue()
 			default:

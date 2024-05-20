@@ -7,13 +7,14 @@ import (
 )
 
 type Interpreter struct {
-	parser *parser.Parser
-	env    *Environment
-	result string
+	request *Request
+	parser  *parser.Parser
+	env     *Environment
+	result  string
 }
 
-func NewInterpreter() *Interpreter {
-	return &Interpreter{parser: parser.NewParser(), env: NewEnvironment(nil)}
+func NewInterpreter(request *Request) *Interpreter {
+	return &Interpreter{request: request, parser: parser.NewParser(), env: NewEnvironment(nil, request)}
 }
 
 func (interpreter *Interpreter) Process(sourceCode string) (string, error) {
@@ -53,6 +54,8 @@ func (interpreter *Interpreter) process(stmt ast.IStatement) (IRuntimeValue, err
 		return interpreter.processSimpleVariableExpression(ast.ExprToSimpleVarExpr(stmt))
 	case ast.SimpleAssignmentExpr:
 		return interpreter.processSimpleAssignmentExpression(ast.ExprToSimpleAssignExpr(stmt))
+	case ast.SubscriptExpr:
+		return interpreter.processSubscriptExpression(ast.ExprToSubscriptExpr(stmt))
 	case ast.FunctionCallExpr:
 		return interpreter.processFunctionCallExpression(ast.ExprToFuncCallExpr(stmt))
 	case ast.EmptyIntrinsicExpr:
@@ -132,6 +135,121 @@ func (interpreter *Interpreter) processSimpleAssignmentExpression(expr ast.ISimp
 	}
 
 	return interpreter.env.declareVariable(variableName, value)
+}
+
+func (interpreter *Interpreter) processSubscriptExpression(expr ast.ISubscriptExpression) (IRuntimeValue, error) {
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-subscript-expression
+
+	variable, err := interpreter.lookupVariable(expr.GetVariable(), interpreter.env)
+	if err != nil {
+		return NewVoidRuntimeValue(), err
+	}
+
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-subscript-expression
+	// dereferencable-expression designates an array
+	if variable.GetType() == ArrayValue {
+		// TODO processSubscriptExpression - no key
+		// Spec: https://phplang.org/spec/10-expressions.html#grammar-subscript-expression
+		// If expression is omitted, a new element is inserted. Its key has type int and is one more than the highest, previously assigned int key for this array. If this is the first element with an int key, key 0 is used. If the largest previously assigned int key is the largest integer value that can be represented, the new element is not added. The result is the added new element, or NULL if the element was not added.
+
+		key, err := interpreter.process(expr.GetIndex())
+		if err != nil {
+			return NewVoidRuntimeValue(), err
+		}
+
+		array := runtimeValToArrayRuntimeVal(variable)
+
+		exists, err := lib_array_key_exists(key, array)
+		if err != nil {
+			return NewVoidRuntimeValue(), err
+		}
+
+		// Spec: https://phplang.org/spec/10-expressions.html#grammar-subscript-expression
+		// If expression is present, if the designated element exists,
+		// the type and value of the result is the type and value of that element;
+		// otherwise, the result is NULL.
+		if exists {
+			element, _ := array.GetElement(key)
+			return element, nil
+		} else {
+			return NewNullRuntimeValue(), nil
+		}
+
+		// TODO processSubscriptExpression
+		// If the usage context is as the left-hand side of a simple-assignment-expression, the value of the new element is the value of the right-hand side of that simple-assignment-expression.
+		// If the usage context is as the left-hand side of a compound-assignment-expression: the expression e1 op= e2 is evaluated as e1 = NULL op (e2).
+		// If the usage context is as the operand of a postfix- or prefix-increment or decrement operator, the value of the new element is considered to be NULL.
+	}
+
+	return NewVoidRuntimeValue(), fmt.Errorf("Interpreter error: Unsupported subscript expression: %s", expr)
+
+	/*
+	   If dereferencable-expression designates a string, expression must not designate a string.
+
+	   expression can be omitted only if subscript-expression is used in a modifiable-lvalue context and dereferencable-expression does not designate a string. Exception from this is when dereferencable-expression is an empty string - then it is converted to an empty array.
+
+	   If subscript-expression is used in a non-lvalue context, the element being designated must exist.
+
+	   Semantics
+
+	   A subscript-expression designates a (possibly non-existent) element of an array or string. When subscript-expression designates an object of a type that implements ArrayAccess, the minimal semantics are defined below; however, they can be augmented by that object’s methods offsetGet and offsetSet.
+
+	   The element key is designated by expression. If the type of element-key is neither int nor string, keys with float or bool values, or strings whose contents match exactly the pattern of decimal-literal, are converted to integer, and key values of all other types are converted to string.
+
+	   If both dereferencable-expression and expression designate strings, expression is treated as if it specified the int key zero instead and a non-fatal error is produces.
+
+	   A subscript-expression designates a modifiable lvalue if and only if dereferencable-expression designates a modifiable lvalue.
+
+	   dereferencable-expression designates a string
+
+	   The expression is converted to int and the result is the character of the string at the position corresponding to that integer. If the integer is negative, the position is counted backwards from the end of the string. If the position refers to a non-existing offset, the result is an empty string.
+
+	   If the operator is used as the left-hand side of a simple-assignment-expression,
+
+	       If the assigned string is empty, or in case of non-existing negative offset (absolute value larger than string length), a warning is raised and no assignment is performed.
+	       If the offset is larger than the current string length, the string is extended to a length equal to the offset value, using space (0x20) padding characters.
+	       The value being assigned is converted to string and the character in the specified offset is replaced by the first character of the string.
+
+	   The subscript operator can not be used on a string value in a byRef context or as the operand of the postfix- or prefix-increment or decrement operators or on the left side of compound-assignment-expression, doing so will result in a fatal error.
+
+	   dereferencable-expression designates an object of a type that implements ArrayAccess
+
+	   If expression is present,
+
+	       If subscript-expression is used in a non-lvalue context, the object’s method offsetGet is called with an argument of expression. The return value of the offsetGet is the result.
+	       If the usage context is as the left-hand side of a simple-assignment-expression, the object’s method offsetSet is called with a first argument of expression and a second argument that is the value of the right-hand side of that simple-assignment-expression. The value of the right-hand side is the result.
+	       If the usage context is as the left-hand side of a compound-assignment-expression, the expression e1[e] op= e2 is evaluated as e1[e] = e1->offsetGet(e) op (e2), which is then processed according to the rules for simple assignment immediately above.
+	       If the usage context is as the operand of the postfix- or prefix-increment or decrement operators, the object’s method offsetGet is called with an argument of expression. However, this method has no way of knowing if an increment or decrement operator was used, or whether it was a prefix or postfix operator. In order for the value to be modified by the increment/decrement, offsetGet must return byRef. The result of the subscript operator value returned by offsetGet.
+
+	   If expression is omitted,
+
+	       If the usage context is as the left-hand side of a simple-assignment-expression, the object’s method offsetSet is called with a first argument of NULL and a second argument that is the value of the right-hand side of that simple-assignment-expression. The type and value of the result is the type and value of the right-hand side of that simple-assignment-expression.
+	       If the usage context is as the left-hand side of a compound-assignment-expression: The expression e1[] op= e2 is evaluated as e1[] = e1->offsetGet(NULL) op (e2), which is then processed according to the rules for simple assignment immediately above.
+	       If the usage context is as the operand of the postfix- or prefix-increment or decrement operators, the object’s method offsetGet is called with an argument of NULL. However, this method has no way of knowing if an increment or decrement operator was used, or whether it was a prefix or postfix operator. In order for the value to be modified by the increment/decrement, offsetGet must return byRef. The result of the subscript operator value returned by offsetGet.
+
+	   Note: The brace ({...}) form of this operator has been deprecated.
+	*/
+
+	// Examples
+	/*
+	   $v = array(10, 20, 30);
+	   $v[1] = 1.234;    // change the value (and type) of element [1]
+	   $v[-10] = 19;   // insert a new element with int key -10
+	   $v["red"] = TRUE; // insert a new element with string key "red"
+	   [[2,4,6,8], [5,10], [100,200,300]][0][2]  // designates element with value 6
+	   ["black", "white", "yellow"][1][2]  // designates substring "i" in "white"
+	   function f() { return [1000, 2000, 3000]; }
+	   f()[2];      // designates element with value 3000
+	   "red"[1.9];    // designates "e"
+	   "red"[-2];    // designates "e"
+	   "red"[0][0][0];    // designates "r"
+	   // -----------------------------------------
+	   class MyVector implements ArrayAccess { /* ... */ /*}
+	$vect1 = new MyVector(array(10, 'A' => 2.3, "up"));
+	$vect1[10] = 987; // calls Vector::offsetSet(10, 987)
+	$vect1[] = "xxx"; // calls Vector::offsetSet(NULL, "xxx")
+	$x = $vect1[1];   // calls Vector::offsetGet(1)
+	*/
 }
 
 func (interpreter *Interpreter) processFunctionCallExpression(expr ast.IFunctionCallExpression) (IRuntimeValue, error) {

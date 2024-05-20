@@ -47,6 +47,7 @@ func NewNullRuntimeValue() *RuntimeValue {
 type IArrayRuntimeValue interface {
 	IRuntimeValue
 	GetElements() map[IRuntimeValue]IRuntimeValue
+	GetElement(key IRuntimeValue) (IRuntimeValue, bool)
 }
 
 type ArrayRuntimeValue struct {
@@ -64,6 +65,22 @@ func (runtimeValue *ArrayRuntimeValue) GetType() ValueType {
 
 func (runtimeValue *ArrayRuntimeValue) GetElements() map[IRuntimeValue]IRuntimeValue {
 	return runtimeValue.elements
+}
+
+func (runtimeValue *ArrayRuntimeValue) GetElement(key IRuntimeValue) (IRuntimeValue, bool) {
+	for k, value := range runtimeValue.elements {
+		if k.GetType() != key.GetType() {
+			continue
+		}
+		boolean, err := compare(key, "===", k)
+		if err != nil {
+			return NewVoidRuntimeValue(), false
+		}
+		if runtimeValToBoolRuntimeVal(boolean).GetValue() {
+			return value, true
+		}
+	}
+	return NewVoidRuntimeValue(), false
 }
 
 func runtimeValToArrayRuntimeVal(runtimeValue IRuntimeValue) IArrayRuntimeValue {

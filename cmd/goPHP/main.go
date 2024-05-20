@@ -35,7 +35,7 @@ func main() {
 	// 	fmt.Println("Error:", err)
 	// }
 
-	interpreter := interpreter.NewInterpreter()
+	interpreter := interpreter.NewInterpreter(&interpreter.Request{})
 	result, err := interpreter.Process(fileContent)
 	fmt.Println(result)
 	if err != nil {

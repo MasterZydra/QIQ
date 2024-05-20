@@ -42,6 +42,33 @@ func TestVariableName(t *testing.T) {
 	}
 }
 
+func TestArrayMember(t *testing.T) {
+	program, err := NewParser().ProduceAST("<?php $myVar[];")
+	if err != nil {
+		t.Errorf("Unexpected error: \"%s\"", err)
+		return
+	}
+	expected := ast.NewSubscriptExpression(ast.NewSimpleVariableExpression(ast.NewVariableNameExpression("$myVar")), nil)
+	actual := ast.ExprToSubscriptExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
+	if expected.String() != actual.String() {
+		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
+	}
+
+	program, err = NewParser().ProduceAST("<?php $myVar[0];")
+	if err != nil {
+		t.Errorf("Unexpected error: \"%s\"", err)
+		return
+	}
+	expected = ast.NewSubscriptExpression(
+		ast.NewSimpleVariableExpression(ast.NewVariableNameExpression("$myVar")),
+		ast.NewIntegerLiteralExpression(0),
+	)
+	actual = ast.ExprToSubscriptExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
+	if expected.String() != actual.String() {
+		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
+	}
+}
+
 func TestFunctionCall(t *testing.T) {
 	// Without argument
 	program, err := NewParser().ProduceAST("<?php func();")

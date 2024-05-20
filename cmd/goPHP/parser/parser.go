@@ -645,6 +645,8 @@ func (parser *Parser) parsePrimaryExpression() (ast.IExpression, error) {
 	//    scoped-property-access-expression
 	//    member-access-expression
 
+	var variable ast.IExpression
+
 	// ------------------- MARK: callable-variable -------------------
 
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-callable-variable
@@ -664,7 +666,7 @@ func (parser *Parser) parsePrimaryExpression() (ast.IExpression, error) {
 	//    variable-name
 
 	if parser.isTokenType(lexer.VariableNameToken, false) {
-		return ast.NewSimpleVariableExpression(ast.NewVariableNameExpression(parser.eat().Value)), nil
+		variable = ast.NewSimpleVariableExpression(ast.NewVariableNameExpression(parser.eat().Value))
 	}
 
 	// Spec: https://phplang.org/spec/10-expressions.html#simple-variable
@@ -684,10 +686,10 @@ func (parser *Parser) parsePrimaryExpression() (ast.IExpression, error) {
 
 		if parser.at().Value == "}" {
 			parser.eat()
-			return ast.NewSimpleVariableExpression(expr), nil
+			variable = ast.NewSimpleVariableExpression(expr)
+		} else {
+			return ast.NewEmptyExpression(), fmt.Errorf("Parser error: End of simple variable expression not detected")
 		}
-
-		return ast.NewEmptyExpression(), fmt.Errorf("Parser error: End of simple variable expression not detected")
 	}
 
 	// Spec: https://phplang.org/spec/10-expressions.html#simple-variable
@@ -700,11 +702,45 @@ func (parser *Parser) parsePrimaryExpression() (ast.IExpression, error) {
 		if expr, err := parser.parsePrimaryExpression(); err != nil {
 			return ast.NewEmptyExpression(), err
 		} else {
-			return ast.NewSimpleVariableExpression(expr), nil
+			variable = ast.NewSimpleVariableExpression(expr)
 		}
 	}
 
-	// TODO subscript-expression
+	if ast.IsVariableExpression(variable) && !parser.isToken(lexer.OperatorOrPunctuatorToken, "[", false) &&
+		!parser.isToken(lexer.OperatorOrPunctuatorToken, "{", false) {
+		return variable, nil
+	}
+
+	// ------------------- MARK: subscript-expression -------------------
+
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-subscript-expression
+
+	// subscript-expression:
+	//    dereferencable-expression   [   expression(opt)   ]
+	//    dereferencable-expression   {   expression   }   <b>[Deprecated form]</b>
+
+	// dereferencable-expression:
+	//    variable
+	//    (   expression   )
+	//    array-creation-expression
+	//    string-literal
+
+	// TODO subscript-expression - dereferencable-expression (expression, array-creation, string)
+	if ast.IsVariableExpression(variable) && parser.isToken(lexer.OperatorOrPunctuatorToken, "[", true) {
+		var err error
+		var index ast.IExpression
+		if !parser.isToken(lexer.OperatorOrPunctuatorToken, "]", false) {
+			index, err = parser.parseExpression()
+			if err != nil {
+				return ast.NewEmptyExpression(), err
+			}
+		}
+		if !parser.isToken(lexer.OperatorOrPunctuatorToken, "]", true) {
+			return ast.NewEmptyExpression(), fmt.Errorf("Expected \"]\". Got: %s", parser.at())
+		}
+		return ast.NewSubscriptExpression(variable, index), nil
+	}
+
 	// TODO member-call-expression
 	// TODO scoped-call-expression
 
