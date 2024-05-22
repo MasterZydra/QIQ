@@ -673,6 +673,12 @@ func ExprToEqualExpr(expr IExpression) IEqualityExpression {
 	return i.(IEqualityExpression)
 }
 
+// ------------------- MARK: ShiftExpression -------------------
+
+func NewShiftExpression(lhs IExpression, operator string, rhs IExpression) *EqualityExpression {
+	return &EqualityExpression{expr: NewExpression(ShiftExpr), lhs: lhs, operator: operator, rhs: rhs}
+}
+
 // ------------------- MARK: AdditiveExpression -------------------
 
 func NewAdditiveExpression(lhs IExpression, operator string, rhs IExpression) *EqualityExpression {
@@ -691,10 +697,28 @@ func NewExponentiationExpression(lhs IExpression, rhs IExpression) *EqualityExpr
 	return &EqualityExpression{expr: NewExpression(ExponentiationExpr), lhs: lhs, operator: "**", rhs: rhs}
 }
 
+// ------------------- MARK: LogicalIncOrExpression -------------------
+
+func NewLogicalIncOrExpression(lhs IExpression, rhs IExpression) *EqualityExpression {
+	return &EqualityExpression{expr: NewExpression(LogicalIncOrExpr), lhs: lhs, operator: "||", rhs: rhs}
+}
+
+// ------------------- MARK: LogicalAndExpression -------------------
+
+func NewLogicalAndExpression(lhs IExpression, rhs IExpression) *EqualityExpression {
+	return &EqualityExpression{expr: NewExpression(LogicalAndExpr), lhs: lhs, operator: "&&", rhs: rhs}
+}
+
 // ------------------- MARK: BitwiseIncOrExpression -------------------
 
 func NewBitwiseIncOrExpression(lhs IExpression, rhs IExpression) *EqualityExpression {
 	return &EqualityExpression{expr: NewExpression(BitwiseIncOrExpr), lhs: lhs, operator: "|", rhs: rhs}
+}
+
+// ------------------- MARK: BitwiseExcOrExpression -------------------
+
+func NewBitwiseExcOrExpression(lhs IExpression, rhs IExpression) *EqualityExpression {
+	return &EqualityExpression{expr: NewExpression(BitwiseExcOrExpr), lhs: lhs, operator: "^", rhs: rhs}
 }
 
 // ------------------- MARK: BitwiseAndExpression -------------------

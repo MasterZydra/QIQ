@@ -119,7 +119,23 @@ func TestArray(t *testing.T) {
 }
 
 func TestCalculation(t *testing.T) {
+	// Boolean
+	testInputOutput(t, `<?php echo 4 && 0 ? "t" : "f";`, "f")
+	testInputOutput(t, `<?php echo 4 && 1 ? "t" : "f";`, "t")
+	testInputOutput(t, `<?php echo 4 && false ? "t" : "f";`, "f")
+	testInputOutput(t, `<?php echo 4 && true ? "t" : "f";`, "t")
+	testInputOutput(t, `<?php echo 0 || 0 ? "t" : "f";`, "f")
+	testInputOutput(t, `<?php echo 4 || 1 ? "t" : "f";`, "t")
+	testInputOutput(t, `<?php echo false || false ? "t" : "f";`, "f")
+	testInputOutput(t, `<?php echo 4 || true ? "t" : "f";`, "t")
+
 	// Integer
+	testInputOutput(t, `<?php echo 4 >> 2;`, "1")
+	testInputOutput(t, `<?php echo 8 << 2;`, "32")
+	testInputOutput(t, `<?php $a = 13; echo $a <<= 1;`, "26")
+	testInputOutput(t, `<?php echo 4 ^ 4;`, "0")
+	testInputOutput(t, `<?php echo 8 ^ 4;`, "12")
+	testInputOutput(t, `<?php $a = 13; echo $a ^= 4;`, "9")
 	testInputOutput(t, `<?php echo 4 | 4;`, "4")
 	testInputOutput(t, `<?php echo 8 | 4;`, "12")
 	testInputOutput(t, `<?php $a = 8; echo $a |= 4;`, "12")

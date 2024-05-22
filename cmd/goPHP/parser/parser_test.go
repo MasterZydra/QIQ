@@ -484,6 +484,21 @@ func TestEqualityExpression(t *testing.T) {
 	}
 }
 
+func TestShiftExpression(t *testing.T) {
+	program, err := NewParser().ProduceAST(`<?php "234" << 23;`)
+	if err != nil {
+		t.Errorf("Unexpected error: \"%s\"", err)
+		return
+	}
+	expected := ast.NewShiftExpression(
+		ast.NewStringLiteralExpression("234", ast.DoubleQuotedString), "<<", ast.NewIntegerLiteralExpression(23),
+	)
+	actual := ast.ExprToEqualExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
+	if expected.String() != actual.String() || expected.GetOperator() != actual.GetOperator() {
+		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
+	}
+}
+
 func TestAdditiveExpression(t *testing.T) {
 	program, err := NewParser().ProduceAST(`<?php "234" + 23;`)
 	if err != nil {
@@ -536,6 +551,51 @@ func TestBitwiseIncOrExpression(t *testing.T) {
 		return
 	}
 	expected := ast.NewBitwiseIncOrExpression(
+		ast.NewStringLiteralExpression("234", ast.DoubleQuotedString), ast.NewIntegerLiteralExpression(12),
+	)
+	actual := ast.ExprToEqualExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
+	if expected.String() != actual.String() || expected.GetOperator() != actual.GetOperator() {
+		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
+	}
+}
+
+func TestLogicalIncOrExpression(t *testing.T) {
+	program, err := NewParser().ProduceAST(`<?php "234" || 12;`)
+	if err != nil {
+		t.Errorf("Unexpected error: \"%s\"", err)
+		return
+	}
+	expected := ast.NewLogicalIncOrExpression(
+		ast.NewStringLiteralExpression("234", ast.DoubleQuotedString), ast.NewIntegerLiteralExpression(12),
+	)
+	actual := ast.ExprToEqualExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
+	if expected.String() != actual.String() || expected.GetOperator() != actual.GetOperator() {
+		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
+	}
+}
+
+func TestLogicalAndExpression(t *testing.T) {
+	program, err := NewParser().ProduceAST(`<?php "234" && 12;`)
+	if err != nil {
+		t.Errorf("Unexpected error: \"%s\"", err)
+		return
+	}
+	expected := ast.NewLogicalAndExpression(
+		ast.NewStringLiteralExpression("234", ast.DoubleQuotedString), ast.NewIntegerLiteralExpression(12),
+	)
+	actual := ast.ExprToEqualExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
+	if expected.String() != actual.String() || expected.GetOperator() != actual.GetOperator() {
+		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
+	}
+}
+
+func TestBitwiseExcOrExpression(t *testing.T) {
+	program, err := NewParser().ProduceAST(`<?php "234" ^ 12;`)
+	if err != nil {
+		t.Errorf("Unexpected error: \"%s\"", err)
+		return
+	}
+	expected := ast.NewBitwiseExcOrExpression(
 		ast.NewStringLiteralExpression("234", ast.DoubleQuotedString), ast.NewIntegerLiteralExpression(12),
 	)
 	actual := ast.ExprToEqualExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())

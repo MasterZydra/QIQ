@@ -5,6 +5,7 @@ import (
 	"GoPHP/cmd/goPHP/common"
 	"GoPHP/cmd/goPHP/lexer"
 	"fmt"
+	"slices"
 	"strings"
 )
 
@@ -366,8 +367,19 @@ func (parser *Parser) parseLogicalIncOrExpression1() (ast.IExpression, error) {
 	//    logical-AND-expression-1
 	//    logical-inc-OR-expression-1   ||   logical-AND-expression-1
 
-	// TODO logical-inc-OR-expression-1
-	return parser.parseLogicalAndExpression1()
+	lhs, err := parser.parseLogicalAndExpression1()
+	if err != nil {
+		return ast.NewEmptyExpression(), err
+	}
+
+	for parser.isToken(lexer.OperatorOrPunctuatorToken, "||", true) {
+		rhs, err := parser.parseLogicalIncOrExpression1()
+		if err != nil {
+			return ast.NewEmptyExpression(), err
+		}
+		lhs = ast.NewLogicalIncOrExpression(lhs, rhs)
+	}
+	return lhs, nil
 }
 
 func (parser *Parser) parseLogicalAndExpression1() (ast.IExpression, error) {
@@ -377,8 +389,19 @@ func (parser *Parser) parseLogicalAndExpression1() (ast.IExpression, error) {
 	//    bitwise-inc-OR-expression
 	//    logical-AND-expression-1   &&   bitwise-inc-OR-expression
 
-	// TODO logical-AND-expression-1
-	return parser.parseBitwiseIncOrExpression()
+	lhs, err := parser.parseBitwiseIncOrExpression()
+	if err != nil {
+		return ast.NewEmptyExpression(), err
+	}
+
+	for parser.isToken(lexer.OperatorOrPunctuatorToken, "&&", true) {
+		rhs, err := parser.parseLogicalAndExpression1()
+		if err != nil {
+			return ast.NewEmptyExpression(), err
+		}
+		lhs = ast.NewLogicalAndExpression(lhs, rhs)
+	}
+	return lhs, nil
 }
 
 func (parser *Parser) parseBitwiseIncOrExpression() (ast.IExpression, error) {
@@ -410,8 +433,19 @@ func (parser *Parser) parseBitwiseExcOrExpression() (ast.IExpression, error) {
 	//    bitwise-AND-expression
 	//    bitwise-exc-OR-expression   ^   bitwise-AND-expression
 
-	// TODO bitwise-exc-OR-expression
-	return parser.parseBitwiseAndExpression()
+	lhs, err := parser.parseBitwiseAndExpression()
+	if err != nil {
+		return ast.NewEmptyExpression(), err
+	}
+
+	for parser.isToken(lexer.OperatorOrPunctuatorToken, "^", true) {
+		rhs, err := parser.parseBitwiseExcOrExpression()
+		if err != nil {
+			return ast.NewEmptyExpression(), err
+		}
+		lhs = ast.NewBitwiseExcOrExpression(lhs, rhs)
+	}
+	return lhs, nil
 }
 
 func (parser *Parser) parseBitwiseAndExpression() (ast.IExpression, error) {
@@ -486,8 +520,20 @@ func (parser *Parser) parseShiftExpression() (ast.IExpression, error) {
 	//    shift-expression   <<   additive-expression
 	//    shift-expression   >>   additive-expression
 
-	// TODO shift-expression
-	return parser.parseAdditiveExpression()
+	lhs, err := parser.parseAdditiveExpression()
+	if err != nil {
+		return ast.NewEmptyExpression(), err
+	}
+
+	for parser.isTokenType(lexer.OperatorOrPunctuatorToken, false) && slices.Contains([]string{"<<", ">>"}, parser.at().Value) {
+		operator := parser.eat().Value
+		rhs, err := parser.parseShiftExpression()
+		if err != nil {
+			return ast.NewEmptyExpression(), err
+		}
+		lhs = ast.NewShiftExpression(lhs, operator, rhs)
+	}
+	return lhs, nil
 }
 
 func (parser *Parser) parseAdditiveExpression() (ast.IExpression, error) {

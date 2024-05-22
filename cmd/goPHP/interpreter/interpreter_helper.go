@@ -141,6 +141,10 @@ func calculate(operand1 IRuntimeValue, operator string, operand2 IRuntimeValue) 
 	resultType := VoidValue
 	if slices.Contains([]string{"."}, operator) {
 		resultType = StringValue
+	} else if slices.Contains([]string{"&&", "||"}, operator) {
+		resultType = BooleanValue
+	} else if slices.Contains([]string{"&", "|", "^", "<<", ">>"}, operator) {
+		resultType = IntegerValue
 	} else {
 		resultType = IntegerValue
 		if operand1.GetType() == FloatingValue || operand2.GetType() == FloatingValue {
@@ -167,6 +171,8 @@ func calculate(operand1 IRuntimeValue, operator string, operand2 IRuntimeValue) 
 	//   true && 3
 
 	switch resultType {
+	case BooleanValue:
+		return calculateBoolean(runtimeValToBoolRuntimeVal(operand1), operator, runtimeValToBoolRuntimeVal(operand2))
 	case IntegerValue:
 		return calculateInteger(runtimeValToIntRuntimeVal(operand1), operator, runtimeValToIntRuntimeVal(operand2))
 	case FloatingValue:
@@ -175,6 +181,17 @@ func calculate(operand1 IRuntimeValue, operator string, operand2 IRuntimeValue) 
 		return calculateString(runtimeValToStrRuntimeVal(operand1), operator, runtimeValToStrRuntimeVal(operand2))
 	default:
 		return NewVoidRuntimeValue(), fmt.Errorf("calculate: Type \"%s\" not implemented", operator)
+	}
+}
+
+func calculateBoolean(operand1 IBooleanRuntimeValue, operator string, operand2 IBooleanRuntimeValue) (IBooleanRuntimeValue, error) {
+	switch operator {
+	case "&&":
+		return NewBooleanRuntimeValue(operand1.GetValue() && operand2.GetValue()), nil
+	case "||":
+		return NewBooleanRuntimeValue(operand1.GetValue() || operand2.GetValue()), nil
+	default:
+		return NewBooleanRuntimeValue(false), fmt.Errorf("calculateBoolean: Operator \"%s\" not implemented", operator)
 	}
 }
 
@@ -197,6 +214,12 @@ func calculateFloating(operand1 IFloatingRuntimeValue, operator string, operand2
 
 func calculateInteger(operand1 IIntegerRuntimeValue, operator string, operand2 IIntegerRuntimeValue) (IIntegerRuntimeValue, error) {
 	switch operator {
+	case "<<":
+		return NewIntegerRuntimeValue(operand1.GetValue() << operand2.GetValue()), nil
+	case ">>":
+		return NewIntegerRuntimeValue(operand1.GetValue() >> operand2.GetValue()), nil
+	case "^":
+		return NewIntegerRuntimeValue(operand1.GetValue() ^ operand2.GetValue()), nil
 	case "|":
 		return NewIntegerRuntimeValue(operand1.GetValue() | operand2.GetValue()), nil
 	case "&":

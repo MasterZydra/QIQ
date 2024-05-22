@@ -78,7 +78,8 @@ func (interpreter *Interpreter) processStmt(stmt ast.IStatement, env *Environmen
 		return interpreter.processCoalesceExpression(ast.ExprToCoalesceExpr(stmt), env)
 	case ast.EqualityExpr:
 		return interpreter.processEqualityExpression(ast.ExprToEqualExpr(stmt), env)
-	case ast.AdditiveExpr, ast.BitwiseAndExpr, ast.BitwiseIncOrExpr, ast.MultiplicativeExpr, ast.ExponentiationExpr:
+	case ast.AdditiveExpr, ast.BitwiseAndExpr, ast.BitwiseExcOrExpr, ast.BitwiseIncOrExpr, ast.ExponentiationExpr,
+		ast.LogicalAndExpr, ast.LogicalIncOrExpr, ast.MultiplicativeExpr, ast.ShiftExpr:
 		return interpreter.processAdditiveExpression(ast.ExprToEqualExpr(stmt), env)
 	case ast.LogicalNotExpr:
 		return interpreter.processLogicalNotExpression(ast.ExprToUnaryOpExpr(stmt), env)
