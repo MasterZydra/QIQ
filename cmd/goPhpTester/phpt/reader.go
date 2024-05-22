@@ -34,7 +34,7 @@ func NewReader(filename string) (*Reader, error) {
 
 func (reader *Reader) GetTestFile() (*TestFile, error) {
 	getError := func(section string) error {
-		return fmt.Errorf("Expected \"%s\". Got: \"%s\"", reader.filename, section, reader.at())
+		return fmt.Errorf("Expected \"%s\". Got: \"%s\"", section, reader.at())
 	}
 
 	if reader.at() == "--TEST--" {
@@ -52,7 +52,7 @@ func (reader *Reader) GetTestFile() (*TestFile, error) {
 		}
 		paramsMap, err := url.ParseQuery(params)
 		if err != nil {
-			return nil, fmt.Errorf("--POST--\n%s", reader.filename, err)
+			return nil, fmt.Errorf("--POST--\n%s", err)
 		}
 		reader.testFile.PostParams = paramsMap
 		reader.sections = append(reader.sections, "--POST--")
@@ -65,7 +65,7 @@ func (reader *Reader) GetTestFile() (*TestFile, error) {
 		}
 		paramsMap, err := url.ParseQuery(params)
 		if err != nil {
-			return nil, fmt.Errorf("--GET--\n%s", reader.filename, err)
+			return nil, fmt.Errorf("--GET--\n%s", err)
 		}
 		reader.testFile.GetParams = paramsMap
 		reader.sections = append(reader.sections, "--GET--")

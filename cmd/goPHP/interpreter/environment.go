@@ -85,32 +85,28 @@ func (env *Environment) unsetVariable(variableName string) {
 // ------------------- MARK: Constants -------------------
 
 func (env *Environment) declareConstant(constantName string, value IRuntimeValue) (IRuntimeValue, error) {
-	if _, err := env.lookupConstant(constantName); err == nil {
+	// Get "global" environment
+	var environment *Environment = env
+	for environment.parent != nil {
+		environment = env.parent
+	}
+
+	if _, err := environment.lookupConstant(constantName); err == nil {
 		return NewVoidRuntimeValue(), fmt.Errorf("Cannot redefine an exisiting constant: \"%s\"", constantName)
 	}
 
-	env.constants[constantName] = value
+	environment.constants[constantName] = value
 
 	return value, nil
 }
 
-func (env *Environment) resolveConstant(constantName string) (*Environment, error) {
-	if _, ok := env.constants[constantName]; ok {
-		return env, nil
-	}
-
-	if env.parent == nil {
-		return nil, fmt.Errorf("Interpreter error: Cannot resolve constant \"%s\" as it does not exist", constantName)
-	}
-
-	return env.parent.resolveConstant(constantName)
-}
-
 func (env *Environment) lookupConstant(constantName string) (IRuntimeValue, error) {
-	environment, err := env.resolveConstant(constantName)
-	if err != nil {
-		return NewVoidRuntimeValue(), err
+	// Get "global" environment
+	var environment *Environment = env
+	for environment.parent != nil {
+		environment = env.parent
 	}
+
 	value, ok := environment.constants[constantName]
 	if !ok {
 		return NewVoidRuntimeValue(), fmt.Errorf("Interpreter error: Undefined constant \"%s\"", constantName)

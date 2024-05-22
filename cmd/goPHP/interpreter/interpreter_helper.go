@@ -95,8 +95,9 @@ func (interpreter *Interpreter) exprToRuntimeValue(expr ast.IExpression, env *En
 	case ast.StringLiteralExpr:
 		str := ast.ExprToStrLitExpr(expr).GetValue()
 		// variable substitution
+		// TODO move to area where it is called before printing it
 		if ast.ExprToStrLitExpr(expr).GetStringType() == ast.DoubleQuotedString {
-			r, _ := regexp.Compile(`{\$[A-Za-z1-9_][A-Za-z0-9_]*(\[['A-Za-z]*\])?}`)
+			r, _ := regexp.Compile(`{\$[A-Za-z_][A-Za-z0-9_]*['A-Za-z0-9\[\]]*}`)
 			matches := r.FindAllString(str, -1)
 			for _, match := range matches {
 				exprStr := "<?= " + match[1:len(match)-1] + ";"
