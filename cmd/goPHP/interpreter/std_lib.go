@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"slices"
+	"strings"
 )
 
 func registerNativeFunctions(environment *Environment) {
@@ -15,35 +16,35 @@ func registerNativeFunctions(environment *Environment) {
 	environment.nativeFunctions["is_null"] = nativeFn_is_null
 	environment.nativeFunctions["key_exits"] = nativeFn_array_key_exists
 	environment.nativeFunctions["strval"] = nativeFn_strval
+	environment.nativeFunctions["var_dump"] = nativeFn_var_dump
 }
 
-type nativeFunction func([]IRuntimeValue, *Environment) (IRuntimeValue, error)
+type nativeFunction func([]IRuntimeValue, *Interpreter) (IRuntimeValue, Error)
 
 // ------------------- MARK: array_key_exits -------------------
 
-func nativeFn_array_key_exists(args []IRuntimeValue, env *Environment) (IRuntimeValue, error) {
+func nativeFn_array_key_exists(args []IRuntimeValue, _ *Interpreter) (IRuntimeValue, Error) {
 	if len(args) != 2 {
-		return NewVoidRuntimeValue(), fmt.Errorf(
-			"Uncaught ArgumentCountError: array_key_exists() expects exactly 2 arguments, %d given", len(args),
-		)
+		return NewVoidRuntimeValue(),
+			NewError("Uncaught ArgumentCountError: array_key_exists() expects exactly 2 arguments, %d given", len(args))
 	}
 
 	if args[1].GetType() != ArrayValue {
-		return NewVoidRuntimeValue(), fmt.Errorf("Uncaught TypeError: $array must be of type array")
+		return NewVoidRuntimeValue(), NewError("Uncaught TypeError: $array must be of type array")
 	}
 
 	boolean, err := lib_array_key_exists(args[0], runtimeValToArrayRuntimeVal(args[1]))
 	return NewBooleanRuntimeValue(boolean), err
 }
 
-func lib_array_key_exists(key IRuntimeValue, array IArrayRuntimeValue) (bool, error) {
+func lib_array_key_exists(key IRuntimeValue, array IArrayRuntimeValue) (bool, Error) {
 	// Spec: https://www.php.net/manual/en/function.array-key-exists.php
 
 	// TODO lib_array_key_exists - allowedKeyTypes - resource
 	allowedKeyTypes := []ValueType{StringValue, IntegerValue, FloatingValue, BooleanValue, NullValue}
 
 	if !slices.Contains(allowedKeyTypes, key.GetType()) {
-		return false, fmt.Errorf("Values of type %s are not allowed as array key", key.GetType())
+		return false, NewError("Values of type %s are not allowed as array key", key.GetType())
 	}
 
 	_, ok := array.GetElement(key)
@@ -52,18 +53,17 @@ func lib_array_key_exists(key IRuntimeValue, array IArrayRuntimeValue) (bool, er
 
 // ------------------- MARK: boolval -------------------
 
-func nativeFn_boolval(args []IRuntimeValue, env *Environment) (IRuntimeValue, error) {
+func nativeFn_boolval(args []IRuntimeValue, _ *Interpreter) (IRuntimeValue, Error) {
 	if len(args) != 1 {
-		return NewVoidRuntimeValue(), fmt.Errorf(
-			"Uncaught ArgumentCountError: boolval() expects exactly 1 argument, %d given", len(args),
-		)
+		return NewVoidRuntimeValue(),
+			NewError("Uncaught ArgumentCountError: boolval() expects exactly 1 argument, %d given", len(args))
 	}
 
 	boolean, err := lib_boolval(args[0])
 	return NewBooleanRuntimeValue(boolean), err
 }
 
-func lib_boolval(runtimeValue IRuntimeValue) (bool, error) {
+func lib_boolval(runtimeValue IRuntimeValue) (bool, Error) {
 	// Spec: https://phplang.org/spec/08-conversions.html#converting-to-boolean-type
 
 	switch runtimeValue.GetType() {
@@ -93,7 +93,7 @@ func lib_boolval(runtimeValue IRuntimeValue) (bool, error) {
 		str := runtimeValToStrRuntimeVal(runtimeValue).GetValue()
 		return str != "" && str != "0", nil
 	default:
-		return false, fmt.Errorf("boolval: Unsupported runtime value %s", runtimeValue.GetType())
+		return false, NewError("boolval: Unsupported runtime value %s", runtimeValue.GetType())
 	}
 
 	// TODO boolval - object
@@ -107,27 +107,47 @@ func lib_boolval(runtimeValue IRuntimeValue) (bool, error) {
 
 // ------------------- MARK: error_reporting -------------------
 
-func nativeFn_error_reporting(args []IRuntimeValue, env *Environment) (IRuntimeValue, error) {
+func nativeFn_error_reporting(args []IRuntimeValue, interpreter *Interpreter) (IRuntimeValue, Error) {
 	// Spec: https://www.php.net/manual/en/function.error-reporting.php
 
-	// TODO implement nativeFn_error_reporting after adding configuration for error level
-	return NewIntegerRuntimeValue(0), nil
+	if len(args) == 0 || len(args) == 1 && args[0].GetType() == NullValue {
+		return NewIntegerRuntimeValue(interpreter.config.ErrorReporting), nil
+	}
+
+	if len(args) != 1 {
+		return NewVoidRuntimeValue(),
+			NewError("Uncaught ArgumentCountError: error_reporting() expects most 1 argument, %d given", len(args))
+	}
+
+	if args[0].GetType() != IntegerValue {
+		return NewVoidRuntimeValue(),
+			NewError("Uncaught ArgumentError: error_reporting() expects most integer for $error_level argument, %s given", args[0].GetType())
+	}
+
+	newValue := runtimeValToIntRuntimeVal(args[0]).GetValue()
+	if newValue == -1 {
+		newValue = E_ALL
+	}
+
+	previous := interpreter.config.ErrorReporting
+	interpreter.config.ErrorReporting = newValue
+
+	return NewIntegerRuntimeValue(previous), nil
 }
 
 // ------------------- MARK: floatval -------------------
 
-func nativeFn_floatval(args []IRuntimeValue, env *Environment) (IRuntimeValue, error) {
+func nativeFn_floatval(args []IRuntimeValue, _ *Interpreter) (IRuntimeValue, Error) {
 	if len(args) != 1 {
-		return NewVoidRuntimeValue(), fmt.Errorf(
-			"Uncaught ArgumentCountError: floatval() expects exactly 1 argument, %d given", len(args),
-		)
+		return NewVoidRuntimeValue(),
+			NewError("Uncaught ArgumentCountError: floatval() expects exactly 1 argument, %d given", len(args))
 	}
 
 	floating, err := lib_floatval(args[0])
 	return NewFloatingRuntimeValue(floating), err
 }
 
-func lib_floatval(runtimeValue IRuntimeValue) (float64, error) {
+func lib_floatval(runtimeValue IRuntimeValue) (float64, Error) {
 	// Spec: https://phplang.org/spec/08-conversions.html#converting-to-floating-point-type
 
 	switch runtimeValue.GetType() {
@@ -161,18 +181,17 @@ func lib_floatval(runtimeValue IRuntimeValue) (float64, error) {
 
 // ------------------- MARK: intval -------------------
 
-func nativeFn_intval(args []IRuntimeValue, env *Environment) (IRuntimeValue, error) {
+func nativeFn_intval(args []IRuntimeValue, _ *Interpreter) (IRuntimeValue, Error) {
 	if len(args) != 1 {
-		return NewVoidRuntimeValue(), fmt.Errorf(
-			"Uncaught ArgumentCountError: intval() expects exactly 1 argument, %d given", len(args),
-		)
+		return NewVoidRuntimeValue(),
+			NewError("Uncaught ArgumentCountError: intval() expects exactly 1 argument, %d given", len(args))
 	}
 
 	integer, err := lib_intval(args[0])
 	return NewIntegerRuntimeValue(integer), err
 }
 
-func lib_intval(runtimeValue IRuntimeValue) (int64, error) {
+func lib_intval(runtimeValue IRuntimeValue) (int64, Error) {
 	// Spec: https://phplang.org/spec/08-conversions.html#converting-to-integer-type
 
 	switch runtimeValue.GetType() {
@@ -197,7 +216,7 @@ func lib_intval(runtimeValue IRuntimeValue) (int64, error) {
 		// If the source value is NULL, the result value is 0.
 		return 0, nil
 	default:
-		return 0, fmt.Errorf("lib_intval: Unsupported runtime value %s", runtimeValue.GetType())
+		return 0, NewError("lib_intval: Unsupported runtime value %s", runtimeValue.GetType())
 	}
 	// TODO lib_intval - float
 	// Spec: https://phplang.org/spec/08-conversions.html#converting-to-integer-type
@@ -223,11 +242,10 @@ func lib_intval(runtimeValue IRuntimeValue) (int64, error) {
 
 // ------------------- MARK: is_null -------------------
 
-func nativeFn_is_null(args []IRuntimeValue, env *Environment) (IRuntimeValue, error) {
+func nativeFn_is_null(args []IRuntimeValue, _ *Interpreter) (IRuntimeValue, Error) {
 	if len(args) != 1 {
-		return NewVoidRuntimeValue(), fmt.Errorf(
-			"Uncaught ArgumentCountError: is_null() expects exactly 1 argument, %d given", len(args),
-		)
+		return NewVoidRuntimeValue(),
+			NewError("Uncaught ArgumentCountError: is_null() expects exactly 1 argument, %d given", len(args))
 	}
 
 	return NewBooleanRuntimeValue(lib_is_null(args[0])), nil
@@ -240,18 +258,17 @@ func lib_is_null(runtimeValue IRuntimeValue) bool {
 
 // ------------------- MARK: strval -------------------
 
-func nativeFn_strval(args []IRuntimeValue, env *Environment) (IRuntimeValue, error) {
+func nativeFn_strval(args []IRuntimeValue, _ *Interpreter) (IRuntimeValue, Error) {
 	if len(args) != 1 {
-		return NewVoidRuntimeValue(), fmt.Errorf(
-			"Uncaught ArgumentCountError: strval() expects exactly 1 argument,  %d given", len(args),
-		)
+		return NewVoidRuntimeValue(),
+			NewError("Uncaught ArgumentCountError: strval() expects exactly 1 argument,  %d given", len(args))
 	}
 
 	str, err := lib_strval(args[0])
 	return NewStringRuntimeValue(str), err
 }
 
-func lib_strval(runtimeValue IRuntimeValue) (string, error) {
+func lib_strval(runtimeValue IRuntimeValue) (string, Error) {
 	// Spec: https://phplang.org/spec/08-conversions.html#converting-to-string-type
 
 	switch runtimeValue.GetType() {
@@ -285,7 +302,7 @@ func lib_strval(runtimeValue IRuntimeValue) (string, error) {
 	case StringValue:
 		return runtimeValToStrRuntimeVal(runtimeValue).GetValue(), nil
 	default:
-		return "", fmt.Errorf("lib_strval: Unsupported runtime value %s", runtimeValue.GetType())
+		return "", NewError("lib_strval: Unsupported runtime value %s", runtimeValue.GetType())
 	}
 
 	// TODO lib_strval - object
@@ -295,4 +312,66 @@ func lib_strval(runtimeValue IRuntimeValue) (string, error) {
 	// TODO lib_strval - resource
 	// Spec: https://phplang.org/spec/08-conversions.html#converting-to-string-type
 	// If the source is a resource, the result value is an implementation-defined string.
+}
+
+// ------------------- MARK: var_dump -------------------
+
+func nativeFn_var_dump(args []IRuntimeValue, interpreter *Interpreter) (IRuntimeValue, Error) {
+	// Spec: https://www.php.net/manual/en/function.var-dump.php
+
+	if len(args) == 0 {
+		return NewVoidRuntimeValue(),
+			NewError("Uncaught ArgumentCountError: var_dump() expects at least 1 argument,  %d given", len(args))
+	}
+
+	for _, arg := range args {
+		if err := lib_var_dump_var(interpreter, arg, 2); err != nil {
+			return NewVoidRuntimeValue(), err
+		}
+	}
+
+	return NewVoidRuntimeValue(), nil
+}
+
+func lib_var_dump_var(interpreter *Interpreter, value IRuntimeValue, depth int) Error {
+	switch value.GetType() {
+	case ArrayValue:
+		keys := runtimeValToArrayRuntimeVal(value).GetKeys()
+		elements := runtimeValToArrayRuntimeVal(value).GetElements()
+		interpreter.println(fmt.Sprintf("array(%d) {", len(keys)))
+		for _, key := range keys {
+			if key.GetType() != IntegerValue {
+				return NewError("lib_var_dump_var: Unsupported array key type %s", key.GetType())
+			}
+			keyValue := runtimeValToIntRuntimeVal(key).GetValue()
+			interpreter.println(fmt.Sprintf("%s[%d]=>", strings.Repeat(" ", depth), keyValue))
+			interpreter.print(strings.Repeat(" ", depth))
+			lib_var_dump_var(interpreter, elements[key], depth+2)
+		}
+		interpreter.println(strings.Repeat(" ", depth-2) + "}")
+	case BooleanValue:
+		boolean := runtimeValToBoolRuntimeVal(value).GetValue()
+		if boolean {
+			interpreter.println("bool(true)")
+		} else {
+			interpreter.println("bool(false)")
+		}
+	case FloatingValue:
+		strVal, err := lib_strval(value)
+		if err != nil {
+			return err
+		}
+		interpreter.println("float(" + strVal + ")")
+	case IntegerValue:
+		strVal, err := lib_strval(value)
+		if err != nil {
+			return err
+		}
+		interpreter.println("int(" + strVal + ")")
+	case NullValue:
+		interpreter.println("NULL")
+	default:
+		return NewError("lib_var_dump_var: Unsupported runtime value %s", value.GetType())
+	}
+	return nil
 }

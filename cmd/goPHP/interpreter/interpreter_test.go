@@ -2,6 +2,7 @@ package interpreter
 
 import (
 	"GoPHP/cmd/goPHP/ast"
+	"fmt"
 	"testing"
 )
 
@@ -11,7 +12,7 @@ func TestVariableExprToVariableName(t *testing.T) {
 	// simple-variable-expression
 
 	// $var
-	interpreter := NewInterpreter(&Request{})
+	interpreter := NewInterpreter(NewDevConfig(), &Request{})
 	actual, err := interpreter.varExprToVarName(ast.NewSimpleVariableExpression(ast.NewVariableNameExpression("$var")), interpreter.env)
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
@@ -23,7 +24,7 @@ func TestVariableExprToVariableName(t *testing.T) {
 	}
 
 	// $$var
-	interpreter = NewInterpreter(&Request{})
+	interpreter = NewInterpreter(NewDevConfig(), &Request{})
 	interpreter.env.declareVariable("$var", NewStringRuntimeValue("hi"))
 	actual, err = interpreter.varExprToVarName(
 		ast.NewSimpleVariableExpression(
@@ -38,7 +39,7 @@ func TestVariableExprToVariableName(t *testing.T) {
 	}
 
 	// $$$var
-	interpreter = NewInterpreter(&Request{})
+	interpreter = NewInterpreter(NewDevConfig(), &Request{})
 	interpreter.env.declareVariable("$var1", NewStringRuntimeValue("hi"))
 	interpreter.env.declareVariable("$var", NewStringRuntimeValue("var1"))
 	actual, err = interpreter.varExprToVarName(
@@ -58,7 +59,7 @@ func TestVariableExprToVariableName(t *testing.T) {
 // ------------------- MARK: input output tests -------------------
 
 func testInputOutput(t *testing.T, php string, output string) {
-	actual, err := NewInterpreter(&Request{}).Process(php)
+	actual, err := NewInterpreter(NewDevConfig(), &Request{}).Process(php)
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -179,6 +180,11 @@ func TestCalculation(t *testing.T) {
 	// String
 	testInputOutput(t, `<?php echo "a" . "bc";`, "abc")
 	testInputOutput(t, `<?php $a = "a"; echo $a .= "bc";`, "abc")
+}
+
+func TestPredefinedConstants(t *testing.T) {
+	testInputOutput(t, `<?php echo E_USER_NOTICE;`, fmt.Sprintf("%d", E_USER_NOTICE))
+	testInputOutput(t, `<?php echo E_ALL;`, fmt.Sprintf("%d", E_ALL))
 }
 
 func TestConstantDeclaration(t *testing.T) {

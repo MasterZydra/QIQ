@@ -46,21 +46,49 @@ func NewNullRuntimeValue() *RuntimeValue {
 
 type IArrayRuntimeValue interface {
 	IRuntimeValue
+	AddElement(key IRuntimeValue, value IRuntimeValue)
+	GetKeys() []IRuntimeValue
 	GetElements() map[IRuntimeValue]IRuntimeValue
 	GetElement(key IRuntimeValue) (IRuntimeValue, bool)
 }
 
 type ArrayRuntimeValue struct {
 	runtimeValue *RuntimeValue
+	keys         []IRuntimeValue
 	elements     map[IRuntimeValue]IRuntimeValue
 }
 
-func NewArrayRuntimeValue(elements map[IRuntimeValue]IRuntimeValue) *ArrayRuntimeValue {
-	return &ArrayRuntimeValue{runtimeValue: NewRuntimeValue(ArrayValue), elements: elements}
+func NewArrayRuntimeValue() *ArrayRuntimeValue {
+	return &ArrayRuntimeValue{
+		runtimeValue: NewRuntimeValue(ArrayValue),
+		keys:         []IRuntimeValue{},
+		elements:     map[IRuntimeValue]IRuntimeValue{},
+	}
+}
+
+func NewArrayRuntimeValueFromMap(elements map[IRuntimeValue]IRuntimeValue) *ArrayRuntimeValue {
+	keys := []IRuntimeValue{}
+	for key := range elements {
+		keys = append(keys, key)
+	}
+	return &ArrayRuntimeValue{
+		runtimeValue: NewRuntimeValue(ArrayValue),
+		keys:         keys,
+		elements:     elements,
+	}
 }
 
 func (runtimeValue *ArrayRuntimeValue) GetType() ValueType {
 	return runtimeValue.runtimeValue.valueType
+}
+
+func (runtimeValue *ArrayRuntimeValue) AddElement(key IRuntimeValue, value IRuntimeValue) {
+	runtimeValue.keys = append(runtimeValue.keys, key)
+	runtimeValue.elements[key] = value
+}
+
+func (runtimeValue *ArrayRuntimeValue) GetKeys() []IRuntimeValue {
+	return runtimeValue.keys
 }
 
 func (runtimeValue *ArrayRuntimeValue) GetElements() map[IRuntimeValue]IRuntimeValue {

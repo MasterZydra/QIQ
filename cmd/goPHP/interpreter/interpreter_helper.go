@@ -2,7 +2,6 @@ package interpreter
 
 import (
 	"GoPHP/cmd/goPHP/ast"
-	"fmt"
 	"math"
 	"regexp"
 	"slices"
@@ -17,7 +16,7 @@ func (interpreter *Interpreter) println(str string) {
 	interpreter.print(str + "\n")
 }
 
-func (interpreter *Interpreter) processCondition(expr ast.IExpression, env *Environment) (IRuntimeValue, bool, error) {
+func (interpreter *Interpreter) processCondition(expr ast.IExpression, env *Environment) (IRuntimeValue, bool, Error) {
 	runtimeValue, err := interpreter.processStmt(expr, env)
 	if err != nil {
 		return runtimeValue, false, err
@@ -27,17 +26,21 @@ func (interpreter *Interpreter) processCondition(expr ast.IExpression, env *Envi
 	return runtimeValue, boolean, err
 }
 
-func (interpreter *Interpreter) lookupVariable(expr ast.IExpression, env *Environment) (IRuntimeValue, error) {
+func (interpreter *Interpreter) lookupVariable(expr ast.IExpression, env *Environment, suppressWarning bool) (IRuntimeValue, Error) {
 	variableName, err := interpreter.varExprToVarName(expr, env)
 	if err != nil {
 		return NewVoidRuntimeValue(), err
 	}
 
-	return env.lookupVariable(variableName)
+	runtimeValue, err := env.lookupVariable(variableName)
+	if !suppressWarning && err != nil {
+		interpreter.printError(err)
+	}
+	return runtimeValue, nil
 }
 
 // Convert a variable expression into the interpreted variable name
-func (interpreter *Interpreter) varExprToVarName(expr ast.IExpression, env *Environment) (string, error) {
+func (interpreter *Interpreter) varExprToVarName(expr ast.IExpression, env *Environment) (string, Error) {
 	switch expr.GetKind() {
 	case ast.SimpleVariableExpr:
 		variableNameExpr := ast.ExprToSimpleVarExpr(expr).GetVariableName()
@@ -53,7 +56,7 @@ func (interpreter *Interpreter) varExprToVarName(expr ast.IExpression, env *Envi
 			}
 			runtimeValue, err := env.lookupVariable(variableName)
 			if err != nil {
-				interpreter.println(err.Error())
+				interpreter.printError(err)
 			}
 			valueStr, err := lib_strval(runtimeValue)
 			if err != nil {
@@ -62,15 +65,23 @@ func (interpreter *Interpreter) varExprToVarName(expr ast.IExpression, env *Envi
 			return "$" + valueStr, nil
 		}
 
-		return "", fmt.Errorf("varExprToVarName - SimpleVariableExpr: Unsupported expression: %s", expr)
+		return "", NewError("varExprToVarName - SimpleVariableExpr: Unsupported expression: %s", expr)
 	default:
-		return "", fmt.Errorf("varExprToVarName: Unsupported expression: %s", expr)
+		return "", NewError("varExprToVarName: Unsupported expression: %s", expr)
 	}
+}
+
+func (interpreter *Interpreter) printError(err Error) {
+	if err.GetErrorType() == WarningPhpError && interpreter.config.ErrorReporting&E_WARNING != 0 {
+		interpreter.println("Warning: " + err.GetMessage())
+	}
+	// TODO implement
+	// Depending on interpreter.config.ErrorReporting
 }
 
 // ------------------- MARK: RuntimeValue -------------------
 
-func (interpreter *Interpreter) exprToRuntimeValue(expr ast.IExpression, env *Environment) (IRuntimeValue, error) {
+func (interpreter *Interpreter) exprToRuntimeValue(expr ast.IExpression, env *Environment) (IRuntimeValue, Error) {
 	switch expr.GetKind() {
 	case ast.ArrayLiteralExpr:
 		elements := map[IRuntimeValue]IRuntimeValue{}
@@ -85,9 +96,7 @@ func (interpreter *Interpreter) exprToRuntimeValue(expr ast.IExpression, env *En
 			}
 			elements[keyValue] = elementValue
 		}
-		return NewArrayRuntimeValue(elements), nil
-	case ast.BooleanLiteralExpr:
-		return NewBooleanRuntimeValue(ast.ExprToBoolLitExpr(expr).GetValue()), nil
+		return NewArrayRuntimeValueFromMap(elements), nil
 	case ast.IntegerLiteralExpr:
 		return NewIntegerRuntimeValue(ast.ExprToIntLitExpr(expr).GetValue()), nil
 	case ast.FloatingLiteralExpr:
@@ -101,7 +110,7 @@ func (interpreter *Interpreter) exprToRuntimeValue(expr ast.IExpression, env *En
 			matches := r.FindAllString(str, -1)
 			for _, match := range matches {
 				exprStr := "<?= " + match[1:len(match)-1] + ";"
-				result, err := NewInterpreter(interpreter.request).process(exprStr, env)
+				result, err := NewInterpreter(interpreter.config, interpreter.request).process(exprStr, env)
 				if err != nil {
 					return NewVoidRuntimeValue(), err
 				}
@@ -109,14 +118,12 @@ func (interpreter *Interpreter) exprToRuntimeValue(expr ast.IExpression, env *En
 			}
 		}
 		return NewStringRuntimeValue(str), nil
-	case ast.NullLiteralExpr:
-		return NewNullRuntimeValue(), nil
 	default:
-		return NewVoidRuntimeValue(), fmt.Errorf("exprToRuntimeValue: Unsupported expression: %s", expr)
+		return NewVoidRuntimeValue(), NewError("exprToRuntimeValue: Unsupported expression: %s", expr)
 	}
 }
 
-func runtimeValueToValueType(valueType ValueType, runtimeValue IRuntimeValue) (IRuntimeValue, error) {
+func runtimeValueToValueType(valueType ValueType, runtimeValue IRuntimeValue) (IRuntimeValue, Error) {
 	switch valueType {
 	case BooleanValue:
 		boolean, err := lib_boolval(runtimeValue)
@@ -131,13 +138,13 @@ func runtimeValueToValueType(valueType ValueType, runtimeValue IRuntimeValue) (I
 		str, err := lib_strval(runtimeValue)
 		return NewStringRuntimeValue(str), err
 	default:
-		return NewVoidRuntimeValue(), fmt.Errorf("runtimeValueToValueType: Unsupported runtime value: %s", valueType)
+		return NewVoidRuntimeValue(), NewError("runtimeValueToValueType: Unsupported runtime value: %s", valueType)
 	}
 }
 
 // ------------------- MARK: calculation -------------------
 
-func calculate(operand1 IRuntimeValue, operator string, operand2 IRuntimeValue) (IRuntimeValue, error) {
+func calculate(operand1 IRuntimeValue, operator string, operand2 IRuntimeValue) (IRuntimeValue, Error) {
 	resultType := VoidValue
 	if slices.Contains([]string{"."}, operator) {
 		resultType = StringValue
@@ -152,7 +159,7 @@ func calculate(operand1 IRuntimeValue, operator string, operand2 IRuntimeValue) 
 		}
 	}
 
-	var err error
+	var err Error
 	operand1, err = runtimeValueToValueType(resultType, operand1)
 	if err != nil {
 		return NewVoidRuntimeValue(), err
@@ -180,22 +187,22 @@ func calculate(operand1 IRuntimeValue, operator string, operand2 IRuntimeValue) 
 	case StringValue:
 		return calculateString(runtimeValToStrRuntimeVal(operand1), operator, runtimeValToStrRuntimeVal(operand2))
 	default:
-		return NewVoidRuntimeValue(), fmt.Errorf("calculate: Type \"%s\" not implemented", operator)
+		return NewVoidRuntimeValue(), NewError("calculate: Type \"%s\" not implemented", operator)
 	}
 }
 
-func calculateBoolean(operand1 IBooleanRuntimeValue, operator string, operand2 IBooleanRuntimeValue) (IBooleanRuntimeValue, error) {
+func calculateBoolean(operand1 IBooleanRuntimeValue, operator string, operand2 IBooleanRuntimeValue) (IBooleanRuntimeValue, Error) {
 	switch operator {
 	case "&&":
 		return NewBooleanRuntimeValue(operand1.GetValue() && operand2.GetValue()), nil
 	case "||":
 		return NewBooleanRuntimeValue(operand1.GetValue() || operand2.GetValue()), nil
 	default:
-		return NewBooleanRuntimeValue(false), fmt.Errorf("calculateBoolean: Operator \"%s\" not implemented", operator)
+		return NewBooleanRuntimeValue(false), NewError("calculateBoolean: Operator \"%s\" not implemented", operator)
 	}
 }
 
-func calculateFloating(operand1 IFloatingRuntimeValue, operator string, operand2 IFloatingRuntimeValue) (IFloatingRuntimeValue, error) {
+func calculateFloating(operand1 IFloatingRuntimeValue, operator string, operand2 IFloatingRuntimeValue) (IFloatingRuntimeValue, Error) {
 	switch operator {
 	case "+":
 		return NewFloatingRuntimeValue(operand1.GetValue() + operand2.GetValue()), nil
@@ -208,11 +215,11 @@ func calculateFloating(operand1 IFloatingRuntimeValue, operator string, operand2
 	case "**":
 		return NewFloatingRuntimeValue(math.Pow(operand1.GetValue(), operand2.GetValue())), nil
 	default:
-		return NewFloatingRuntimeValue(0), fmt.Errorf("calculateInteger: Operator \"%s\" not implemented", operator)
+		return NewFloatingRuntimeValue(0), NewError("calculateInteger: Operator \"%s\" not implemented", operator)
 	}
 }
 
-func calculateInteger(operand1 IIntegerRuntimeValue, operator string, operand2 IIntegerRuntimeValue) (IIntegerRuntimeValue, error) {
+func calculateInteger(operand1 IIntegerRuntimeValue, operator string, operand2 IIntegerRuntimeValue) (IIntegerRuntimeValue, Error) {
 	switch operator {
 	case "<<":
 		return NewIntegerRuntimeValue(operand1.GetValue() << operand2.GetValue()), nil
@@ -237,22 +244,22 @@ func calculateInteger(operand1 IIntegerRuntimeValue, operator string, operand2 I
 	case "**":
 		return NewIntegerRuntimeValue(int64(math.Pow(float64(operand1.GetValue()), float64(operand2.GetValue())))), nil
 	default:
-		return NewIntegerRuntimeValue(0), fmt.Errorf("calculateInteger: Operator \"%s\" not implemented", operator)
+		return NewIntegerRuntimeValue(0), NewError("calculateInteger: Operator \"%s\" not implemented", operator)
 	}
 }
 
-func calculateString(operand1 IStringRuntimeValue, operator string, operand2 IStringRuntimeValue) (IStringRuntimeValue, error) {
+func calculateString(operand1 IStringRuntimeValue, operator string, operand2 IStringRuntimeValue) (IStringRuntimeValue, Error) {
 	switch operator {
 	case ".":
 		return NewStringRuntimeValue(operand1.GetValue() + operand2.GetValue()), nil
 	default:
-		return NewStringRuntimeValue(""), fmt.Errorf("calculateString: Operator \"%s\" not implemented", operator)
+		return NewStringRuntimeValue(""), NewError("calculateString: Operator \"%s\" not implemented", operator)
 	}
 }
 
 // ------------------- MARK: comparison -------------------
 
-func compare(lhs IRuntimeValue, operator string, rhs IRuntimeValue) (IBooleanRuntimeValue, error) {
+func compare(lhs IRuntimeValue, operator string, rhs IRuntimeValue) (IBooleanRuntimeValue, Error) {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-equality-expression
 
 	// TODO compare - "==", "!=", "<>"
@@ -283,7 +290,7 @@ func compare(lhs IRuntimeValue, operator string, rhs IRuntimeValue) (IBooleanRun
 			case StringValue:
 				result = runtimeValToStrRuntimeVal(lhs).GetValue() == runtimeValToStrRuntimeVal(rhs).GetValue()
 			default:
-				return NewBooleanRuntimeValue(false), fmt.Errorf("compare: Runtime type %s for operator \"===\" not implemented", lhs.GetType())
+				return NewBooleanRuntimeValue(false), NewError("compare: Runtime type %s for operator \"===\" not implemented", lhs.GetType())
 			}
 		}
 
@@ -294,5 +301,5 @@ func compare(lhs IRuntimeValue, operator string, rhs IRuntimeValue) (IBooleanRun
 		}
 	}
 
-	return NewBooleanRuntimeValue(false), fmt.Errorf("compare: Operator \"%s\" not implemented", operator)
+	return NewBooleanRuntimeValue(false), NewError("compare: Operator \"%s\" not implemented", operator)
 }

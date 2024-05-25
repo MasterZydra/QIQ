@@ -101,11 +101,10 @@ func TestArrayLiteral(t *testing.T) {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
 	}
-	expected := ast.NewArrayLiteralExpression(map[ast.IExpression]ast.IExpression{
-		ast.NewIntegerLiteralExpression(0): ast.NewIntegerLiteralExpression(1),
-		ast.NewIntegerLiteralExpression(1): ast.NewStringLiteralExpression("a", ast.DoubleQuotedString),
-		ast.NewIntegerLiteralExpression(2): ast.NewBooleanLiteralExpression(false),
-	})
+	expected := ast.NewArrayLiteralExpression()
+	expected.AddElement(ast.NewIntegerLiteralExpression(0), ast.NewIntegerLiteralExpression(1))
+	expected.AddElement(ast.NewIntegerLiteralExpression(1), ast.NewStringLiteralExpression("a", ast.DoubleQuotedString))
+	expected.AddElement(ast.NewIntegerLiteralExpression(2), ast.NewBooleanLiteralExpression(false))
 	actual := ast.ExprToArrayLitExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
@@ -116,11 +115,10 @@ func TestArrayLiteral(t *testing.T) {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
 	}
-	expected = ast.NewArrayLiteralExpression(map[ast.IExpression]ast.IExpression{
-		ast.NewIntegerLiteralExpression(0): ast.NewIntegerLiteralExpression(1),
-		ast.NewIntegerLiteralExpression(1): ast.NewStringLiteralExpression("a", ast.DoubleQuotedString),
-		ast.NewIntegerLiteralExpression(2): ast.NewBooleanLiteralExpression(false),
-	})
+	expected = ast.NewArrayLiteralExpression()
+	expected.AddElement(ast.NewIntegerLiteralExpression(0), ast.NewIntegerLiteralExpression(1))
+	expected.AddElement(ast.NewIntegerLiteralExpression(1), ast.NewStringLiteralExpression("a", ast.DoubleQuotedString))
+	expected.AddElement(ast.NewIntegerLiteralExpression(2), ast.NewBooleanLiteralExpression(false))
 	actual = ast.ExprToArrayLitExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
@@ -134,8 +132,8 @@ func TestBooleanLiteral(t *testing.T) {
 		return
 	}
 	expected := ast.NewBooleanLiteralExpression(true)
-	actual := ast.ExprToBoolLitExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
-	if expected.String() != actual.String() || expected.GetValue() != actual.GetValue() {
+	actual := ast.ExprToConstAccessExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
+	if expected.String() != actual.String() || expected.GetConstantName() != actual.GetConstantName() {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
 	}
 
@@ -145,8 +143,21 @@ func TestBooleanLiteral(t *testing.T) {
 		return
 	}
 	expected = ast.NewBooleanLiteralExpression(false)
-	actual = ast.ExprToBoolLitExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
-	if expected.String() != actual.String() || expected.GetValue() != actual.GetValue() {
+	actual = ast.ExprToConstAccessExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
+	if expected.String() != actual.String() || expected.GetConstantName() != actual.GetConstantName() {
+		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
+	}
+}
+
+func TestNullLiteral(t *testing.T) {
+	program, err := NewParser().ProduceAST("<?php null;")
+	if err != nil {
+		t.Errorf("Unexpected error: \"%s\"", err)
+		return
+	}
+	expected := ast.NewNullLiteralExpression()
+	actual := ast.ExprToConstAccessExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
+	if expected.String() != actual.String() || expected.GetConstantName() != actual.GetConstantName() {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
 	}
 }

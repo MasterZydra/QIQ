@@ -247,7 +247,15 @@ func (parser *Parser) parseExpression() (ast.IExpression, error) {
 	// Spec-Fix: So that by following assignment-expression the primary-expression is reachable
 	//    assignment-expression
 
-	// TODO logical-inc-OR-expression-2
+	// logical-inc-OR-expression-2
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-logical-inc-OR-expression-2
+
+	// logical-inc-OR-expression-2:
+	//    logical-exc-OR-expression
+	//    logical-inc-OR-expression-2   or   logical-exc-OR-expression
+
+	// TODO logical-inc-OR-expression-2:
+
 	// TODO include-expression
 	// TODO include-once-expression
 	// TODO require-expression
@@ -879,16 +887,16 @@ func (parser *Parser) parsePrimaryExpression() (ast.IExpression, error) {
 	// qualified-name::
 	//    namespace-name-as-a-prefix(opt)   name
 
-	if parser.isTokenType(lexer.NameToken, false) {
+	if parser.isTokenType(lexer.NameToken, false) ||
+		(parser.isTokenType(lexer.KeywordToken, false) && common.IsCorePredefinedConstants(parser.at().Value)) {
 		// TODO constant-access-expression - namespace-name-as-a-prefix
 		// TODO constant-access-expression - check if name is a defined constant here or in interpreter
 		return ast.NewConstantAccessExpression(parser.eat().Value), nil
 	}
 
 	// literal
-	if parser.isToken(lexer.KeywordToken, "FALSE", false) || parser.isToken(lexer.KeywordToken, "TRUE", false) ||
-		parser.isTokenType(lexer.IntegerLiteralToken, false) || parser.isTokenType(lexer.FloatingLiteralToken, false) ||
-		parser.isTokenType(lexer.StringLiteralToken, false) || parser.isToken(lexer.KeywordToken, "NULL", false) {
+	if parser.isTokenType(lexer.IntegerLiteralToken, false) || parser.isTokenType(lexer.FloatingLiteralToken, false) ||
+		parser.isTokenType(lexer.StringLiteralToken, false) {
 		return parser.parseLiteral()
 	}
 
@@ -944,14 +952,6 @@ func (parser *Parser) parseLiteral() (ast.IExpression, error) {
 
 	// A literal evaluates to its value, as specified in the lexical specification for literals.
 
-	// boolean-literal
-	if parser.isToken(lexer.KeywordToken, "FALSE", true) {
-		return ast.NewBooleanLiteralExpression(false), nil
-	}
-	if parser.isToken(lexer.KeywordToken, "TRUE", true) {
-		return ast.NewBooleanLiteralExpression(true), nil
-	}
-
 	// integer-literal
 	if parser.isTokenType(lexer.IntegerLiteralToken, false) {
 		// decimal-literal
@@ -1006,11 +1006,6 @@ func (parser *Parser) parseLiteral() (ast.IExpression, error) {
 		// TODO nowdoc-string-literal
 	}
 
-	// null-literal
-	if parser.isToken(lexer.KeywordToken, "NULL", true) {
-		return ast.NewNullLiteralExpression(), nil
-	}
-
 	return ast.NewEmptyExpression(), fmt.Errorf("parseLiteral: Unsupported literal: %s", parser.at())
 }
 
@@ -1054,7 +1049,7 @@ func (parser *Parser) parseArrayCreationExpression() (ast.IExpression, error) {
 	}
 
 	var index int64 = 0
-	elements := map[ast.IExpression]ast.IExpression{}
+	arrayExpr := ast.NewArrayLiteralExpression()
 	for {
 		if (!isShortSyntax && parser.isToken(lexer.OperatorOrPunctuatorToken, ")", true)) ||
 			(isShortSyntax && parser.isToken(lexer.OperatorOrPunctuatorToken, "]", true)) {
@@ -1066,7 +1061,7 @@ func (parser *Parser) parseArrayCreationExpression() (ast.IExpression, error) {
 		if err != nil {
 			return ast.NewEmptyExpression(), err
 		}
-		elements[ast.NewIntegerLiteralExpression(index)] = element
+		arrayExpr.AddElement(ast.NewIntegerLiteralExpression(index), element)
 		index++
 
 		if parser.isToken(lexer.OperatorOrPunctuatorToken, ",", true) ||
@@ -1080,7 +1075,7 @@ func (parser *Parser) parseArrayCreationExpression() (ast.IExpression, error) {
 			return ast.NewEmptyExpression(), fmt.Errorf("Expected \",\" or \")\". Got: %s", parser.at())
 		}
 	}
-	return ast.NewArrayLiteralExpression(elements), nil
+	return arrayExpr, nil
 }
 
 func (parser *Parser) parseIntrinsic() (ast.IExpression, error) {

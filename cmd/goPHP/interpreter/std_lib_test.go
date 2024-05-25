@@ -3,9 +3,8 @@ package interpreter
 import "testing"
 
 func TestArrayKeyExists(t *testing.T) {
-	array := NewArrayRuntimeValue(map[IRuntimeValue]IRuntimeValue{
-		NewIntegerRuntimeValue(0): NewIntegerRuntimeValue(42),
-	})
+	array := NewArrayRuntimeValue()
+	array.AddElement(NewIntegerRuntimeValue(0), NewIntegerRuntimeValue(42))
 	if actual, _ := lib_array_key_exists(NewIntegerRuntimeValue(0), array); !actual {
 		t.Errorf("Expected: \"%t\", Got \"%t\"", true, actual)
 	}
@@ -27,8 +26,10 @@ func TestLibBoolval(t *testing.T) {
 	}
 
 	// array to boolean
-	doTest(NewArrayRuntimeValue(map[IRuntimeValue]IRuntimeValue{}), false)
-	doTest(NewArrayRuntimeValue(map[IRuntimeValue]IRuntimeValue{NewIntegerRuntimeValue(0): NewIntegerRuntimeValue(42)}), true)
+	doTest(NewArrayRuntimeValue(), false)
+	array := NewArrayRuntimeValue()
+	array.AddElement(NewIntegerRuntimeValue(0), NewIntegerRuntimeValue(42))
+	doTest(array, true)
 
 	// boolean to boolean
 	doTest(NewBooleanRuntimeValue(true), true)
@@ -54,6 +55,26 @@ func TestLibBoolval(t *testing.T) {
 
 	// null to boolean
 	doTest(NewNullRuntimeValue(), false)
+}
+
+func TestLibErrorReporting(t *testing.T) {
+	// Spec: https://www.php.net/manual/en/function.error-reporting.php - Example #1
+
+	// Turn off all error reporting
+	testInputOutput(t, `<?php error_reporting(0); echo error_reporting();`, "0")
+	// Report simple running errors
+	testInputOutput(t, `<?php error_reporting(E_ERROR | E_WARNING | E_PARSE); echo error_reporting();`, "7")
+	// Reporting E_NOTICE can be good too (to report uninitialized
+	// variables or catch variable name misspellings ...)
+	testInputOutput(t, `<?php error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE); echo error_reporting();`, "15")
+	// Report all errors except E_NOTICE
+	// testInputOutput(t, `<?php error_reporting(E_ALL & ~E_NOTICE); echo error_reporting();`, "0")
+	// TODO uncomment after implementing unary expression
+	// Report all PHP errors
+	testInputOutput(t, `<?php error_reporting(E_ALL); echo error_reporting();`, "32767")
+	// Report all PHP errors
+	// testInputOutput(t, `<?php error_reporting(-1); echo error_reporting();`, "32767")
+	// TODO uncomment after implementing unary expression
 }
 
 func TestLibFloatval(t *testing.T) {
@@ -107,8 +128,10 @@ func TestLibIntval(t *testing.T) {
 	}
 
 	// array to integer
-	doTest(NewArrayRuntimeValue(map[IRuntimeValue]IRuntimeValue{}), 0)
-	doTest(NewArrayRuntimeValue(map[IRuntimeValue]IRuntimeValue{NewIntegerRuntimeValue(0): NewIntegerRuntimeValue(42)}), 1)
+	doTest(NewArrayRuntimeValue(), 0)
+	array := NewArrayRuntimeValue()
+	array.AddElement(NewIntegerRuntimeValue(0), NewIntegerRuntimeValue(42))
+	doTest(array, 1)
 
 	// boolean to integer
 	doTest(NewBooleanRuntimeValue(true), 1)
@@ -160,7 +183,7 @@ func TestLibStrval(t *testing.T) {
 	}
 
 	// array to string
-	doTest(NewArrayRuntimeValue(map[IRuntimeValue]IRuntimeValue{}), "Array")
+	doTest(NewArrayRuntimeValue(), "Array")
 
 	// boolean to string
 	doTest(NewBooleanRuntimeValue(true), "1")
@@ -186,4 +209,11 @@ func TestLibStrval(t *testing.T) {
 
 	// null to string
 	doTest(NewNullRuntimeValue(), "")
+}
+
+func TestLibVarDump(t *testing.T) {
+	testInputOutput(t, `<?php var_dump(3.5, 42, true, false, null);`, "float(3.5)\nint(42)\nbool(true)\nbool(false)\nNULL\n")
+	testInputOutput(t, `<?php var_dump([]);`, "array(0) {\n}\n")
+	testInputOutput(t, `<?php var_dump([1,2]);`, "array(2) {\n  [0]=>\n  int(1)\n  [1]=>\n  int(2)\n}\n")
+	testInputOutput(t, `<?php var_dump([1, [1]]);`, "array(2) {\n  [0]=>\n  int(1)\n  [1]=>\n  array(1) {\n    [0]=>\n    int(1)\n  }\n}\n")
 }

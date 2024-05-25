@@ -91,10 +91,10 @@ func doTest(path string, info os.FileInfo, err error) error {
 		}
 	}
 
-	result, err := interpreter.NewInterpreter(request).Process(testFile.File)
-	if err != nil {
+	result, phpError := interpreter.NewInterpreter(interpreter.NewDevConfig(), request).Process(testFile.File)
+	if phpError != nil {
 		fmt.Println("FAIL ", path)
-		fmt.Println("     ", err)
+		fmt.Println("     ", phpError)
 		// return err
 		failed++
 		return nil

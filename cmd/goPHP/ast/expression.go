@@ -266,20 +266,36 @@ func ExprToConstAccessExpr(expr IExpression) IConstantAccessExpression {
 
 type IArrayLiteralExpression interface {
 	IExpression
+	GetKeys() []IExpression
+	AddElement(key IExpression, value IExpression)
 	GetElements() map[IExpression]IExpression
 }
 
 type ArrayLiteralExpression struct {
 	expr     IExpression
+	keys     []IExpression
 	elements map[IExpression]IExpression
 }
 
-func NewArrayLiteralExpression(elements map[IExpression]IExpression) *ArrayLiteralExpression {
-	return &ArrayLiteralExpression{expr: NewExpression(ArrayLiteralExpr), elements: elements}
+func NewArrayLiteralExpression() *ArrayLiteralExpression {
+	return &ArrayLiteralExpression{
+		expr:     NewExpression(ArrayLiteralExpr),
+		keys:     []IExpression{},
+		elements: map[IExpression]IExpression{},
+	}
 }
 
 func (expr *ArrayLiteralExpression) GetKind() NodeType {
 	return expr.expr.GetKind()
+}
+
+func (expr *ArrayLiteralExpression) AddElement(key IExpression, value IExpression) {
+	expr.keys = append(expr.keys, key)
+	expr.elements[key] = value
+}
+
+func (expr *ArrayLiteralExpression) GetKeys() []IExpression {
+	return expr.keys
 }
 
 func (expr *ArrayLiteralExpression) GetElements() map[IExpression]IExpression {
@@ -297,35 +313,11 @@ func ExprToArrayLitExpr(expr IExpression) IArrayLiteralExpression {
 
 // ------------------- MARK: BooleanLiteralExpression -------------------
 
-type IBooleanLiteralExpression interface {
-	IExpression
-	GetValue() bool
-}
-
-type BooleanLiteralExpression struct {
-	expr  IExpression
-	value bool
-}
-
-func NewBooleanLiteralExpression(value bool) *BooleanLiteralExpression {
-	return &BooleanLiteralExpression{expr: NewExpression(BooleanLiteralExpr), value: value}
-}
-
-func (expr *BooleanLiteralExpression) GetKind() NodeType {
-	return expr.expr.GetKind()
-}
-
-func (expr *BooleanLiteralExpression) GetValue() bool {
-	return expr.value
-}
-
-func (expr *BooleanLiteralExpression) String() string {
-	return fmt.Sprintf("{%s - value: %t }", expr.GetKind(), expr.value)
-}
-
-func ExprToBoolLitExpr(expr IExpression) IBooleanLiteralExpression {
-	var i interface{} = expr
-	return i.(IBooleanLiteralExpression)
+func NewBooleanLiteralExpression(value bool) *ConstantAccessExpression {
+	if value {
+		return NewConstantAccessExpression("TRUE")
+	}
+	return NewConstantAccessExpression("FALSE")
 }
 
 // ------------------- MARK: IntegerLiteralExpression -------------------
@@ -442,17 +434,8 @@ func ExprToStrLitExpr(expr IExpression) IStringLiteralExpression {
 
 // ------------------- MARK: NullLiteralExpression -------------------
 
-type INullLiteralExpression interface {
-	IExpression
-}
-
-func NewNullLiteralExpression() *Expression {
-	return NewExpression(NullLiteralExpr)
-}
-
-func ExprToNullLitExpr(expr IExpression) INullLiteralExpression {
-	var i interface{} = expr
-	return i.(INullLiteralExpression)
+func NewNullLiteralExpression() *ConstantAccessExpression {
+	return NewConstantAccessExpression("NULL")
 }
 
 // ------------------- MARK: SimpleAssignmentExpression -------------------
