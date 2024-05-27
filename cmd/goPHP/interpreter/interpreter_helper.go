@@ -144,7 +144,112 @@ func runtimeValueToValueType(valueType ValueType, runtimeValue IRuntimeValue) (I
 	}
 }
 
-// ------------------- MARK: calculation -------------------
+// ------------------- MARK: unary-op-calculation -------------------
+
+func calculateUnary(operator string, operand IRuntimeValue) (IRuntimeValue, Error) {
+	switch operand.GetType() {
+	case BooleanValue:
+		return calculateUnaryBoolean(operator, runtimeValToBoolRuntimeVal(operand))
+	case IntegerValue:
+		return calculateUnaryInteger(operator, runtimeValToIntRuntimeVal(operand))
+	case FloatingValue:
+		return calculateUnaryFloating(operator, runtimeValToFloatRuntimeVal(operand))
+	case NullValue:
+		// Spec: https://phplang.org/spec/10-expressions.html#unary-arithmetic-operators
+		// For a unary + or unary - operator used with a NULL-valued operand, the value of the result is zero and the type is int.
+		return NewIntegerRuntimeValue(0), nil
+	default:
+		return NewVoidRuntimeValue(), NewError("calculateUnary: Type \"%s\" not implemented", operand.GetType())
+	}
+
+	// TODO calculateUnary - string
+	// Spec: https://phplang.org/spec/10-expressions.html#unary-arithmetic-operators
+	// For a unary + or - operator used with a numeric string or a leading-numeric string, the string is first converted to an int or float, as appropriate, after which it is handled as an arithmetic operand. The trailing non-numeric characters in leading-numeric strings are ignored. With a non-numeric string, the result has type int and value 0. If the string was leading-numeric or non-numeric, a non-fatal error MUST be produced.
+	// For a unary ~ operator used with a string, the result is the string with each byte being bitwise complement of the corresponding byte of the source string.
+
+	// TODO calculateUnary - object
+	// If the operand has an object type supporting the operation, then the object semantics defines the result. Otherwise, for ~ the fatal error is issued and for + and - the object is converted to int.
+}
+
+func calculateUnaryBoolean(operator string, operand IBooleanRuntimeValue) (IIntegerRuntimeValue, Error) {
+	switch operator {
+	case "+":
+		// Spec: https://phplang.org/spec/10-expressions.html#unary-arithmetic-operators
+		// For a unary "+" operator used with a TRUE-valued operand, the value of the result is 1 and the type is int.
+		// When used with a FALSE-valued operand, the value of the result is zero and the type is int.
+		if runtimeValToBoolRuntimeVal(operand).GetValue() {
+			return NewIntegerRuntimeValue(1), nil
+		}
+		return NewIntegerRuntimeValue(0), nil
+
+	case "-":
+		// Spec: https://phplang.org/spec/10-expressions.html#unary-arithmetic-operators
+		// For a unary "-" operator used with a TRUE-valued operand, the value of the result is -1 and the type is int.
+		// When used with a FALSE-valued operand, the value of the result is zero and the type is int.
+		if runtimeValToBoolRuntimeVal(operand).GetValue() {
+			return NewIntegerRuntimeValue(-1), nil
+		}
+		return NewIntegerRuntimeValue(0), nil
+
+	default:
+		return NewIntegerRuntimeValue(0), NewError("calculateUnaryBoolean: Operator \"%s\" not implemented", operator)
+	}
+}
+
+func calculateUnaryFloating(operator string, operand IFloatingRuntimeValue) (IRuntimeValue, Error) {
+	switch operator {
+	case "+":
+		// Spec: https://phplang.org/spec/10-expressions.html#unary-arithmetic-operators
+		// For a unary "+" operator used with an arithmetic operand, the type and value of the result is the type and value of the operand.
+		return operand, nil
+
+	case "-":
+		// Spec: https://phplang.org/spec/10-expressions.html#unary-arithmetic-operators
+		// For a unary - operator used with an arithmetic operand, the value of the result is the negated value of the operand.
+		// However, if an int operand’s original value is the smallest representable for that type,
+		// the operand is treated as if it were float and the result will be float.
+		return NewFloatingRuntimeValue(-runtimeValToFloatRuntimeVal(operand).GetValue()), nil
+
+	case "~":
+		// Spec: https://phplang.org/spec/10-expressions.html#unary-arithmetic-operators
+		// For a unary ~ operator used with a float operand, the value of the operand is first converted to int before the bitwise complement is computed.
+		intRuntimeValue, err := runtimeValueToValueType(IntegerValue, operand)
+		if err != nil {
+			return NewFloatingRuntimeValue(0), err
+		}
+		return calculateUnaryInteger(operator, runtimeValToIntRuntimeVal(intRuntimeValue))
+
+	default:
+		return NewFloatingRuntimeValue(0), NewError("calculateUnaryFloating: Operator \"%s\" not implemented", operator)
+	}
+}
+
+func calculateUnaryInteger(operator string, operand IIntegerRuntimeValue) (IIntegerRuntimeValue, Error) {
+	switch operator {
+	case "+":
+		// Spec: https://phplang.org/spec/10-expressions.html#unary-arithmetic-operators
+		// For a unary "+" operator used with an arithmetic operand, the type and value of the result is the type and value of the operand.
+		return operand, nil
+
+	case "-":
+		// Spec: https://phplang.org/spec/10-expressions.html#unary-arithmetic-operators
+		// For a unary - operator used with an arithmetic operand, the value of the result is the negated value of the operand.
+		// However, if an int operand’s original value is the smallest representable for that type,
+		// the operand is treated as if it were float and the result will be float.
+		return NewIntegerRuntimeValue(-runtimeValToIntRuntimeVal(operand).GetValue()), nil
+
+	case "~":
+		// Spec: https://phplang.org/spec/10-expressions.html#unary-arithmetic-operators
+		// For a unary ~ operator used with an int operand, the type of the result is int.
+		// The value of the result is the bitwise complement of the value of the operand
+		// (that is, each bit in the result is set if and only if the corresponding bit in the operand is clear).
+		return NewIntegerRuntimeValue(^runtimeValToIntRuntimeVal(operand).GetValue()), nil
+	default:
+		return NewIntegerRuntimeValue(0), NewError("calculateUnaryInteger: Operator \"%s\" not implemented", operator)
+	}
+}
+
+// ------------------- MARK: binary-op-calculation -------------------
 
 func calculate(operand1 IRuntimeValue, operator string, operand2 IRuntimeValue) (IRuntimeValue, Error) {
 	resultType := VoidValue

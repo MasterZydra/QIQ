@@ -64,17 +64,14 @@ func TestLibErrorReporting(t *testing.T) {
 	testInputOutput(t, `<?php error_reporting(0); echo error_reporting();`, "0")
 	// Report simple running errors
 	testInputOutput(t, `<?php error_reporting(E_ERROR | E_WARNING | E_PARSE); echo error_reporting();`, "7")
-	// Reporting E_NOTICE can be good too (to report uninitialized
-	// variables or catch variable name misspellings ...)
+	// Reporting E_NOTICE can be good too (to report uninitialized variables or catch variable name misspellings ...)
 	testInputOutput(t, `<?php error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE); echo error_reporting();`, "15")
 	// Report all errors except E_NOTICE
-	// testInputOutput(t, `<?php error_reporting(E_ALL & ~E_NOTICE); echo error_reporting();`, "0")
-	// TODO uncomment after implementing unary expression
+	testInputOutput(t, `<?php error_reporting(E_ALL & ~E_NOTICE); echo error_reporting();`, "32759")
 	// Report all PHP errors
 	testInputOutput(t, `<?php error_reporting(E_ALL); echo error_reporting();`, "32767")
 	// Report all PHP errors
-	// testInputOutput(t, `<?php error_reporting(-1); echo error_reporting();`, "32767")
-	// TODO uncomment after implementing unary expression
+	testInputOutput(t, `<?php error_reporting(-1); echo error_reporting();`, "32767")
 }
 
 func TestLibFloatval(t *testing.T) {
@@ -145,10 +142,10 @@ func TestLibIntval(t *testing.T) {
 	doTest(NewIntegerRuntimeValue(-2), -2)
 
 	// floating to integer
-	// doTest(NewFloatingRuntimeValue(0.0), 0)
-	// doTest(NewFloatingRuntimeValue(1.5), 1)
-	// doTest(NewFloatingRuntimeValue(42.0), 42)
-	// doTest(NewFloatingRuntimeValue(-2.0), -2)
+	doTest(NewFloatingRuntimeValue(0.0), 0)
+	doTest(NewFloatingRuntimeValue(1.5), 1)
+	doTest(NewFloatingRuntimeValue(42.0), 42)
+	doTest(NewFloatingRuntimeValue(-2.0), -2)
 
 	// string to integer
 	// doTest(NewStringRuntimeValue(""), false)

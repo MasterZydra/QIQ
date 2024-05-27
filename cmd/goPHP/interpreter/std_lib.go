@@ -209,6 +209,12 @@ func lib_intval(runtimeValue IRuntimeValue) (int64, Error) {
 			return 1, nil
 		}
 		return 0, nil
+	case FloatingValue:
+		// Spec: https://phplang.org/spec/08-conversions.html#converting-to-integer-type
+		// If the source type is float, for the values INF, -INF, and NAN, the result value is zero.
+		// For all other values, if the precision can be preserved (that is, the float is within the range of an integer),
+		// the fractional part is rounded towards zero.
+		return int64(runtimeValToFloatRuntimeVal(runtimeValue).GetValue()), nil
 	case IntegerValue:
 		return runtimeValToIntRuntimeVal(runtimeValue).GetValue(), nil
 	case NullValue:
@@ -218,14 +224,6 @@ func lib_intval(runtimeValue IRuntimeValue) (int64, Error) {
 	default:
 		return 0, NewError("lib_intval: Unsupported runtime value %s", runtimeValue.GetType())
 	}
-	// TODO lib_intval - float
-	// Spec: https://phplang.org/spec/08-conversions.html#converting-to-integer-type
-	// If the source type is float, for the values INF, -INF, and NAN, the result value is zero. For all other values, if the precision can be preserved (that is, the float is within the range of an integer), the fractional part is rounded towards zero. If the precision cannot be preserved, the following conversion algorithm is used, where X is defined as two to the power of the number of bits in an integer (for example, 2 to the power of 32, i.e. 4294967296):
-	// 1. We take the floating point remainder (wherein the remainder has the same sign as the dividend) of dividing the float by X, rounded towards zero.
-	// 2. If the remainder is less than zero, it is rounded towards infinity and X is added.
-	// 3. This result is converted to an unsigned integer.
-	// 4. This result is converted to a signed integer by treating the unsigned integer as a two’s complement representation of the signed integer.
-	// Implementations may implement this conversion differently (for example, on some architectures there may be hardware support for this specific conversion mode) so long as the result is the same.
 
 	// TODO lib_intval - string
 	// Spec: https://phplang.org/spec/08-conversions.html#converting-to-integer-type

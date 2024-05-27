@@ -84,6 +84,8 @@ func (interpreter *Interpreter) processStmt(stmt ast.IStatement, env *Environmen
 	case ast.AdditiveExpr, ast.BitwiseAndExpr, ast.BitwiseExcOrExpr, ast.BitwiseIncOrExpr, ast.ExponentiationExpr,
 		ast.LogicalAndExpr, ast.LogicalIncOrExpr, ast.MultiplicativeExpr, ast.ShiftExpr:
 		return interpreter.processAdditiveExpression(ast.ExprToEqualExpr(stmt), env)
+	case ast.UnaryOpExpr:
+		return interpreter.processUnaryExpression(ast.ExprToUnaryOpExpr(stmt), env)
 	case ast.LogicalNotExpr:
 		return interpreter.processLogicalNotExpression(ast.ExprToUnaryOpExpr(stmt), env)
 
@@ -499,6 +501,14 @@ func (interpreter *Interpreter) processAdditiveExpression(expr ast.IEqualityExpr
 		return NewVoidRuntimeValue(), err
 	}
 	return calculate(lhs, expr.GetOperator(), rhs)
+}
+
+func (interpreter *Interpreter) processUnaryExpression(expr ast.IUnaryOpExpression, env *Environment) (IRuntimeValue, Error) {
+	operand, err := interpreter.processStmt(expr.GetExpression(), env)
+	if err != nil {
+		return NewVoidRuntimeValue(), err
+	}
+	return calculateUnary(expr.GetOperator(), operand)
 }
 
 func (interpreter *Interpreter) processLogicalNotExpression(expr ast.IUnaryOpExpression, env *Environment) (IRuntimeValue, Error) {

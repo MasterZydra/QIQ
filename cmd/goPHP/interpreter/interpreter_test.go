@@ -221,6 +221,30 @@ func TestComparison(t *testing.T) {
 	testInputOutput(t, `<?php echo "123" === 123 ? "a" : "b";`, "b")
 }
 
+func TestUnaryExpression(t *testing.T) {
+	// Boolean
+	testInputOutput(t, `<?php var_dump(+true);`, "int(1)\n")
+	testInputOutput(t, `<?php var_dump(-true);`, "int(-1)\n")
+	testInputOutput(t, `<?php var_dump(+false);`, "int(0)\n")
+	testInputOutput(t, `<?php var_dump(-false);`, "int(0)\n")
+
+	// Floating
+	testInputOutput(t, `<?php var_dump(+2.5);`, "float(2.5)\n")
+	testInputOutput(t, `<?php var_dump(+(-2.5));`, "float(-2.5)\n")
+	testInputOutput(t, `<?php var_dump(-3.0);`, "float(-3)\n")
+	testInputOutput(t, `<?php var_dump(-(-3.0));`, "float(3)\n")
+	testInputOutput(t, `<?php var_dump(~(-3.0));`, "int(2)\n")
+	testInputOutput(t, `<?php var_dump(~3.0);`, "int(-4)\n")
+
+	// Integer
+	testInputOutput(t, `<?php var_dump(+2);`, "int(2)\n")
+	testInputOutput(t, `<?php var_dump(+(-2));`, "int(-2)\n")
+	testInputOutput(t, `<?php var_dump(-3);`, "int(-3)\n")
+	testInputOutput(t, `<?php var_dump(-(-3));`, "int(3)\n")
+	testInputOutput(t, `<?php var_dump(~(-3));`, "int(2)\n")
+	testInputOutput(t, `<?php var_dump(~3);`, "int(-4)\n")
+}
+
 func TestLogicalExpression(t *testing.T) {
 	// Not
 	testInputOutput(t, `<?php echo !true ? "a" : "b";`, "b")

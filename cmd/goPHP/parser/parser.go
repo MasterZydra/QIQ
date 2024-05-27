@@ -650,13 +650,19 @@ func (parser *Parser) parseUnaryExpression() (ast.IExpression, error) {
 	// unary-operator: one of
 	//    +   -   ~
 
-	// TODO unary-op-expression - constraints
 	if parser.isTokenType(lexer.OperatorOrPunctuatorToken, false) && common.IsUnaryOperator(parser.at().Value) {
-		// TODO unary-op-expression
+		operator := parser.eat().Value
+		expr, err := parser.parseUnaryExpression()
+		if err != nil {
+			return ast.NewEmptyExpression(), err
+		}
+
+		return ast.NewUnaryOpExpression(operator, expr), nil
 	}
 
 	// TODO error-control-expression
 	// TODO cast-expression
+
 	return parser.parseExponentiationExpression()
 }
 
