@@ -489,7 +489,7 @@ func TestEqualityExpression(t *testing.T) {
 	expected := ast.NewEqualityExpression(
 		ast.NewStringLiteralExpression("234", ast.DoubleQuotedString), "!==", ast.NewBooleanLiteralExpression(true),
 	)
-	actual := ast.ExprToEqualExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
+	actual := ast.ExprToBinOpExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() || expected.GetOperator() != actual.GetOperator() {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
 	}
@@ -501,10 +501,10 @@ func TestShiftExpression(t *testing.T) {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
 	}
-	expected := ast.NewShiftExpression(
+	expected := ast.NewBinaryOpExpression(
 		ast.NewStringLiteralExpression("234", ast.DoubleQuotedString), "<<", ast.NewIntegerLiteralExpression(23),
 	)
-	actual := ast.ExprToEqualExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
+	actual := ast.ExprToBinOpExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() || expected.GetOperator() != actual.GetOperator() {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
 	}
@@ -516,10 +516,10 @@ func TestAdditiveExpression(t *testing.T) {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
 	}
-	expected := ast.NewAdditiveExpression(
+	expected := ast.NewBinaryOpExpression(
 		ast.NewStringLiteralExpression("234", ast.DoubleQuotedString), "+", ast.NewIntegerLiteralExpression(23),
 	)
-	actual := ast.ExprToEqualExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
+	actual := ast.ExprToBinOpExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() || expected.GetOperator() != actual.GetOperator() {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
 	}
@@ -531,10 +531,10 @@ func TestMultiplicativeExpression(t *testing.T) {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
 	}
-	expected := ast.NewMultiplicativeExpression(
+	expected := ast.NewBinaryOpExpression(
 		ast.NewStringLiteralExpression("234", ast.DoubleQuotedString), "*", ast.NewIntegerLiteralExpression(12),
 	)
-	actual := ast.ExprToEqualExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
+	actual := ast.ExprToBinOpExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() || expected.GetOperator() != actual.GetOperator() {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
 	}
@@ -546,10 +546,10 @@ func TestExponentiationExpression(t *testing.T) {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
 	}
-	expected := ast.NewExponentiationExpression(
-		ast.NewStringLiteralExpression("234", ast.DoubleQuotedString), ast.NewIntegerLiteralExpression(12),
+	expected := ast.NewBinaryOpExpression(
+		ast.NewStringLiteralExpression("234", ast.DoubleQuotedString), "**", ast.NewIntegerLiteralExpression(12),
 	)
-	actual := ast.ExprToEqualExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
+	actual := ast.ExprToBinOpExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() || expected.GetOperator() != actual.GetOperator() {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
 	}
@@ -561,10 +561,10 @@ func TestBitwiseIncOrExpression(t *testing.T) {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
 	}
-	expected := ast.NewBitwiseIncOrExpression(
-		ast.NewStringLiteralExpression("234", ast.DoubleQuotedString), ast.NewIntegerLiteralExpression(12),
+	expected := ast.NewBinaryOpExpression(
+		ast.NewStringLiteralExpression("234", ast.DoubleQuotedString), "|", ast.NewIntegerLiteralExpression(12),
 	)
-	actual := ast.ExprToEqualExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
+	actual := ast.ExprToBinOpExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() || expected.GetOperator() != actual.GetOperator() {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
 	}
@@ -576,10 +576,10 @@ func TestLogicalIncOrExpression(t *testing.T) {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
 	}
-	expected := ast.NewLogicalIncOrExpression(
-		ast.NewStringLiteralExpression("234", ast.DoubleQuotedString), ast.NewIntegerLiteralExpression(12),
+	expected := ast.NewBinaryOpExpression(
+		ast.NewStringLiteralExpression("234", ast.DoubleQuotedString), "||", ast.NewIntegerLiteralExpression(12),
 	)
-	actual := ast.ExprToEqualExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
+	actual := ast.ExprToBinOpExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() || expected.GetOperator() != actual.GetOperator() {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
 	}
@@ -591,10 +591,10 @@ func TestLogicalAndExpression(t *testing.T) {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
 	}
-	expected := ast.NewLogicalAndExpression(
-		ast.NewStringLiteralExpression("234", ast.DoubleQuotedString), ast.NewIntegerLiteralExpression(12),
+	expected := ast.NewBinaryOpExpression(
+		ast.NewStringLiteralExpression("234", ast.DoubleQuotedString), "&&", ast.NewIntegerLiteralExpression(12),
 	)
-	actual := ast.ExprToEqualExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
+	actual := ast.ExprToBinOpExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() || expected.GetOperator() != actual.GetOperator() {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
 	}
@@ -606,10 +606,10 @@ func TestBitwiseExcOrExpression(t *testing.T) {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
 	}
-	expected := ast.NewBitwiseExcOrExpression(
-		ast.NewStringLiteralExpression("234", ast.DoubleQuotedString), ast.NewIntegerLiteralExpression(12),
+	expected := ast.NewBinaryOpExpression(
+		ast.NewStringLiteralExpression("234", ast.DoubleQuotedString), "^", ast.NewIntegerLiteralExpression(12),
 	)
-	actual := ast.ExprToEqualExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
+	actual := ast.ExprToBinOpExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() || expected.GetOperator() != actual.GetOperator() {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
 	}
@@ -621,10 +621,10 @@ func TestBitwiseAndExpression(t *testing.T) {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
 	}
-	expected := ast.NewBitwiseAndExpression(
-		ast.NewStringLiteralExpression("234", ast.DoubleQuotedString), ast.NewIntegerLiteralExpression(12),
+	expected := ast.NewBinaryOpExpression(
+		ast.NewStringLiteralExpression("234", ast.DoubleQuotedString), "&", ast.NewIntegerLiteralExpression(12),
 	)
-	actual := ast.ExprToEqualExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
+	actual := ast.ExprToBinOpExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() || expected.GetOperator() != actual.GetOperator() {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
 	}
@@ -649,12 +649,8 @@ func TestParenthesizedExpression(t *testing.T) {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
 	}
-	expected := ast.NewAdditiveExpression(
-		ast.NewIntegerLiteralExpression(1),
-		"+",
-		ast.NewIntegerLiteralExpression(2),
-	)
-	actual := ast.ExprToEqualExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
+	expected := ast.NewBinaryOpExpression(ast.NewIntegerLiteralExpression(1), "+", ast.NewIntegerLiteralExpression(2))
+	actual := ast.ExprToBinOpExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() || expected.GetOperator() != actual.GetOperator() {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
 	}

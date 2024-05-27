@@ -156,6 +156,7 @@ func TestCalculation(t *testing.T) {
 	testInputOutput(t, `<?php echo 42 % 5;`, "2")
 	testInputOutput(t, `<?php $a = 42; echo $a %= 5;`, "2")
 	testInputOutput(t, `<?php echo 2 ** 4;`, "16")
+	testInputOutput(t, `<?php echo 2 ** 2 ** 2;`, "16")
 	testInputOutput(t, `<?php $a = 2; echo $a **= 4;`, "16")
 
 	// Combined additions and multiplications

@@ -385,7 +385,7 @@ func (parser *Parser) parseLogicalIncOrExpression1() (ast.IExpression, error) {
 		if err != nil {
 			return ast.NewEmptyExpression(), err
 		}
-		lhs = ast.NewLogicalIncOrExpression(lhs, rhs)
+		lhs = ast.NewBinaryOpExpression(lhs, "||", rhs)
 	}
 	return lhs, nil
 }
@@ -407,7 +407,7 @@ func (parser *Parser) parseLogicalAndExpression1() (ast.IExpression, error) {
 		if err != nil {
 			return ast.NewEmptyExpression(), err
 		}
-		lhs = ast.NewLogicalAndExpression(lhs, rhs)
+		lhs = ast.NewBinaryOpExpression(lhs, "&&", rhs)
 	}
 	return lhs, nil
 }
@@ -429,7 +429,7 @@ func (parser *Parser) parseBitwiseIncOrExpression() (ast.IExpression, error) {
 		if err != nil {
 			return ast.NewEmptyExpression(), err
 		}
-		lhs = ast.NewBitwiseIncOrExpression(lhs, rhs)
+		lhs = ast.NewBinaryOpExpression(lhs, "|", rhs)
 	}
 	return lhs, nil
 }
@@ -451,7 +451,7 @@ func (parser *Parser) parseBitwiseExcOrExpression() (ast.IExpression, error) {
 		if err != nil {
 			return ast.NewEmptyExpression(), err
 		}
-		lhs = ast.NewBitwiseExcOrExpression(lhs, rhs)
+		lhs = ast.NewBinaryOpExpression(lhs, "^", rhs)
 	}
 	return lhs, nil
 }
@@ -473,7 +473,7 @@ func (parser *Parser) parseBitwiseAndExpression() (ast.IExpression, error) {
 		if err != nil {
 			return ast.NewEmptyExpression(), err
 		}
-		lhs = ast.NewBitwiseAndExpression(lhs, rhs)
+		lhs = ast.NewBinaryOpExpression(lhs, "&", rhs)
 	}
 	return lhs, nil
 }
@@ -539,7 +539,7 @@ func (parser *Parser) parseShiftExpression() (ast.IExpression, error) {
 		if err != nil {
 			return ast.NewEmptyExpression(), err
 		}
-		lhs = ast.NewShiftExpression(lhs, operator, rhs)
+		lhs = ast.NewBinaryOpExpression(lhs, operator, rhs)
 	}
 	return lhs, nil
 }
@@ -564,7 +564,7 @@ func (parser *Parser) parseAdditiveExpression() (ast.IExpression, error) {
 		if err != nil {
 			return ast.NewEmptyExpression(), err
 		}
-		lhs = ast.NewAdditiveExpression(lhs, operator, rhs)
+		lhs = ast.NewBinaryOpExpression(lhs, operator, rhs)
 	}
 
 	return lhs, nil
@@ -590,7 +590,7 @@ func (parser *Parser) parseMultiplicativeExpression() (ast.IExpression, error) {
 		if err != nil {
 			return ast.NewEmptyExpression(), err
 		}
-		lhs = ast.NewMultiplicativeExpression(lhs, operator, rhs)
+		lhs = ast.NewBinaryOpExpression(lhs, operator, rhs)
 	}
 	return lhs, nil
 }
@@ -682,7 +682,7 @@ func (parser *Parser) parseExponentiationExpression() (ast.IExpression, error) {
 		if err != nil {
 			return ast.NewEmptyExpression(), err
 		}
-		return ast.NewExponentiationExpression(lhs, rhs), nil
+		return ast.NewBinaryOpExpression(lhs, "**", rhs), nil
 	}
 	return lhs, nil
 }

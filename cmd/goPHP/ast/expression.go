@@ -672,107 +672,57 @@ func ExprToCoalesceExpr(expr IExpression) ICoalesceExpression {
 	return i.(ICoalesceExpression)
 }
 
-// ------------------- MARK: EqualityExpression -------------------
+// ------------------- MARK: BinaryOpExpression -------------------
 
-type IEqualityExpression interface {
+type IBinaryOpExpression interface {
 	IExpression
 	GetLHS() IExpression
 	GetOperator() string
 	GetRHS() IExpression
 }
 
-type EqualityExpression struct {
+type BinaryOpExpression struct {
 	expr     IExpression
 	lhs      IExpression
 	operator string
 	rhs      IExpression
 }
 
-func NewEqualityExpression(lhs IExpression, operator string, rhs IExpression) *EqualityExpression {
-	return &EqualityExpression{expr: NewExpression(EqualityExpr), lhs: lhs, operator: operator, rhs: rhs}
+func NewEqualityExpression(lhs IExpression, operator string, rhs IExpression) *BinaryOpExpression {
+	return &BinaryOpExpression{expr: NewExpression(EqualityExpr), lhs: lhs, operator: operator, rhs: rhs}
 }
 
-func (expr *EqualityExpression) GetId() int64 {
+func NewBinaryOpExpression(lhs IExpression, operator string, rhs IExpression) *BinaryOpExpression {
+	return &BinaryOpExpression{expr: NewExpression(BinaryOpExpr), lhs: lhs, operator: operator, rhs: rhs}
+}
+
+func (expr *BinaryOpExpression) GetId() int64 {
 	return expr.expr.GetId()
 }
 
-func (expr *EqualityExpression) GetKind() NodeType {
+func (expr *BinaryOpExpression) GetKind() NodeType {
 	return expr.expr.GetKind()
 }
 
-func (expr *EqualityExpression) GetLHS() IExpression {
+func (expr *BinaryOpExpression) GetLHS() IExpression {
 	return expr.lhs
 }
 
-func (expr *EqualityExpression) GetOperator() string {
+func (expr *BinaryOpExpression) GetOperator() string {
 	return expr.operator
 }
 
-func (expr *EqualityExpression) GetRHS() IExpression {
+func (expr *BinaryOpExpression) GetRHS() IExpression {
 	return expr.rhs
 }
 
-func (expr *EqualityExpression) String() string {
+func (expr *BinaryOpExpression) String() string {
 	return fmt.Sprintf("{%s - lhs: %s, operator: \"%s\" rhs: %s }", expr.GetKind(), expr.lhs, expr.operator, expr.rhs)
 }
 
-func ExprToEqualExpr(expr IExpression) IEqualityExpression {
+func ExprToBinOpExpr(expr IExpression) IBinaryOpExpression {
 	var i interface{} = expr
-	return i.(IEqualityExpression)
-}
-
-// ------------------- MARK: ShiftExpression -------------------
-
-func NewShiftExpression(lhs IExpression, operator string, rhs IExpression) *EqualityExpression {
-	return &EqualityExpression{expr: NewExpression(ShiftExpr), lhs: lhs, operator: operator, rhs: rhs}
-}
-
-// ------------------- MARK: AdditiveExpression -------------------
-
-func NewAdditiveExpression(lhs IExpression, operator string, rhs IExpression) *EqualityExpression {
-	return &EqualityExpression{expr: NewExpression(AdditiveExpr), lhs: lhs, operator: operator, rhs: rhs}
-}
-
-// ------------------- MARK: MultiplicativeExpression -------------------
-
-func NewMultiplicativeExpression(lhs IExpression, operator string, rhs IExpression) *EqualityExpression {
-	return &EqualityExpression{expr: NewExpression(MultiplicativeExpr), lhs: lhs, operator: operator, rhs: rhs}
-}
-
-// ------------------- MARK: ExponentiationExpression -------------------
-
-func NewExponentiationExpression(lhs IExpression, rhs IExpression) *EqualityExpression {
-	return &EqualityExpression{expr: NewExpression(ExponentiationExpr), lhs: lhs, operator: "**", rhs: rhs}
-}
-
-// ------------------- MARK: LogicalIncOrExpression -------------------
-
-func NewLogicalIncOrExpression(lhs IExpression, rhs IExpression) *EqualityExpression {
-	return &EqualityExpression{expr: NewExpression(LogicalIncOrExpr), lhs: lhs, operator: "||", rhs: rhs}
-}
-
-// ------------------- MARK: LogicalAndExpression -------------------
-
-func NewLogicalAndExpression(lhs IExpression, rhs IExpression) *EqualityExpression {
-	return &EqualityExpression{expr: NewExpression(LogicalAndExpr), lhs: lhs, operator: "&&", rhs: rhs}
-}
-
-// ------------------- MARK: BitwiseIncOrExpression -------------------
-
-func NewBitwiseIncOrExpression(lhs IExpression, rhs IExpression) *EqualityExpression {
-	return &EqualityExpression{expr: NewExpression(BitwiseIncOrExpr), lhs: lhs, operator: "|", rhs: rhs}
-}
-
-// ------------------- MARK: BitwiseExcOrExpression -------------------
-
-func NewBitwiseExcOrExpression(lhs IExpression, rhs IExpression) *EqualityExpression {
-	return &EqualityExpression{expr: NewExpression(BitwiseExcOrExpr), lhs: lhs, operator: "^", rhs: rhs}
-}
-
-// ------------------- MARK: BitwiseAndExpression -------------------
-
-func NewBitwiseAndExpression(lhs IExpression, rhs IExpression) *EqualityExpression {
-	return &EqualityExpression{expr: NewExpression(BitwiseAndExpr), lhs: lhs, operator: "&", rhs: rhs}
+	return i.(IBinaryOpExpression)
 }
 
 // ------------------- MARK: UnaryOpExpression -------------------
@@ -787,6 +737,10 @@ type UnaryOpExpression struct {
 	expr       IExpression
 	operator   string
 	expression IExpression
+}
+
+func NewLogicalNotExpression(expression IExpression) *UnaryOpExpression {
+	return &UnaryOpExpression{expr: NewExpression(LogicalNotExpr), operator: "!", expression: expression}
 }
 
 func NewUnaryOpExpression(operator string, expression IExpression) *UnaryOpExpression {
@@ -816,10 +770,4 @@ func (expr *UnaryOpExpression) String() string {
 func ExprToUnaryOpExpr(expr IExpression) IUnaryOpExpression {
 	var i interface{} = expr
 	return i.(IUnaryOpExpression)
-}
-
-// ------------------- MARK: LogicalNotExpression -------------------
-
-func NewLogicalNotExpression(expression IExpression) *UnaryOpExpression {
-	return &UnaryOpExpression{expr: NewExpression(LogicalNotExpr), operator: "!", expression: expression}
 }

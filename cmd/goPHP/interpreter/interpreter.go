@@ -80,10 +80,9 @@ func (interpreter *Interpreter) processStmt(stmt ast.IStatement, env *Environmen
 	case ast.CoalesceExpr:
 		return interpreter.processCoalesceExpression(ast.ExprToCoalesceExpr(stmt), env)
 	case ast.EqualityExpr:
-		return interpreter.processEqualityExpression(ast.ExprToEqualExpr(stmt), env)
-	case ast.AdditiveExpr, ast.BitwiseAndExpr, ast.BitwiseExcOrExpr, ast.BitwiseIncOrExpr, ast.ExponentiationExpr,
-		ast.LogicalAndExpr, ast.LogicalIncOrExpr, ast.MultiplicativeExpr, ast.ShiftExpr:
-		return interpreter.processAdditiveExpression(ast.ExprToEqualExpr(stmt), env)
+		return interpreter.processEqualityExpression(ast.ExprToBinOpExpr(stmt), env)
+	case ast.BinaryOpExpr:
+		return interpreter.processAdditiveExpression(ast.ExprToBinOpExpr(stmt), env)
 	case ast.UnaryOpExpr:
 		return interpreter.processUnaryExpression(ast.ExprToUnaryOpExpr(stmt), env)
 	case ast.LogicalNotExpr:
@@ -477,7 +476,7 @@ func (interpreter *Interpreter) processCoalesceExpression(expr ast.ICoalesceExpr
 	// TODO use isset here - Steps: Add caching of expression results - map[exprId]IRuntimeValue
 }
 
-func (interpreter *Interpreter) processEqualityExpression(expr ast.IEqualityExpression, env *Environment) (IRuntimeValue, Error) {
+func (interpreter *Interpreter) processEqualityExpression(expr ast.IBinaryOpExpression, env *Environment) (IRuntimeValue, Error) {
 	lhs, err := interpreter.processStmt(expr.GetLHS(), env)
 	if err != nil {
 		return NewVoidRuntimeValue(), err
@@ -490,7 +489,7 @@ func (interpreter *Interpreter) processEqualityExpression(expr ast.IEqualityExpr
 	return compare(lhs, expr.GetOperator(), rhs)
 }
 
-func (interpreter *Interpreter) processAdditiveExpression(expr ast.IEqualityExpression, env *Environment) (IRuntimeValue, Error) {
+func (interpreter *Interpreter) processAdditiveExpression(expr ast.IBinaryOpExpression, env *Environment) (IRuntimeValue, Error) {
 	lhs, err := interpreter.processStmt(expr.GetLHS(), env)
 	if err != nil {
 		return NewVoidRuntimeValue(), err
