@@ -11,11 +11,14 @@ type Interpreter struct {
 	request *Request
 	parser  *parser.Parser
 	env     *Environment
+	cache   map[int64]IRuntimeValue
 	result  string
 }
 
 func NewInterpreter(config *Config, request *Request) *Interpreter {
-	return &Interpreter{config: config, request: request, parser: parser.NewParser(), env: NewEnvironment(nil, request)}
+	return &Interpreter{config: config, request: request, parser: parser.NewParser(),
+		env: NewEnvironment(nil, request), cache: map[int64]IRuntimeValue{},
+	}
 }
 
 func (interpreter *Interpreter) Process(sourceCode string) (string, Error) {

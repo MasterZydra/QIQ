@@ -9,11 +9,16 @@ type IExpression interface {
 }
 
 type Expression struct {
+	id   int64
 	kind NodeType
 }
 
 func NewExpression(kind NodeType) *Expression {
-	return &Expression{kind: kind}
+	return &Expression{id: getNextNodeId(), kind: kind}
+}
+
+func (stmt *Expression) GetId() int64 {
+	return stmt.id
 }
 
 func (expr *Expression) GetKind() NodeType {
@@ -42,6 +47,10 @@ type TextExpression struct {
 
 func NewTextExpression(value string) *TextExpression {
 	return &TextExpression{expr: NewExpression(TextNode), value: value}
+}
+
+func (expr *TextExpression) GetId() int64 {
+	return expr.expr.GetId()
 }
 
 func (expr *TextExpression) GetKind() NodeType {
@@ -77,6 +86,10 @@ func NewVariableNameExpression(variableName string) *VariableNameExpression {
 	return &VariableNameExpression{expr: NewExpression(VariableNameExpr), variableName: variableName}
 }
 
+func (expr *VariableNameExpression) GetId() int64 {
+	return expr.expr.GetId()
+}
+
 func (expr *VariableNameExpression) GetKind() NodeType {
 	return expr.expr.GetKind()
 }
@@ -108,6 +121,10 @@ type SimpleVariableExpression struct {
 
 func NewSimpleVariableExpression(variableName IExpression) *SimpleVariableExpression {
 	return &SimpleVariableExpression{expr: NewExpression(SimpleVariableExpr), variableName: variableName}
+}
+
+func (expr *SimpleVariableExpression) GetId() int64 {
+	return expr.expr.GetId()
 }
 
 func (expr *SimpleVariableExpression) GetKind() NodeType {
@@ -143,6 +160,10 @@ type SubscriptExpression struct {
 
 func NewSubscriptExpression(variable IExpression, index IExpression) *SubscriptExpression {
 	return &SubscriptExpression{expr: NewExpression(SubscriptExpr), variable: variable, index: index}
+}
+
+func (expr *SubscriptExpression) GetId() int64 {
+	return expr.expr.GetId()
 }
 
 func (expr *SubscriptExpression) GetKind() NodeType {
@@ -182,6 +203,10 @@ type FunctionCallExpression struct {
 
 func NewFunctionCallExpression(functionName string, arguments []IExpression) *FunctionCallExpression {
 	return &FunctionCallExpression{expr: NewExpression(FunctionCallExpr), functionName: functionName, arguments: arguments}
+}
+
+func (expr *FunctionCallExpression) GetId() int64 {
+	return expr.expr.GetId()
 }
 
 func (expr *FunctionCallExpression) GetKind() NodeType {
@@ -245,6 +270,10 @@ func NewConstantAccessExpression(constantName string) *ConstantAccessExpression 
 	return &ConstantAccessExpression{expr: NewExpression(ConstantAccessExpr), constantName: constantName}
 }
 
+func (expr *ConstantAccessExpression) GetId() int64 {
+	return expr.expr.GetId()
+}
+
 func (expr *ConstantAccessExpression) GetKind() NodeType {
 	return expr.expr.GetKind()
 }
@@ -283,6 +312,10 @@ func NewArrayLiteralExpression() *ArrayLiteralExpression {
 		keys:     []IExpression{},
 		elements: map[IExpression]IExpression{},
 	}
+}
+
+func (expr *ArrayLiteralExpression) GetId() int64 {
+	return expr.expr.GetId()
 }
 
 func (expr *ArrayLiteralExpression) GetKind() NodeType {
@@ -336,6 +369,10 @@ func NewIntegerLiteralExpression(value int64) *IntegerLiteralExpression {
 	return &IntegerLiteralExpression{expr: NewExpression(IntegerLiteralExpr), value: value}
 }
 
+func (expr *IntegerLiteralExpression) GetId() int64 {
+	return expr.expr.GetId()
+}
+
 func (expr *IntegerLiteralExpression) GetKind() NodeType {
 	return expr.expr.GetKind()
 }
@@ -367,6 +404,10 @@ type FloatingLiteralExpression struct {
 
 func NewFloatingLiteralExpression(value float64) *FloatingLiteralExpression {
 	return &FloatingLiteralExpression{expr: NewExpression(FloatingLiteralExpr), value: value}
+}
+
+func (expr *FloatingLiteralExpression) GetId() int64 {
+	return expr.expr.GetId()
 }
 
 func (expr *FloatingLiteralExpression) GetKind() NodeType {
@@ -409,6 +450,10 @@ type StringLiteralExpression struct {
 
 func NewStringLiteralExpression(value string, stringType StringType) *StringLiteralExpression {
 	return &StringLiteralExpression{expr: NewExpression(StringLiteralExpr), value: value, stringType: stringType}
+}
+
+func (expr *StringLiteralExpression) GetId() int64 {
+	return expr.expr.GetId()
 }
 
 func (expr *StringLiteralExpression) GetKind() NodeType {
@@ -456,6 +501,10 @@ func NewSimpleAssignmentExpression(variable IExpression, value IExpression) *Sim
 	return &SimpleAssignmentExpression{expr: NewExpression(SimpleAssignmentExpr), variable: variable, value: value}
 }
 
+func (expr *SimpleAssignmentExpression) GetId() int64 {
+	return expr.expr.GetId()
+}
+
 func (expr *SimpleAssignmentExpression) GetKind() NodeType {
 	return expr.expr.GetKind()
 }
@@ -497,6 +546,10 @@ func NewCompoundAssignmentExpression(variable IExpression, operator string, valu
 	return &CompoundAssignmentExpression{
 		expr: NewExpression(CompoundAssignmentExpr), variable: variable, operator: operator, value: value,
 	}
+}
+
+func (expr *CompoundAssignmentExpression) GetId() int64 {
+	return expr.expr.GetId()
 }
 
 func (expr *CompoundAssignmentExpression) GetKind() NodeType {
@@ -547,6 +600,10 @@ func NewConditionalExpression(cond IExpression, ifExpr IExpression, elseExpr IEx
 	return &ConditionalExpression{expr: NewExpression(ConditionalExpr), cond: cond, ifExpr: ifExpr, elseExpr: elseExpr}
 }
 
+func (expr *ConditionalExpression) GetId() int64 {
+	return expr.expr.GetId()
+}
+
 func (expr *ConditionalExpression) GetKind() NodeType {
 	return expr.expr.GetKind()
 }
@@ -590,6 +647,10 @@ func NewCoalesceExpression(cond IExpression, elseExpr IExpression) *CoalesceExpr
 	return &CoalesceExpression{expr: NewExpression(CoalesceExpr), cond: cond, elseExpr: elseExpr}
 }
 
+func (expr *CoalesceExpression) GetId() int64 {
+	return expr.expr.GetId()
+}
+
 func (expr *CoalesceExpression) GetKind() NodeType {
 	return expr.expr.GetKind()
 }
@@ -629,6 +690,10 @@ type EqualityExpression struct {
 
 func NewEqualityExpression(lhs IExpression, operator string, rhs IExpression) *EqualityExpression {
 	return &EqualityExpression{expr: NewExpression(EqualityExpr), lhs: lhs, operator: operator, rhs: rhs}
+}
+
+func (expr *EqualityExpression) GetId() int64 {
+	return expr.expr.GetId()
 }
 
 func (expr *EqualityExpression) GetKind() NodeType {
@@ -726,6 +791,10 @@ type UnaryOpExpression struct {
 
 func NewUnaryOpExpression(operator string, expression IExpression) *UnaryOpExpression {
 	return &UnaryOpExpression{expr: NewExpression(UnaryOpExpr), operator: operator, expression: expression}
+}
+
+func (expr *UnaryOpExpression) GetId() int64 {
+	return expr.expr.GetId()
 }
 
 func (expr *UnaryOpExpression) GetKind() NodeType {

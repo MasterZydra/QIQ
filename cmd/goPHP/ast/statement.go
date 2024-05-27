@@ -5,16 +5,22 @@ import "fmt"
 // ------------------- MARK: Statement -------------------
 
 type IStatement interface {
+	GetId() int64
 	GetKind() NodeType
 	String() string
 }
 
 type Statement struct {
+	id   int64
 	kind NodeType
 }
 
 func NewStatement(kind NodeType) *Statement {
-	return &Statement{kind: kind}
+	return &Statement{id: getNextNodeId(), kind: kind}
+}
+
+func (stmt *Statement) GetId() int64 {
+	return stmt.id
 }
 
 func (stmt *Statement) GetKind() NodeType {
@@ -43,6 +49,10 @@ type EchoStatement struct {
 
 func NewEchoStatement(expressions []IExpression) *EchoStatement {
 	return &EchoStatement{stmt: NewStatement(EchoStmt), expressions: expressions}
+}
+
+func (stmt *EchoStatement) GetId() int64 {
+	return stmt.stmt.GetId()
 }
 
 func (stmt *EchoStatement) GetKind() NodeType {
@@ -80,6 +90,10 @@ func NewConstDeclarationStatement(name string, value IExpression) *ConstDeclarat
 	return &ConstDeclarationStatement{stmt: NewStatement(ConstDeclarationStmt), name: name, value: value}
 }
 
+func (stmt *ConstDeclarationStatement) GetId() int64 {
+	return stmt.stmt.GetId()
+}
+
 func (stmt *ConstDeclarationStatement) GetKind() NodeType {
 	return stmt.stmt.GetKind()
 }
@@ -115,6 +129,10 @@ type ExpressionStatement struct {
 
 func NewExpressionStatement(expr IExpression) *ExpressionStatement {
 	return &ExpressionStatement{stmt: NewStatement(ExpressionStmt), expr: expr}
+}
+
+func (stmt *ExpressionStatement) GetId() int64 {
+	return stmt.stmt.GetId()
 }
 
 func (stmt *ExpressionStatement) GetKind() NodeType {
