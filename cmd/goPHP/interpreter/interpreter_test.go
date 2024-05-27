@@ -208,6 +208,7 @@ func TestCoalesce(t *testing.T) {
 		`<?php $a = null; echo $a ?? "a"; $a = "b"; echo $a ?? "a"; echo "c" ?? "d";`,
 		"abc",
 	)
+	testInputOutput(t, `<?php echo $a ?? "a";`, "a")
 }
 
 func TestComparison(t *testing.T) {

@@ -441,12 +441,22 @@ func (interpreter *Interpreter) processConditionalExpression(expr ast.ICondition
 func (interpreter *Interpreter) processCoalesceExpression(expr ast.ICoalesceExpression, env *Environment) (IRuntimeValue, Error) {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-coalesce-expression
 
+	// Store current error reporting
+	errorReporting := interpreter.config.ErrorReporting
+	// Suppress all errors
+	interpreter.config.ErrorReporting = 0
+
 	cond, err := interpreter.processStmt(expr.GetCondition(), env)
+
+	// Restore previous error reporting
+	interpreter.config.ErrorReporting = errorReporting
+
 	if err != nil {
 		return NewVoidRuntimeValue(), err
 	}
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-coalesce-expression
 	// Given the expression e1 ?? e2, if e1 is set and not NULL (i.e. TRUE for isset), then the result is e1.
+
 	if cond.GetType() != NullValue {
 		return cond, nil
 	}
@@ -459,7 +469,7 @@ func (interpreter *Interpreter) processCoalesceExpression(expr ast.ICoalesceExpr
 	// TODO processCoalesceExpression - handle uninitialized variables
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-coalesce-expression
 	// Note that the semantics of ?? is similar to isset so that uninitialized variables will not produce warnings when used in e1.
-	// TODO use isset here
+	// TODO use isset here - Steps: Add caching of expression results - map[exprId]IRuntimeValue
 }
 
 func (interpreter *Interpreter) processEqualityExpression(expr ast.IEqualityExpression, env *Environment) (IRuntimeValue, Error) {
