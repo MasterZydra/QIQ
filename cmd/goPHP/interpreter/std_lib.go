@@ -340,13 +340,20 @@ func lib_var_dump_var(interpreter *Interpreter, value IRuntimeValue, depth int) 
 		elements := runtimeValToArrayRuntimeVal(value).GetElements()
 		interpreter.println(fmt.Sprintf("array(%d) {", len(keys)))
 		for _, key := range keys {
-			if key.GetType() != IntegerValue {
+			switch key.GetType() {
+			case IntegerValue:
+				keyValue := runtimeValToIntRuntimeVal(key).GetValue()
+				interpreter.println(fmt.Sprintf("%s[%d]=>", strings.Repeat(" ", depth), keyValue))
+			case StringValue:
+				keyValue := runtimeValToStrRuntimeVal(key).GetValue()
+				interpreter.println(fmt.Sprintf(`%s["%s"]=>`, strings.Repeat(" ", depth), keyValue))
+			default:
 				return NewError("lib_var_dump_var: Unsupported array key type %s", key.GetType())
 			}
-			keyValue := runtimeValToIntRuntimeVal(key).GetValue()
-			interpreter.println(fmt.Sprintf("%s[%d]=>", strings.Repeat(" ", depth), keyValue))
 			interpreter.print(strings.Repeat(" ", depth))
-			lib_var_dump_var(interpreter, elements[key], depth+2)
+			if err := lib_var_dump_var(interpreter, elements[key], depth+2); err != nil {
+				return err
+			}
 		}
 		interpreter.println(strings.Repeat(" ", depth-2) + "}")
 	case BooleanValue:
@@ -370,6 +377,9 @@ func lib_var_dump_var(interpreter *Interpreter, value IRuntimeValue, depth int) 
 		interpreter.println("int(" + strVal + ")")
 	case NullValue:
 		interpreter.println("NULL")
+	case StringValue:
+		strVal := runtimeValToStrRuntimeVal(value).GetValue()
+		interpreter.println(fmt.Sprintf("string(%d) \"%s\"", len(strVal), strVal))
 	default:
 		return NewError("lib_var_dump_var: Unsupported runtime value %s", value.GetType())
 	}

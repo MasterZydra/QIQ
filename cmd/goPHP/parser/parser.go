@@ -802,19 +802,23 @@ func (parser *Parser) parsePrimaryExpression() (ast.IExpression, error) {
 	//    string-literal
 
 	// TODO subscript-expression - dereferencable-expression (expression, array-creation, string)
-	if ast.IsVariableExpression(variable) && parser.isToken(lexer.OperatorOrPunctuatorToken, "[", true) {
-		var err error
-		var index ast.IExpression
-		if !parser.isToken(lexer.OperatorOrPunctuatorToken, "]", false) {
-			index, err = parser.parseExpression()
-			if err != nil {
-				return ast.NewEmptyExpression(), err
+	// TODO allow nesting
+	if ast.IsVariableExpression(variable) && parser.isToken(lexer.OperatorOrPunctuatorToken, "[", false) {
+		for ast.IsVariableExpression(variable) && parser.isToken(lexer.OperatorOrPunctuatorToken, "[", true) {
+			var err error
+			var index ast.IExpression
+			if !parser.isToken(lexer.OperatorOrPunctuatorToken, "]", false) {
+				index, err = parser.parseExpression()
+				if err != nil {
+					return ast.NewEmptyExpression(), err
+				}
 			}
+			if !parser.isToken(lexer.OperatorOrPunctuatorToken, "]", true) {
+				return ast.NewEmptyExpression(), fmt.Errorf("Expected \"]\". Got: %s", parser.at())
+			}
+			variable = ast.NewSubscriptExpression(variable, index)
 		}
-		if !parser.isToken(lexer.OperatorOrPunctuatorToken, "]", true) {
-			return ast.NewEmptyExpression(), fmt.Errorf("Expected \"]\". Got: %s", parser.at())
-		}
-		return ast.NewSubscriptExpression(variable, index), nil
+		return variable, nil
 	}
 
 	// TODO member-call-expression

@@ -2,8 +2,8 @@ package phpt
 
 type TestFile struct {
 	Title      string
-	GetParams  map[string][]string
-	PostParams map[string][]string
+	GetParams  [][]string
+	PostParams [][]string
 	File       string
 	Expect     string
 }

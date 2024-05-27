@@ -117,6 +117,8 @@ func TestVariableDeclaration(t *testing.T) {
 func TestArray(t *testing.T) {
 	testInputOutput(t, `<?php $a = [0, 1, 2]; echo $a[0] === null ? "y" : "n";`, "n")
 	testInputOutput(t, `<?php $a = [0, 1, 2]; echo $a[3] === null ? "y" : "n";`, "y")
+	testInputOutput(t, `<?php $a = [0, 1]; echo $a[2] = 2; echo $a[2];`, "22")
+	// TODO add test with nested: $b["a"]["b"]["c"]=1;
 }
 
 func TestCalculation(t *testing.T) {

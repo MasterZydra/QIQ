@@ -66,6 +66,8 @@ func (interpreter *Interpreter) varExprToVarName(expr ast.IExpression, env *Envi
 		}
 
 		return "", NewError("varExprToVarName - SimpleVariableExpr: Unsupported expression: %s", expr)
+	case ast.SubscriptExpr:
+		return interpreter.varExprToVarName(ast.ExprToSubscriptExpr(expr).GetVariable(), env)
 	default:
 		return "", NewError("varExprToVarName: Unsupported expression: %s", expr)
 	}
@@ -84,19 +86,19 @@ func (interpreter *Interpreter) printError(err Error) {
 func (interpreter *Interpreter) exprToRuntimeValue(expr ast.IExpression, env *Environment) (IRuntimeValue, Error) {
 	switch expr.GetKind() {
 	case ast.ArrayLiteralExpr:
-		elements := map[IRuntimeValue]IRuntimeValue{}
-		for key, element := range ast.ExprToArrayLitExpr(expr).GetElements() {
+		arrayRuntimeValue := NewArrayRuntimeValue()
+		for _, key := range ast.ExprToArrayLitExpr(expr).GetKeys() {
 			keyValue, err := interpreter.processStmt(key, env)
 			if err != nil {
 				return NewVoidRuntimeValue(), err
 			}
-			elementValue, err := interpreter.processStmt(element, env)
+			elementValue, err := interpreter.processStmt(ast.ExprToArrayLitExpr(expr).GetElements()[key], env)
 			if err != nil {
 				return NewVoidRuntimeValue(), err
 			}
-			elements[keyValue] = elementValue
+			arrayRuntimeValue.SetElement(keyValue, elementValue)
 		}
-		return NewArrayRuntimeValueFromMap(elements), nil
+		return arrayRuntimeValue, nil
 	case ast.IntegerLiteralExpr:
 		return NewIntegerRuntimeValue(ast.ExprToIntLitExpr(expr).GetValue()), nil
 	case ast.FloatingLiteralExpr:

@@ -46,10 +46,10 @@ func NewNullRuntimeValue() *RuntimeValue {
 
 type IArrayRuntimeValue interface {
 	IRuntimeValue
-	AddElement(key IRuntimeValue, value IRuntimeValue)
 	GetKeys() []IRuntimeValue
 	GetElements() map[IRuntimeValue]IRuntimeValue
 	GetElement(key IRuntimeValue) (IRuntimeValue, bool)
+	SetElement(key IRuntimeValue, value IRuntimeValue)
 }
 
 type ArrayRuntimeValue struct {
@@ -82,9 +82,30 @@ func (runtimeValue *ArrayRuntimeValue) GetType() ValueType {
 	return runtimeValue.runtimeValue.valueType
 }
 
-func (runtimeValue *ArrayRuntimeValue) AddElement(key IRuntimeValue, value IRuntimeValue) {
-	runtimeValue.keys = append(runtimeValue.keys, key)
-	runtimeValue.elements[key] = value
+func (runtimeValue *ArrayRuntimeValue) SetElement(key IRuntimeValue, value IRuntimeValue) {
+	existingKey, exists := runtimeValue.findKey(key)
+	if !exists {
+		runtimeValue.keys = append(runtimeValue.keys, key)
+		runtimeValue.elements[key] = value
+	} else {
+		runtimeValue.elements[existingKey] = value
+	}
+}
+
+func (runtimeValue *ArrayRuntimeValue) findKey(key IRuntimeValue) (IRuntimeValue, bool) {
+	for k := range runtimeValue.elements {
+		if k.GetType() != key.GetType() {
+			continue
+		}
+		boolean, err := compare(key, "===", k)
+		if err != nil {
+			return NewVoidRuntimeValue(), false
+		}
+		if runtimeValToBoolRuntimeVal(boolean).GetValue() {
+			return k, true
+		}
+	}
+	return NewVoidRuntimeValue(), false
 }
 
 func (runtimeValue *ArrayRuntimeValue) GetKeys() []IRuntimeValue {
@@ -96,19 +117,11 @@ func (runtimeValue *ArrayRuntimeValue) GetElements() map[IRuntimeValue]IRuntimeV
 }
 
 func (runtimeValue *ArrayRuntimeValue) GetElement(key IRuntimeValue) (IRuntimeValue, bool) {
-	for k, value := range runtimeValue.elements {
-		if k.GetType() != key.GetType() {
-			continue
-		}
-		boolean, err := compare(key, "===", k)
-		if err != nil {
-			return NewVoidRuntimeValue(), false
-		}
-		if runtimeValToBoolRuntimeVal(boolean).GetValue() {
-			return value, true
-		}
+	key, found := runtimeValue.findKey(key)
+	if !found {
+		return NewVoidRuntimeValue(), false
 	}
-	return NewVoidRuntimeValue(), false
+	return runtimeValue.elements[key], true
 }
 
 func runtimeValToArrayRuntimeVal(runtimeValue IRuntimeValue) IArrayRuntimeValue {

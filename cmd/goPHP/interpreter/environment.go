@@ -1,6 +1,8 @@
 package interpreter
 
 import (
+	"fmt"
+	"regexp"
 	"strings"
 )
 
@@ -35,8 +37,59 @@ func NewEnvironment(parentEnv *Environment, request *Request) *Environment {
 }
 
 func registerPredefinedVariables(environment *Environment, request *Request) {
-	environment.predefinedVariables["$_GET"] = NewArrayRuntimeValueFromMap(request.GetParams)
-	environment.predefinedVariables["$_POST"] = NewArrayRuntimeValueFromMap(request.PostParams)
+	environment.predefinedVariables["$_GET"] = paramToArray(request.GetParams)
+	environment.predefinedVariables["$_POST"] = paramToArray(request.PostParams)
+}
+
+func paramToArray(params [][]string) IArrayRuntimeValue {
+	result := NewArrayRuntimeValue()
+
+	for _, param := range params {
+		key := param[0]
+		value := param[1]
+
+		// No array
+		if !strings.Contains(key, "]") {
+			result.SetElement(NewStringRuntimeValue(key), NewStringRuntimeValue(value))
+			continue
+		}
+
+		// Array
+
+		openingBracket := strings.Index(key, "[")
+		// Get name of param without brackets
+		paramName := key[:openingBracket]
+
+		// Check if array is already in params
+		arrayValue, found := result.GetElement(NewStringRuntimeValue(paramName))
+		if !found || arrayValue.GetType() != ArrayValue {
+			arrayValue = NewArrayRuntimeValue()
+		}
+
+		// Wrap keys that are strings in double quotes
+		decimalKeys, _ := regexp.Compile(`\[[0-9]+\]`)
+		nondecimalKeys, _ := regexp.Compile(`\[.+\]`)
+		matches := nondecimalKeys.FindAllString(decimalKeys.ReplaceAllString(key, ""), -1)
+		for _, match := range matches {
+			replacement := `["` + match[1:len(match)-1] + `"]`
+			key = strings.Replace(key, match, replacement, 1)
+		}
+
+		// Prepare environment
+		env := NewEnvironment(nil, NewRequest())
+		env.declareVariable("$"+paramName, arrayValue)
+
+		// Execute PHP to store new array values in env
+		interpreter := NewInterpreter(NewProdConfig(), NewRequest())
+		interpreter.process(fmt.Sprintf(`<?php $%s = "%s";`, key, value), env)
+
+		// Extract array from environment
+		arrayValue = env.variables["$"+paramName]
+
+		result.SetElement(NewStringRuntimeValue(paramName), arrayValue)
+		continue
+	}
+	return result
 }
 
 func registerPredefinedConstants(environment *Environment) {

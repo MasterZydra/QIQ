@@ -3,6 +3,7 @@ package interpreter
 import (
 	"GoPHP/cmd/goPHP/ast"
 	"GoPHP/cmd/goPHP/parser"
+	"strings"
 )
 
 type Interpreter struct {
@@ -34,7 +35,7 @@ func (interpreter *Interpreter) process(sourceCode string, env *Environment) (st
 		}
 	}
 
-	return interpreter.result, nil
+	return strings.ReplaceAll(interpreter.result, "\n\n", "\n"), nil
 }
 
 func (interpreter *Interpreter) processStmt(stmt ast.IStatement, env *Environment) (IRuntimeValue, Error) {
@@ -130,6 +131,40 @@ func (interpreter *Interpreter) processSimpleAssignmentExpression(expr ast.ISimp
 	variableName, err := interpreter.varExprToVarName(expr.GetVariable(), env)
 	if err != nil {
 		return NewVoidRuntimeValue(), err
+	}
+
+	currentValue, _ := env.lookupVariable(variableName)
+
+	if currentValue.GetType() == ArrayValue {
+		if expr.GetVariable().GetKind() != ast.SubscriptExpr {
+			return NewVoidRuntimeValue(), NewError("processSimpleAssignmentExpression: Unsupported variable type %s", expr.GetVariable().GetKind())
+		}
+
+		var key ast.IExpression = ast.ExprToSubscriptExpr(expr.GetVariable()).GetIndex()
+
+		array := runtimeValToArrayRuntimeVal(currentValue)
+		if key == nil {
+			var lastIndex IRuntimeValue = NewIntegerRuntimeValue(0)
+			if len(array.GetKeys()) > 0 {
+				lastIndex = array.GetKeys()[len(array.GetKeys())-1]
+			}
+			if lastIndex.GetType() != IntegerValue {
+				return NewVoidRuntimeValue(), NewError("processSimpleAssignmentExpression: Unsupported array key %s", lastIndex.GetType())
+			}
+			var nextIndex = lastIndex
+			if len(array.GetKeys()) > 0 {
+				nextIndex = NewIntegerRuntimeValue(runtimeValToIntRuntimeVal(lastIndex).GetValue() + 1)
+			}
+			array.SetElement(nextIndex, value)
+		} else {
+			keyValue, err := interpreter.processStmt(key, env)
+			if err != nil {
+				return NewVoidRuntimeValue(), err
+			}
+			array.SetElement(keyValue, value)
+		}
+
+		return value, nil
 	}
 
 	return env.declareVariable(variableName, value)

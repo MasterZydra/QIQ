@@ -13,7 +13,7 @@ func main() {
 
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
-		if fileContent != "" {
+		if fileContent != "" || scanner.Text() == "" {
 			fileContent += "\n"
 		}
 		fileContent += scanner.Text()

@@ -3,7 +3,6 @@ package phpt
 import (
 	"bufio"
 	"fmt"
-	"net/url"
 	"os"
 	"slices"
 )
@@ -50,7 +49,7 @@ func (reader *Reader) GetTestFile() (*TestFile, error) {
 		for !reader.isEof() && !reader.isSection(reader.at()) {
 			params += reader.eat()
 		}
-		paramsMap, err := url.ParseQuery(params)
+		paramsMap, err := parseQuery(params)
 		if err != nil {
 			return nil, fmt.Errorf("--POST--\n%s", err)
 		}
@@ -63,7 +62,7 @@ func (reader *Reader) GetTestFile() (*TestFile, error) {
 		for !reader.isEof() && !reader.isSection(reader.at()) {
 			params += reader.eat()
 		}
-		paramsMap, err := url.ParseQuery(params)
+		paramsMap, err := parseQuery(params)
 		if err != nil {
 			return nil, fmt.Errorf("--GET--\n%s", err)
 		}

@@ -4,7 +4,7 @@ import "testing"
 
 func TestArrayKeyExists(t *testing.T) {
 	array := NewArrayRuntimeValue()
-	array.AddElement(NewIntegerRuntimeValue(0), NewIntegerRuntimeValue(42))
+	array.SetElement(NewIntegerRuntimeValue(0), NewIntegerRuntimeValue(42))
 	if actual, _ := lib_array_key_exists(NewIntegerRuntimeValue(0), array); !actual {
 		t.Errorf("Expected: \"%t\", Got \"%t\"", true, actual)
 	}
@@ -28,7 +28,7 @@ func TestLibBoolval(t *testing.T) {
 	// array to boolean
 	doTest(NewArrayRuntimeValue(), false)
 	array := NewArrayRuntimeValue()
-	array.AddElement(NewIntegerRuntimeValue(0), NewIntegerRuntimeValue(42))
+	array.SetElement(NewIntegerRuntimeValue(0), NewIntegerRuntimeValue(42))
 	doTest(array, true)
 
 	// boolean to boolean
@@ -130,7 +130,7 @@ func TestLibIntval(t *testing.T) {
 	// array to integer
 	doTest(NewArrayRuntimeValue(), 0)
 	array := NewArrayRuntimeValue()
-	array.AddElement(NewIntegerRuntimeValue(0), NewIntegerRuntimeValue(42))
+	array.SetElement(NewIntegerRuntimeValue(0), NewIntegerRuntimeValue(42))
 	doTest(array, 1)
 
 	// boolean to integer

@@ -1,10 +1,10 @@
 package interpreter
 
 type Request struct {
-	GetParams  map[IRuntimeValue]IRuntimeValue
-	PostParams map[IRuntimeValue]IRuntimeValue
+	GetParams  [][]string
+	PostParams [][]string
 }
 
 func NewRequest() *Request {
-	return &Request{GetParams: map[IRuntimeValue]IRuntimeValue{}, PostParams: map[IRuntimeValue]IRuntimeValue{}}
+	return &Request{GetParams: [][]string{}, PostParams: [][]string{}}
 }

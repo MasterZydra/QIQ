@@ -78,18 +78,8 @@ func doTest(path string, info os.FileInfo, err error) error {
 	}
 
 	request := interpreter.NewRequest()
-	if len(testFile.PostParams) > 0 {
-		for key, value := range testFile.PostParams {
-			request.PostParams[interpreter.NewStringRuntimeValue(key)] =
-				interpreter.NewStringRuntimeValue(value[0])
-		}
-	}
-	if len(testFile.GetParams) > 0 {
-		for key, value := range testFile.GetParams {
-			request.GetParams[interpreter.NewStringRuntimeValue(key)] =
-				interpreter.NewStringRuntimeValue(value[0])
-		}
-	}
+	request.GetParams = testFile.GetParams
+	request.PostParams = testFile.PostParams
 
 	result, phpError := interpreter.NewInterpreter(interpreter.NewDevConfig(), request).Process(testFile.File)
 	if phpError != nil {
