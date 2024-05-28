@@ -46,6 +46,8 @@ func (interpreter *Interpreter) processStmt(stmt ast.IStatement, env *Environmen
 	// Statements
 	case ast.ConstDeclarationStmt:
 		return interpreter.processConstDeclarationStatement(ast.StmtToConstDeclStatement(stmt), env)
+	case ast.CompoundStmt:
+		return interpreter.processCompoundStatement(ast.StmtToCompoundStatement(stmt), env)
 	case ast.ExpressionStmt:
 		return interpreter.processStmt(ast.StmtToExprStatement(stmt).GetExpression(), env)
 	case ast.EchoStmt:
@@ -103,6 +105,16 @@ func (interpreter *Interpreter) processConstDeclarationStatement(stmt ast.IConst
 		return NewVoidRuntimeValue(), err
 	}
 	return env.declareConstant(stmt.GetName(), value)
+}
+
+func (interpreter *Interpreter) processCompoundStatement(stmt ast.ICompoundStatement, env *Environment) (IRuntimeValue, Error) {
+	for _, statement := range stmt.GetStatements() {
+		_, err := interpreter.processStmt(statement, env)
+		if err != nil {
+			return NewVoidRuntimeValue(), err
+		}
+	}
+	return NewVoidRuntimeValue(), nil
 }
 
 func (interpreter *Interpreter) processEchoStatement(stmt ast.IEchoStatement, env *Environment) (IRuntimeValue, Error) {

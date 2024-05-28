@@ -77,7 +77,33 @@ func (parser *Parser) parseStatement() (ast.IStatement, error) {
 		return ast.NewExpressionStatement(ast.NewTextExpression(parser.eat().Value)), nil
 	}
 
-	// TODO compound-statement
+	// ------------------- MARK: compound-statement -------------------
+
+	// Spec: https://phplang.org/spec/11-statements.html#grammar-compound-statement
+
+	// compound-statement:
+	//    {   statement-list(opt)   }
+
+	// statement-list:
+	//    statement
+	//    statement-list   statement
+
+	if parser.isToken(lexer.OperatorOrPunctuatorToken, "{", true) {
+		statements := []ast.IStatement{}
+		for !parser.isEof() && !parser.isToken(lexer.OperatorOrPunctuatorToken, "}", false) {
+			stmt, err := parser.parseStatement()
+			if err != nil {
+				return ast.NewEmptyStatement(), err
+			}
+			statements = append(statements, stmt)
+		}
+
+		if !parser.isToken(lexer.OperatorOrPunctuatorToken, "}", true) {
+			return ast.NewEmptyStatement(), fmt.Errorf("Expected \"}\", Got: %s", parser.at())
+		}
+		return ast.NewCompoundStatement(statements), nil
+	}
+
 	// TODO named-label-statement
 	// TODO selection-statement
 	// TODO iteration-statement
@@ -857,7 +883,8 @@ func (parser *Parser) parsePrimaryExpression() (ast.IExpression, error) {
 		parser.next(0).TokenType == lexer.OperatorOrPunctuatorToken && parser.next(0).Value == "(" {
 		functionName := parser.eat().Value
 		args := []ast.IExpression{}
-		parser.eat() // Eat opening parentheses
+		// Eat opening parentheses
+		parser.eat()
 		for {
 			if parser.isToken(lexer.OperatorOrPunctuatorToken, ")", true) {
 				break
@@ -877,8 +904,6 @@ func (parser *Parser) parsePrimaryExpression() (ast.IExpression, error) {
 		}
 		return ast.NewFunctionCallExpression(functionName, args), nil
 	}
-	// TODO function-call-expression
-	// TODO function-call-expression - qualified-name
 
 	// TODO scoped-property-access-expression
 	// TODO member-access-expression

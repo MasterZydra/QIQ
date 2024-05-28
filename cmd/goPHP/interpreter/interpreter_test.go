@@ -332,3 +332,7 @@ func TestIntrinsic(t *testing.T) {
 	testInputOutput(t, `<?php $a = 1; echo isset($a) ? "y" : "n"; unset($a); echo isset($a) ? "y" : "n";`, "yn")
 	testInputOutput(t, `<?php echo isset($a) ? "y" : "n"; unset($a); echo isset($a) ? "y" : "n";`, "nn")
 }
+
+func TestCompoundStmt(t *testing.T) {
+	testInputOutput(t, `<?php { echo "1"; echo "2";} {}`, "12")
+}

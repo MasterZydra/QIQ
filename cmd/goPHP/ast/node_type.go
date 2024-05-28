@@ -31,6 +31,7 @@ const (
 	PrefixIncExpr          NodeType = "PrefixIncExpression"
 	LogicalNotExpr         NodeType = "LogicalNotExpression"
 	// Statements
+	CompoundStmt         NodeType = "CompoundStatement"
 	EchoStmt             NodeType = "EchoStatement"
 	ConstDeclarationStmt NodeType = "ConstDeclarationStatement"
 	ExpressionStmt       NodeType = "ExpressionStatement"

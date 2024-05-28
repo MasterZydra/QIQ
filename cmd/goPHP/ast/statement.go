@@ -35,6 +35,43 @@ func NewEmptyStatement() *Statement {
 	return &Statement{kind: EmptyNode}
 }
 
+// ------------------- MARK: CompoundStatement -------------------
+
+type ICompoundStatement interface {
+	IStatement
+	GetStatements() []IStatement
+}
+
+type CompoundStatement struct {
+	stmt       IStatement
+	statements []IStatement
+}
+
+func NewCompoundStatement(statements []IStatement) *CompoundStatement {
+	return &CompoundStatement{stmt: NewStatement(CompoundStmt), statements: statements}
+}
+
+func (stmt *CompoundStatement) GetId() int64 {
+	return stmt.stmt.GetId()
+}
+
+func (stmt *CompoundStatement) GetKind() NodeType {
+	return stmt.stmt.GetKind()
+}
+
+func (stmt *CompoundStatement) GetStatements() []IStatement {
+	return stmt.statements
+}
+
+func (stmt *CompoundStatement) String() string {
+	return fmt.Sprintf("{%s - %s}", stmt.GetKind(), stmt.statements)
+}
+
+func StmtToCompoundStatement(stmt IStatement) ICompoundStatement {
+	var i interface{} = stmt
+	return i.(ICompoundStatement)
+}
+
 // ------------------- MARK: EchoStatement -------------------
 
 type IEchoStatement interface {
