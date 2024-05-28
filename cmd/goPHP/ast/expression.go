@@ -739,6 +739,14 @@ type UnaryOpExpression struct {
 	expression IExpression
 }
 
+func NewPrefixIncExpression(expression IExpression, operator string) *UnaryOpExpression {
+	return &UnaryOpExpression{expr: NewExpression(PrefixIncExpr), operator: operator, expression: expression}
+}
+
+func NewPostfixIncExpression(expression IExpression, operator string) *UnaryOpExpression {
+	return &UnaryOpExpression{expr: NewExpression(PostfixIncExpr), operator: operator, expression: expression}
+}
+
 func NewLogicalNotExpression(expression IExpression) *UnaryOpExpression {
 	return &UnaryOpExpression{expr: NewExpression(LogicalNotExpr), operator: "!", expression: expression}
 }

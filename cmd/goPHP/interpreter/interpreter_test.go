@@ -222,6 +222,42 @@ func TestComparison(t *testing.T) {
 	testInputOutput(t, `<?php echo "123" === 123 ? "a" : "b";`, "b")
 }
 
+func TestIncDec(t *testing.T) {
+	// Boolean
+	testInputOutput(t, `<?php $a = true; var_dump($a++); var_dump($a);`, "bool(true)\nbool(true)\n")
+	testInputOutput(t, `<?php $a = true; var_dump($a--); var_dump($a);`, "bool(true)\nbool(true)\n")
+	testInputOutput(t, `<?php $a = true; var_dump(++$a); var_dump($a);`, "bool(true)\nbool(true)\n")
+	testInputOutput(t, `<?php $a = true; var_dump(--$a); var_dump($a);`, "bool(true)\nbool(true)\n")
+	testInputOutput(t, `<?php $a = false; var_dump($a++); var_dump($a);`, "bool(false)\nbool(false)\n")
+	testInputOutput(t, `<?php $a = false; var_dump($a--); var_dump($a);`, "bool(false)\nbool(false)\n")
+	testInputOutput(t, `<?php $a = false; var_dump(++$a); var_dump($a);`, "bool(false)\nbool(false)\n")
+	testInputOutput(t, `<?php $a = false; var_dump(--$a); var_dump($a);`, "bool(false)\nbool(false)\n")
+
+	// Floating
+	testInputOutput(t, `<?php $a = 42.0; var_dump($a++); var_dump($a);`, "float(42)\nfloat(43)\n")
+	testInputOutput(t, `<?php $a = 42.0; var_dump($a--); var_dump($a);`, "float(42)\nfloat(41)\n")
+	testInputOutput(t, `<?php $a = 42.0; var_dump(++$a); var_dump($a);`, "float(43)\nfloat(43)\n")
+	testInputOutput(t, `<?php $a = 42.0; var_dump(--$a); var_dump($a);`, "float(41)\nfloat(41)\n")
+
+	// Integer
+	testInputOutput(t, `<?php $a = 42; var_dump($a++); var_dump($a);`, "int(42)\nint(43)\n")
+	testInputOutput(t, `<?php $a = 42; var_dump($a--); var_dump($a);`, "int(42)\nint(41)\n")
+	testInputOutput(t, `<?php $a = 42; var_dump(++$a); var_dump($a);`, "int(43)\nint(43)\n")
+	testInputOutput(t, `<?php $a = 42; var_dump(--$a); var_dump($a);`, "int(41)\nint(41)\n")
+
+	// Null
+	testInputOutput(t, `<?php $a = null; var_dump($a++); var_dump($a);`, "NULL\nint(1)\n")
+	testInputOutput(t, `<?php $a = null; var_dump($a--); var_dump($a);`, "NULL\nNULL\n")
+	testInputOutput(t, `<?php $a = null; var_dump(++$a); var_dump($a);`, "int(1)\nint(1)\n")
+	testInputOutput(t, `<?php $a = null; var_dump(--$a); var_dump($a);`, "NULL\nNULL\n")
+
+	// String
+	testInputOutput(t, `<?php $a = ""; var_dump($a++); var_dump($a);`, `string(0) ""`+"\n"+`string(1) "1"`+"\n")
+	testInputOutput(t, `<?php $a = ""; var_dump($a--); var_dump($a);`, `string(0) ""`+"\nint(-1)\n")
+	testInputOutput(t, `<?php $a = ""; var_dump(++$a); var_dump($a);`, `string(1) "1"`+"\n"+`string(1) "1"`+"\n")
+	testInputOutput(t, `<?php $a = ""; var_dump(--$a); var_dump($a);`, "int(-1)\nint(-1)\n")
+}
+
 func TestUnaryExpression(t *testing.T) {
 	// Boolean
 	testInputOutput(t, `<?php var_dump(+true);`, "int(1)\n")

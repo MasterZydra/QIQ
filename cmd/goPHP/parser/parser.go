@@ -789,7 +789,9 @@ func (parser *Parser) parsePrimaryExpression() (ast.IExpression, error) {
 	}
 
 	if ast.IsVariableExpression(variable) && !parser.isToken(lexer.OperatorOrPunctuatorToken, "[", false) &&
-		!parser.isToken(lexer.OperatorOrPunctuatorToken, "{", false) {
+		!parser.isToken(lexer.OperatorOrPunctuatorToken, "{", false) &&
+		!parser.isToken(lexer.OperatorOrPunctuatorToken, "++", false) &&
+		!parser.isToken(lexer.OperatorOrPunctuatorToken, "--", false) {
 		return variable, nil
 	}
 
@@ -926,10 +928,48 @@ func (parser *Parser) parsePrimaryExpression() (ast.IExpression, error) {
 
 	// TODO anonymous-function-creation-expression
 	// TODO object-creation-expression
-	// TODO postfix-increment-expression
-	// TODO postfix-decrement-expression
-	// TODO prefix-increment-expression
-	// TODO prefix-decrement-expression
+
+	// ------------------- MARK: postfix-increment-expression -------------------
+
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-postfix-increment-expression
+
+	// postfix-increment-expression:
+	//    variable   ++
+
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-postfix-decrement-expression
+
+	// postfix-decrement-expression:
+	//    variable   --
+
+	if ast.IsVariableExpression(variable) && (parser.isToken(lexer.OperatorOrPunctuatorToken, "++", false) ||
+		parser.isToken(lexer.OperatorOrPunctuatorToken, "--", false)) {
+		return ast.NewPostfixIncExpression(variable, parser.eat().Value), nil
+	}
+
+	// ------------------- MARK: prefix-increment-expression -------------------
+
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-prefix-increment-expression
+
+	// prefix-increment-expression:
+	//    ++   variable
+
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-prefix-decrement-expression
+	// prefix-decrement-expression:
+	//    --   variable
+
+	if parser.isToken(lexer.OperatorOrPunctuatorToken, "++", false) ||
+		parser.isToken(lexer.OperatorOrPunctuatorToken, "--", false) {
+		operator := parser.eat().Value
+		variable, err := parser.parsePrimaryExpression()
+		if err != nil {
+			return ast.NewEmptyExpression(), err
+		}
+		if !ast.IsVariableExpression(variable) {
+			return ast.NewEmptyExpression(), fmt.Errorf("Syntax error, unexpected %s", variable)
+		}
+		return ast.NewPrefixIncExpression(variable, operator), nil
+	}
+
 	// TODO byref-assignment-expression
 	// TODO shell-command-expression
 

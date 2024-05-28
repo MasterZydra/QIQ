@@ -144,6 +144,145 @@ func runtimeValueToValueType(valueType ValueType, runtimeValue IRuntimeValue) (I
 	}
 }
 
+// ------------------- MARK: inc-dec-calculation -------------------
+
+func calculateIncDec(operator string, operand IRuntimeValue) (IRuntimeValue, Error) {
+	switch operand.GetType() {
+	case BooleanValue:
+		// Spec: https://phplang.org/spec/10-expressions.html#prefix-increment-and-decrement-operators
+		// For a prefix ++ or -- operator used with a Boolean-valued operand, there is no side effect, and the result is the operand’s value.
+		return operand, nil
+	case FloatingValue:
+		return calculateIncDecFloating(operator, runtimeValToFloatRuntimeVal(operand))
+	case IntegerValue:
+		return calculateIncDecInteger(operator, runtimeValToIntRuntimeVal(operand))
+	case NullValue:
+		return calculateIncDecNull(operator)
+	case StringValue:
+		return calculateIncDecString(operator, runtimeValToStrRuntimeVal(operand))
+	default:
+		return NewVoidRuntimeValue(), NewError("calculateIncDec: Type \"%s\" not implemented", operand.GetType())
+	}
+
+	// TODO calculateIncDec - object
+	// Spec: https://phplang.org/spec/10-expressions.html#prefix-increment-and-decrement-operators
+	// If the operand has an object type supporting the operation, then the object semantics defines the result. Otherwise, the operation has no effect and the result is the operand.
+}
+
+func calculateIncDecInteger(operator string, operand IIntegerRuntimeValue) (IRuntimeValue, Error) {
+	switch operator {
+	case "++":
+		// Spec: https://phplang.org/spec/10-expressions.html#prefix-increment-and-decrement-operators
+		//For a prefix "++" operator used with an arithmetic operand, the side effect of the operator is to increment the value of the operand by 1.
+		// The result is the value of the operand after it has been incremented.
+		// If an int operand’s value is the largest representable for that type, the operand is incremented as if it were float.
+
+		// Spec: https://phplang.org/spec/10-expressions.html#prefix-increment-and-decrement-operators
+		// For a prefix ++ or -- operator used with an operand having the value INF, -INF, or NAN, there is no side effect, and the result is the operand’s value.
+		return calculateInteger(operand, "+", NewIntegerRuntimeValue(1))
+
+	case "--":
+		// Spec: https://phplang.org/spec/10-expressions.html#prefix-increment-and-decrement-operators
+		// For a prefix "--" operator used with an arithmetic operand, the side effect of the operator is to decrement the value of the operand by 1.
+		// The result is the value of the operand after it has been decremented.
+		// If an int operand’s value is the smallest representable for that type, the operand is decremented as if it were float.
+
+		// Spec: https://phplang.org/spec/10-expressions.html#prefix-increment-and-decrement-operators
+		// For a prefix ++ or -- operator used with an operand having the value INF, -INF, or NAN, there is no side effect, and the result is the operand’s value.
+		return calculateInteger(operand, "-", NewIntegerRuntimeValue(1))
+
+	default:
+		return NewIntegerRuntimeValue(0), NewError("calculateIncDecInteger: Operator \"%s\" not implemented", operator)
+	}
+}
+
+func calculateIncDecFloating(operator string, operand IFloatingRuntimeValue) (IRuntimeValue, Error) {
+	switch operator {
+	case "++":
+		// Spec: https://phplang.org/spec/10-expressions.html#prefix-increment-and-decrement-operators
+		//For a prefix "++" operator used with an arithmetic operand, the side effect of the operator is to increment the value of the operand by 1.
+		// The result is the value of the operand after it has been incremented.
+		// If an int operand’s value is the largest representable for that type, the operand is incremented as if it were float.
+
+		// Spec: https://phplang.org/spec/10-expressions.html#prefix-increment-and-decrement-operators
+		// For a prefix ++ or -- operator used with an operand having the value INF, -INF, or NAN, there is no side effect, and the result is the operand’s value.
+		return calculateFloating(operand, "+", NewFloatingRuntimeValue(1))
+
+	case "--":
+		// Spec: https://phplang.org/spec/10-expressions.html#prefix-increment-and-decrement-operators
+		// For a prefix "--" operator used with an arithmetic operand, the side effect of the operator is to decrement the value of the operand by 1.
+		// The result is the value of the operand after it has been decremented.
+		// If an int operand’s value is the smallest representable for that type, the operand is decremented as if it were float.
+
+		// Spec: https://phplang.org/spec/10-expressions.html#prefix-increment-and-decrement-operators
+		// For a prefix ++ or -- operator used with an operand having the value INF, -INF, or NAN, there is no side effect, and the result is the operand’s value.
+		return calculateFloating(operand, "-", NewFloatingRuntimeValue(1))
+
+	default:
+		return NewIntegerRuntimeValue(0), NewError("calculateIncDecFloating: Operator \"%s\" not implemented", operator)
+	}
+}
+
+func calculateIncDecNull(operator string) (IRuntimeValue, Error) {
+	switch operator {
+	case "++":
+		// Spec: https://phplang.org/spec/10-expressions.html#prefix-increment-and-decrement-operators
+		// For a prefix ++ operator used with a NULL-valued operand, the side effect is that the operand’s type is changed to int,
+		// the operand’s value is set to zero, and that value is incremented by 1.
+		// The result is the value of the operand after it has been incremented.
+		return NewIntegerRuntimeValue(1), nil
+
+	case "--":
+		// Spec: https://phplang.org/spec/10-expressions.html#prefix-increment-and-decrement-operators
+		// For a prefix – operator used with a NULL-valued operand, there is no side effect, and the result is the operand’s value.
+		return NewNullRuntimeValue(), nil
+
+	default:
+		return NewIntegerRuntimeValue(0), NewError("calculateIncDecNull: Operator \"%s\" not implemented", operator)
+	}
+}
+
+func calculateIncDecString(operator string, operand IStringRuntimeValue) (IRuntimeValue, Error) {
+	switch operator {
+	case "++":
+		// Spec: https://phplang.org/spec/10-expressions.html#prefix-increment-and-decrement-operators
+		// For a prefix "++" operator used with an operand whose value is an empty string,
+		// the side effect is that the operand’s value is changed to the string “1”. The type of the operand is unchanged.
+		// The result is the new value of the operand.
+		if runtimeValToStrRuntimeVal(operand).GetValue() == "" {
+			return NewStringRuntimeValue("1"), nil
+		}
+		return NewVoidRuntimeValue(), NewError("TODO calculateIncDecString")
+
+	case "--":
+		// Spec: https://phplang.org/spec/10-expressions.html#prefix-increment-and-decrement-operators
+		// For a prefix "--" operator used with an operand whose value is an empty string,
+		// the side effect is that the operand’s type is changed to int, the operand’s value is set to zero,
+		// and that value is decremented by 1. The result is the value of the operand after it has been incremented.
+		if runtimeValToStrRuntimeVal(operand).GetValue() == "" {
+			return NewIntegerRuntimeValue(-1), nil
+		}
+		return NewVoidRuntimeValue(), NewError("TODO calculateIncDecString")
+
+	default:
+		return NewIntegerRuntimeValue(0), NewError("calculateIncDecNull: Operator \"%s\" not implemented", operator)
+	}
+
+	// TODO calculateIncDecString
+	// Spec: https://phplang.org/spec/10-expressions.html#prefix-increment-and-decrement-operators
+	/*
+		String Operands
+
+		For a prefix -- or ++ operator used with a numeric string, the numeric string is treated as the corresponding int or float value.
+
+		For a prefix -- operator used with a non-numeric string-valued operand, there is no side effect, and the result is the operand’s value.
+
+		For a non-numeric string-valued operand that contains only alphanumeric characters, for a prefix ++ operator, the operand is considered to be a representation of a base-36 number (i.e., with digits 0–9 followed by A–Z or a–z) in which letter case is ignored for value purposes. The right-most digit is incremented by 1. For the digits 0–8, that means going to 1–9. For the letters “A”–“Y” (or “a”–“y”), that means going to “B”–“Z” (or “b”–“z”). For the digit 9, the digit becomes 0, and the carry is added to the next left-most digit, and so on. For the digit “Z” (or “z”), the resulting string has an extra digit “A” (or “a”) appended. For example, when incrementing, “a” -> “b”, “Z” -> “AA”, “AA” -> “AB”, “F29” -> “F30”, “FZ9” -> “GA0”, and “ZZ9” -> “AAA0”. A digit position containing a number wraps modulo-10, while a digit position containing a letter wraps modulo-26.
+
+		For a non-numeric string-valued operand that contains any non-alphanumeric characters, for a prefix ++ operator, all characters up to and including the right-most non-alphanumeric character is passed through to the resulting string, unchanged. Characters to the right of that right-most non-alphanumeric character are treated like a non-numeric string-valued operand that contains only alphanumeric characters, except that the resulting string will not be extended. Instead, a digit position containing a number wraps modulo-10, while a digit position containing a letter wraps modulo-26.
+	*/
+}
+
 // ------------------- MARK: unary-op-calculation -------------------
 
 func calculateUnary(operator string, operand IRuntimeValue) (IRuntimeValue, Error) {

@@ -27,6 +27,8 @@ const (
 	EqualityExpr           NodeType = "EqualityExpression"
 	ShiftExpr              NodeType = "ShiftExpression"
 	UnaryOpExpr            NodeType = "UnaryOpExpression"
+	PostfixIncExpr         NodeType = "PostfixIncExpression"
+	PrefixIncExpr          NodeType = "PrefixIncExpression"
 	LogicalNotExpr         NodeType = "LogicalNotExpression"
 	// Statements
 	EchoStmt             NodeType = "EchoStatement"

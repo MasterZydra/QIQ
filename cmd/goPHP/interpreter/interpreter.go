@@ -87,6 +87,10 @@ func (interpreter *Interpreter) processStmt(stmt ast.IStatement, env *Environmen
 		return interpreter.processUnaryExpression(ast.ExprToUnaryOpExpr(stmt), env)
 	case ast.LogicalNotExpr:
 		return interpreter.processLogicalNotExpression(ast.ExprToUnaryOpExpr(stmt), env)
+	case ast.PostfixIncExpr:
+		return interpreter.processPostfixIncExpression(ast.ExprToUnaryOpExpr(stmt), env)
+	case ast.PrefixIncExpr:
+		return interpreter.processPrefixIncExpression(ast.ExprToUnaryOpExpr(stmt), env)
 
 	default:
 		return NewVoidRuntimeValue(), NewError("Unsupported statement or expression: %s", stmt)
@@ -520,4 +524,48 @@ func (interpreter *Interpreter) processLogicalNotExpression(expr ast.IUnaryOpExp
 		return NewVoidRuntimeValue(), err
 	}
 	return NewBooleanRuntimeValue(!boolValue), nil
+}
+
+func (interpreter *Interpreter) processPostfixIncExpression(expr ast.IUnaryOpExpression, env *Environment) (IRuntimeValue, Error) {
+	// Spec: https://phplang.org/spec/10-expressions.html#postfix-increment-and-decrement-operators
+	// These operators behave like their prefix counterparts except that the value of a postfix ++ or – expression is the value
+	// before any increment or decrement takes place.
+
+	previous, err := interpreter.processStmt(expr.GetExpression(), env)
+	if err != nil {
+		return NewVoidRuntimeValue(), err
+	}
+
+	newValue, err := calculateIncDec(expr.GetOperator(), previous)
+	if err != nil {
+		return NewVoidRuntimeValue(), err
+	}
+
+	variableName, err := interpreter.varExprToVarName(expr.GetExpression(), env)
+	if err != nil {
+		return NewVoidRuntimeValue(), err
+	}
+	env.declareVariable(variableName, newValue)
+
+	return previous, nil
+}
+
+func (interpreter *Interpreter) processPrefixIncExpression(expr ast.IUnaryOpExpression, env *Environment) (IRuntimeValue, Error) {
+	previous, err := interpreter.processStmt(expr.GetExpression(), env)
+	if err != nil {
+		return NewVoidRuntimeValue(), err
+	}
+
+	newValue, err := calculateIncDec(expr.GetOperator(), previous)
+	if err != nil {
+		return NewVoidRuntimeValue(), err
+	}
+
+	variableName, err := interpreter.varExprToVarName(expr.GetExpression(), env)
+	if err != nil {
+		return NewVoidRuntimeValue(), err
+	}
+	env.declareVariable(variableName, newValue)
+
+	return newValue, nil
 }
