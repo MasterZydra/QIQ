@@ -105,7 +105,19 @@ func (parser *Parser) parseStatement() (ast.IStatement, error) {
 	}
 
 	// TODO named-label-statement
-	// TODO selection-statement
+
+	// ------------------- MARK: selection-statement -------------------
+
+	// Spec: https://phplang.org/spec/11-statements.html#grammar-selection-statement
+
+	// selection-statement:
+	//    if-statement
+	//    switch-statement
+
+	if parser.isToken(lexer.KeywordToken, "if", false) || parser.isToken(lexer.KeywordToken, "switch", false) {
+		return parser.parseSelectionStatement()
+	}
+
 	// TODO iteration-statement
 	// TODO jump-statement
 	// TODO try-statement
@@ -259,6 +271,104 @@ func (parser *Parser) parseStatement() (ast.IStatement, error) {
 		}
 		return ast.NewEmptyExpression(), fmt.Errorf("Parser error: Statement must end with a semicolon")
 	}
+}
+
+func (parser *Parser) parseSelectionStatement() (ast.IStatement, error) {
+	// ------------------- MARK: selection-statement -------------------
+
+	// Spec: https://phplang.org/spec/11-statements.html#grammar-selection-statement
+
+	// selection-statement:
+	//    if-statement
+	//    switch-statement
+
+	// TODO if-statement - if with ":" after condition
+	if parser.isToken(lexer.KeywordToken, "if", true) {
+		// Spec: https://phplang.org/spec/11-statements.html#grammar-if-statement
+
+		// if-statement:
+		//    if   (   expression   )   statement   elseif-clauses-1(opt)   else-clause-1(opt)
+		//    if   (   expression   )   :   statement-list   elseif-clauses-2(opt)   else-clause-2(opt)   endif   ;
+
+		// elseif-clauses-1:
+		//    elseif-clause-1
+		//    elseif-clauses-1   elseif-clause-1
+
+		// elseif-clause-1:
+		//    elseif   (   expression   )   statement
+
+		// else-clause-1:
+		//    else   statement
+
+		// elseif-clauses-2:
+		//    elseif-clause-2
+		//    elseif-clauses-2   elseif-clause-2
+
+		// elseif-clause-2:
+		//    elseif   (   expression   )   :   statement-list
+
+		// else-clause-2:
+		//    else   :   statement-list
+
+		// if
+		if !parser.isToken(lexer.OperatorOrPunctuatorToken, "(", true) {
+			return ast.NewEmptyStatement(), fmt.Errorf("Expected \"(\". Got %s", parser.at())
+		}
+
+		condition, err := parser.parseExpression()
+		if err != nil {
+			return ast.NewEmptyStatement(), err
+		}
+
+		if !parser.isToken(lexer.OperatorOrPunctuatorToken, ")", true) {
+			return ast.NewEmptyStatement(), fmt.Errorf("Expected \")\". Got %s", parser.at())
+		}
+
+		ifBlock, err := parser.parseStatement()
+		if err != nil {
+			return ast.NewEmptyStatement(), err
+		}
+
+		// elseif
+		elseIf := []ast.IIfStatement{}
+		for parser.isToken(lexer.KeywordToken, "elseif", true) {
+			if !parser.isToken(lexer.OperatorOrPunctuatorToken, "(", true) {
+				return ast.NewEmptyStatement(), fmt.Errorf("Expected \"(\". Got %s", parser.at())
+			}
+
+			elseIfCondition, err := parser.parseExpression()
+			if err != nil {
+				return ast.NewEmptyStatement(), err
+			}
+
+			if !parser.isToken(lexer.OperatorOrPunctuatorToken, ")", true) {
+				return ast.NewEmptyStatement(), fmt.Errorf("Expected \")\". Got %s", parser.at())
+			}
+
+			elseIfBlock, err := parser.parseStatement()
+			if err != nil {
+				return ast.NewEmptyStatement(), err
+			}
+			elseIf = append(elseIf, ast.NewIfStatement(elseIfCondition, elseIfBlock, nil, nil))
+		}
+
+		// else
+		var elseBlock ast.IStatement = nil
+		if parser.isToken(lexer.KeywordToken, "else", true) {
+			elseBlock, err = parser.parseStatement()
+			if err != nil {
+				return ast.NewEmptyStatement(), err
+			}
+		}
+
+		return ast.NewIfStatement(condition, ifBlock, elseIf, elseBlock), nil
+	}
+
+	// TODO switch-statement
+	// if parser.isToken(lexer.KeywordToken, "switch", false) {
+	// }
+
+	return ast.NewEmptyStatement(), fmt.Errorf("Unsupported selection statement %s", parser.at())
 }
 
 func (parser *Parser) parseExpression() (ast.IExpression, error) {

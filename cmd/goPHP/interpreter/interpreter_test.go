@@ -336,3 +336,9 @@ func TestIntrinsic(t *testing.T) {
 func TestCompoundStmt(t *testing.T) {
 	testInputOutput(t, `<?php { echo "1"; echo "2";} {}`, "12")
 }
+
+func TestIfStmt(t *testing.T) {
+	testInputOutput(t, `<?php $a = 42; if ($a === 42) { echo "42"; } elseif ($a === 41) { echo "41"; } else { echo "??"; }`, "42")
+	testInputOutput(t, `<?php $a = 41; if ($a === 42) { echo "42"; } elseif ($a === 41) { echo "41"; } else { echo "??"; }`, "41")
+	testInputOutput(t, `<?php $a = 40; if ($a === 42) { echo "42"; } elseif ($a === 41) { echo "41"; } else { echo "??"; }`, "??")
+}

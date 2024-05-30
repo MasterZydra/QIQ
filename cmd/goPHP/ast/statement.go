@@ -35,6 +35,62 @@ func NewEmptyStatement() *Statement {
 	return &Statement{kind: EmptyNode}
 }
 
+// ------------------- MARK: IfStatement -------------------
+
+type IIfStatement interface {
+	IStatement
+	GetCondition() IExpression
+	GetIfBlock() IStatement
+	GetElseIf() []IIfStatement
+	GetElseBlock() IStatement
+}
+
+type IfStatement struct {
+	stmt      IStatement
+	condition IExpression
+	ifBlock   IStatement
+	elseIf    []IIfStatement
+	elseBlock IStatement
+}
+
+func NewIfStatement(condition IExpression, ifBlock IStatement, elseIf []IIfStatement, elseBlock IStatement) *IfStatement {
+	return &IfStatement{stmt: NewStatement(IfStmt), condition: condition, ifBlock: ifBlock, elseIf: elseIf, elseBlock: elseBlock}
+}
+
+func (stmt *IfStatement) GetId() int64 {
+	return stmt.stmt.GetId()
+}
+
+func (stmt *IfStatement) GetKind() NodeType {
+	return stmt.stmt.GetKind()
+}
+
+func (stmt *IfStatement) GetCondition() IExpression {
+	return stmt.condition
+}
+
+func (stmt *IfStatement) GetIfBlock() IStatement {
+	return stmt.ifBlock
+}
+
+func (stmt *IfStatement) GetElseIf() []IIfStatement {
+	return stmt.elseIf
+}
+
+func (stmt *IfStatement) GetElseBlock() IStatement {
+	return stmt.elseBlock
+}
+
+func (stmt *IfStatement) String() string {
+	return fmt.Sprintf("{%s - condition: %s, ifBlock: %s, elseIf: %s, else: %s}",
+		stmt.GetKind(), stmt.condition, stmt.ifBlock, stmt.elseIf, stmt.elseBlock)
+}
+
+func StmtToIfStatement(stmt IStatement) IIfStatement {
+	var i interface{} = stmt
+	return i.(IIfStatement)
+}
+
 // ------------------- MARK: CompoundStatement -------------------
 
 type ICompoundStatement interface {

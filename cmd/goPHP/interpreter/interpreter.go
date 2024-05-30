@@ -48,10 +48,12 @@ func (interpreter *Interpreter) processStmt(stmt ast.IStatement, env *Environmen
 		return interpreter.processConstDeclarationStatement(ast.StmtToConstDeclStatement(stmt), env)
 	case ast.CompoundStmt:
 		return interpreter.processCompoundStatement(ast.StmtToCompoundStatement(stmt), env)
-	case ast.ExpressionStmt:
-		return interpreter.processStmt(ast.StmtToExprStatement(stmt).GetExpression(), env)
 	case ast.EchoStmt:
 		return interpreter.processEchoStatement(ast.StmtToEchoStatement(stmt), env)
+	case ast.ExpressionStmt:
+		return interpreter.processStmt(ast.StmtToExprStatement(stmt).GetExpression(), env)
+	case ast.IfStmt:
+		return interpreter.processIfStmt(ast.StmtToIfStatement(stmt), env)
 
 	// Expressions
 	case ast.ArrayLiteralExpr, ast.IntegerLiteralExpr, ast.FloatingLiteralExpr, ast.StringLiteralExpr:
@@ -130,6 +132,60 @@ func (interpreter *Interpreter) processEchoStatement(stmt ast.IEchoStatement, en
 			interpreter.print(str)
 		}
 	}
+	return NewVoidRuntimeValue(), nil
+}
+
+func (interpreter *Interpreter) processIfStmt(stmt ast.IIfStatement, env *Environment) (IRuntimeValue, Error) {
+	conditionRuntimeValue, err := interpreter.processStmt(stmt.GetCondition(), env)
+	if err != nil {
+		return NewVoidRuntimeValue(), err
+	}
+
+	condition, err := lib_boolval(conditionRuntimeValue)
+	if err != nil {
+		return NewVoidRuntimeValue(), err
+	}
+
+	if condition {
+		_, err = interpreter.processStmt(stmt.GetIfBlock(), env)
+		if err != nil {
+			return NewVoidRuntimeValue(), err
+		}
+		return NewVoidRuntimeValue(), nil
+	}
+
+	if len(stmt.GetElseIf()) > 0 {
+		for _, elseIf := range stmt.GetElseIf() {
+			conditionRuntimeValue, err := interpreter.processStmt(elseIf.GetCondition(), env)
+			if err != nil {
+				return NewVoidRuntimeValue(), err
+			}
+
+			condition, err := lib_boolval(conditionRuntimeValue)
+			if err != nil {
+				return NewVoidRuntimeValue(), err
+			}
+
+			if !condition {
+				continue
+			}
+
+			_, err = interpreter.processStmt(elseIf.GetIfBlock(), env)
+			if err != nil {
+				return NewVoidRuntimeValue(), err
+			}
+			return NewVoidRuntimeValue(), nil
+		}
+	}
+
+	if stmt.GetElseBlock() != nil {
+		_, err = interpreter.processStmt(stmt.GetElseBlock(), env)
+		if err != nil {
+			return NewVoidRuntimeValue(), err
+		}
+		return NewVoidRuntimeValue(), nil
+	}
+
 	return NewVoidRuntimeValue(), nil
 }
 
