@@ -4,6 +4,7 @@ import (
 	"GoPHP/cmd/goPHP/ast"
 	"math"
 	"regexp"
+	"runtime"
 	"slices"
 	"strings"
 )
@@ -141,6 +142,50 @@ func runtimeValueToValueType(valueType ValueType, runtimeValue IRuntimeValue) (I
 		return NewStringRuntimeValue(str), err
 	default:
 		return NewVoidRuntimeValue(), NewError("runtimeValueToValueType: Unsupported runtime value: %s", valueType)
+	}
+}
+
+func getPhpOs() string {
+	switch runtime.GOOS {
+	case "android":
+		return "Android"
+	case "darwin":
+		return "Darwin"
+	case "dragonfly":
+		return "DragonFly"
+	case "freebsd":
+		return "FreeBSD"
+	case "illumos":
+		return "IllumOS"
+	case "linux":
+		return "Linux"
+	case "netbsd":
+		return "NetBSD"
+	case "openbsd":
+		return "OpenBSD"
+	case "solaris":
+		return "Solaris"
+	case "windows":
+		return "Windows"
+	default:
+		return "Unkown"
+	}
+}
+
+func getPhpOsFamily() string {
+	switch runtime.GOOS {
+	case "android", "linux":
+		return "Linux"
+	case "darwin":
+		return "Darwin"
+	case "dragonfly", "freebsd", "netbsd", "openbsd":
+		return "BSD"
+	case "solaris":
+		return "Solaris"
+	case "windows":
+		return "Windows"
+	default:
+		return "Unkown"
 	}
 }
 
