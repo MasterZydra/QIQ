@@ -688,6 +688,10 @@ type BinaryOpExpression struct {
 	rhs      IExpression
 }
 
+func NewRelationalExpression(lhs IExpression, operator string, rhs IExpression) *BinaryOpExpression {
+	return &BinaryOpExpression{expr: NewExpression(RelationalExpr), lhs: lhs, operator: operator, rhs: rhs}
+}
+
 func NewEqualityExpression(lhs IExpression, operator string, rhs IExpression) *BinaryOpExpression {
 	return &BinaryOpExpression{expr: NewExpression(EqualityExpr), lhs: lhs, operator: operator, rhs: rhs}
 }

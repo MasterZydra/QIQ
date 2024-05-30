@@ -25,6 +25,7 @@ const (
 	CoalesceExpr           NodeType = "CoalesceExpression"
 	BinaryOpExpr           NodeType = "BinaryOpExpression"
 	EqualityExpr           NodeType = "EqualityExpression"
+	RelationalExpr         NodeType = "RelationalExpression"
 	ShiftExpr              NodeType = "ShiftExpression"
 	UnaryOpExpr            NodeType = "UnaryOpExpression"
 	PostfixIncExpr         NodeType = "PostfixIncExpression"

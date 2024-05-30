@@ -83,6 +83,8 @@ func (interpreter *Interpreter) processStmt(stmt ast.IStatement, env *Environmen
 		return interpreter.processConditionalExpression(ast.ExprToCondExpr(stmt), env)
 	case ast.CoalesceExpr:
 		return interpreter.processCoalesceExpression(ast.ExprToCoalesceExpr(stmt), env)
+	case ast.RelationalExpr:
+		return interpreter.processRelationalExpression(ast.ExprToBinOpExpr(stmt), env)
 	case ast.EqualityExpr:
 		return interpreter.processEqualityExpression(ast.ExprToBinOpExpr(stmt), env)
 	case ast.BinaryOpExpr:
@@ -546,6 +548,19 @@ func (interpreter *Interpreter) processCoalesceExpression(expr ast.ICoalesceExpr
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-coalesce-expression
 	// Note that the semantics of ?? is similar to isset so that uninitialized variables will not produce warnings when used in e1.
 	// TODO use isset here - Steps: Add caching of expression results - map[exprId]IRuntimeValue
+}
+
+func (interpreter *Interpreter) processRelationalExpression(expr ast.IBinaryOpExpression, env *Environment) (IRuntimeValue, Error) {
+	lhs, err := interpreter.processStmt(expr.GetLHS(), env)
+	if err != nil {
+		return NewVoidRuntimeValue(), err
+	}
+
+	rhs, err := interpreter.processStmt(expr.GetRHS(), env)
+	if err != nil {
+		return NewVoidRuntimeValue(), err
+	}
+	return compareRelation(lhs, expr.GetOperator(), rhs)
 }
 
 func (interpreter *Interpreter) processEqualityExpression(expr ast.IBinaryOpExpression, env *Environment) (IRuntimeValue, Error) {

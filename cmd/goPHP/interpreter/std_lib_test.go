@@ -167,6 +167,16 @@ func TestLibIsNull(t *testing.T) {
 	}
 }
 
+func TestLibIsScalar(t *testing.T) {
+	testInputOutput(t, `<?php $a = true; var_dump(is_scalar($a));`, "bool(true)\n")
+	testInputOutput(t, `<?php $a = false; var_dump(is_scalar($a));`, "bool(true)\n")
+	testInputOutput(t, `<?php $a = 42; var_dump(is_scalar($a));`, "bool(true)\n")
+	testInputOutput(t, `<?php $a = 3.5; var_dump(is_scalar($a));`, "bool(true)\n")
+	testInputOutput(t, `<?php $a = "abc"; var_dump(is_scalar($a));`, "bool(true)\n")
+	testInputOutput(t, `<?php $a = null; var_dump(is_scalar($a));`, "bool(false)\n")
+	testInputOutput(t, `<?php $a = []; var_dump(is_scalar($a));`, "bool(false)\n")
+}
+
 func TestLibStrval(t *testing.T) {
 	doTest := func(runtimeValue IRuntimeValue, expected string) {
 		actual, err := lib_strval(runtimeValue)

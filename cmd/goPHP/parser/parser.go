@@ -652,8 +652,20 @@ func (parser *Parser) parserRelationalExpression() (ast.IExpression, error) {
 	//    relational-expression   >=   shift-expression
 	//    relational-expression   <=>   shift-expression
 
-	// TODO relational-expression
-	return parser.parseShiftExpression()
+	lhs, err := parser.parseShiftExpression()
+	if err != nil {
+		return ast.NewEmptyExpression(), err
+	}
+
+	for parser.isTokenType(lexer.OperatorOrPunctuatorToken, false) && common.IsRelationalExpressionOperators(parser.at().Value) {
+		operator := parser.eat().Value
+		rhs, err := parser.parseShiftExpression()
+		if err != nil {
+			return ast.NewEmptyExpression(), err
+		}
+		lhs = ast.NewRelationalExpression(lhs, operator, rhs)
+	}
+	return lhs, nil
 }
 
 func (parser *Parser) parseShiftExpression() (ast.IExpression, error) {

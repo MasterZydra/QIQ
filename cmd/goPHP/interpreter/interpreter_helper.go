@@ -433,7 +433,7 @@ func calculate(operand1 IRuntimeValue, operator string, operand2 IRuntimeValue) 
 	case StringValue:
 		return calculateString(runtimeValToStrRuntimeVal(operand1), operator, runtimeValToStrRuntimeVal(operand2))
 	default:
-		return NewVoidRuntimeValue(), NewError("calculate: Type \"%s\" not implemented", operator)
+		return NewVoidRuntimeValue(), NewError("calculate: Type \"%s\" not implemented", resultType)
 	}
 }
 
@@ -502,6 +502,472 @@ func calculateString(operand1 IStringRuntimeValue, operator string, operand2 ISt
 		return NewStringRuntimeValue(""), NewError("calculateString: Operator \"%s\" not implemented", operator)
 	}
 }
+
+// ------------------- MARK: compareRelation -------------------
+
+func compareRelation(lhs IRuntimeValue, operator string, rhs IRuntimeValue) (IRuntimeValue, Error) {
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-relational-expression
+
+	// Note that greater-than semantics is implemented as the reverse of less-than, i.e. "$a > $b" is the same as "$b < $a".
+	// This may lead to confusing results if the operands are not well-ordered
+	// - such as comparing two objects not having comparison semantics, or comparing arrays.
+
+	// Operator "<=>" represents comparison operator between two expressions,
+	// with the result being an integer less than "0" if the expression on the left is less than the expression on the right
+	// (i.e. if "$a < $b" would return "TRUE"), as defined below by the semantics of the operator "<",
+	// integer "0" if those expressions are equal (as defined by the semantics of the == operator) and
+	// integer greater than 0 otherwise.
+
+	// Operator "<" represents less-than, operator ">" represents greater-than, operator "<=" represents less-than-or-equal-to,
+	// and operator ">=" represents greater-than-or-equal-to. The type of the result is bool.
+
+	// The following table shows the result for comparison of different types, with the left operand displayed vertically
+	// and the right displayed horizontally. The conversions are performed according to type conversion rules.
+
+	// See in compareRelation[Type] ...
+
+	// "<" means that the left operand is always less than the right operand.
+	// ">" means that the left operand is always greater than the right operand.
+	// "->" means that the left operand is converted to the type of the right operand.
+	// "<-" means that the right operand is converted to the type of the left operand.
+
+	// A number means one of the cases below:
+	//   2. If one of the operands has arithmetic type, is a resource, or a numeric string,
+	//      which can be represented as int or float without loss of precision,
+	//      the operands are converted to the corresponding arithmetic type, with float taking precedence over int,
+	//      and resources converting to int. The result is the numerical comparison of the two operands after conversion.
+	//
+	//   3. If only one operand has object type, if the object has comparison handler, that handler defines the result.
+	//      Otherwise, if the object can be converted to the other operand’s type, it is converted and the result is used for the comparison.
+	//      Otherwise, the object compares greater-than any other operand type.
+	//
+	//   4. If both operands are non-numeric strings, the result is the lexical comparison of the two operands.
+	//      Specifically, the strings are compared byte-by-byte starting with their first byte.
+	//      If the two bytes compare equal and there are no more bytes in either string, the strings are equal and the comparison ends;
+	//      otherwise, if this is the final byte in one string, the shorter string compares less-than the longer string and the comparison ends.
+	//      If the two bytes compare unequal, the string having the lower-valued byte compares less-than the other string, and the comparison ends.
+	//      If there are more bytes in the strings, the process is repeated for the next pair of bytes.
+	//
+	//   6. When comparing two objects, if any of the object types has its own compare semantics, that would define the result,
+	//      with the left operand taking precedence. Otherwise, if the objects are of different types, the comparison result is FALSE.
+	//      If the objects are of the same type, the properties of the objects are compares using the array comparison described above.
+
+	// Reduce code complexity and duplication by only implementing less-than and less-than-or-equal-to
+	switch operator {
+	case ">":
+		return compareRelation(rhs, "<", lhs)
+	case ">=":
+		return compareRelation(rhs, "<=", lhs)
+	}
+
+	switch lhs.GetType() {
+	case ArrayValue:
+		return compareRelationArray(runtimeValToArrayRuntimeVal(lhs), operator, rhs)
+	case BooleanValue:
+		return compareRelationBoolean(runtimeValToBoolRuntimeVal(lhs), operator, rhs)
+	case FloatingValue:
+		return compareRelationFloating(runtimeValToFloatRuntimeVal(lhs), operator, rhs)
+	case IntegerValue:
+		return compareRelationInteger(runtimeValToIntRuntimeVal(lhs), operator, rhs)
+	case StringValue:
+		return compareRelationString(runtimeValToStrRuntimeVal(lhs), operator, rhs)
+	case NullValue:
+		return compareRelationNull(operator, rhs)
+	default:
+		return NewVoidRuntimeValue(), NewError("compareRelation: Type \"%s\" not implemented", lhs.GetType())
+	}
+
+}
+
+func compareRelationArray(lhs IArrayRuntimeValue, operator string, rhs IRuntimeValue) (IRuntimeValue, Error) {
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-relational-expression
+
+	//        NULL  bool  int  float  string  array  object  resource
+	// array   <-    ->    >    >      >       5      3       >
+
+	//   5. If both operands have array type, if the arrays have different numbers of elements,
+	//      the one with the fewer is considered less-than the other one, regardless of the keys and values in each, and the comparison ends.
+	//      For arrays having the same numbers of elements, the keys from the left operand are considered one by one,
+	//      if the next key in the left-hand operand exists in the right-hand operand, the corresponding values are compared.
+	//      If they are unequal, the array containing the lesser value is considered less-than the other one, and the comparison ends;
+	//      otherwise, the process is repeated with the next element.
+	//      If the next key in the left-hand operand does not exist in the right-hand operand, the arrays cannot be compared and FALSE is returned.
+	//      If all the values are equal, then the arrays are considered equal.
+
+	// TODO compareRelationArray - object
+	// TODO compareRelationArray - resource
+
+	if rhs.GetType() == NullValue {
+		var err Error
+		rhs, err = lib_arrayval(rhs)
+		if err != nil {
+			return NewVoidRuntimeValue(), err
+		}
+	}
+
+	switch rhs.GetType() {
+	case ArrayValue:
+		rhsArray := runtimeValToArrayRuntimeVal(rhs)
+		var result int64 = 0
+		if len(lhs.GetKeys()) != len(rhsArray.GetKeys()) {
+			if len(lhs.GetKeys()) < len(rhsArray.GetKeys()) {
+				result = -1
+			} else {
+				result = 1
+			}
+		} else {
+			for _, key := range lhs.GetKeys() {
+				lhsValue, _ := lhs.GetElement(key)
+				rhsValue, found := rhsArray.GetElement(key)
+				if found {
+					equal, err := compare(lhsValue, "===", rhsValue)
+					if err != nil {
+						return NewVoidRuntimeValue(), err
+					}
+					if runtimeValToBoolRuntimeVal(equal).GetValue() {
+						continue
+					}
+					lessThan, err := compareRelation(lhsValue, operator, rhsValue)
+					if err != nil {
+						return NewVoidRuntimeValue(), err
+					}
+					if lessThan.GetType() == BooleanValue {
+						if runtimeValToBoolRuntimeVal(lessThan).GetValue() {
+							result = -1
+						} else {
+							result = 1
+						}
+					}
+					if lessThan.GetType() == IntegerValue {
+						result = runtimeValToIntRuntimeVal(lessThan).GetValue()
+					}
+				}
+			}
+		}
+
+		switch operator {
+		case "<":
+			return NewBooleanRuntimeValue(result == -1), nil
+		case "<=":
+			return NewBooleanRuntimeValue(result < 1), nil
+		case "<=>":
+			return NewIntegerRuntimeValue(result), nil
+		default:
+			return NewVoidRuntimeValue(), NewError("compareRelationArray: Operator \"%s\" not implemented", operator)
+		}
+
+	case BooleanValue:
+		lhsBoolean, err := lib_boolval(lhs)
+		if err != nil {
+			return NewVoidRuntimeValue(), err
+		}
+		return compareRelationBoolean(NewBooleanRuntimeValue(lhsBoolean), operator, rhs)
+
+	case FloatingValue, IntegerValue, StringValue:
+		switch operator {
+		case "<", "<=":
+			return NewBooleanRuntimeValue(false), nil
+		case "<=>":
+			return NewIntegerRuntimeValue(1), nil
+		default:
+			return NewVoidRuntimeValue(), NewError("compareRelationArray: Operator \"%s\" not implemented", operator)
+		}
+
+	default:
+		return NewVoidRuntimeValue(), NewError("compareRelationArray: Type \"%s\" not implemented", rhs.GetType())
+	}
+}
+
+func compareRelationBoolean(lhs IBooleanRuntimeValue, operator string, rhs IRuntimeValue) (IRuntimeValue, Error) {
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-relational-expression
+
+	//       NULL  bool  int  float  string  array  object  resource
+	// bool   <-    1     <-   <-     <-      <-     <-      <-
+
+	//   1. If either operand has type bool, the other operand is converted to that type.
+	//      The result is the logical comparison of the two operands after conversion, where FALSE is defined to be less than TRUE.
+
+	rhsBoolean, err := lib_boolval(rhs)
+	if err != nil {
+		return NewVoidRuntimeValue(), err
+	}
+	// TODO compareRelationBoolean - object - implement in lib_boolval
+	// TODO compareRelationBoolean - resource - implement in lib_boolval
+
+	lhsInt, err := lib_intval(lhs)
+	if err != nil {
+		return NewVoidRuntimeValue(), err
+	}
+	rhsInt, err := lib_intval(NewBooleanRuntimeValue(rhsBoolean))
+	if err != nil {
+		return NewVoidRuntimeValue(), err
+	}
+
+	switch operator {
+	case "<":
+		return NewBooleanRuntimeValue(lhsInt < rhsInt), nil
+
+	case "<=":
+		return NewBooleanRuntimeValue(lhsInt <= rhsInt), nil
+
+	case "<=>":
+		if lhsInt > rhsInt {
+			return NewIntegerRuntimeValue(1), nil
+		}
+		if lhsInt == rhsInt {
+			return NewIntegerRuntimeValue(0), nil
+		}
+		return NewIntegerRuntimeValue(-1), nil
+
+	default:
+		return NewVoidRuntimeValue(), NewError("compareRelationBoolean: Operator \"%s\" not implemented", operator)
+	}
+}
+
+func compareRelationFloating(lhs IFloatingRuntimeValue, operator string, rhs IRuntimeValue) (IRuntimeValue, Error) {
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-relational-expression
+
+	//        NULL  bool  int  float  string  array  object  resource
+	// float   <-    ->    2    2      <-      <      3       <-
+
+	// TODO compareRelationFloating - string
+	// TODO compareRelationFloating - object
+	// TODO compareRelationFloating - resource
+
+	if rhs.GetType() == NullValue || rhs.GetType() == IntegerValue {
+		var err Error
+		rhs, err = runtimeValueToValueType(FloatingValue, rhs)
+		if err != nil {
+			return NewVoidRuntimeValue(), err
+		}
+	}
+
+	switch rhs.GetType() {
+	case ArrayValue:
+		switch operator {
+		case "<", "<=":
+			return NewBooleanRuntimeValue(true), nil
+		case "<=>":
+			return NewIntegerRuntimeValue(-1), nil
+		default:
+			return NewVoidRuntimeValue(), NewError("compareRelationArray: Operator \"%s\" not implemented", operator)
+		}
+
+	case BooleanValue:
+		lhsBoolean, err := lib_boolval(lhs)
+		if err != nil {
+			return NewVoidRuntimeValue(), err
+		}
+		return compareRelationBoolean(NewBooleanRuntimeValue(lhsBoolean), operator, rhs)
+
+	case FloatingValue:
+		lhsFloat := runtimeValToFloatRuntimeVal(lhs).GetValue()
+		rhsFloat := runtimeValToFloatRuntimeVal(rhs).GetValue()
+		switch operator {
+		case "<":
+			return NewBooleanRuntimeValue(lhsFloat < rhsFloat), nil
+		case "<=":
+			return NewBooleanRuntimeValue(lhsFloat <= rhsFloat), nil
+		case "<=>":
+			if lhsFloat > rhsFloat {
+				return NewIntegerRuntimeValue(1), nil
+			}
+			if lhsFloat == rhsFloat {
+				return NewIntegerRuntimeValue(0), nil
+			}
+			return NewIntegerRuntimeValue(-1), nil
+		default:
+			return NewVoidRuntimeValue(), NewError("compareRelationFloating: Operator \"%s\" not implemented", operator)
+		}
+
+	default:
+		return NewVoidRuntimeValue(), NewError("compareRelationFloating: Type \"%s\" not implemented", rhs.GetType())
+	}
+}
+
+func compareRelationInteger(lhs IIntegerRuntimeValue, operator string, rhs IRuntimeValue) (IRuntimeValue, Error) {
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-relational-expression
+
+	//      NULL  bool  int  float  string  array  object  resource
+	// int   <-    ->    2    2      <-      <      3       <-
+
+	// TODO compareRelationInteger - string
+	// TODO compareRelationInteger - object
+	// TODO compareRelationInteger - resource
+
+	if rhs.GetType() == NullValue {
+		var err Error
+		rhs, err = runtimeValueToValueType(IntegerValue, rhs)
+		if err != nil {
+			return NewVoidRuntimeValue(), err
+		}
+	}
+
+	switch rhs.GetType() {
+	case ArrayValue:
+		switch operator {
+		case "<", "<=":
+			return NewBooleanRuntimeValue(true), nil
+		case "<=>":
+			return NewIntegerRuntimeValue(-1), nil
+		default:
+			return NewVoidRuntimeValue(), NewError("compareRelationInteger: Operator \"%s\" not implemented for type array", operator)
+		}
+
+	case BooleanValue:
+		lhsBoolean, err := lib_boolval(lhs)
+		if err != nil {
+			return NewVoidRuntimeValue(), err
+		}
+		return compareRelationBoolean(NewBooleanRuntimeValue(lhsBoolean), operator, rhs)
+
+	case FloatingValue:
+		lhsFloat, err := lib_floatval(lhs)
+		if err != nil {
+			return NewVoidRuntimeValue(), err
+		}
+		return compareRelationFloating(NewFloatingRuntimeValue(lhsFloat), operator, rhs)
+
+	case IntegerValue:
+		lhsInt := runtimeValToIntRuntimeVal(lhs).GetValue()
+		rhsInt := runtimeValToIntRuntimeVal(rhs).GetValue()
+		switch operator {
+		case "<":
+			return NewBooleanRuntimeValue(lhsInt < rhsInt), nil
+		case "<=":
+			return NewBooleanRuntimeValue(lhsInt <= rhsInt), nil
+		case "<=>":
+			if lhsInt > rhsInt {
+				return NewIntegerRuntimeValue(1), nil
+			}
+			if lhsInt == rhsInt {
+				return NewIntegerRuntimeValue(0), nil
+			}
+			return NewIntegerRuntimeValue(-1), nil
+		default:
+			return NewVoidRuntimeValue(), NewError("compareRelationInteger: Operator \"%s\" not implemented", operator)
+		}
+
+	default:
+		return NewVoidRuntimeValue(), NewError("compareRelationInteger: Type \"%s\" not implemented", rhs.GetType())
+	}
+}
+
+func compareRelationNull(operator string, rhs IRuntimeValue) (IRuntimeValue, Error) {
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-relational-expression
+
+	//       NULL  bool  int  float  string  array  object  resource
+	// NULL   =     ->    ->   ->     ->      ->     <       <
+
+	// "=" means the result is always “equals”, i.e. strict comparisons are always FALSE and equality comparisons are always TRUE.
+
+	switch rhs.GetType() {
+	case ArrayValue:
+		lhs, err := lib_arrayval(NewNullRuntimeValue())
+		if err != nil {
+			return NewVoidRuntimeValue(), err
+		}
+		return compareRelationArray(lhs, operator, rhs)
+
+	case BooleanValue:
+		lhs, err := lib_boolval(NewNullRuntimeValue())
+		if err != nil {
+			return NewVoidRuntimeValue(), err
+		}
+		return compareRelationBoolean(NewBooleanRuntimeValue(lhs), operator, rhs)
+
+	case FloatingValue:
+		lhs, err := lib_floatval(NewNullRuntimeValue())
+		if err != nil {
+			return NewVoidRuntimeValue(), err
+		}
+		return compareRelationFloating(NewFloatingRuntimeValue(lhs), operator, rhs)
+
+	case IntegerValue:
+		lhs, err := lib_intval(NewNullRuntimeValue())
+		if err != nil {
+			return NewVoidRuntimeValue(), err
+		}
+		return compareRelationInteger(NewIntegerRuntimeValue(lhs), operator, rhs)
+
+	case NullValue:
+		switch operator {
+		case "<":
+			return NewBooleanRuntimeValue(false), nil
+		case "<=":
+			return NewBooleanRuntimeValue(true), nil
+		case "<=>":
+			return NewIntegerRuntimeValue(0), nil
+		}
+		return NewVoidRuntimeValue(), NewError("compareRelationNull: Operator \"%s\" not implemented for type NULL", operator)
+
+		// TODO compareRelationNull - object
+		// TODO compareRelationNull - resource
+
+	case StringValue:
+		lhs, err := lib_strval(NewNullRuntimeValue())
+		if err != nil {
+			return NewVoidRuntimeValue(), err
+		}
+		return compareRelationString(NewStringRuntimeValue(lhs), operator, rhs)
+
+	default:
+		return NewVoidRuntimeValue(), NewError("compareRelationNull: Type \"%s\" not implemented", rhs.GetType())
+	}
+}
+
+func compareRelationString(lhs IStringRuntimeValue, operator string, rhs IRuntimeValue) (IRuntimeValue, Error) {
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-relational-expression
+
+	//         NULL  bool  int  float  string  array  object  resource
+	// string   <-    ->    ->   ->     2, 4    <      3       2
+
+	// TODO compareRelationString - int
+	// TODO compareRelationString - float
+	// TODO compareRelationString - string
+	// TODO compareRelationString - object
+	// TODO compareRelationString - resource
+
+	if rhs.GetType() == NullValue {
+		var err Error
+		rhs, err = runtimeValueToValueType(StringValue, rhs)
+		if err != nil {
+			return NewVoidRuntimeValue(), err
+		}
+	}
+
+	switch rhs.GetType() {
+	case ArrayValue:
+		switch operator {
+		case "<", "<=":
+			return NewBooleanRuntimeValue(true), nil
+		case "<=>":
+			return NewIntegerRuntimeValue(-1), nil
+		default:
+			return NewVoidRuntimeValue(), NewError("compareRelationArray: Operator \"%s\" not implemented", operator)
+		}
+
+	case BooleanValue:
+		lhs, err := lib_boolval(lhs)
+		if err != nil {
+			return NewVoidRuntimeValue(), err
+		}
+		return compareRelationBoolean(NewBooleanRuntimeValue(lhs), operator, rhs)
+
+	default:
+		return NewVoidRuntimeValue(), NewError("compareRelationString: Type \"%s\" not implemented", rhs.GetType())
+	}
+}
+
+// TODO compareRelationObject
+// Spec: https://phplang.org/spec/10-expressions.html#grammar-relational-expression
+//         NULL  bool  int  float  string  array  object  resource
+// object   >     ->    3    3      3       3      6       3
+
+// TODO compareRelationResource
+// Spec: https://phplang.org/spec/10-expressions.html#grammar-relational-expression
+//           NULL  bool  int  float  string  array  object  resource
+// resource   >     ->    ->   ->     2       <      3       2
 
 // ------------------- MARK: comparison -------------------
 

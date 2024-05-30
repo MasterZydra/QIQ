@@ -4,6 +4,14 @@ import (
 	"slices"
 )
 
+// Spec: https://phplang.org/spec/10-expressions.html#grammar-relational-expression
+var relationalExpressionOperators = []string{"<", ">", "<=", ">=", "<=>"}
+
+func IsRelationalExpressionOperators(op string) bool {
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-relational-expression
+	return slices.Contains(relationalExpressionOperators, op)
+}
+
 // Spec: https://phplang.org/spec/10-expressions.html#grammar-compound-assignment-operator
 var compoundAssignmentOperators = []string{
 	"**=", "*=", "/=", "%=", "+=", "-=", ".=", "<<=", ">>=", "&=", "^=", "|=",

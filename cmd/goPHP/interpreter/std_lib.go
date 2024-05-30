@@ -14,6 +14,7 @@ func registerNativeFunctions(environment *Environment) {
 	environment.nativeFunctions["floatval"] = nativeFn_floatval
 	environment.nativeFunctions["intval"] = nativeFn_intval
 	environment.nativeFunctions["is_null"] = nativeFn_is_null
+	environment.nativeFunctions["is_scalar"] = nativeFn_is_scalar
 	environment.nativeFunctions["key_exits"] = nativeFn_array_key_exists
 	environment.nativeFunctions["strval"] = nativeFn_strval
 	environment.nativeFunctions["var_dump"] = nativeFn_var_dump
@@ -49,6 +50,44 @@ func lib_array_key_exists(key IRuntimeValue, array IArrayRuntimeValue) (bool, Er
 
 	_, ok := array.GetElement(key)
 	return ok, nil
+}
+
+// ------------------- MARK: arrayval -------------------
+
+// This is not an official function. But converting different types to array is needed in several places
+func lib_arrayval(runtimeValue IRuntimeValue) (IArrayRuntimeValue, Error) {
+	// Spec: https://phplang.org/spec/08-conversions.html#converting-to-array-type
+
+	// The result type is array.
+
+	if runtimeValue.GetType() == NullValue {
+		// Spec: https://phplang.org/spec/08-conversions.html#converting-to-array-type
+		// If the source value is NULL, the result value is an array of zero elements.
+		return NewArrayRuntimeValue(), nil
+	}
+
+	// TODO lib_arrayval - resource
+	if lib_is_scalar(runtimeValue) {
+		// Spec: https://phplang.org/spec/08-conversions.html#converting-to-array-type
+		// If the source type is scalar or resource and it is non-NULL,
+		// the result value is an array of one element under the key 0 whose value is that of the source.
+		array := NewArrayRuntimeValue()
+		array.SetElement(NewIntegerRuntimeValue(0), runtimeValue)
+		return array, nil
+	}
+
+	// TODO lib_arrayval - object
+	// Spec: https://phplang.org/spec/08-conversions.html#converting-to-array-type
+	// If the source is an object, the result is an array of zero or more elements, where the elements are key/value pairs corresponding to the object’s instance properties. The order of insertion of the elements into the array is the lexical order of the instance properties in the class-member-declarations list.
+
+	// TODO lib_arrayval - instance properties
+	// Spec: https://phplang.org/spec/08-conversions.html#converting-to-array-type
+	// For public instance properties, the keys of the array elements would be the same as the property name.
+	// The key for a private instance property has the form “\0class\0name”, where the class is the class name, and the name is the property name.
+	// The key for a protected instance property has the form “\0*\0name”, where name is that of the property.
+	// The value for each key is that from the corresponding property, or NULL if the property was not initialized.
+
+	return NewArrayRuntimeValue(), NewError("lib_arrayval: Unsupported type %s", runtimeValue.GetType())
 }
 
 // ------------------- MARK: boolval -------------------
@@ -252,6 +291,22 @@ func nativeFn_is_null(args []IRuntimeValue, _ *Interpreter) (IRuntimeValue, Erro
 func lib_is_null(runtimeValue IRuntimeValue) bool {
 	// Spec: https://www.php.net/manual/en/function.is-null.php
 	return runtimeValue.GetType() == NullValue
+}
+
+// ------------------- MARK: is_scalar -------------------
+
+func nativeFn_is_scalar(args []IRuntimeValue, _ *Interpreter) (IRuntimeValue, Error) {
+	if len(args) != 1 {
+		return NewVoidRuntimeValue(),
+			NewError("Uncaught ArgumentCountError: is_scalar() expects exactly 1 argument, %d given", len(args))
+	}
+
+	return NewBooleanRuntimeValue(lib_is_scalar(args[0])), nil
+}
+
+func lib_is_scalar(runtimeValue IRuntimeValue) bool {
+	// Spec: https://www.php.net/manual/en/function.is-scalar.php
+	return slices.Contains([]ValueType{BooleanValue, IntegerValue, FloatingValue, StringValue}, runtimeValue.GetType())
 }
 
 // ------------------- MARK: strval -------------------
