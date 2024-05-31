@@ -78,6 +78,7 @@ func doTest(path string, info os.FileInfo, err error) error {
 	}
 
 	request := interpreter.NewRequest()
+	request.Env = testFile.Env
 	request.GetParams = testFile.GetParams
 	request.PostParams = testFile.PostParams
 

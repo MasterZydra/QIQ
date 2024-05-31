@@ -41,4 +41,5 @@ func main() {
 	if err != nil {
 		fmt.Println("Error:", err)
 	}
+	os.Exit(interpreter.GetExitCode())
 }

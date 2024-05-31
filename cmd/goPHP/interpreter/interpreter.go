@@ -7,18 +7,24 @@ import (
 )
 
 type Interpreter struct {
-	config  *Config
-	request *Request
-	parser  *parser.Parser
-	env     *Environment
-	cache   map[int64]IRuntimeValue
-	result  string
+	config   *Config
+	request  *Request
+	parser   *parser.Parser
+	env      *Environment
+	cache    map[int64]IRuntimeValue
+	result   string
+	exitCode int64
 }
 
 func NewInterpreter(config *Config, request *Request) *Interpreter {
 	return &Interpreter{config: config, request: request, parser: parser.NewParser(),
 		env: NewEnvironment(nil, request), cache: map[int64]IRuntimeValue{},
+		exitCode: 0,
 	}
+}
+
+func (interpreter *Interpreter) GetExitCode() int {
+	return int(interpreter.exitCode)
 }
 
 func (interpreter *Interpreter) Process(sourceCode string) (string, Error) {
@@ -34,6 +40,10 @@ func (interpreter *Interpreter) process(sourceCode string, env *Environment) (st
 
 	for _, stmt := range program.GetStatements() {
 		if _, err := interpreter.processStmt(stmt, env); err != nil {
+			// Handle exit event - Stop code execution
+			if err.GetErrorType() == EventError && err.GetMessage() == ExitEvent {
+				break
+			}
 			return interpreter.result, err
 		}
 	}
@@ -71,6 +81,8 @@ func (interpreter *Interpreter) processStmt(stmt ast.IStatement, env *Environmen
 		return interpreter.processFunctionCallExpression(ast.ExprToFuncCallExpr(stmt), env)
 	case ast.EmptyIntrinsicExpr:
 		return interpreter.processEmptyIntrinsicExpression(ast.ExprToFuncCallExpr(stmt), env)
+	case ast.ExitIntrinsicExpr:
+		return interpreter.processExitIntrinsicExpression(ast.ExprToFuncCallExpr(stmt), env)
 	case ast.IssetIntrinsicExpr:
 		return interpreter.processIssetExpression(ast.ExprToFuncCallExpr(stmt), env)
 	case ast.UnsetIntrinsicExpr:
@@ -414,6 +426,45 @@ func (interpreter *Interpreter) processEmptyIntrinsicExpression(expr ast.IFuncti
 		return NewVoidRuntimeValue(), err
 	}
 	return NewBooleanRuntimeValue(!boolean), nil
+}
+
+func (interpreter *Interpreter) processExitIntrinsicExpression(expr ast.IFunctionCallExpression, env *Environment) (IRuntimeValue, Error) {
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-exit-intrinsic
+
+	// "exit" and "die" are equivalent.
+
+	// This intrinsic terminates the current script.
+	// If expression designates a string, that string is written to STDOUT.
+	// If expression designates an integer, that represents the script’s exit status code. Code 255 is reserved by PHP.
+	// Code 0 represents “success”. The exit status code is made available to the execution environment.
+	// If expression is omitted or is a string, the exit status code is zero. exit does not have a resulting value.
+
+	// "exit" performs the following operations, in order:
+	//   1. Writes the optional string to STDOUT.
+	//   2. Calls any functions registered via the library function register_shutdown_function in their order of registration.
+	//   3. Invokes destructors for all remaining instances.
+
+	expression := expr.GetArguments()[0]
+	if expression != nil {
+		exprValue, err := interpreter.processStmt(expression, env)
+		if err != nil {
+			return NewVoidRuntimeValue(), err
+		}
+		if exprValue.GetType() == StringValue {
+			interpreter.print(runtimeValToStrRuntimeVal(exprValue).GetValue())
+		}
+		if exprValue.GetType() == IntegerValue {
+			exitCode := runtimeValToIntRuntimeVal(exprValue).GetValue()
+			if exitCode >= 0 && exitCode < 255 {
+				interpreter.exitCode = exitCode
+			}
+		}
+	}
+
+	// TODO processExitIntrinsicExpression - call shutdown functions
+	// TODO processExitIntrinsicExpression - call destructors
+
+	return NewVoidRuntimeValue(), NewEvent(ExitEvent)
 }
 
 func (interpreter *Interpreter) processIssetExpression(expr ast.IFunctionCallExpression, env *Environment) (IRuntimeValue, Error) {

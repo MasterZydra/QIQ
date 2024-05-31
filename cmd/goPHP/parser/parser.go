@@ -1308,7 +1308,33 @@ func (parser *Parser) parseIntrinsic() (ast.IExpression, error) {
 	}
 
 	// TODO eval-intrinsic
-	// TODO exit-intrinsic
+
+	// ------------------- MARK: exit-intrinsic -------------------
+
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-exit-intrinsic
+
+	// exit-intrinsic:
+	//    exit
+	//    exit   (   expression(opt)   )
+	//    die
+	//    die   (   expression(opt)   )
+
+	if parser.isToken(lexer.KeywordToken, "exit", true) || parser.isToken(lexer.KeywordToken, "die", true) {
+		var expr ast.IExpression = nil
+		if parser.isToken(lexer.OperatorOrPunctuatorToken, "(", true) {
+			if !parser.isToken(lexer.OperatorOrPunctuatorToken, ")", false) {
+				var err error
+				expr, err = parser.parseExpression()
+				if err != nil {
+					return ast.NewEmptyExpression(), err
+				}
+			}
+			if !parser.isToken(lexer.OperatorOrPunctuatorToken, ")", true) {
+				return ast.NewEmptyExpression(), fmt.Errorf("Expected \")\". Got %s", parser.at())
+			}
+		}
+		return ast.NewExitIntrinsic(expr), nil
+	}
 
 	// ------------------- MARK: isset-intrinsic -------------------
 

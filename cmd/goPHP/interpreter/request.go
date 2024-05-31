@@ -1,6 +1,7 @@
 package interpreter
 
 type Request struct {
+	Env        map[string]string
 	GetParams  [][]string
 	PostParams [][]string
 }

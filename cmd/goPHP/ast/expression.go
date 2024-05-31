@@ -232,6 +232,14 @@ func ExprToFuncCallExpr(expr IExpression) IFunctionCallExpression {
 
 // ------------------- MARK: EmptyIntrinsic -------------------
 
+func NewExitIntrinsic(expression IExpression) *FunctionCallExpression {
+	return &FunctionCallExpression{expr: NewExpression(ExitIntrinsicExpr),
+		functionName: "exit", arguments: []IExpression{expression},
+	}
+}
+
+// ------------------- MARK: EmptyIntrinsic -------------------
+
 func NewEmptyIntrinsic(expression IExpression) *FunctionCallExpression {
 	return &FunctionCallExpression{expr: NewExpression(EmptyIntrinsicExpr),
 		functionName: "empty", arguments: []IExpression{expression},

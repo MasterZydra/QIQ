@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"slices"
+	"strings"
 )
 
 type Reader struct {
@@ -43,6 +44,24 @@ func (reader *Reader) GetTestFile() (*TestFile, error) {
 	} else {
 		return nil, getError("--TEST--")
 	}
+	if reader.at() == "--CREDITS--" {
+		reader.eat()
+		for !reader.isEof() && !reader.isSection(reader.at()) {
+			reader.eat()
+		}
+	}
+	if reader.at() == "--SKIPIF--" {
+		reader.eat()
+		file := ""
+		for !reader.isEof() && !reader.isSection(reader.at()) {
+			if file != "" {
+				file += "\n"
+			}
+			file += reader.eat()
+		}
+		reader.testFile.File = file
+		reader.sections = append(reader.sections, "--SKIPIF--")
+	}
 	if reader.at() == "--POST--" {
 		reader.eat()
 		params := ""
@@ -69,9 +88,21 @@ func (reader *Reader) GetTestFile() (*TestFile, error) {
 		reader.testFile.GetParams = paramsMap
 		reader.sections = append(reader.sections, "--GET--")
 	}
+
+	if reader.at() == "--ENV--" {
+		reader.eat()
+		env := map[string]string{}
+		for !reader.isEof() && !reader.isSection(reader.at()) {
+			line := reader.eat()
+			separator := strings.Index(line, "=")
+			env[line[:separator]] = line[separator+1:]
+		}
+		reader.testFile.Env = env
+		reader.sections = append(reader.sections, "--ENV--")
+	}
 	if reader.at() == "--FILE--" {
 		reader.eat()
-		file := ""
+		file := reader.testFile.File
 		for !reader.isEof() && !reader.isSection(reader.at()) {
 			file += reader.eat() + "\n"
 		}

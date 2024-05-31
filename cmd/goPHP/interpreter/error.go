@@ -39,6 +39,8 @@ const (
 	RecoverablePhpError    ErrorType = "RecoverableError"
 	DeprecatedPhpError     ErrorType = "Deprecated"
 	UserDeprecatedPhpError ErrorType = "UserDeprecated"
+	// Non-PHP error types
+	EventError ErrorType = "Event"
 )
 
 type Error interface {
@@ -74,3 +76,11 @@ func NewError(format string, a ...any) Error {
 func NewWarning(format string, a ...any) Error {
 	return &PhpError{errorType: WarningPhpError, message: fmt.Sprintf(format, a...)}
 }
+
+func NewEvent(event string) Error {
+	return &PhpError{errorType: EventError, message: event}
+}
+
+const (
+	ExitEvent string = "exit"
+)

@@ -656,6 +656,74 @@ func TestParenthesizedExpression(t *testing.T) {
 	}
 }
 
+func TestExitIntrinsic(t *testing.T) {
+	program, err := NewParser().ProduceAST(`<?php exit(42);`)
+	if err != nil {
+		t.Errorf("Unexpected error: \"%s\"", err)
+		return
+	}
+	expected := ast.NewExitIntrinsic(ast.NewIntegerLiteralExpression(42))
+	actual := ast.ExprToFuncCallExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
+	if expected.String() != actual.String() {
+		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
+	}
+
+	program, err = NewParser().ProduceAST(`<?php exit();`)
+	if err != nil {
+		t.Errorf("Unexpected error: \"%s\"", err)
+		return
+	}
+	expected = ast.NewExitIntrinsic(nil)
+	actual = ast.ExprToFuncCallExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
+	if expected.String() != actual.String() {
+		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
+	}
+
+	program, err = NewParser().ProduceAST(`<?php exit;`)
+	if err != nil {
+		t.Errorf("Unexpected error: \"%s\"", err)
+		return
+	}
+	expected = ast.NewExitIntrinsic(nil)
+	actual = ast.ExprToFuncCallExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
+	if expected.String() != actual.String() {
+		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
+	}
+
+	program, err = NewParser().ProduceAST(`<?php die(42);`)
+	if err != nil {
+		t.Errorf("Unexpected error: \"%s\"", err)
+		return
+	}
+	expected = ast.NewExitIntrinsic(ast.NewIntegerLiteralExpression(42))
+	actual = ast.ExprToFuncCallExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
+	if expected.String() != actual.String() {
+		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
+	}
+
+	program, err = NewParser().ProduceAST(`<?php die();`)
+	if err != nil {
+		t.Errorf("Unexpected error: \"%s\"", err)
+		return
+	}
+	expected = ast.NewExitIntrinsic(nil)
+	actual = ast.ExprToFuncCallExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
+	if expected.String() != actual.String() {
+		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
+	}
+
+	program, err = NewParser().ProduceAST(`<?php die;`)
+	if err != nil {
+		t.Errorf("Unexpected error: \"%s\"", err)
+		return
+	}
+	expected = ast.NewExitIntrinsic(nil)
+	actual = ast.ExprToFuncCallExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
+	if expected.String() != actual.String() {
+		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
+	}
+}
+
 func TestEmptyIntrinsic(t *testing.T) {
 	program, err := NewParser().ProduceAST(`<?php empty(false);`)
 	if err != nil {

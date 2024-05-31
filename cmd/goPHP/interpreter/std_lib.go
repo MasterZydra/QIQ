@@ -12,6 +12,7 @@ func registerNativeFunctions(environment *Environment) {
 	environment.nativeFunctions["boolval"] = nativeFn_boolval
 	environment.nativeFunctions["error_reporting"] = nativeFn_error_reporting
 	environment.nativeFunctions["floatval"] = nativeFn_floatval
+	environment.nativeFunctions["getenv"] = nativeFn_getenv
 	environment.nativeFunctions["intval"] = nativeFn_intval
 	environment.nativeFunctions["is_null"] = nativeFn_is_null
 	environment.nativeFunctions["is_scalar"] = nativeFn_is_scalar
@@ -216,6 +217,38 @@ func lib_floatval(runtimeValue IRuntimeValue) (float64, Error) {
 	// TODO lib_floatval - object
 	// Spec: https://phplang.org/spec/08-conversions.html#converting-to-floating-point-type
 	// If the source is an object, if the class defines a conversion function, the result is determined by that function (this is currently available only to internal classes). If not, the conversion is invalid, the result is assumed to be 1.0 and a non-fatal error is produced.
+}
+
+// ------------------- MARK: getenv -------------------
+
+func nativeFn_getenv(args []IRuntimeValue, interpreter *Interpreter) (IRuntimeValue, Error) {
+	// Spec: https://www.php.net/manual/en/function.getenv.php
+
+	//  getenv(?string $name = null, bool $local_only = false): string|array|false
+
+	// Returns the value of the environment variable name, or false if the environment variable name does not exist.
+	// If name is null, all environment variables are returned as an associative array.
+
+	// TODO getenv - add support for $local_only
+	if len(args) != 1 {
+		return NewVoidRuntimeValue(),
+			NewError("Uncaught ArgumentCountError: getenv() expects exactly 1 argument, %d given", len(args))
+	}
+
+	if args[0].GetType() == NullValue {
+		return interpreter.env.lookupVariable("$_ENV")
+	}
+
+	envVars, err := interpreter.env.lookupVariable("$_ENV")
+	if err != nil {
+		return NewVoidRuntimeValue(), err
+	}
+	envArray := runtimeValToArrayRuntimeVal(envVars)
+	value, found := envArray.GetElement(args[0])
+	if !found {
+		return NewBooleanRuntimeValue(false), nil
+	}
+	return value, nil
 }
 
 // ------------------- MARK: intval -------------------
