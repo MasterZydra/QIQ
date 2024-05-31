@@ -13,8 +13,14 @@ func (interpreter *Interpreter) print(str string) {
 	interpreter.result += str
 }
 
+var PHP_EOL string = ""
+
 func (interpreter *Interpreter) println(str string) {
-	interpreter.print(str + "\n")
+	if PHP_EOL == "" {
+		str, _ := interpreter.env.lookupConstant("PHP_EOL")
+		PHP_EOL = runtimeValToStrRuntimeVal(str).GetValue()
+	}
+	interpreter.print(str + PHP_EOL)
 }
 
 func (interpreter *Interpreter) processCondition(expr ast.IExpression, env *Environment) (IRuntimeValue, bool, Error) {

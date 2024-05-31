@@ -282,7 +282,6 @@ func (parser *Parser) parseSelectionStatement() (ast.IStatement, error) {
 	//    if-statement
 	//    switch-statement
 
-	// TODO if-statement - if with ":" after condition
 	if parser.isToken(lexer.KeywordToken, "if", true) {
 		// Spec: https://phplang.org/spec/11-statements.html#grammar-if-statement
 
@@ -324,9 +323,25 @@ func (parser *Parser) parseSelectionStatement() (ast.IStatement, error) {
 			return ast.NewEmptyStatement(), fmt.Errorf("Expected \")\". Got %s", parser.at())
 		}
 
-		ifBlock, err := parser.parseStatement()
-		if err != nil {
-			return ast.NewEmptyStatement(), err
+		isAltSytax := parser.isToken(lexer.OperatorOrPunctuatorToken, ":", true)
+
+		var ifBlock ast.IStatement
+		if !isAltSytax {
+			ifBlock, err = parser.parseStatement()
+			if err != nil {
+				return ast.NewEmptyStatement(), err
+			}
+		} else {
+			statements := []ast.IStatement{}
+			for !parser.isToken(lexer.KeywordToken, "elseif", false) && !parser.isToken(lexer.KeywordToken, "else", false) &&
+				!parser.isToken(lexer.KeywordToken, "endif", false) {
+				statement, err := parser.parseStatement()
+				if err != nil {
+					return ast.NewEmptyStatement(), err
+				}
+				statements = append(statements, statement)
+			}
+			ifBlock = ast.NewCompoundStatement(statements)
 		}
 
 		// elseif
@@ -345,20 +360,62 @@ func (parser *Parser) parseSelectionStatement() (ast.IStatement, error) {
 				return ast.NewEmptyStatement(), fmt.Errorf("Expected \")\". Got %s", parser.at())
 			}
 
-			elseIfBlock, err := parser.parseStatement()
-			if err != nil {
-				return ast.NewEmptyStatement(), err
+			if isAltSytax && !parser.isToken(lexer.OperatorOrPunctuatorToken, ":", true) {
+				return ast.NewEmptyStatement(), fmt.Errorf("Expected \":\". Got %s", parser.at())
 			}
+
+			var elseIfBlock ast.IStatement
+			if !isAltSytax {
+				elseIfBlock, err = parser.parseStatement()
+				if err != nil {
+					return ast.NewEmptyStatement(), err
+				}
+			} else {
+				statements := []ast.IStatement{}
+				for !parser.isToken(lexer.KeywordToken, "elseif", false) && !parser.isToken(lexer.KeywordToken, "else", false) &&
+					!parser.isToken(lexer.KeywordToken, "endif", false) {
+					statement, err := parser.parseStatement()
+					if err != nil {
+						return ast.NewEmptyStatement(), err
+					}
+					statements = append(statements, statement)
+				}
+				elseIfBlock = ast.NewCompoundStatement(statements)
+			}
+
 			elseIf = append(elseIf, ast.NewIfStatement(elseIfCondition, elseIfBlock, nil, nil))
 		}
 
 		// else
 		var elseBlock ast.IStatement = nil
 		if parser.isToken(lexer.KeywordToken, "else", true) {
-			elseBlock, err = parser.parseStatement()
-			if err != nil {
-				return ast.NewEmptyStatement(), err
+			if isAltSytax && !parser.isToken(lexer.OperatorOrPunctuatorToken, ":", true) {
+				return ast.NewEmptyStatement(), fmt.Errorf("Expected \":\". Got %s", parser.at())
 			}
+
+			if !isAltSytax {
+				elseBlock, err = parser.parseStatement()
+				if err != nil {
+					return ast.NewEmptyStatement(), err
+				}
+			} else {
+				statements := []ast.IStatement{}
+				for !parser.isToken(lexer.KeywordToken, "endif", false) {
+					statement, err := parser.parseStatement()
+					if err != nil {
+						return ast.NewEmptyStatement(), err
+					}
+					statements = append(statements, statement)
+				}
+				elseBlock = ast.NewCompoundStatement(statements)
+			}
+		}
+
+		if isAltSytax && !parser.isToken(lexer.KeywordToken, "endif", true) {
+			return ast.NewEmptyStatement(), fmt.Errorf("Expected \"endif\". Got %s", parser.at())
+		}
+		if isAltSytax && !parser.isToken(lexer.OperatorOrPunctuatorToken, ";", true) {
+			return ast.NewEmptyStatement(), fmt.Errorf("Expected \";\". Got %s", parser.at())
 		}
 
 		return ast.NewIfStatement(condition, ifBlock, elseIf, elseBlock), nil

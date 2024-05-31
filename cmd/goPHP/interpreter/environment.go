@@ -109,6 +109,11 @@ func registerPredefinedConstants(environment *Environment) {
 	environment.predefinedConstants["NULL"] = NewNullRuntimeValue()
 	environment.predefinedConstants["PHP_OS"] = NewStringRuntimeValue(getPhpOs())
 	environment.predefinedConstants["PHP_OS_FAMILY"] = NewStringRuntimeValue(getPhpOsFamily())
+	if getPhpOs() == "Windows" {
+		environment.predefinedConstants["PHP_EOL"] = NewStringRuntimeValue("\r\n")
+	} else {
+		environment.predefinedConstants["PHP_EOL"] = NewStringRuntimeValue("\n")
+	}
 
 	// Spec: https://www.php.net/manual/en/errorfunc.constants.php
 	environment.predefinedConstants["E_ERROR"] = NewIntegerRuntimeValue(E_ERROR)

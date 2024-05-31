@@ -359,6 +359,10 @@ func TestIfStmt(t *testing.T) {
 	testInputOutput(t, `<?php $a = 42; if ($a === 42) { echo "42"; } elseif ($a === 41) { echo "41"; } else { echo "??"; }`, "42")
 	testInputOutput(t, `<?php $a = 41; if ($a === 42) { echo "42"; } elseif ($a === 41) { echo "41"; } else { echo "??"; }`, "41")
 	testInputOutput(t, `<?php $a = 40; if ($a === 42) { echo "42"; } elseif ($a === 41) { echo "41"; } else { echo "??"; }`, "??")
+	// Alternative syntax
+	testInputOutput(t, `<?php $a = 42; if ($a === 42): echo "42"; elseif ($a === 41): echo "41"; else: echo "??"; endif;`, "42")
+	testInputOutput(t, `<?php $a = 41; if ($a === 42): echo "42"; elseif ($a === 41): echo "41"; else: echo "??"; endif;`, "41")
+	testInputOutput(t, `<?php $a = 40; if ($a === 42): echo "42"; elseif ($a === 41): echo "41"; else: echo "??"; endif;`, "??")
 }
 
 func TestCompareRelation(t *testing.T) {
