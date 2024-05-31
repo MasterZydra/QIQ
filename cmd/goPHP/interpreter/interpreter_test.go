@@ -130,6 +130,20 @@ func TestPredefinedConstants(t *testing.T) {
 	testInputOutput(t, `<?php echo E_ALL;`, fmt.Sprintf("%d", E_ALL))
 }
 
+func TestCastExpression(t *testing.T) {
+	testInputOutput(t, `<?php var_dump((array)42);`, "array(1) {\n  [0]=>\n  int(42)\n}\n")
+	testInputOutput(t, `<?php var_dump((binary)42);`, `string(2) "42"`+"\n")
+	testInputOutput(t, `<?php var_dump((bool)42);`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump((boolean)42);`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump((double)42);`, "float(42)\n")
+	testInputOutput(t, `<?php var_dump((int)42);`, "int(42)\n")
+	testInputOutput(t, `<?php var_dump((integer)42);`, "int(42)\n")
+	testInputOutput(t, `<?php var_dump((float)42);`, "float(42)\n")
+	// TODO testInputOutput(t, `<?php var_dump((object)42);`, "a")
+	testInputOutput(t, `<?php var_dump((real)42);`, "float(42)\n")
+	testInputOutput(t, `<?php var_dump((string)42);`, `string(2) "42"`+"\n")
+}
+
 func TestConstantDeclaration(t *testing.T) {
 	testInputOutput(t,
 		`<?php const TRUTH = 42; const PI = "3.141";echo TRUTH, PI;`,

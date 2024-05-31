@@ -763,6 +763,10 @@ func NewLogicalNotExpression(expression IExpression) *UnaryOpExpression {
 	return &UnaryOpExpression{expr: NewExpression(LogicalNotExpr), operator: "!", expression: expression}
 }
 
+func NewCastExpression(castType string, expression IExpression) *UnaryOpExpression {
+	return &UnaryOpExpression{expr: NewExpression(CastExpr), operator: castType, expression: expression}
+}
+
 func NewUnaryOpExpression(operator string, expression IExpression) *UnaryOpExpression {
 	return &UnaryOpExpression{expr: NewExpression(UnaryOpExpr), operator: operator, expression: expression}
 }

@@ -29,6 +29,7 @@ const (
 	RelationalExpr         NodeType = "RelationalExpression"
 	ShiftExpr              NodeType = "ShiftExpression"
 	UnaryOpExpr            NodeType = "UnaryOpExpression"
+	CastExpr               NodeType = "CastExpression"
 	PostfixIncExpr         NodeType = "PostfixIncExpression"
 	PrefixIncExpr          NodeType = "PrefixIncExpression"
 	LogicalNotExpr         NodeType = "LogicalNotExpression"

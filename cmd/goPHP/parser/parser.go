@@ -866,7 +866,28 @@ func (parser *Parser) parseUnaryExpression() (ast.IExpression, error) {
 	}
 
 	// TODO error-control-expression
-	// TODO cast-expression
+
+	// cast-expression
+
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-cast-expression
+
+	// cast-expression:
+	//    (   cast-type   )   unary-expression
+
+	if parser.isToken(lexer.OperatorOrPunctuatorToken, "(", false) &&
+		parser.next(0).TokenType == lexer.KeywordToken && common.IsCastTypeKeyword(parser.next(0).Value) {
+		// Eat opening parentheses
+		parser.eat()
+		castType := parser.eat().Value
+		if !parser.isToken(lexer.OperatorOrPunctuatorToken, ")", true) {
+			return ast.NewEmptyExpression(), fmt.Errorf("Expected \")\". Got %s", parser.at())
+		}
+		expr, err := parser.parseUnaryExpression()
+		if err != nil {
+			return ast.NewEmptyExpression(), err
+		}
+		return ast.NewCastExpression(castType, expr), nil
+	}
 
 	return parser.parseExponentiationExpression()
 }
@@ -1249,7 +1270,7 @@ func (parser *Parser) parseLiteral() (ast.IExpression, error) {
 				nil
 		}
 
-		// TODO double-quoted-string-literal
+		// double-quoted-string-literal
 		if common.IsDoubleQuotedStringLiteral(parser.at().Value) {
 			return ast.NewStringLiteralExpression(
 					common.DoubleQuotedStringLiteralToString(parser.eat().Value), ast.DoubleQuotedString),

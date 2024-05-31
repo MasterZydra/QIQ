@@ -103,6 +103,8 @@ func (interpreter *Interpreter) processStmt(stmt ast.IStatement, env *Environmen
 		return interpreter.processAdditiveExpression(ast.ExprToBinOpExpr(stmt), env)
 	case ast.UnaryOpExpr:
 		return interpreter.processUnaryExpression(ast.ExprToUnaryOpExpr(stmt), env)
+	case ast.CastExpr:
+		return interpreter.processCastExpression(ast.ExprToUnaryOpExpr(stmt), env)
 	case ast.LogicalNotExpr:
 		return interpreter.processLogicalNotExpression(ast.ExprToUnaryOpExpr(stmt), env)
 	case ast.PostfixIncExpr:
@@ -646,6 +648,49 @@ func (interpreter *Interpreter) processUnaryExpression(expr ast.IUnaryOpExpressi
 		return NewVoidRuntimeValue(), err
 	}
 	return calculateUnary(expr.GetOperator(), operand)
+}
+
+func (interpreter *Interpreter) processCastExpression(expr ast.IUnaryOpExpression, env *Environment) (IRuntimeValue, Error) {
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-cast-type
+
+	// A cast-type of "unset" is no longer supported and results in a compile-time error.
+	// With the exception of the cast-type unset and binary (see below), the value of the operand cast-expression is converted to the type specified by cast-type, and that is the type and value of the result. This construct is referred to as a cast and is used as the verb, “to cast”. If no conversion is involved, the type and value of the result are the same as those of cast-expression.
+
+	// A cast can result in a loss of information.
+
+	// TODO processCastExpression - object
+	// A cast-type of "object" results in a conversion to type "object".
+
+	value, err := interpreter.processStmt(expr.GetExpression(), env)
+	if err != nil {
+		return NewVoidRuntimeValue(), err
+	}
+
+	switch expr.GetOperator() {
+	case "array":
+		// Spec: https://phplang.org/spec/10-expressions.html#grammar-cast-type
+		// A cast-type of "array" results in a conversion to type array.
+		return lib_arrayval(value)
+	case "binary", "string":
+		// Spec: https://phplang.org/spec/10-expressions.html#grammar-cast-type
+		// A cast-type of "binary" is reserved for future use in dealing with so-called binary strings. For now, it is fully equivalent to "string" cast.
+		// A cast-type of "string" results in a conversion to type "string".
+		return runtimeValueToValueType(StringValue, value)
+	case "bool", "boolean":
+		// Spec: https://phplang.org/spec/10-expressions.html#grammar-cast-type
+		// A cast-type of "bool" or "boolean" results in a conversion to type "bool".
+		return runtimeValueToValueType(BooleanValue, value)
+	case "double", "float", "real":
+		// Spec: https://phplang.org/spec/10-expressions.html#grammar-cast-type
+		// A cast-type of "float", "double", or "real" results in a conversion to type "float".
+		return runtimeValueToValueType(FloatingValue, value)
+	case "int", "integer":
+		// Spec: https://phplang.org/spec/10-expressions.html#grammar-cast-type
+		// A cast-type of "int" or "integer" results in a conversion to type "int".
+		return runtimeValueToValueType(IntegerValue, value)
+	default:
+		return NewVoidRuntimeValue(), NewError("processCastExpression: Unsupported cast type %s", expr.GetOperator())
+	}
 }
 
 func (interpreter *Interpreter) processLogicalNotExpression(expr ast.IUnaryOpExpression, env *Environment) (IRuntimeValue, Error) {

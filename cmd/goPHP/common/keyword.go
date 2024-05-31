@@ -37,6 +37,22 @@ func IsKeyword(token string) bool {
 	return slices.Contains(keywords, token)
 }
 
+// Spec: https://phplang.org/spec/10-expressions.html#grammar-cast-type
+var castTypeKeywords = []string{
+	"array", "binary", "bool", "boolean", "double", "int", "integer", "float", "object", "real", "string",
+}
+
+func IsCastTypeKeyword(token string) bool {
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-cast-type
+
+	// Spec: https://phplang.org/spec/09-lexical-structure.html#keywords
+	// Keywords are not case-sensitive.
+	token = strings.ToLower(token)
+
+	return slices.Contains(castTypeKeywords, token)
+
+}
+
 // Spec: https://phplang.org/spec/06-constants.html#context-dependent-constants
 var contextDependentConstants = []string{
 	"__CLASS__", "__COMPILER_HALT_OFFSET__", "__DIR__", "__FILE__", "__FUNCTION__", "__LINE__",

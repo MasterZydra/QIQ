@@ -630,6 +630,19 @@ func TestBitwiseAndExpression(t *testing.T) {
 	}
 }
 
+func TestCastExpression(t *testing.T) {
+	program, err := NewParser().ProduceAST(`<?php (string)42;`)
+	if err != nil {
+		t.Errorf("Unexpected error: \"%s\"", err)
+		return
+	}
+	expected := ast.NewCastExpression("string", ast.NewIntegerLiteralExpression(42))
+	actual := ast.ExprToUnaryOpExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
+	if expected.String() != actual.String() || expected.GetOperator() != actual.GetOperator() {
+		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
+	}
+}
+
 func TestLogicalNotExpression(t *testing.T) {
 	program, err := NewParser().ProduceAST(`<?php !true;`)
 	if err != nil {

@@ -264,7 +264,8 @@ func (lexer *Lexer) tokenizeToken() error {
 
 				// Spec: https://phplang.org/spec/09-lexical-structure.html#keywords
 				// Also, all magic constants are also treated as keywords.
-				if common.IsKeyword(name) || common.IsContextDependentConstants(name) || common.IsCorePredefinedConstants(name) {
+				if common.IsKeyword(name) || common.IsContextDependentConstants(name) || common.IsCorePredefinedConstants(name) ||
+					common.IsCastTypeKeyword(name) {
 					lexer.pushKeywordToken(name)
 					return nil
 				}
