@@ -137,7 +137,7 @@ func registerPredefinedConstants(environment *Environment) {
 // ------------------- MARK: Variables -------------------
 
 func (env *Environment) declareVariable(variableName string, value IRuntimeValue) (IRuntimeValue, Error) {
-	env.variables[variableName] = value
+	env.variables[variableName] = deepCopy(value)
 
 	return value, nil
 }

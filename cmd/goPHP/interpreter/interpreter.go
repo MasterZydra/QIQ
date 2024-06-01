@@ -389,7 +389,7 @@ func (interpreter *Interpreter) processFunctionCallExpression(expr ast.IFunction
 		if err != nil {
 			return NewVoidRuntimeValue(), err
 		}
-		functionArguments[index] = runtimeValue
+		functionArguments[index] = deepCopy(runtimeValue)
 	}
 	return nativeFunction(functionArguments, interpreter)
 }

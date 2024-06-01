@@ -88,6 +88,50 @@ func (interpreter *Interpreter) printError(err Error) {
 	// Depending on interpreter.config.ErrorReporting
 }
 
+func getPhpOs() string {
+	switch runtime.GOOS {
+	case "android":
+		return "Android"
+	case "darwin":
+		return "Darwin"
+	case "dragonfly":
+		return "DragonFly"
+	case "freebsd":
+		return "FreeBSD"
+	case "illumos":
+		return "IllumOS"
+	case "linux":
+		return "Linux"
+	case "netbsd":
+		return "NetBSD"
+	case "openbsd":
+		return "OpenBSD"
+	case "solaris":
+		return "Solaris"
+	case "windows":
+		return "Windows"
+	default:
+		return "Unkown"
+	}
+}
+
+func getPhpOsFamily() string {
+	switch runtime.GOOS {
+	case "android", "linux":
+		return "Linux"
+	case "darwin":
+		return "Darwin"
+	case "dragonfly", "freebsd", "netbsd", "openbsd":
+		return "BSD"
+	case "solaris":
+		return "Solaris"
+	case "windows":
+		return "Windows"
+	default:
+		return "Unkown"
+	}
+}
+
 // ------------------- MARK: RuntimeValue -------------------
 
 func (interpreter *Interpreter) exprToRuntimeValue(expr ast.IExpression, env *Environment) (IRuntimeValue, Error) {
@@ -151,48 +195,17 @@ func runtimeValueToValueType(valueType ValueType, runtimeValue IRuntimeValue) (I
 	}
 }
 
-func getPhpOs() string {
-	switch runtime.GOOS {
-	case "android":
-		return "Android"
-	case "darwin":
-		return "Darwin"
-	case "dragonfly":
-		return "DragonFly"
-	case "freebsd":
-		return "FreeBSD"
-	case "illumos":
-		return "IllumOS"
-	case "linux":
-		return "Linux"
-	case "netbsd":
-		return "NetBSD"
-	case "openbsd":
-		return "OpenBSD"
-	case "solaris":
-		return "Solaris"
-	case "windows":
-		return "Windows"
-	default:
-		return "Unkown"
+func deepCopy(value IRuntimeValue) IRuntimeValue {
+	if value.GetType() != ArrayValue {
+		return value
 	}
-}
 
-func getPhpOsFamily() string {
-	switch runtime.GOOS {
-	case "android", "linux":
-		return "Linux"
-	case "darwin":
-		return "Darwin"
-	case "dragonfly", "freebsd", "netbsd", "openbsd":
-		return "BSD"
-	case "solaris":
-		return "Solaris"
-	case "windows":
-		return "Windows"
-	default:
-		return "Unkown"
+	copy := NewArrayRuntimeValue()
+	array := runtimeValToArrayRuntimeVal(value)
+	for _, key := range array.GetKeys() {
+		copy.SetElement(key, deepCopy(array.GetElements()[key]))
 	}
+	return copy
 }
 
 // ------------------- MARK: inc-dec-calculation -------------------

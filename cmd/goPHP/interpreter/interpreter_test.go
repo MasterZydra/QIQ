@@ -123,6 +123,16 @@ func TestArray(t *testing.T) {
 	testInputOutput(t, `<?php $a = [0, 1, 2]; echo $a[3] === null ? "y" : "n";`, "y")
 	testInputOutput(t, `<?php $a = [0, 1]; echo $a[2] = 2; echo $a[2];`, "22")
 	// TODO add test with nested: $b["a"]["b"]["c"]=1;
+
+	// Pass by value not reference
+	testInputOutput(t,
+		`<?php $a = $b = [42]; var_dump($a[0], $b[0]); $b[0] = 43; var_dump($a[0], $b[0]);`,
+		"int(42)\nint(42)\nint(42)\nint(43)\n",
+	)
+	testInputOutput(t,
+		`<?php $b = [42]; $a = $b; var_dump($a[0], $b[0]); $b[0] = 43; var_dump($a[0], $b[0]);`,
+		"int(42)\nint(42)\nint(42)\nint(43)\n",
+	)
 }
 
 func TestPredefinedConstants(t *testing.T) {
