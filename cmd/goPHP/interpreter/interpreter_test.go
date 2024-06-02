@@ -662,3 +662,66 @@ func TestCompareRelation(t *testing.T) {
 	// testInputOutput(t, `<?php var_dump("22" <= NULL);`, "bool(false)\n")
 	// testInputOutput(t, `<?php var_dump("22" <=> NULL);`, "int(1)\n")
 }
+
+func TestUserFunctions(t *testing.T) {
+	// Simple user defined function without types, params, ...
+	// Check if function definition can be after the function call
+	testInputOutput(t,
+		`<?php
+			echo "a";
+			helloWorld();
+			echo "b";
+			function helloWorld() { echo "Hello World"; }
+			echo "c";
+		`,
+		"aHello Worldbc",
+	)
+	testInputOutput(t,
+		`<?php
+			echo "a";
+			helloWorld();
+			echo "b";
+			{{{ function helloWorld() { echo "Hello World"; } }}}
+			echo "c";
+		`,
+		"aHello Worldbc",
+	)
+
+	// Test correct scoping: $a is available in the function body
+	testInputOutput(t,
+		`<?php
+			$a = 1;
+			func();
+			function func() {
+				echo isset($a) ? "y" : "n";
+				$b = 2;
+			}
+			echo isset($b) ? "y" : "n";
+		`,
+		"nn",
+	)
+
+	// Parameters
+	testInputOutput(t,
+		`<?php
+			$a = 1;
+			func($a);
+			func(2);
+			function func($param) {
+				echo $param;
+			}
+		`,
+		"12",
+	)
+	testInputOutput(t,
+		`<?php
+			$a = 1;
+			func($a, 2);
+			func(1, 1+1);
+			function func($param1, $param2) {
+				echo $param1 + $param2;
+			}
+		`,
+		"33",
+	)
+}

@@ -243,7 +243,12 @@ func (parser *Parser) parseStatement() (ast.IStatement, error) {
 		}
 	}
 
-	// TODO function-definition
+	// ------------------- MARK: function-definition -------------------
+
+	if parser.isToken(lexer.KeywordToken, "function", false) {
+		return parser.parseFunctionDefinition()
+	}
+
 	// TODO class-declaration
 	// TODO interface-declaration
 	// TODO trait-declaration
@@ -426,6 +431,119 @@ func (parser *Parser) parseSelectionStatement() (ast.IStatement, error) {
 	// }
 
 	return ast.NewEmptyStatement(), fmt.Errorf("Unsupported selection statement %s", parser.at())
+}
+
+func (parser *Parser) parseFunctionDefinition() (ast.IStatement, error) {
+	// Spec: https://phplang.org/spec/13-functions.html#grammar-function-definition
+
+	// function-definition:
+	//    function-definition-header   compound-statement
+
+	// function-definition-header:
+	//    function   &(opt)   name   (   parameter-declaration-list(opt)   )   return-type(opt)
+
+	// parameter-declaration-list:
+	//    simple-parameter-declaration-list
+	//    variadic-declaration-list
+
+	// simple-parameter-declaration-list:
+	//    parameter-declaration
+	//    parameter-declaration-list   ,   parameter-declaration
+
+	// variadic-declaration-list:
+	//    simple-parameter-declaration-list   ,   variadic-parameter
+	//    variadic-parameter
+
+	// parameter-declaration:
+	//    type-declaration(opt)   &(opt)   variable-name   default-argument-specifier(opt)
+
+	// variadic-parameter:
+	//    type-declaration(opt)   &(opt)   ...   variable-name
+
+	if !parser.isToken(lexer.KeywordToken, "function", true) {
+		return ast.NewEmptyStatement(), fmt.Errorf("Expected \"function\". Got %s", parser.at())
+	}
+
+	// TODO function-definition - &(opt)
+
+	if parser.at().TokenType != lexer.NameToken {
+		return ast.NewEmptyStatement(), fmt.Errorf("Function name expected. Got %s", parser.at().TokenType)
+	}
+
+	functionName := parser.eat().Value
+
+	if !parser.isToken(lexer.OperatorOrPunctuatorToken, "(", true) {
+		return ast.NewEmptyStatement(), fmt.Errorf("Expected \"(\". Got %s", parser.at())
+	}
+
+	parameters := []ast.FunctionParameter{}
+	if !parser.isToken(lexer.OperatorOrPunctuatorToken, ")", false) {
+		// TODO function-definition - parameter-declaration - type-declaration(opt)
+		// TODO function-definition - parameter-declaration - &(opt)
+
+		for {
+			if parser.at().TokenType != lexer.VariableNameToken {
+				return ast.NewEmptyExpression(), fmt.Errorf("Expected variable. Got %s", parser.at().TokenType)
+			}
+			parameters = append(parameters, ast.FunctionParameter{Name: parser.eat().Value})
+
+			if parser.isToken(lexer.OperatorOrPunctuatorToken, ",", true) {
+				continue
+			}
+			if parser.isToken(lexer.OperatorOrPunctuatorToken, ")", false) {
+				break
+			}
+			return ast.NewEmptyExpression(), fmt.Errorf("Expected \",\" or \")\". Got %s", parser.at())
+		}
+
+		// TODO function-definition - parameter-declaration - default-argument-specifier(opt)
+
+		// TODO function-definition - variadic-parameter
+	}
+
+	if !parser.isToken(lexer.OperatorOrPunctuatorToken, ")", true) {
+		return ast.NewEmptyStatement(), fmt.Errorf("Expected \")\". Got %s", parser.at())
+	}
+
+	// TODO function-definition - return-type(opt)
+
+	body, err := parser.parseStatement()
+	if err != nil {
+		return ast.NewEmptyStatement(), err
+	}
+	if body.GetKind() != ast.CompoundStmt {
+		return ast.NewEmptyStatement(), fmt.Errorf("Expected compound statement. Got %s", body.GetKind())
+	}
+
+	return ast.NewFunctionDefinitionStatement(functionName, parameters, ast.StmtToCompoundStatement(body)), nil
+
+	// TODO function-definition
+	/*
+
+		return-type:
+		   :   type-declaration
+		   :   void
+
+		type-declaration:
+		   ?opt   base-type-declaration
+
+		base-type-declaration:
+		   array
+		   callable
+		   iterable
+		   scalar-type
+		   qualified-name
+
+		scalar-type:
+		   bool
+		   float
+		   int
+		   string
+
+		default-argument-specifier:
+		   =   constant-expression
+
+	*/
 }
 
 func (parser *Parser) parseExpression() (ast.IExpression, error) {

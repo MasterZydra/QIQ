@@ -132,6 +132,38 @@ func getPhpOsFamily() string {
 	}
 }
 
+// Scan and process program for function definitions on root level and in compound statements
+func (interpreter *Interpreter) scanForFunctionDefinition(statements []ast.IStatement, env *Environment) Error {
+	for _, stmt := range statements {
+		if stmt.GetKind() == ast.CompoundStmt {
+			interpreter.scanForFunctionDefinition(ast.StmtToCompoundStatement(stmt).GetStatements(), env)
+			continue
+		}
+
+		if stmt.GetKind() != ast.FunctionDefinitionStmt {
+			continue
+		}
+
+		_, err := interpreter.processFunctionDefinitionStmt(ast.StmtToFunctionDefinitionStatement(stmt), env)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// ------------------- MARK: Caching -------------------
+
+func (interpreter *Interpreter) isCached(stmt ast.IStatement) bool {
+	_, found := interpreter.cache[stmt.GetId()]
+	return found
+}
+
+func (interpreter *Interpreter) writeCache(stmt ast.IStatement, value IRuntimeValue) IRuntimeValue {
+	interpreter.cache[stmt.GetId()] = value
+	return value
+}
+
 // ------------------- MARK: RuntimeValue -------------------
 
 func (interpreter *Interpreter) exprToRuntimeValue(expr ast.IExpression, env *Environment) (IRuntimeValue, Error) {

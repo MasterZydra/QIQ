@@ -38,6 +38,11 @@ func (interpreter *Interpreter) process(sourceCode string, env *Environment) (st
 		return interpreter.result, NewParseError(err)
 	}
 
+	runtimeErr := interpreter.scanForFunctionDefinition(program.GetStatements(), env)
+	if runtimeErr != nil {
+		return interpreter.result, runtimeErr
+	}
+
 	for _, stmt := range program.GetStatements() {
 		if _, err := interpreter.processStmt(stmt, env); err != nil {
 			// Handle exit event - Stop code execution
@@ -55,13 +60,15 @@ func (interpreter *Interpreter) processStmt(stmt ast.IStatement, env *Environmen
 	switch stmt.GetKind() {
 	// Statements
 	case ast.ConstDeclarationStmt:
-		return interpreter.processConstDeclarationStatement(ast.StmtToConstDeclStatement(stmt), env)
+		return interpreter.processConstDeclarationStmt(ast.StmtToConstDeclStatement(stmt), env)
 	case ast.CompoundStmt:
-		return interpreter.processCompoundStatement(ast.StmtToCompoundStatement(stmt), env)
+		return interpreter.processCompoundStmt(ast.StmtToCompoundStatement(stmt), env)
 	case ast.EchoStmt:
-		return interpreter.processEchoStatement(ast.StmtToEchoStatement(stmt), env)
+		return interpreter.processEchoStmt(ast.StmtToEchoStatement(stmt), env)
 	case ast.ExpressionStmt:
 		return interpreter.processStmt(ast.StmtToExprStatement(stmt).GetExpression(), env)
+	case ast.FunctionDefinitionStmt:
+		return interpreter.processFunctionDefinitionStmt(ast.StmtToFunctionDefinitionStatement(stmt), env)
 	case ast.IfStmt:
 		return interpreter.processIfStmt(ast.StmtToIfStatement(stmt), env)
 
@@ -117,7 +124,7 @@ func (interpreter *Interpreter) processStmt(stmt ast.IStatement, env *Environmen
 	}
 }
 
-func (interpreter *Interpreter) processConstDeclarationStatement(stmt ast.IConstDeclarationStatement, env *Environment) (IRuntimeValue, Error) {
+func (interpreter *Interpreter) processConstDeclarationStmt(stmt ast.IConstDeclarationStatement, env *Environment) (IRuntimeValue, Error) {
 	value, err := interpreter.processStmt(stmt.GetValue(), env)
 	if err != nil {
 		return NewVoidRuntimeValue(), err
@@ -125,7 +132,7 @@ func (interpreter *Interpreter) processConstDeclarationStatement(stmt ast.IConst
 	return env.declareConstant(stmt.GetName(), value)
 }
 
-func (interpreter *Interpreter) processCompoundStatement(stmt ast.ICompoundStatement, env *Environment) (IRuntimeValue, Error) {
+func (interpreter *Interpreter) processCompoundStmt(stmt ast.ICompoundStatement, env *Environment) (IRuntimeValue, Error) {
 	for _, statement := range stmt.GetStatements() {
 		_, err := interpreter.processStmt(statement, env)
 		if err != nil {
@@ -135,7 +142,7 @@ func (interpreter *Interpreter) processCompoundStatement(stmt ast.ICompoundState
 	return NewVoidRuntimeValue(), nil
 }
 
-func (interpreter *Interpreter) processEchoStatement(stmt ast.IEchoStatement, env *Environment) (IRuntimeValue, Error) {
+func (interpreter *Interpreter) processEchoStmt(stmt ast.IEchoStatement, env *Environment) (IRuntimeValue, Error) {
 	for _, expr := range stmt.GetExpressions() {
 		if runtimeValue, err := interpreter.processStmt(expr, env); err != nil {
 			return NewVoidRuntimeValue(), err
@@ -149,6 +156,22 @@ func (interpreter *Interpreter) processEchoStatement(stmt ast.IEchoStatement, en
 		}
 	}
 	return NewVoidRuntimeValue(), nil
+}
+
+func (interpreter *Interpreter) processFunctionDefinitionStmt(stmt ast.IFunctionDefinitionStatement, env *Environment) (IRuntimeValue, Error) {
+	// Check if this function definition was already processed before interpreting the code
+	if interpreter.isCached(stmt) {
+		return NewVoidRuntimeValue(), nil
+	}
+
+	function := userFunction{
+		FunctionName: stmt.GetFunctionName(), Parameters: stmt.GetParams(), Body: stmt.GetBody(),
+	}
+	if err := env.defineUserFunction(function); err != nil {
+		return NewVoidRuntimeValue(), err
+	}
+
+	return interpreter.writeCache(stmt, NewVoidRuntimeValue()), nil
 }
 
 func (interpreter *Interpreter) processIfStmt(stmt ast.IIfStatement, env *Environment) (IRuntimeValue, Error) {
@@ -378,20 +401,48 @@ func (interpreter *Interpreter) processSubscriptExpression(expr ast.ISubscriptEx
 }
 
 func (interpreter *Interpreter) processFunctionCallExpression(expr ast.IFunctionCallExpression, env *Environment) (IRuntimeValue, Error) {
+	// Lookup native function
 	nativeFunction, err := env.lookupNativeFunction(expr.GetFunctionName())
+	if err == nil {
+		functionArguments := make([]IRuntimeValue, len(expr.GetArguments()))
+		for index, arg := range expr.GetArguments() {
+			runtimeValue, err := interpreter.processStmt(arg, env)
+			if err != nil {
+				return NewVoidRuntimeValue(), err
+			}
+			functionArguments[index] = deepCopy(runtimeValue)
+		}
+		return nativeFunction(functionArguments, interpreter)
+	}
+
+	// Lookup user function
+	userFunction, err := env.lookupUserFunction(expr.GetFunctionName())
 	if err != nil {
 		return NewVoidRuntimeValue(), err
 	}
 
-	functionArguments := make([]IRuntimeValue, len(expr.GetArguments()))
-	for index, arg := range expr.GetArguments() {
-		runtimeValue, err := interpreter.processStmt(arg, env)
+	functionEnv := NewEnvironment(env, nil)
+
+	if len(userFunction.Parameters) != len(expr.GetArguments()) {
+		return NewVoidRuntimeValue(), NewError(
+			"Uncaught ArgumentCountError: %s() expects exactly %d arguments, %d given",
+			userFunction.FunctionName, len(userFunction.Parameters), len(expr.GetArguments()),
+		)
+	}
+	for index, param := range userFunction.Parameters {
+		runtimeValue, err := interpreter.processStmt(expr.GetArguments()[index], env)
 		if err != nil {
 			return NewVoidRuntimeValue(), err
 		}
-		functionArguments[index] = deepCopy(runtimeValue)
+		functionEnv.declareVariable(param.Name, runtimeValue)
 	}
-	return nativeFunction(functionArguments, interpreter)
+
+	runtimeValue, err := interpreter.processStmt(userFunction.Body, functionEnv)
+	if err != nil {
+		return NewVoidRuntimeValue(), err
+	}
+	return runtimeValue, nil
+
 }
 
 func (interpreter *Interpreter) processEmptyIntrinsicExpression(expr ast.IFunctionCallExpression, env *Environment) (IRuntimeValue, Error) {

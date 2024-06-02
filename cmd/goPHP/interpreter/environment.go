@@ -1,6 +1,7 @@
 package interpreter
 
 import (
+	"GoPHP/cmd/goPHP/ast"
 	"fmt"
 	"regexp"
 	"strings"
@@ -10,6 +11,7 @@ type Environment struct {
 	parent    *Environment
 	variables map[string]IRuntimeValue
 	constants map[string]IRuntimeValue
+	functions map[string]userFunction
 	// StdLib
 	predefinedVariables map[string]IRuntimeValue
 	predefinedConstants map[string]IRuntimeValue
@@ -19,12 +21,13 @@ type Environment struct {
 func NewEnvironment(parentEnv *Environment, request *Request) *Environment {
 	env := &Environment{
 		parent:    parentEnv,
-		variables: make(map[string]IRuntimeValue),
-		constants: make(map[string]IRuntimeValue),
+		variables: map[string]IRuntimeValue{},
+		constants: map[string]IRuntimeValue{},
+		functions: map[string]userFunction{},
 		// StdLib
-		predefinedVariables: make(map[string]IRuntimeValue),
-		predefinedConstants: make(map[string]IRuntimeValue),
-		nativeFunctions:     make(map[string]nativeFunction),
+		predefinedVariables: map[string]IRuntimeValue{},
+		predefinedConstants: map[string]IRuntimeValue{},
+		nativeFunctions:     map[string]nativeFunction{},
 	}
 
 	if parentEnv == nil {
@@ -142,25 +145,34 @@ func (env *Environment) declareVariable(variableName string, value IRuntimeValue
 	return value, nil
 }
 
-func (env *Environment) resolveVariable(variableName string) (*Environment, Error) {
+func (env *Environment) resolvePredefinedVariable(variableName string) (*Environment, Error) {
 	if _, ok := env.predefinedVariables[variableName]; ok {
-		return env, nil
-	}
-	if _, ok := env.variables[variableName]; ok {
 		return env, nil
 	}
 
 	if env.parent == nil {
-		return nil, NewError("Interpreter error: Cannot resolve variable '%s' as it does not exist", variableName)
+		return nil, NewWarning("Undefined variable %s", variableName)
 	}
 
-	return env.parent.resolveVariable(variableName)
+	return env.parent.resolvePredefinedVariable(variableName)
+}
+
+func (env *Environment) resolveVariable(variableName string) (*Environment, Error) {
+	environment, err := env.resolvePredefinedVariable(variableName)
+	if err != nil {
+		if _, ok := env.variables[variableName]; ok {
+			return env, nil
+		} else {
+			return nil, err
+		}
+	}
+	return environment, nil
 }
 
 func (env *Environment) lookupVariable(variableName string) (IRuntimeValue, Error) {
 	environment, err := env.resolveVariable(variableName)
 	if err != nil {
-		return NewNullRuntimeValue(), NewWarning("Undefined variable %s", variableName)
+		return NewNullRuntimeValue(), err
 	}
 	if value, ok := environment.predefinedVariables[variableName]; ok {
 		return value, nil
@@ -238,6 +250,58 @@ func (env *Environment) lookupNativeFunction(functionName string) (nativeFunctio
 	value, ok := environment.nativeFunctions[functionName]
 	if !ok {
 		return nil, NewError("Call to undefined function %s()", functionName)
+	}
+	return value, nil
+}
+
+// ------------------- MARK: User functions -------------------
+
+type userFunction struct {
+	FunctionName string
+	Parameters   []ast.FunctionParameter
+	Body         ast.ICompoundStatement
+}
+
+func (env *Environment) defineUserFunction(function userFunction) Error {
+	_, err := env.lookupNativeFunction(function.FunctionName)
+	if err == nil {
+		return NewError("Cannot redeclare %s()", function.FunctionName)
+	}
+	_, err = env.lookupUserFunction(function.FunctionName)
+	if err == nil {
+		return NewError("Cannot redeclare %s()", function.FunctionName)
+	}
+
+	functionName := strings.ToLower(function.FunctionName)
+
+	env.functions[functionName] = function
+
+	return nil
+}
+
+func (env *Environment) resolveUserFunction(functionName string) (*Environment, Error) {
+	if _, ok := env.functions[functionName]; ok {
+		return env, nil
+	}
+
+	if env.parent == nil {
+		return nil, NewError("Call to undefined function %s()", functionName)
+	}
+
+	return env.parent.resolveUserFunction(functionName)
+}
+
+func (env *Environment) lookupUserFunction(functionName string) (userFunction, Error) {
+	functionName = strings.ToLower(functionName)
+
+	environment, err := env.resolveUserFunction(functionName)
+	if err != nil {
+		return userFunction{}, err
+	}
+
+	value, ok := environment.functions[functionName]
+	if !ok {
+		return userFunction{}, NewError("Call to undefined function %s()", functionName)
 	}
 	return value, nil
 }

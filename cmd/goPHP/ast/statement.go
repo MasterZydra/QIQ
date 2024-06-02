@@ -35,6 +35,61 @@ func NewEmptyStatement() *Statement {
 	return &Statement{kind: EmptyNode}
 }
 
+// ------------------- MARK: FunctionDefinitionStatement -------------------
+
+type FunctionParameter struct {
+	Name string
+}
+
+type IFunctionDefinitionStatement interface {
+	IStatement
+	GetFunctionName() string
+	GetParams() []FunctionParameter
+	GetBody() ICompoundStatement
+}
+
+type FunctionDefinitionStatement struct {
+	stmt         IStatement
+	functionName string
+	params       []FunctionParameter
+	body         ICompoundStatement
+}
+
+func NewFunctionDefinitionStatement(functionName string, params []FunctionParameter, body ICompoundStatement) *FunctionDefinitionStatement {
+	return &FunctionDefinitionStatement{stmt: NewStatement(FunctionDefinitionStmt),
+		functionName: functionName, params: params, body: body,
+	}
+}
+
+func (stmt *FunctionDefinitionStatement) GetId() int64 {
+	return stmt.stmt.GetId()
+}
+
+func (stmt *FunctionDefinitionStatement) GetKind() NodeType {
+	return stmt.stmt.GetKind()
+}
+
+func (stmt *FunctionDefinitionStatement) GetFunctionName() string {
+	return stmt.functionName
+}
+
+func (stmt *FunctionDefinitionStatement) GetParams() []FunctionParameter {
+	return stmt.params
+}
+
+func (stmt *FunctionDefinitionStatement) GetBody() ICompoundStatement {
+	return stmt.body
+}
+
+func (stmt *FunctionDefinitionStatement) String() string {
+	return fmt.Sprintf("{%s - name: %s, params: %s, body: %s}", stmt.GetKind(), stmt.functionName, stmt.params, stmt.body)
+}
+
+func StmtToFunctionDefinitionStatement(stmt IStatement) IFunctionDefinitionStatement {
+	var i interface{} = stmt
+	return i.(IFunctionDefinitionStatement)
+}
+
 // ------------------- MARK: IfStatement -------------------
 
 type IIfStatement interface {
