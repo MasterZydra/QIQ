@@ -724,4 +724,16 @@ func TestUserFunctions(t *testing.T) {
 		`,
 		"33",
 	)
+	// Typed parameters
+	testInputOutput(t,
+		`<?php
+			$a = 1;
+			func($a, 2);
+			func(1, 1+1);
+			function func(int|float $param1, int|float $param2) {
+				echo $param1 + $param2;
+			}
+		`,
+		"33",
+	)
 }

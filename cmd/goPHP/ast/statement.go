@@ -38,6 +38,7 @@ func NewEmptyStatement() *Statement {
 // ------------------- MARK: FunctionDefinitionStatement -------------------
 
 type FunctionParameter struct {
+	Type []string
 	Name string
 }
 

@@ -15,6 +15,8 @@ var keywords = []string{
 	"insteadof", "interface", "isset", "list", "namespace", "new", "or", "print", "private",
 	"protected", "public", "require", "require_once", "return", "static", "switch",
 	"throw", "trait", "try", "unset", "use", "var", "while", "xor", "yield", "yield from",
+	// Non-spec:
+	"mixed",
 }
 
 func IsKeyword(token string) bool {
@@ -51,6 +53,21 @@ func IsCastTypeKeyword(token string) bool {
 
 	return slices.Contains(castTypeKeywords, token)
 
+}
+
+// Spec: https://phplang.org/spec/13-functions.html#grammar-base-type-declaration
+var paramTypeKeywords = []string{
+	"mixed", "array", "bool", "float", "int", "string",
+}
+
+func IsParamTypeKeyword(token string) bool {
+	// Spec: https://phplang.org/spec/13-functions.html#grammar-base-type-declaration
+
+	// Spec: https://phplang.org/spec/09-lexical-structure.html#keywords
+	// Keywords are not case-sensitive.
+	token = strings.ToLower(token)
+
+	return slices.Contains(paramTypeKeywords, token)
 }
 
 // Spec: https://phplang.org/spec/06-constants.html#context-dependent-constants

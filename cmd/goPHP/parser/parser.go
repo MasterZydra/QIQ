@@ -460,6 +460,29 @@ func (parser *Parser) parseFunctionDefinition() (ast.IStatement, error) {
 	// variadic-parameter:
 	//    type-declaration(opt)   &(opt)   ...   variable-name
 
+	// type-declaration:
+	//    ?(opt)   base-type-declaration
+
+	// return-type:
+	//    :   type-declaration
+	//    :   void
+
+	// base-type-declaration:
+	//    array
+	//    callable
+	//    iterable
+	//    scalar-type
+	//    qualified-name
+
+	// scalar-type:
+	//    bool
+	//    float
+	//    int
+	//    string
+
+	// default-argument-specifier:
+	//    =   constant-expression
+
 	if !parser.isToken(lexer.KeywordToken, "function", true) {
 		return ast.NewEmptyStatement(), fmt.Errorf("Expected \"function\". Got %s", parser.at())
 	}
@@ -478,14 +501,29 @@ func (parser *Parser) parseFunctionDefinition() (ast.IStatement, error) {
 
 	parameters := []ast.FunctionParameter{}
 	if !parser.isToken(lexer.OperatorOrPunctuatorToken, ")", false) {
-		// TODO function-definition - parameter-declaration - type-declaration(opt)
-		// TODO function-definition - parameter-declaration - &(opt)
-
 		for {
+			// TODO function-definition - parameter-declaration - type-declaration - ?(opt)
+
+			paramTypes := []string{}
+			for parser.at().TokenType == lexer.KeywordToken && common.IsParamTypeKeyword(parser.at().Value) {
+				paramTypes = append(paramTypes, strings.ToLower(parser.eat().Value))
+				if parser.at().TokenType == lexer.OperatorOrPunctuatorToken && parser.at().Value == "|" {
+					parser.eat()
+					continue
+				}
+				break
+			}
+
+			if len(paramTypes) == 0 {
+				paramTypes = append(paramTypes, "mixed")
+			}
+
+			// TODO function-definition - parameter-declaration - &(opt)
+
 			if parser.at().TokenType != lexer.VariableNameToken {
 				return ast.NewEmptyExpression(), fmt.Errorf("Expected variable. Got %s", parser.at().TokenType)
 			}
-			parameters = append(parameters, ast.FunctionParameter{Name: parser.eat().Value})
+			parameters = append(parameters, ast.FunctionParameter{Name: parser.eat().Value, Type: paramTypes})
 
 			if parser.isToken(lexer.OperatorOrPunctuatorToken, ",", true) {
 				continue
@@ -520,30 +558,9 @@ func (parser *Parser) parseFunctionDefinition() (ast.IStatement, error) {
 	// TODO function-definition
 	/*
 
-		return-type:
-		   :   type-declaration
-		   :   void
 
-		type-declaration:
-		   ?opt   base-type-declaration
 
-		base-type-declaration:
-		   array
-		   callable
-		   iterable
-		   scalar-type
-		   qualified-name
-
-		scalar-type:
-		   bool
-		   float
-		   int
-		   string
-
-		default-argument-specifier:
-		   =   constant-expression
-
-	*/
+	 */
 }
 
 func (parser *Parser) parseExpression() (ast.IExpression, error) {

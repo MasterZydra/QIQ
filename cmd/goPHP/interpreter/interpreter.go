@@ -434,6 +434,19 @@ func (interpreter *Interpreter) processFunctionCallExpression(expr ast.IFunction
 		if err != nil {
 			return NewVoidRuntimeValue(), err
 		}
+		// Check if the parameter types match
+		err = checkParameterTypes(runtimeValue, param.Type)
+		if err != nil && err.GetMessage() == "Types do not match" {
+			givenType, err := lib_gettype(runtimeValue)
+			if err != nil {
+				return NewVoidRuntimeValue(), err
+			}
+			return NewVoidRuntimeValue(), NewError(
+				"Uncaught TypeError: %s(): Argument #%d (%s) must be of type %s, %s given",
+				userFunction.FunctionName, index+1, param.Name, strings.Join(param.Type, "|"), givenType,
+			)
+		}
+		// Declare parameter in function environment
 		functionEnv.declareVariable(param.Name, runtimeValue)
 	}
 

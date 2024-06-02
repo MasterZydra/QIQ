@@ -152,6 +152,33 @@ func (interpreter *Interpreter) scanForFunctionDefinition(statements []ast.IStat
 	return nil
 }
 
+var paramTypeRuntimeValue = map[ValueType]string{
+	ArrayValue:    "array",
+	BooleanValue:  "bool",
+	FloatingValue: "float",
+	IntegerValue:  "int",
+	NullValue:     "NULL",
+	StringValue:   "string",
+}
+
+func checkParameterTypes(runtimeValue IRuntimeValue, expectedTypes []string) Error {
+	typeStr, found := paramTypeRuntimeValue[runtimeValue.GetType()]
+	if !found {
+		return NewError("checkParameterTypes: No mapping for type %s", runtimeValue.GetType())
+	}
+
+	for _, expectedType := range expectedTypes {
+		if expectedType == "mixed" {
+			return nil
+		}
+
+		if typeStr == expectedType {
+			return nil
+		}
+	}
+	return NewError("Types do not match")
+}
+
 // ------------------- MARK: Caching -------------------
 
 func (interpreter *Interpreter) isCached(stmt ast.IStatement) bool {
