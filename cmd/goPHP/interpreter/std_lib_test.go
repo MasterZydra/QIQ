@@ -112,6 +112,22 @@ func TestLibFloatval(t *testing.T) {
 	doTest(NewNullRuntimeValue(), 0)
 }
 
+func TestLibGettype(t *testing.T) {
+	testInputOutput(t, `<?php echo gettype(false);`, "boolean")
+	testInputOutput(t, `<?php echo gettype(true);`, "boolean")
+	testInputOutput(t, `<?php echo gettype(0);`, "integer")
+	testInputOutput(t, `<?php echo gettype(-1);`, "integer")
+	testInputOutput(t, `<?php echo gettype(42);`, "integer")
+	testInputOutput(t, `<?php echo gettype(0.0);`, "double")
+	testInputOutput(t, `<?php echo gettype(-1.5);`, "double")
+	testInputOutput(t, `<?php echo gettype(42.5);`, "double")
+	testInputOutput(t, `<?php echo gettype("");`, "string")
+	testInputOutput(t, `<?php echo gettype("abc");`, "string")
+	testInputOutput(t, `<?php echo gettype([]);`, "array")
+	testInputOutput(t, `<?php echo gettype([42]);`, "array")
+	testInputOutput(t, `<?php echo gettype(null);`, "NULL")
+}
+
 func TestLibIntval(t *testing.T) {
 	doTest := func(runtimeValue IRuntimeValue, expected int64) {
 		actual, err := lib_intval(runtimeValue)

@@ -13,6 +13,7 @@ func registerNativeFunctions(environment *Environment) {
 	environment.nativeFunctions["error_reporting"] = nativeFn_error_reporting
 	environment.nativeFunctions["floatval"] = nativeFn_floatval
 	environment.nativeFunctions["getenv"] = nativeFn_getenv
+	environment.nativeFunctions["gettype"] = nativeFn_gettype
 	environment.nativeFunctions["intval"] = nativeFn_intval
 	environment.nativeFunctions["is_null"] = nativeFn_is_null
 	environment.nativeFunctions["is_scalar"] = nativeFn_is_scalar
@@ -249,6 +250,42 @@ func nativeFn_getenv(args []IRuntimeValue, interpreter *Interpreter) (IRuntimeVa
 		return NewBooleanRuntimeValue(false), nil
 	}
 	return value, nil
+}
+
+// ------------------- MARK: gettype -------------------
+
+func nativeFn_gettype(args []IRuntimeValue, _ *Interpreter) (IRuntimeValue, Error) {
+	if len(args) != 1 {
+		return NewVoidRuntimeValue(),
+			NewError("Uncaught ArgumentCountError: gettype() expects exactly 1 argument, %d given", len(args))
+	}
+
+	typeStr, err := lib_gettype(args[0])
+	return NewStringRuntimeValue(typeStr), err
+}
+
+func lib_gettype(runtimeValue IRuntimeValue) (string, Error) {
+	// Spec: https://www.php.net/manual/en/function.gettype.php
+
+	// TODO lib_gettype - object
+	// TODO lib_gettype - resource
+	// TODO lib_gettype - resource (closed)
+	switch runtimeValue.GetType() {
+	case ArrayValue:
+		return "array", nil
+	case BooleanValue:
+		return "boolean", nil
+	case FloatingValue:
+		return "double", nil
+	case IntegerValue:
+		return "integer", nil
+	case NullValue:
+		return "NULL", nil
+	case StringValue:
+		return "string", nil
+	default:
+		return "unknown type", nil
+	}
 }
 
 // ------------------- MARK: intval -------------------
