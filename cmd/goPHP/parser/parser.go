@@ -507,8 +507,7 @@ func (parser *Parser) parseFunctionDefinition() (ast.IStatement, error) {
 			paramTypes := []string{}
 			for parser.at().TokenType == lexer.KeywordToken && common.IsParamTypeKeyword(parser.at().Value) {
 				paramTypes = append(paramTypes, strings.ToLower(parser.eat().Value))
-				if parser.at().TokenType == lexer.OperatorOrPunctuatorToken && parser.at().Value == "|" {
-					parser.eat()
+				if parser.isToken(lexer.OperatorOrPunctuatorToken, "|", true) {
 					continue
 				}
 				break
@@ -543,7 +542,19 @@ func (parser *Parser) parseFunctionDefinition() (ast.IStatement, error) {
 		return ast.NewEmptyStatement(), fmt.Errorf("Expected \")\". Got %s", parser.at())
 	}
 
-	// TODO function-definition - return-type(opt)
+	returnTypes := []string{}
+	if parser.isToken(lexer.OperatorOrPunctuatorToken, ":", true) {
+		for parser.at().TokenType == lexer.KeywordToken && common.IsReturnTypeKeyword(parser.at().Value) {
+			returnTypes = append(returnTypes, strings.ToLower(parser.eat().Value))
+			if parser.isToken(lexer.OperatorOrPunctuatorToken, "|", true) {
+				continue
+			}
+			break
+		}
+	}
+	if len(returnTypes) == 0 {
+		returnTypes = append(returnTypes, "mixed")
+	}
 
 	body, err := parser.parseStatement()
 	if err != nil {
@@ -553,14 +564,7 @@ func (parser *Parser) parseFunctionDefinition() (ast.IStatement, error) {
 		return ast.NewEmptyStatement(), fmt.Errorf("Expected compound statement. Got %s", body.GetKind())
 	}
 
-	return ast.NewFunctionDefinitionStatement(functionName, parameters, ast.StmtToCompoundStatement(body)), nil
-
-	// TODO function-definition
-	/*
-
-
-
-	 */
+	return ast.NewFunctionDefinitionStatement(functionName, parameters, ast.StmtToCompoundStatement(body), returnTypes), nil
 }
 
 func (parser *Parser) parseExpression() (ast.IExpression, error) {

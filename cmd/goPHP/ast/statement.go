@@ -47,6 +47,7 @@ type IFunctionDefinitionStatement interface {
 	GetFunctionName() string
 	GetParams() []FunctionParameter
 	GetBody() ICompoundStatement
+	GetReturnType() []string
 }
 
 type FunctionDefinitionStatement struct {
@@ -54,11 +55,12 @@ type FunctionDefinitionStatement struct {
 	functionName string
 	params       []FunctionParameter
 	body         ICompoundStatement
+	returnType   []string
 }
 
-func NewFunctionDefinitionStatement(functionName string, params []FunctionParameter, body ICompoundStatement) *FunctionDefinitionStatement {
+func NewFunctionDefinitionStatement(functionName string, params []FunctionParameter, body ICompoundStatement, returnType []string) *FunctionDefinitionStatement {
 	return &FunctionDefinitionStatement{stmt: NewStatement(FunctionDefinitionStmt),
-		functionName: functionName, params: params, body: body,
+		functionName: functionName, params: params, body: body, returnType: returnType,
 	}
 }
 
@@ -82,8 +84,14 @@ func (stmt *FunctionDefinitionStatement) GetBody() ICompoundStatement {
 	return stmt.body
 }
 
+func (stmt *FunctionDefinitionStatement) GetReturnType() []string {
+	return stmt.returnType
+}
+
 func (stmt *FunctionDefinitionStatement) String() string {
-	return fmt.Sprintf("{%s - name: %s, params: %s, body: %s}", stmt.GetKind(), stmt.functionName, stmt.params, stmt.body)
+	return fmt.Sprintf("{%s - name: %s, params: %s, body: %s, returnType: %s}",
+		stmt.GetKind(), stmt.functionName, stmt.params, stmt.body, stmt.returnType,
+	)
 }
 
 func StmtToFunctionDefinitionStatement(stmt IStatement) IFunctionDefinitionStatement {

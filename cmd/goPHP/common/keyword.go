@@ -70,6 +70,16 @@ func IsParamTypeKeyword(token string) bool {
 	return slices.Contains(paramTypeKeywords, token)
 }
 
+func IsReturnTypeKeyword(token string) bool {
+	// Spec: https://phplang.org/spec/13-functions.html#grammar-return-type
+
+	// Spec: https://phplang.org/spec/09-lexical-structure.html#keywords
+	// Keywords are not case-sensitive.
+	token = strings.ToLower(token)
+
+	return token == "void" || slices.Contains(paramTypeKeywords, token)
+}
+
 // Spec: https://phplang.org/spec/06-constants.html#context-dependent-constants
 var contextDependentConstants = []string{
 	"__CLASS__", "__COMPILER_HALT_OFFSET__", "__DIR__", "__FILE__", "__FUNCTION__", "__LINE__",

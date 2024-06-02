@@ -412,6 +412,7 @@ func (interpreter *Interpreter) processFunctionCallExpression(expr ast.IFunction
 			}
 			functionArguments[index] = deepCopy(runtimeValue)
 		}
+		// TODO processFunctionCallExpression - Check return type
 		return nativeFunction(functionArguments, interpreter)
 	}
 

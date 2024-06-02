@@ -736,4 +736,17 @@ func TestUserFunctions(t *testing.T) {
 		`,
 		"33",
 	)
+
+	// Return type
+	testInputOutput(t,
+		`<?php
+			$a = 1;
+			func($a, 2);
+			func(1, 1+1);
+			function func(int|float $param1, int|float $param2): int|float {
+				echo $param1 + $param2;
+			}
+		`,
+		"33",
+	)
 }
