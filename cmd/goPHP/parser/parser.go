@@ -502,6 +502,11 @@ func (parser *Parser) parseFunctionDefinition() (ast.IStatement, error) {
 	parameters := []ast.FunctionParameter{}
 	if !parser.isToken(lexer.OperatorOrPunctuatorToken, ")", false) {
 		for {
+			// Allow trailing comma
+			if parser.isToken(lexer.OperatorOrPunctuatorToken, ")", false) {
+				break
+			}
+
 			// TODO function-definition - parameter-declaration - type-declaration - ?(opt)
 
 			paramTypes := []string{}
