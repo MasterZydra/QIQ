@@ -448,7 +448,7 @@ func (interpreter *Interpreter) processFunctionCallExpression(expr ast.IFunction
 			)
 		}
 		// Declare parameter in function environment
-		functionEnv.declareVariable(param.Name, runtimeValue)
+		functionEnv.declareVariable(param.Name, deepCopy(runtimeValue))
 	}
 
 	runtimeValue, err := interpreter.processStmt(userFunction.Body, functionEnv)
