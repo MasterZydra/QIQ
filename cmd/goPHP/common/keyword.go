@@ -57,7 +57,7 @@ func IsCastTypeKeyword(token string) bool {
 
 // Spec: https://phplang.org/spec/13-functions.html#grammar-base-type-declaration
 var paramTypeKeywords = []string{
-	"mixed", "array", "bool", "float", "int", "string",
+	"mixed", "array", "bool", "float", "int", "null", "string",
 }
 
 func IsParamTypeKeyword(token string) bool {
