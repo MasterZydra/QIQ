@@ -16,7 +16,7 @@ var keywords = []string{
 	"protected", "public", "require", "require_once", "return", "static", "switch",
 	"throw", "trait", "try", "unset", "use", "var", "while", "xor", "yield", "yield from",
 	// Non-spec:
-	"mixed",
+	"mixed", "void",
 }
 
 func IsKeyword(token string) bool {
