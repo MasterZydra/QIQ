@@ -1368,27 +1368,13 @@ func (parser *Parser) parseLiteral() (ast.IExpression, error) {
 
 	// integer-literal
 	if parser.isTokenType(lexer.IntegerLiteralToken, false) {
-		// decimal-literal
-		if common.IsDecimalLiteral(parser.at().Value) {
-			return ast.NewIntegerLiteralExpression(common.DecimalLiteralToInt64(parser.eat().Value)), nil
+		intValue, err := common.IntegerLiteralToInt64(parser.at().Value)
+		if err != nil {
+			return ast.NewEmptyExpression(), fmt.Errorf("Parser error: Unsupported integer literal \"%s\"", parser.at().Value)
 		}
 
-		// octal-literal
-		if common.IsOctalLiteral(parser.at().Value) {
-			return ast.NewIntegerLiteralExpression(common.OctalLiteralToInt64(parser.eat().Value)), nil
-		}
-
-		// hexadecimal-literal
-		if common.IsHexadecimalLiteral(parser.at().Value) {
-			return ast.NewIntegerLiteralExpression(common.HexadecimalLiteralToInt64(parser.eat().Value)), nil
-		}
-
-		// binary-literal
-		if common.IsBinaryLiteral(parser.at().Value) {
-			return ast.NewIntegerLiteralExpression(common.BinaryLiteralToInt64(parser.eat().Value)), nil
-		}
-
-		return ast.NewEmptyExpression(), fmt.Errorf("Parser error: Unsupported integer literal \"%s\"", parser.at().Value)
+		parser.eat()
+		return ast.NewIntegerLiteralExpression(intValue), nil
 	}
 
 	// floating-literal

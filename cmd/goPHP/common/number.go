@@ -1,9 +1,12 @@
 package common
 
 import (
+	"fmt"
 	"regexp"
 	"strconv"
 )
+
+// ------------------- MARK: Integer -------------------
 
 func IsDigit(char string) bool {
 	// Spec: https://phplang.org/spec/19-grammar.html#grammar-digit
@@ -113,6 +116,36 @@ func BinaryLiteralToInt64(str string) int64 {
 	integer, _ := strconv.ParseInt(str[2:], 2, 64)
 	return integer
 }
+
+func IsIntegerLiteral(str string) bool {
+	return IsDecimalLiteral(str) || IsOctalLiteral(str) || IsHexadecimalLiteral(str) || IsBinaryLiteral(str)
+}
+
+func IntegerLiteralToInt64(str string) (int64, error) {
+	// decimal-literal
+	if IsDecimalLiteral(str) {
+		return DecimalLiteralToInt64(str), nil
+	}
+
+	// octal-literal
+	if IsOctalLiteral(str) {
+		return OctalLiteralToInt64(str), nil
+	}
+
+	// hexadecimal-literal
+	if IsHexadecimalLiteral(str) {
+		return HexadecimalLiteralToInt64(str), nil
+	}
+
+	// binary-literal
+	if IsBinaryLiteral(str) {
+		return BinaryLiteralToInt64(str), nil
+	}
+
+	return 0, fmt.Errorf("Given string is not an integer literal")
+}
+
+// ------------------- MARK: Float -------------------
 
 func IsFloatingLiteral(str string) bool {
 	// Spec: https://phplang.org/spec/09-lexical-structure.html#grammar-floating-literal
