@@ -93,7 +93,7 @@ func paramToArray(params [][]string) IArrayRuntimeValue {
 		env.declareVariable("$"+paramName, arrayValue)
 
 		// Execute PHP to store new array values in env
-		interpreter := NewInterpreter(NewProdConfig(), NewRequest())
+		interpreter := NewInterpreter(NewProdConfig(), NewRequest(), "")
 		interpreter.process(fmt.Sprintf(`<?php $%s = "%s";`, key, value), env)
 
 		// Extract array from environment

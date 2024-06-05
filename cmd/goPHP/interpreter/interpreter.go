@@ -7,6 +7,7 @@ import (
 )
 
 type Interpreter struct {
+	filename string
 	config   *Config
 	request  *Request
 	parser   *parser.Parser
@@ -16,8 +17,9 @@ type Interpreter struct {
 	exitCode int64
 }
 
-func NewInterpreter(config *Config, request *Request) *Interpreter {
-	return &Interpreter{config: config, request: request, parser: parser.NewParser(),
+func NewInterpreter(config *Config, request *Request, filename string) *Interpreter {
+	return &Interpreter{
+		filename: filename, config: config, request: request, parser: parser.NewParser(),
 		env: NewEnvironment(nil, request), cache: map[int64]IRuntimeValue{},
 		exitCode: 0,
 	}
@@ -33,7 +35,7 @@ func (interpreter *Interpreter) Process(sourceCode string) (string, Error) {
 
 func (interpreter *Interpreter) process(sourceCode string, env *Environment) (string, Error) {
 	interpreter.result = ""
-	program, err := interpreter.parser.ProduceAST(sourceCode)
+	program, err := interpreter.parser.ProduceAST(sourceCode, interpreter.filename)
 	if err != nil {
 		return interpreter.result, NewParseError(err)
 	}

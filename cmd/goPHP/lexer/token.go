@@ -1,20 +1,22 @@
 package lexer
 
-import "fmt"
+import (
+	"GoPHP/cmd/goPHP/position"
+	"fmt"
+)
 
 type Token struct {
 	TokenType TokenType
 	Value     string
-	Ln        int
-	Col       int
+	Position  *position.Position
 }
 
-func NewToken(tokenType TokenType, value string) *Token {
-	return &Token{TokenType: tokenType, Value: value}
+func NewToken(tokenType TokenType, value string, position *position.Position) *Token {
+	return &Token{TokenType: tokenType, Value: value, Position: position}
 }
 
 func (token *Token) String() string {
-	return fmt.Sprintf("&{Token %s '%s'}", token.TokenType, token.Value)
+	return fmt.Sprintf("&{Token - type: %s, value: \"%s\", position: %s}", token.TokenType, token.Value, token.Position)
 }
 
 type TokenType string

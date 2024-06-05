@@ -12,7 +12,7 @@ func TestVariableExprToVariableName(t *testing.T) {
 	// simple-variable-expression
 
 	// $var
-	interpreter := NewInterpreter(NewDevConfig(), &Request{})
+	interpreter := NewInterpreter(NewDevConfig(), &Request{}, "test.php")
 	actual, err := interpreter.varExprToVarName(ast.NewSimpleVariableExpression(ast.NewVariableNameExpression("$var")), interpreter.env)
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
@@ -24,7 +24,7 @@ func TestVariableExprToVariableName(t *testing.T) {
 	}
 
 	// $$var
-	interpreter = NewInterpreter(NewDevConfig(), &Request{})
+	interpreter = NewInterpreter(NewDevConfig(), &Request{}, "test.php")
 	interpreter.env.declareVariable("$var", NewStringRuntimeValue("hi"))
 	actual, err = interpreter.varExprToVarName(
 		ast.NewSimpleVariableExpression(
@@ -39,7 +39,7 @@ func TestVariableExprToVariableName(t *testing.T) {
 	}
 
 	// $$$var
-	interpreter = NewInterpreter(NewDevConfig(), &Request{})
+	interpreter = NewInterpreter(NewDevConfig(), &Request{}, "test.php")
 	interpreter.env.declareVariable("$var1", NewStringRuntimeValue("hi"))
 	interpreter.env.declareVariable("$var", NewStringRuntimeValue("var1"))
 	actual, err = interpreter.varExprToVarName(
@@ -59,7 +59,7 @@ func TestVariableExprToVariableName(t *testing.T) {
 // ------------------- MARK: input output tests -------------------
 
 func testInputOutput(t *testing.T, php string, output string) *Interpreter {
-	interpreter := NewInterpreter(NewDevConfig(), &Request{})
+	interpreter := NewInterpreter(NewDevConfig(), &Request{}, "test.php")
 	actual, err := interpreter.Process(php)
 	if err != nil {
 		fmt.Println("    Code:", php)

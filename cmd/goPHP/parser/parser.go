@@ -26,11 +26,11 @@ func (parser *Parser) init() {
 	parser.currPos = 0
 }
 
-func (parser *Parser) ProduceAST(sourceCode string) (*ast.Program, error) {
+func (parser *Parser) ProduceAST(sourceCode string, filename string) (*ast.Program, error) {
 	parser.init()
 
 	var err error
-	parser.tokens, err = parser.lexer.Tokenize(sourceCode)
+	parser.tokens, err = parser.lexer.Tokenize(sourceCode, filename)
 	if err != nil {
 		return parser.program, err
 	}

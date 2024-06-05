@@ -9,23 +9,40 @@ import (
 )
 
 type Lexer struct {
-	input   string
-	tokens  []*Token
-	currPos int
+	input  string
+	tokens []*Token
+	// Position info
+	filename          string
+	currPos           PositionSnapshot
+	positionSnapShots []PositionSnapshot
+}
+
+type PositionSnapshot struct {
+	CurrPos          int
+	CurrLine         int
+	CurrCol          int
+	CurrTokenLine    int
+	CurrTokenCol     int
+	SearchTokenStart bool
 }
 
 func NewLexer() *Lexer {
 	return &Lexer{}
 }
 
-func (lexer *Lexer) init(input string) {
+func (lexer *Lexer) init(input string, filename string) {
 	lexer.input = input
 	lexer.tokens = make([]*Token, 0)
-	lexer.currPos = 0
+	// Position info
+	lexer.filename = filename
+	lexer.currPos = PositionSnapshot{
+		CurrPos: 0, CurrLine: 1, CurrCol: 1, CurrTokenLine: 1, CurrTokenCol: 1, SearchTokenStart: false,
+	}
+	lexer.positionSnapShots = []PositionSnapshot{}
 }
 
-func (lexer *Lexer) Tokenize(sourceCode string) ([]*Token, error) {
-	lexer.init(sourceCode)
+func (lexer *Lexer) Tokenize(sourceCode string, filename string) ([]*Token, error) {
+	lexer.init(sourceCode, filename)
 
 	err := lexer.tokenizeScript()
 
@@ -57,8 +74,8 @@ func (lexer *Lexer) tokenizeScript() error {
 		}
 
 		if lexer.nextN(5) == "<?php" {
-			lexer.pushToken(StartTagToken, "")
 			lexer.eatN(5)
+			lexer.pushToken(StartTagToken, "")
 			if err := lexer.tokenizeInputFile(); err != nil {
 				return err
 			}
@@ -66,12 +83,12 @@ func (lexer *Lexer) tokenizeScript() error {
 		}
 
 		if lexer.nextN(3) == "<?=" {
+			lexer.eatN(3)
 			lexer.pushToken(StartTagToken, "")
 			// Spec: https://phplang.org/spec/04-basic-concepts.html#program-structure
 			// If `<?=` is used as the start-tag, the Engine proceeds as if the statement-list started with an echo statement.
 			lexer.pushKeywordToken("echo")
 
-			lexer.eatN(3)
 			if err := lexer.tokenizeInputFile(); err != nil {
 				return err
 			}
@@ -102,11 +119,11 @@ func (lexer *Lexer) tokenizeInputFile() error {
 	for !lexer.isEof() {
 		// End-Tag
 		if lexer.nextN(2) == "?>" {
+			lexer.eatN(2)
 			if lexer.lastToken().TokenType != OperatorOrPunctuatorToken || lexer.lastToken().Value != ";" {
 				lexer.pushToken(OperatorOrPunctuatorToken, ";")
 			}
 			lexer.pushToken(EndTagToken, "")
-			lexer.eatN(2)
 			return nil
 		}
 
@@ -233,14 +250,15 @@ func (lexer *Lexer) tokenizeToken() error {
 			// variable-name::
 			//    $   name
 
-			oldPos := lexer.currPos
+			lexer.pushSnapShot()
 			lexer.eat()
 			if name := lexer.getName(false); name != "" {
 				lexer.getName(true)
 				lexer.pushToken(VariableNameToken, "$"+name)
+				lexer.popSnapShot(false)
 				return nil
 			}
-			lexer.currPos = oldPos
+			lexer.popSnapShot(true)
 		}
 
 		// keyword or name
@@ -251,13 +269,14 @@ func (lexer *Lexer) tokenizeToken() error {
 				// Spec: https://phplang.org/spec/09-lexical-structure.html#keywords
 				// Note carefully that yield from is a single token that contains whitespace. However, comments are not permitted in
 				// that whitespace.
-				oldPos := lexer.currPos
+				lexer.pushSnapShot()
 				lexer.isWhiteSpace(true)
 				if name == "yield" && strings.ToLower(lexer.nextN(4)) == "from" {
 					lexer.eatN(4)
 					name += " from"
+					lexer.popSnapShot(false)
 				} else {
-					lexer.currPos = oldPos
+					lexer.popSnapShot(true)
 				}
 
 				// keyword
@@ -330,9 +349,10 @@ func (lexer *Lexer) getName(eat bool) string {
 
 	name := ""
 
-	oldPos := lexer.currPos
+	lexer.pushSnapShot()
 
 	if !common.IsNameNondigit(lexer.at()) {
+		lexer.popSnapShot(false)
 		return name
 	}
 	name += lexer.eat()
@@ -344,9 +364,7 @@ func (lexer *Lexer) getName(eat bool) string {
 		name += lexer.eat()
 	}
 
-	if !eat {
-		lexer.currPos = oldPos
-	}
+	lexer.popSnapShot(!eat)
 
 	return name
 }
@@ -361,7 +379,7 @@ func (lexer *Lexer) getIntegerLiteral(eat bool) string {
 	//    binary-literal
 
 	intStr := ""
-	oldPos := lexer.currPos
+	lexer.pushSnapShot()
 
 	// ------------------- binary-literal -------------------
 
@@ -389,13 +407,11 @@ func (lexer *Lexer) getIntegerLiteral(eat bool) string {
 		}
 
 		if common.IsBinaryLiteral(intStr) {
-			if !eat {
-				lexer.currPos = oldPos
-			}
+			lexer.popSnapShot(!eat)
 			return intStr
 		}
 
-		lexer.currPos = oldPos
+		lexer.popSnapShot(true)
 		return ""
 	}
 
@@ -422,13 +438,11 @@ func (lexer *Lexer) getIntegerLiteral(eat bool) string {
 		}
 
 		if common.IsHexadecimalLiteral(intStr) {
-			if !eat {
-				lexer.currPos = oldPos
-			}
+			lexer.popSnapShot(!eat)
 			return intStr
 		}
 
-		lexer.currPos = oldPos
+		lexer.popSnapShot(true)
 		return ""
 	}
 
@@ -443,22 +457,18 @@ func (lexer *Lexer) getIntegerLiteral(eat bool) string {
 	// ------------------- decimal-literal -------------------
 
 	if common.IsDecimalLiteral(intStr) {
-		if !eat {
-			lexer.currPos = oldPos
-		}
+		lexer.popSnapShot(!eat)
 		return intStr
 	}
 
 	// ------------------- octal-literal -------------------
 
 	if common.IsOctalLiteral(intStr) {
-		if !eat {
-			lexer.currPos = oldPos
-		}
+		lexer.popSnapShot(!eat)
 		return intStr
 	}
 
-	lexer.currPos = oldPos
+	lexer.popSnapShot(true)
 	return ""
 }
 
@@ -485,7 +495,7 @@ func (lexer *Lexer) getFloatingPointLiteral(eat bool) string {
 	//    digit-sequence   digit
 
 	floatStr := ""
-	oldPos := lexer.currPos
+	lexer.pushSnapShot()
 	state := "beforeDot"
 
 	for !lexer.isEof() {
@@ -539,9 +549,7 @@ func (lexer *Lexer) getFloatingPointLiteral(eat bool) string {
 		}
 	}
 
-	if !eat {
-		lexer.currPos = oldPos
-	}
+	lexer.popSnapShot(!eat)
 
 	// fractional-literal   exponent-part(opt)
 	match, _ := regexp.MatchString(`^([0-9]*\.[0-9]+|[0-9]+\.)([e,E][+,-]?[0-9]+)?$`, floatStr)
@@ -555,7 +563,7 @@ func (lexer *Lexer) getFloatingPointLiteral(eat bool) string {
 		return floatStr
 	}
 
-	lexer.currPos = oldPos
+	lexer.popSnapShot(true)
 	return ""
 }
 
@@ -569,7 +577,7 @@ func (lexer *Lexer) getStringLiteral(eat bool) string {
 	//    nowdoc-string-literal
 
 	strValue := ""
-	oldPos := lexer.currPos
+	lexer.pushSnapShot()
 
 	// ------------------- single-quoted-string-literal -------------------
 
@@ -618,13 +626,11 @@ func (lexer *Lexer) getStringLiteral(eat bool) string {
 		}
 
 		if common.IsSingleQuotedStringLiteral(strValue) {
-			if !eat {
-				lexer.currPos = oldPos
-			}
+			lexer.popSnapShot(!eat)
 			return strValue
 		}
 
-		lexer.currPos = oldPos
+		lexer.popSnapShot(true)
 		return ""
 	}
 
@@ -705,13 +711,11 @@ func (lexer *Lexer) getStringLiteral(eat bool) string {
 		}
 
 		if common.IsDoubleQuotedStringLiteral(strValue) {
-			if !eat {
-				lexer.currPos = oldPos
-			}
+			lexer.popSnapShot(!eat)
 			return strValue
 		}
 
-		lexer.currPos = oldPos
+		lexer.popSnapShot(true)
 		return ""
 	}
 
@@ -761,6 +765,10 @@ func (lexer *Lexer) getOperatorOrPunctuator(eat bool) string {
 	return ""
 }
 
+func (lexer *Lexer) isNewLineChar(char string) bool {
+	return char == "\n" || char == "\r"
+}
+
 func (lexer *Lexer) isNewLine(eat bool) bool {
 	// Spec: https://phplang.org/spec/19-grammar.html#grammar-new-line
 
@@ -784,6 +792,10 @@ func (lexer *Lexer) isNewLine(eat bool) bool {
 	return false
 }
 
+func (lexer *Lexer) isWhiteSpaceChar(char string) bool {
+	return char == " " || char == "\t"
+}
+
 func (lexer *Lexer) isWhiteSpace(eat bool) bool {
 	// Spec: https://phplang.org/spec/19-grammar.html#grammar-white-space
 
@@ -797,16 +809,14 @@ func (lexer *Lexer) isWhiteSpace(eat bool) bool {
 	//    Horizontal-tab character (0x09)
 
 	if lexer.isNewLine(eat) {
-		oldPos := lexer.currPos
+		lexer.pushSnapShot()
 		if !eat {
-			lexer.currPos++
+			lexer.currPos.CurrPos++
 		}
 
 		lexer.isWhiteSpace(eat)
 
-		if !eat {
-			lexer.currPos = oldPos
-		}
+		lexer.popSnapShot(!eat)
 
 		return true
 	}
@@ -816,16 +826,14 @@ func (lexer *Lexer) isWhiteSpace(eat bool) bool {
 			lexer.eat()
 		}
 
-		oldPos := lexer.currPos
+		lexer.pushSnapShot()
 		if !eat {
-			lexer.currPos++
+			lexer.currPos.CurrPos++
 		}
 
 		lexer.isWhiteSpace(eat)
 
-		if !eat {
-			lexer.currPos = oldPos
-		}
+		lexer.popSnapShot(!eat)
 
 		return true
 	}

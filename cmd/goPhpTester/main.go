@@ -82,7 +82,7 @@ func doTest(path string, info os.FileInfo, err error) error {
 	request.GetParams = testFile.GetParams
 	request.PostParams = testFile.PostParams
 
-	result, phpError := interpreter.NewInterpreter(interpreter.NewDevConfig(), request).Process(testFile.File)
+	result, phpError := interpreter.NewInterpreter(interpreter.NewDevConfig(), request, "").Process(testFile.File)
 	if phpError != nil {
 		fmt.Println("FAIL ", path)
 		fmt.Println("     ", phpError)

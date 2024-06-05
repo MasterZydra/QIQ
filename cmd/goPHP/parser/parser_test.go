@@ -6,7 +6,7 @@ import (
 )
 
 func TestText(t *testing.T) {
-	program, err := NewParser().ProduceAST("<html>")
+	program, err := NewParser().ProduceAST("<html>", "test.php")
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -19,7 +19,7 @@ func TestText(t *testing.T) {
 }
 
 func TestVariableName(t *testing.T) {
-	program, err := NewParser().ProduceAST("<?php $myVar;")
+	program, err := NewParser().ProduceAST("<?php $myVar;", "test.php")
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -30,7 +30,7 @@ func TestVariableName(t *testing.T) {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
 	}
 
-	program, err = NewParser().ProduceAST("<?php $$myVar;")
+	program, err = NewParser().ProduceAST("<?php $$myVar;", "test.php")
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -43,7 +43,7 @@ func TestVariableName(t *testing.T) {
 }
 
 func TestArrayMember(t *testing.T) {
-	program, err := NewParser().ProduceAST("<?php $myVar[];")
+	program, err := NewParser().ProduceAST("<?php $myVar[];", "test.php")
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -54,7 +54,7 @@ func TestArrayMember(t *testing.T) {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
 	}
 
-	program, err = NewParser().ProduceAST("<?php $myVar[0];")
+	program, err = NewParser().ProduceAST("<?php $myVar[0];", "test.php")
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -71,7 +71,7 @@ func TestArrayMember(t *testing.T) {
 
 func TestFunctionCall(t *testing.T) {
 	// Without argument
-	program, err := NewParser().ProduceAST("<?php func();")
+	program, err := NewParser().ProduceAST("<?php func();", "test.php")
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -83,7 +83,7 @@ func TestFunctionCall(t *testing.T) {
 	}
 
 	// With argument
-	program, err = NewParser().ProduceAST("<?php func(42);")
+	program, err = NewParser().ProduceAST("<?php func(42);", "test.php")
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -96,7 +96,7 @@ func TestFunctionCall(t *testing.T) {
 }
 
 func TestArrayLiteral(t *testing.T) {
-	program, err := NewParser().ProduceAST(`<?php [1, "a", false];`)
+	program, err := NewParser().ProduceAST(`<?php [1, "a", false];`, "test.php")
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -110,7 +110,7 @@ func TestArrayLiteral(t *testing.T) {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
 	}
 
-	program, err = NewParser().ProduceAST(`<?php array(1, "a", false,);`)
+	program, err = NewParser().ProduceAST(`<?php array(1, "a", false,);`, "test.php")
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -126,7 +126,7 @@ func TestArrayLiteral(t *testing.T) {
 }
 
 func TestBooleanLiteral(t *testing.T) {
-	program, err := NewParser().ProduceAST("<?php true;")
+	program, err := NewParser().ProduceAST("<?php true;", "test.php")
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -137,7 +137,7 @@ func TestBooleanLiteral(t *testing.T) {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
 	}
 
-	program, err = NewParser().ProduceAST("<?php false;")
+	program, err = NewParser().ProduceAST("<?php false;", "test.php")
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -150,7 +150,7 @@ func TestBooleanLiteral(t *testing.T) {
 }
 
 func TestNullLiteral(t *testing.T) {
-	program, err := NewParser().ProduceAST("<?php null;")
+	program, err := NewParser().ProduceAST("<?php null;", "test.php")
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -164,7 +164,7 @@ func TestNullLiteral(t *testing.T) {
 
 func TestIntegerLiteral(t *testing.T) {
 	// decimal-literal
-	program, err := NewParser().ProduceAST("<?php 42;")
+	program, err := NewParser().ProduceAST("<?php 42;", "test.php")
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -176,7 +176,7 @@ func TestIntegerLiteral(t *testing.T) {
 	}
 
 	// octal-literal
-	program, err = NewParser().ProduceAST("<?php 042;")
+	program, err = NewParser().ProduceAST("<?php 042;", "test.php")
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -188,7 +188,7 @@ func TestIntegerLiteral(t *testing.T) {
 	}
 
 	// hexadecimal-literal
-	program, err = NewParser().ProduceAST("<?php 0x42;")
+	program, err = NewParser().ProduceAST("<?php 0x42;", "test.php")
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -200,7 +200,7 @@ func TestIntegerLiteral(t *testing.T) {
 	}
 
 	// binary-literal
-	program, err = NewParser().ProduceAST("<?php 0b110110101;")
+	program, err = NewParser().ProduceAST("<?php 0b110110101;", "test.php")
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -213,7 +213,7 @@ func TestIntegerLiteral(t *testing.T) {
 }
 
 func TestFloatingLiteral(t *testing.T) {
-	program, err := NewParser().ProduceAST("<?php .5;")
+	program, err := NewParser().ProduceAST("<?php .5;", "test.php")
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -224,7 +224,7 @@ func TestFloatingLiteral(t *testing.T) {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
 	}
 
-	program, err = NewParser().ProduceAST("<?php 1.2;")
+	program, err = NewParser().ProduceAST("<?php 1.2;", "test.php")
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -235,7 +235,7 @@ func TestFloatingLiteral(t *testing.T) {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
 	}
 
-	program, err = NewParser().ProduceAST("<?php .5e-4;")
+	program, err = NewParser().ProduceAST("<?php .5e-4;", "test.php")
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -246,7 +246,7 @@ func TestFloatingLiteral(t *testing.T) {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
 	}
 
-	program, err = NewParser().ProduceAST("<?php 2.5e+4;")
+	program, err = NewParser().ProduceAST("<?php 2.5e+4;", "test.php")
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -257,7 +257,7 @@ func TestFloatingLiteral(t *testing.T) {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
 	}
 
-	program, err = NewParser().ProduceAST("<?php 2e4;")
+	program, err = NewParser().ProduceAST("<?php 2e4;", "test.php")
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -270,7 +270,7 @@ func TestFloatingLiteral(t *testing.T) {
 }
 
 func TestStringLiteral(t *testing.T) {
-	program, err := NewParser().ProduceAST(`<?php b'A "single quoted" \'string\'';`)
+	program, err := NewParser().ProduceAST(`<?php b'A "single quoted" \'string\'';`, "test.php")
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -282,7 +282,7 @@ func TestStringLiteral(t *testing.T) {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
 	}
 
-	program, err = NewParser().ProduceAST(`<?php 'A "single quoted" \'string\'';`)
+	program, err = NewParser().ProduceAST(`<?php 'A "single quoted" \'string\'';`, "test.php")
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -294,7 +294,7 @@ func TestStringLiteral(t *testing.T) {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
 	}
 
-	program, err = NewParser().ProduceAST(`<?php b"A \"single quoted\" 'string'";`)
+	program, err = NewParser().ProduceAST(`<?php b"A \"single quoted\" 'string'";`, "test.php")
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -306,7 +306,7 @@ func TestStringLiteral(t *testing.T) {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
 	}
 
-	program, err = NewParser().ProduceAST(`<?php "A \"single quoted\" 'string'";`)
+	program, err = NewParser().ProduceAST(`<?php "A \"single quoted\" 'string'";`, "test.php")
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -320,7 +320,7 @@ func TestStringLiteral(t *testing.T) {
 }
 
 func TestEchoStatement(t *testing.T) {
-	program, err := NewParser().ProduceAST(`<?php echo 12, "abc", $var;`)
+	program, err := NewParser().ProduceAST(`<?php echo 12, "abc", $var;`, "test.php")
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -348,7 +348,7 @@ func TestEchoStatement(t *testing.T) {
 
 func TestAssignmentExpression(t *testing.T) {
 	// SimpleAssignmentExpression
-	program, err := NewParser().ProduceAST(`<?php $variable = "abc";`)
+	program, err := NewParser().ProduceAST(`<?php $variable = "abc";`, "test.php")
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -363,7 +363,7 @@ func TestAssignmentExpression(t *testing.T) {
 	}
 
 	// CompoundAssignmentExpression
-	program, err = NewParser().ProduceAST(`<?php $a = 42; $a += 2;`)
+	program, err = NewParser().ProduceAST(`<?php $a = 42; $a += 2;`, "test.php")
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -379,7 +379,7 @@ func TestAssignmentExpression(t *testing.T) {
 	}
 
 	// ConditionalExpression
-	program, err = NewParser().ProduceAST(`<?php 1 ? "a" : "b";`)
+	program, err = NewParser().ProduceAST(`<?php 1 ? "a" : "b";`, "test.php")
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -394,7 +394,7 @@ func TestAssignmentExpression(t *testing.T) {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected2, actual2)
 	}
 
-	program, err = NewParser().ProduceAST(`<?php 1 ?: "b";`)
+	program, err = NewParser().ProduceAST(`<?php 1 ?: "b";`, "test.php")
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -409,7 +409,7 @@ func TestAssignmentExpression(t *testing.T) {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected2, actual2)
 	}
 
-	program, err = NewParser().ProduceAST(`<?php 1 ? "a" : 2 ? "b": "c";`)
+	program, err = NewParser().ProduceAST(`<?php 1 ? "a" : 2 ? "b": "c";`, "test.php")
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -430,7 +430,7 @@ func TestAssignmentExpression(t *testing.T) {
 }
 
 func TestCoalesceExpression(t *testing.T) {
-	program, err := NewParser().ProduceAST(`<?php "a" ?? "b";`)
+	program, err := NewParser().ProduceAST(`<?php "a" ?? "b";`, "test.php")
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -444,7 +444,7 @@ func TestCoalesceExpression(t *testing.T) {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
 	}
 
-	program, err = NewParser().ProduceAST(`<?php "a" ?? "b" ?? "c";`)
+	program, err = NewParser().ProduceAST(`<?php "a" ?? "b" ?? "c";`, "test.php")
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -463,7 +463,7 @@ func TestCoalesceExpression(t *testing.T) {
 }
 
 func TestConstDeclaration(t *testing.T) {
-	program, err := NewParser().ProduceAST(`<?php const PI = 3.141, ZERO = 0;`)
+	program, err := NewParser().ProduceAST(`<?php const PI = 3.141, ZERO = 0;`, "test.php")
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -481,7 +481,7 @@ func TestConstDeclaration(t *testing.T) {
 }
 
 func TestEqualityExpression(t *testing.T) {
-	program, err := NewParser().ProduceAST(`<?php "234" !== true;`)
+	program, err := NewParser().ProduceAST(`<?php "234" !== true;`, "test.php")
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -496,7 +496,7 @@ func TestEqualityExpression(t *testing.T) {
 }
 
 func TestShiftExpression(t *testing.T) {
-	program, err := NewParser().ProduceAST(`<?php "234" << 23;`)
+	program, err := NewParser().ProduceAST(`<?php "234" << 23;`, "test.php")
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -511,7 +511,7 @@ func TestShiftExpression(t *testing.T) {
 }
 
 func TestAdditiveExpression(t *testing.T) {
-	program, err := NewParser().ProduceAST(`<?php "234" + 23;`)
+	program, err := NewParser().ProduceAST(`<?php "234" + 23;`, "test.php")
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -526,7 +526,7 @@ func TestAdditiveExpression(t *testing.T) {
 }
 
 func TestMultiplicativeExpression(t *testing.T) {
-	program, err := NewParser().ProduceAST(`<?php "234" * 12;`)
+	program, err := NewParser().ProduceAST(`<?php "234" * 12;`, "test.php")
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -541,7 +541,7 @@ func TestMultiplicativeExpression(t *testing.T) {
 }
 
 func TestExponentiationExpression(t *testing.T) {
-	program, err := NewParser().ProduceAST(`<?php "234" ** 12;`)
+	program, err := NewParser().ProduceAST(`<?php "234" ** 12;`, "test.php")
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -556,7 +556,7 @@ func TestExponentiationExpression(t *testing.T) {
 }
 
 func TestBitwiseIncOrExpression(t *testing.T) {
-	program, err := NewParser().ProduceAST(`<?php "234" | 12;`)
+	program, err := NewParser().ProduceAST(`<?php "234" | 12;`, "test.php")
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -571,7 +571,7 @@ func TestBitwiseIncOrExpression(t *testing.T) {
 }
 
 func TestLogicalIncOrExpression(t *testing.T) {
-	program, err := NewParser().ProduceAST(`<?php "234" || 12;`)
+	program, err := NewParser().ProduceAST(`<?php "234" || 12;`, "test.php")
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -586,7 +586,7 @@ func TestLogicalIncOrExpression(t *testing.T) {
 }
 
 func TestLogicalAndExpression(t *testing.T) {
-	program, err := NewParser().ProduceAST(`<?php "234" && 12;`)
+	program, err := NewParser().ProduceAST(`<?php "234" && 12;`, "test.php")
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -601,7 +601,7 @@ func TestLogicalAndExpression(t *testing.T) {
 }
 
 func TestBitwiseExcOrExpression(t *testing.T) {
-	program, err := NewParser().ProduceAST(`<?php "234" ^ 12;`)
+	program, err := NewParser().ProduceAST(`<?php "234" ^ 12;`, "test.php")
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -616,7 +616,7 @@ func TestBitwiseExcOrExpression(t *testing.T) {
 }
 
 func TestBitwiseAndExpression(t *testing.T) {
-	program, err := NewParser().ProduceAST(`<?php "234" & 12;`)
+	program, err := NewParser().ProduceAST(`<?php "234" & 12;`, "test.php")
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -631,7 +631,7 @@ func TestBitwiseAndExpression(t *testing.T) {
 }
 
 func TestCastExpression(t *testing.T) {
-	program, err := NewParser().ProduceAST(`<?php (string)42;`)
+	program, err := NewParser().ProduceAST(`<?php (string)42;`, "test.php")
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -644,7 +644,7 @@ func TestCastExpression(t *testing.T) {
 }
 
 func TestLogicalNotExpression(t *testing.T) {
-	program, err := NewParser().ProduceAST(`<?php !true;`)
+	program, err := NewParser().ProduceAST(`<?php !true;`, "test.php")
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -657,7 +657,7 @@ func TestLogicalNotExpression(t *testing.T) {
 }
 
 func TestParenthesizedExpression(t *testing.T) {
-	program, err := NewParser().ProduceAST(`<?php (1+2);`)
+	program, err := NewParser().ProduceAST(`<?php (1+2);`, "test.php")
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -670,7 +670,7 @@ func TestParenthesizedExpression(t *testing.T) {
 }
 
 func TestExitIntrinsic(t *testing.T) {
-	program, err := NewParser().ProduceAST(`<?php exit(42);`)
+	program, err := NewParser().ProduceAST(`<?php exit(42);`, "test.php")
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -681,7 +681,7 @@ func TestExitIntrinsic(t *testing.T) {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
 	}
 
-	program, err = NewParser().ProduceAST(`<?php exit();`)
+	program, err = NewParser().ProduceAST(`<?php exit();`, "test.php")
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -692,7 +692,7 @@ func TestExitIntrinsic(t *testing.T) {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
 	}
 
-	program, err = NewParser().ProduceAST(`<?php exit;`)
+	program, err = NewParser().ProduceAST(`<?php exit;`, "test.php")
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -703,7 +703,7 @@ func TestExitIntrinsic(t *testing.T) {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
 	}
 
-	program, err = NewParser().ProduceAST(`<?php die(42);`)
+	program, err = NewParser().ProduceAST(`<?php die(42);`, "test.php")
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -714,7 +714,7 @@ func TestExitIntrinsic(t *testing.T) {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
 	}
 
-	program, err = NewParser().ProduceAST(`<?php die();`)
+	program, err = NewParser().ProduceAST(`<?php die();`, "test.php")
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -725,7 +725,7 @@ func TestExitIntrinsic(t *testing.T) {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
 	}
 
-	program, err = NewParser().ProduceAST(`<?php die;`)
+	program, err = NewParser().ProduceAST(`<?php die;`, "test.php")
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -738,7 +738,7 @@ func TestExitIntrinsic(t *testing.T) {
 }
 
 func TestEmptyIntrinsic(t *testing.T) {
-	program, err := NewParser().ProduceAST(`<?php empty(false);`)
+	program, err := NewParser().ProduceAST(`<?php empty(false);`, "test.php")
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -751,7 +751,7 @@ func TestEmptyIntrinsic(t *testing.T) {
 }
 
 func TestIssetIntrinsic(t *testing.T) {
-	program, err := NewParser().ProduceAST(`<?php isset($a);`)
+	program, err := NewParser().ProduceAST(`<?php isset($a);`, "test.php")
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -764,7 +764,7 @@ func TestIssetIntrinsic(t *testing.T) {
 }
 
 func TestUnsetIntrinsic(t *testing.T) {
-	program, err := NewParser().ProduceAST(`<?php unset($a);`)
+	program, err := NewParser().ProduceAST(`<?php unset($a);`, "test.php")
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return

@@ -11,7 +11,7 @@ func (parser *Parser) isEof() bool {
 
 func (parser *Parser) at() *lexer.Token {
 	if parser.isEof() {
-		return lexer.NewToken(lexer.EndOfFileToken, "")
+		return lexer.NewToken(lexer.EndOfFileToken, "", nil)
 	}
 
 	return parser.tokens[parser.currPos]
@@ -28,7 +28,7 @@ func (parser *Parser) next(offset int) *lexer.Token {
 
 func (parser *Parser) eat() *lexer.Token {
 	if parser.isEof() {
-		return lexer.NewToken(lexer.EndOfFileToken, "")
+		return lexer.NewToken(lexer.EndOfFileToken, "", nil)
 	}
 
 	result := parser.at()
@@ -71,5 +71,5 @@ func (parser *Parser) expect(tokenType lexer.TokenType, value string, eat bool) 
 	if parser.isToken(tokenType, value, eat) {
 		return nil
 	}
-	return fmt.Errorf("Parser error: Unexpected token %s. Expected: %s", parser.at(), lexer.NewToken(tokenType, value))
+	return fmt.Errorf("Parser error: Unexpected token %s. Expected: %s", parser.at(), lexer.NewToken(tokenType, value, nil))
 }

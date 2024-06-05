@@ -222,7 +222,7 @@ func (interpreter *Interpreter) exprToRuntimeValue(expr ast.IExpression, env *En
 			matches := r.FindAllString(str, -1)
 			for _, match := range matches {
 				exprStr := "<?= " + match[1:len(match)-1] + ";"
-				result, err := NewInterpreter(interpreter.config, interpreter.request).process(exprStr, env)
+				result, err := NewInterpreter(interpreter.config, interpreter.request, "").process(exprStr, env)
 				if err != nil {
 					return NewVoidRuntimeValue(), err
 				}

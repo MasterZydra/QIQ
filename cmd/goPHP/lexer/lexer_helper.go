@@ -2,11 +2,12 @@ package lexer
 
 import (
 	"GoPHP/cmd/goPHP/common"
+	"GoPHP/cmd/goPHP/position"
 	"strings"
 )
 
 func (lexer *Lexer) isEof() bool {
-	return lexer.currPos > len(lexer.input)-1
+	return lexer.currPos.CurrPos > len(lexer.input)-1
 }
 
 func (lexer *Lexer) at() string {
@@ -14,11 +15,11 @@ func (lexer *Lexer) at() string {
 		return ""
 	}
 
-	return lexer.input[lexer.currPos : lexer.currPos+1]
+	return lexer.input[lexer.currPos.CurrPos : lexer.currPos.CurrPos+1]
 }
 
 func (lexer *Lexer) next(offset int) string {
-	pos := lexer.currPos + offset + 1
+	pos := lexer.currPos.CurrPos + offset + 1
 	if pos > len(lexer.input) {
 		pos = len(lexer.input)
 	}
@@ -27,12 +28,12 @@ func (lexer *Lexer) next(offset int) string {
 }
 
 func (lexer *Lexer) nextN(length int) string {
-	end := lexer.currPos + length
+	end := lexer.currPos.CurrPos + length
 	if end > len(lexer.input) {
 		end = len(lexer.input)
 	}
 
-	return lexer.input[lexer.currPos:end]
+	return lexer.input[lexer.currPos.CurrPos:end]
 }
 
 func (lexer *Lexer) eat() string {
@@ -41,7 +42,21 @@ func (lexer *Lexer) eat() string {
 	}
 
 	result := lexer.at()
-	lexer.currPos++
+
+	if lexer.currPos.SearchTokenStart && !lexer.isNewLineChar(result) && !lexer.isWhiteSpaceChar(result) {
+		lexer.currPos.CurrTokenLine = lexer.currPos.CurrLine
+		lexer.currPos.CurrTokenCol = lexer.currPos.CurrCol
+		lexer.currPos.SearchTokenStart = false
+	}
+
+	if result == "\n" {
+		lexer.currPos.CurrLine += 1
+		lexer.currPos.CurrCol = 1
+	} else {
+		lexer.currPos.CurrCol += 1
+	}
+
+	lexer.currPos.CurrPos++
 	return result
 }
 
@@ -54,7 +69,12 @@ func (lexer *Lexer) eatN(length int) string {
 }
 
 func (lexer *Lexer) pushToken(tokenType TokenType, value string) {
-	lexer.tokens = append(lexer.tokens, NewToken(tokenType, value))
+	var pos *position.Position = nil
+	if tokenType != TextToken {
+		pos = position.NewPosition(lexer.filename, lexer.currPos.CurrTokenLine, lexer.currPos.CurrTokenCol)
+	}
+	lexer.tokens = append(lexer.tokens, NewToken(tokenType, value, pos))
+	lexer.currPos.SearchTokenStart = true
 }
 
 func (lexer *Lexer) pushKeywordToken(keyword string) {
@@ -71,4 +91,24 @@ func (lexer *Lexer) pushKeywordToken(keyword string) {
 
 func (lexer *Lexer) lastToken() *Token {
 	return lexer.tokens[len(lexer.tokens)-1]
+}
+
+func (lexer *Lexer) pushSnapShot() {
+	lexer.positionSnapShots = append(lexer.positionSnapShots, lexer.currPos)
+}
+
+func (lexer *Lexer) popSnapShot(apply bool) {
+	if len(lexer.positionSnapShots) == 0 {
+		return
+	}
+	snapShot := lexer.positionSnapShots[len(lexer.positionSnapShots)-1]
+	if len(lexer.positionSnapShots) == 1 {
+		lexer.positionSnapShots = []PositionSnapshot{}
+	} else {
+		lexer.positionSnapShots = lexer.positionSnapShots[:len(lexer.positionSnapShots)-1]
+	}
+
+	if apply {
+		lexer.currPos = snapShot
+	}
 }
