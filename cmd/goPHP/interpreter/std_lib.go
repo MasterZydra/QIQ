@@ -242,7 +242,7 @@ func nativeFn_getenv(args []IRuntimeValue, interpreter *Interpreter) (IRuntimeVa
 
 	envVars, err := interpreter.env.lookupVariable("$_ENV")
 	if err != nil {
-		return NewVoidRuntimeValue(), err
+		return envVars, err
 	}
 	envArray := runtimeValToArrayRuntimeVal(envVars)
 	value, found := envArray.GetElement(args[0])

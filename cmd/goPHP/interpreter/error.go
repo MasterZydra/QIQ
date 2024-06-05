@@ -82,5 +82,6 @@ func NewEvent(event string) Error {
 }
 
 const (
-	ExitEvent string = "exit"
+	ExitEvent   string = "exit"
+	ReturnEvent string = "return"
 )

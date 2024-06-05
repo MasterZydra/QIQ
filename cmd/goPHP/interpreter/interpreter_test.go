@@ -741,10 +741,10 @@ func TestUserFunctions(t *testing.T) {
 	testInputOutput(t,
 		`<?php
 			$a = 1;
-			func($a, 2);
-			func(1, 1+1);
+			echo func($a, 2);
+			echo func(1, 1+1);
 			function func(int|float $param1, int|float $param2,): int|float {
-				echo $param1 + $param2;
+				return $param1 + $param2;
 			}
 		`,
 		"33",

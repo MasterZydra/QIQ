@@ -36,7 +36,8 @@ func (parser *Parser) ProduceAST(sourceCode string, filename string) (*ast.Progr
 	}
 
 	for !parser.isEof() {
-		if parser.isTokenType(lexer.StartTagToken, true) || parser.isTokenType(lexer.EndTagToken, true) {
+		if parser.isTokenType(lexer.StartTagToken, true) || parser.isTokenType(lexer.EndTagToken, true) ||
+			parser.isToken(lexer.OperatorOrPunctuatorToken, ";", true) {
 			continue
 		}
 		stmt, err := parser.parseStatement()
@@ -106,20 +107,20 @@ func (parser *Parser) parseStatement() (ast.IStatement, error) {
 
 	// TODO named-label-statement
 
-	// ------------------- MARK: selection-statement -------------------
-
-	// Spec: https://phplang.org/spec/11-statements.html#grammar-selection-statement
-
-	// selection-statement:
-	//    if-statement
-	//    switch-statement
-
+	// selection-statement
 	if parser.isToken(lexer.KeywordToken, "if", false) || parser.isToken(lexer.KeywordToken, "switch", false) {
 		return parser.parseSelectionStatement()
 	}
 
 	// TODO iteration-statement
-	// TODO jump-statement
+
+	// jump-statement
+	if parser.isToken(lexer.KeywordToken, "goto", false) || parser.isToken(lexer.KeywordToken, "continue", false) ||
+		parser.isToken(lexer.KeywordToken, "break", false) || parser.isToken(lexer.KeywordToken, "return", false) ||
+		parser.isToken(lexer.KeywordToken, "throw", false) {
+		return parser.parseJumpStatement()
+	}
+
 	// TODO try-statement
 	// TODO declare-statement
 
@@ -243,8 +244,7 @@ func (parser *Parser) parseStatement() (ast.IStatement, error) {
 		}
 	}
 
-	// ------------------- MARK: function-definition -------------------
-
+	// function-definition
 	if parser.isToken(lexer.KeywordToken, "function", false) {
 		return parser.parseFunctionDefinition()
 	}
@@ -433,7 +433,52 @@ func (parser *Parser) parseSelectionStatement() (ast.IStatement, error) {
 	return ast.NewEmptyStatement(), fmt.Errorf("Unsupported selection statement %s", parser.at())
 }
 
+func (parser *Parser) parseJumpStatement() (ast.IStatement, error) {
+	// ------------------- MARK: jump-statement -------------------
+
+	// Spec: https://phplang.org/spec/11-statements.html#grammar-jump-statement
+
+	// jump-statement:
+	//    goto-statement
+	//    continue-statement
+	//    break-statement
+	//    return-statement
+	//    throw-statement
+
+	// TODO goto-statement
+	// TODO continue-statement
+	// TODO break-statement
+
+	// ------------------- MARK: return-statement -------------------
+
+	// Spec: https://phplang.org/spec/11-statements.html#grammar-return-statement
+
+	// return-statement:
+	//    return   expressionopt   ;
+
+	if parser.isToken(lexer.KeywordToken, "return", true) {
+		var expr ast.IExpression = nil
+		if !parser.isToken(lexer.OperatorOrPunctuatorToken, ";", false) {
+			var err error
+			expr, err = parser.parseExpression()
+			if err != nil {
+				return ast.NewEmptyStatement(), err
+			}
+		}
+		if !parser.isToken(lexer.OperatorOrPunctuatorToken, ";", true) {
+			return ast.NewEmptyStatement(), fmt.Errorf("Expected: \";\". Got: \"%s\"", parser.at())
+		}
+
+		return ast.NewReturnStatement(expr), nil
+	}
+
+	// TODO throw-statement
+
+	return ast.NewEmptyStatement(), fmt.Errorf("Unsupported jump statement %s", parser.at())
+}
+
 func (parser *Parser) parseFunctionDefinition() (ast.IStatement, error) {
+	// ------------------- MARK: function-definition -------------------
 	// Spec: https://phplang.org/spec/13-functions.html#grammar-function-definition
 
 	// function-definition:

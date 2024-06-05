@@ -71,6 +71,8 @@ func (interpreter *Interpreter) processStmt(stmt ast.IStatement, env *Environmen
 		return interpreter.processStmt(ast.StmtToExprStatement(stmt).GetExpression(), env)
 	case ast.FunctionDefinitionStmt:
 		return interpreter.processFunctionDefinitionStmt(ast.StmtToFunctionDefinitionStatement(stmt), env)
+	case ast.ReturnStmt:
+		return interpreter.processReturnStmt(ast.StmtToExprStatement(stmt), env)
 	case ast.IfStmt:
 		return interpreter.processIfStmt(ast.StmtToIfStatement(stmt), env)
 
@@ -129,16 +131,16 @@ func (interpreter *Interpreter) processStmt(stmt ast.IStatement, env *Environmen
 func (interpreter *Interpreter) processConstDeclarationStmt(stmt ast.IConstDeclarationStatement, env *Environment) (IRuntimeValue, Error) {
 	value, err := interpreter.processStmt(stmt.GetValue(), env)
 	if err != nil {
-		return NewVoidRuntimeValue(), err
+		return value, err
 	}
 	return env.declareConstant(stmt.GetName(), value)
 }
 
 func (interpreter *Interpreter) processCompoundStmt(stmt ast.ICompoundStatement, env *Environment) (IRuntimeValue, Error) {
 	for _, statement := range stmt.GetStatements() {
-		_, err := interpreter.processStmt(statement, env)
+		runtimeValue, err := interpreter.processStmt(statement, env)
 		if err != nil {
-			return NewVoidRuntimeValue(), err
+			return runtimeValue, err
 		}
 	}
 	return NewVoidRuntimeValue(), nil
@@ -147,7 +149,7 @@ func (interpreter *Interpreter) processCompoundStmt(stmt ast.ICompoundStatement,
 func (interpreter *Interpreter) processEchoStmt(stmt ast.IEchoStatement, env *Environment) (IRuntimeValue, Error) {
 	for _, expr := range stmt.GetExpressions() {
 		if runtimeValue, err := interpreter.processStmt(expr, env); err != nil {
-			return NewVoidRuntimeValue(), err
+			return runtimeValue, err
 		} else {
 			var str string
 			str, err = lib_strval(runtimeValue)
@@ -176,10 +178,21 @@ func (interpreter *Interpreter) processFunctionDefinitionStmt(stmt ast.IFunction
 	return interpreter.writeCache(stmt, NewVoidRuntimeValue()), nil
 }
 
+func (interpreter *Interpreter) processReturnStmt(stmt ast.IExpressionStatement, env *Environment) (IRuntimeValue, Error) {
+	if stmt.GetExpression() == nil {
+		return NewVoidRuntimeValue(), NewEvent(ReturnEvent)
+	}
+	runtimeValue, err := interpreter.processStmt(stmt.GetExpression(), env)
+	if err != nil {
+		return runtimeValue, err
+	}
+	return runtimeValue, NewEvent(ReturnEvent)
+}
+
 func (interpreter *Interpreter) processIfStmt(stmt ast.IIfStatement, env *Environment) (IRuntimeValue, Error) {
 	conditionRuntimeValue, err := interpreter.processStmt(stmt.GetCondition(), env)
 	if err != nil {
-		return NewVoidRuntimeValue(), err
+		return conditionRuntimeValue, err
 	}
 
 	condition, err := lib_boolval(conditionRuntimeValue)
@@ -188,9 +201,9 @@ func (interpreter *Interpreter) processIfStmt(stmt ast.IIfStatement, env *Enviro
 	}
 
 	if condition {
-		_, err = interpreter.processStmt(stmt.GetIfBlock(), env)
+		runtimeValue, err := interpreter.processStmt(stmt.GetIfBlock(), env)
 		if err != nil {
-			return NewVoidRuntimeValue(), err
+			return runtimeValue, err
 		}
 		return NewVoidRuntimeValue(), nil
 	}
@@ -199,7 +212,7 @@ func (interpreter *Interpreter) processIfStmt(stmt ast.IIfStatement, env *Enviro
 		for _, elseIf := range stmt.GetElseIf() {
 			conditionRuntimeValue, err := interpreter.processStmt(elseIf.GetCondition(), env)
 			if err != nil {
-				return NewVoidRuntimeValue(), err
+				return conditionRuntimeValue, err
 			}
 
 			condition, err := lib_boolval(conditionRuntimeValue)
@@ -211,18 +224,18 @@ func (interpreter *Interpreter) processIfStmt(stmt ast.IIfStatement, env *Enviro
 				continue
 			}
 
-			_, err = interpreter.processStmt(elseIf.GetIfBlock(), env)
+			runtimeValue, err := interpreter.processStmt(elseIf.GetIfBlock(), env)
 			if err != nil {
-				return NewVoidRuntimeValue(), err
+				return runtimeValue, err
 			}
 			return NewVoidRuntimeValue(), nil
 		}
 	}
 
 	if stmt.GetElseBlock() != nil {
-		_, err = interpreter.processStmt(stmt.GetElseBlock(), env)
+		runtimeValue, err := interpreter.processStmt(stmt.GetElseBlock(), env)
 		if err != nil {
-			return NewVoidRuntimeValue(), err
+			return runtimeValue, err
 		}
 		return NewVoidRuntimeValue(), nil
 	}
@@ -242,7 +255,7 @@ func (interpreter *Interpreter) processSimpleAssignmentExpression(expr ast.ISimp
 
 	value, err := interpreter.processStmt(expr.GetValue(), env)
 	if err != nil {
-		return NewVoidRuntimeValue(), err
+		return value, err
 	}
 
 	variableName, err := interpreter.varExprToVarName(expr.GetVariable(), env)
@@ -276,7 +289,7 @@ func (interpreter *Interpreter) processSimpleAssignmentExpression(expr ast.ISimp
 		} else {
 			keyValue, err := interpreter.processStmt(key, env)
 			if err != nil {
-				return NewVoidRuntimeValue(), err
+				return keyValue, err
 			}
 			array.SetElement(keyValue, value)
 		}
@@ -292,7 +305,7 @@ func (interpreter *Interpreter) processSubscriptExpression(expr ast.ISubscriptEx
 
 	variable, err := interpreter.lookupVariable(expr.GetVariable(), env, false)
 	if err != nil {
-		return NewVoidRuntimeValue(), err
+		return variable, err
 	}
 
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-subscript-expression
@@ -304,7 +317,7 @@ func (interpreter *Interpreter) processSubscriptExpression(expr ast.ISubscriptEx
 
 		key, err := interpreter.processStmt(expr.GetIndex(), env)
 		if err != nil {
-			return NewVoidRuntimeValue(), err
+			return key, err
 		}
 
 		array := runtimeValToArrayRuntimeVal(variable)
@@ -410,7 +423,7 @@ func (interpreter *Interpreter) processFunctionCallExpression(expr ast.IFunction
 		for index, arg := range expr.GetArguments() {
 			runtimeValue, err := interpreter.processStmt(arg, env)
 			if err != nil {
-				return NewVoidRuntimeValue(), err
+				return runtimeValue, err
 			}
 			functionArguments[index] = deepCopy(runtimeValue)
 		}
@@ -435,7 +448,7 @@ func (interpreter *Interpreter) processFunctionCallExpression(expr ast.IFunction
 	for index, param := range userFunction.Parameters {
 		runtimeValue, err := interpreter.processStmt(expr.GetArguments()[index], env)
 		if err != nil {
-			return NewVoidRuntimeValue(), err
+			return runtimeValue, err
 		}
 		// Check if the parameter types match
 		err = checkParameterTypes(runtimeValue, param.Type)
@@ -454,8 +467,8 @@ func (interpreter *Interpreter) processFunctionCallExpression(expr ast.IFunction
 	}
 
 	runtimeValue, err := interpreter.processStmt(userFunction.Body, functionEnv)
-	if err != nil {
-		return NewVoidRuntimeValue(), err
+	if err != nil && !(err.GetErrorType() == EventError && err.GetMessage() == ReturnEvent) {
+		return runtimeValue, err
 	}
 	return runtimeValue, nil
 
@@ -486,7 +499,7 @@ func (interpreter *Interpreter) processEmptyIntrinsicExpression(expr ast.IFuncti
 	} else {
 		runtimeValue, err = interpreter.processStmt(expr.GetArguments()[0], env)
 		if err != nil {
-			return NewVoidRuntimeValue(), err
+			return runtimeValue, err
 		}
 	}
 
@@ -517,7 +530,7 @@ func (interpreter *Interpreter) processExitIntrinsicExpression(expr ast.IFunctio
 	if expression != nil {
 		exprValue, err := interpreter.processStmt(expression, env)
 		if err != nil {
-			return NewVoidRuntimeValue(), err
+			return exprValue, err
 		}
 		if exprValue.GetType() == StringValue {
 			interpreter.print(runtimeValToStrRuntimeVal(exprValue).GetValue())
@@ -584,17 +597,17 @@ func (interpreter *Interpreter) processCompoundAssignmentExpression(expr ast.ICo
 
 	operand1, err := interpreter.processStmt(expr.GetVariable(), env)
 	if err != nil {
-		return NewVoidRuntimeValue(), err
+		return operand1, err
 	}
 
 	operand2, err := interpreter.processStmt(expr.GetValue(), env)
 	if err != nil {
-		return NewVoidRuntimeValue(), err
+		return operand2, err
 	}
 
 	newValue, err := calculate(operand1, expr.GetOperator(), operand2)
 	if err != nil {
-		return NewVoidRuntimeValue(), err
+		return newValue, err
 	}
 
 	variableName, err := interpreter.varExprToVarName(expr.GetVariable(), env)
@@ -612,7 +625,7 @@ func (interpreter *Interpreter) processConditionalExpression(expr ast.ICondition
 	// Given the expression "e1 ? e2 : e3", e1 is evaluated first and converted to bool if it has another type.
 	runtimeValue, isConditionTrue, err := interpreter.processCondition(expr.GetCondition(), env)
 	if err != nil {
-		return NewVoidRuntimeValue(), err
+		return runtimeValue, err
 	}
 
 	if isConditionTrue {
@@ -650,7 +663,7 @@ func (interpreter *Interpreter) processCoalesceExpression(expr ast.ICoalesceExpr
 	interpreter.config.ErrorReporting = errorReporting
 
 	if err != nil {
-		return NewVoidRuntimeValue(), err
+		return cond, err
 	}
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-coalesce-expression
 	// Given the expression e1 ?? e2, if e1 is set and not NULL (i.e. TRUE for isset), then the result is e1.
@@ -673,12 +686,12 @@ func (interpreter *Interpreter) processCoalesceExpression(expr ast.ICoalesceExpr
 func (interpreter *Interpreter) processRelationalExpression(expr ast.IBinaryOpExpression, env *Environment) (IRuntimeValue, Error) {
 	lhs, err := interpreter.processStmt(expr.GetLHS(), env)
 	if err != nil {
-		return NewVoidRuntimeValue(), err
+		return lhs, err
 	}
 
 	rhs, err := interpreter.processStmt(expr.GetRHS(), env)
 	if err != nil {
-		return NewVoidRuntimeValue(), err
+		return rhs, err
 	}
 	return compareRelation(lhs, expr.GetOperator(), rhs)
 }
@@ -686,12 +699,12 @@ func (interpreter *Interpreter) processRelationalExpression(expr ast.IBinaryOpEx
 func (interpreter *Interpreter) processEqualityExpression(expr ast.IBinaryOpExpression, env *Environment) (IRuntimeValue, Error) {
 	lhs, err := interpreter.processStmt(expr.GetLHS(), env)
 	if err != nil {
-		return NewVoidRuntimeValue(), err
+		return lhs, err
 	}
 
 	rhs, err := interpreter.processStmt(expr.GetRHS(), env)
 	if err != nil {
-		return NewVoidRuntimeValue(), err
+		return rhs, err
 	}
 	return compare(lhs, expr.GetOperator(), rhs)
 }
@@ -699,12 +712,12 @@ func (interpreter *Interpreter) processEqualityExpression(expr ast.IBinaryOpExpr
 func (interpreter *Interpreter) processAdditiveExpression(expr ast.IBinaryOpExpression, env *Environment) (IRuntimeValue, Error) {
 	lhs, err := interpreter.processStmt(expr.GetLHS(), env)
 	if err != nil {
-		return NewVoidRuntimeValue(), err
+		return lhs, err
 	}
 
 	rhs, err := interpreter.processStmt(expr.GetRHS(), env)
 	if err != nil {
-		return NewVoidRuntimeValue(), err
+		return rhs, err
 	}
 	return calculate(lhs, expr.GetOperator(), rhs)
 }
@@ -712,7 +725,7 @@ func (interpreter *Interpreter) processAdditiveExpression(expr ast.IBinaryOpExpr
 func (interpreter *Interpreter) processUnaryExpression(expr ast.IUnaryOpExpression, env *Environment) (IRuntimeValue, Error) {
 	operand, err := interpreter.processStmt(expr.GetExpression(), env)
 	if err != nil {
-		return NewVoidRuntimeValue(), err
+		return operand, err
 	}
 	return calculateUnary(expr.GetOperator(), operand)
 }
@@ -730,7 +743,7 @@ func (interpreter *Interpreter) processCastExpression(expr ast.IUnaryOpExpressio
 
 	value, err := interpreter.processStmt(expr.GetExpression(), env)
 	if err != nil {
-		return NewVoidRuntimeValue(), err
+		return value, err
 	}
 
 	switch expr.GetOperator() {
@@ -763,7 +776,7 @@ func (interpreter *Interpreter) processCastExpression(expr ast.IUnaryOpExpressio
 func (interpreter *Interpreter) processLogicalNotExpression(expr ast.IUnaryOpExpression, env *Environment) (IRuntimeValue, Error) {
 	runtimeValue, err := interpreter.processStmt(expr.GetExpression(), env)
 	if err != nil {
-		return NewVoidRuntimeValue(), err
+		return runtimeValue, err
 	}
 	boolValue, err := lib_boolval(runtimeValue)
 	if err != nil {
@@ -779,12 +792,12 @@ func (interpreter *Interpreter) processPostfixIncExpression(expr ast.IUnaryOpExp
 
 	previous, err := interpreter.processStmt(expr.GetExpression(), env)
 	if err != nil {
-		return NewVoidRuntimeValue(), err
+		return previous, err
 	}
 
 	newValue, err := calculateIncDec(expr.GetOperator(), previous)
 	if err != nil {
-		return NewVoidRuntimeValue(), err
+		return newValue, err
 	}
 
 	variableName, err := interpreter.varExprToVarName(expr.GetExpression(), env)
@@ -799,12 +812,12 @@ func (interpreter *Interpreter) processPostfixIncExpression(expr ast.IUnaryOpExp
 func (interpreter *Interpreter) processPrefixIncExpression(expr ast.IUnaryOpExpression, env *Environment) (IRuntimeValue, Error) {
 	previous, err := interpreter.processStmt(expr.GetExpression(), env)
 	if err != nil {
-		return NewVoidRuntimeValue(), err
+		return previous, err
 	}
 
 	newValue, err := calculateIncDec(expr.GetOperator(), previous)
 	if err != nil {
-		return NewVoidRuntimeValue(), err
+		return newValue, err
 	}
 
 	variableName, err := interpreter.varExprToVarName(expr.GetExpression(), env)

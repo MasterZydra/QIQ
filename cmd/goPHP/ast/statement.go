@@ -284,6 +284,10 @@ type ExpressionStatement struct {
 	expr IExpression
 }
 
+func NewReturnStatement(expr IExpression) *ExpressionStatement {
+	return &ExpressionStatement{stmt: NewStatement(ReturnStmt), expr: expr}
+}
+
 func NewExpressionStatement(expr IExpression) *ExpressionStatement {
 	return &ExpressionStatement{stmt: NewStatement(ExpressionStmt), expr: expr}
 }

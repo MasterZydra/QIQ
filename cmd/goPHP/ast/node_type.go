@@ -36,6 +36,7 @@ const (
 	// Statements
 	FunctionDefinitionStmt NodeType = "FunctionDefinitionStatement"
 	IfStmt                 NodeType = "IfStatement"
+	ReturnStmt             NodeType = "ReturnStatement"
 	CompoundStmt           NodeType = "CompoundStatement"
 	EchoStmt               NodeType = "EchoStatement"
 	ConstDeclarationStmt   NodeType = "ConstDeclarationStatement"
