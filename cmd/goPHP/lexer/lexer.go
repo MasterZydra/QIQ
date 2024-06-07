@@ -69,11 +69,11 @@ func (lexer *Lexer) tokenizeScript() error {
 
 	for !lexer.isEof() {
 		// Push optional text token if a start-tag is detected
-		if lexer.nextN(3) == "<?=" || lexer.nextN(5) == "<?php" {
+		if lexer.nextN(3) == "<?=" || strings.ToLower(lexer.nextN(5)) == "<?php" {
 			pushTextToken()
 		}
 
-		if lexer.nextN(5) == "<?php" {
+		if strings.ToLower(lexer.nextN(5)) == "<?php" {
 			lexer.eatN(5)
 			lexer.pushToken(StartTagToken, "")
 			if err := lexer.tokenizeInputFile(); err != nil {
