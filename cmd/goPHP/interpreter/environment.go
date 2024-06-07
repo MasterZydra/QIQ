@@ -197,7 +197,7 @@ func (env *Environment) declareConstant(constantName string, value IRuntimeValue
 	// Get "global" environment
 	var environment *Environment = env
 	for environment.parent != nil {
-		environment = env.parent
+		environment = environment.parent
 	}
 
 	if _, err := environment.lookupConstant(constantName); err == nil {
@@ -213,7 +213,7 @@ func (env *Environment) lookupConstant(constantName string) (IRuntimeValue, Erro
 	// Get "global" environment
 	var environment *Environment = env
 	for environment.parent != nil {
-		environment = env.parent
+		environment = environment.parent
 	}
 
 	if value, ok := environment.predefinedConstants[constantName]; ok {
