@@ -24,7 +24,7 @@ func TestVariableName(t *testing.T) {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
 	}
-	expected := ast.NewSimpleVariableExpression(ast.NewVariableNameExpression("$myVar"))
+	expected := ast.NewSimpleVariableExpression(ast.NewVariableNameExpression(nil, "$myVar"))
 	actual := ast.ExprToSimpleVarExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
@@ -35,7 +35,7 @@ func TestVariableName(t *testing.T) {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
 	}
-	expected = ast.NewSimpleVariableExpression(ast.NewSimpleVariableExpression(ast.NewVariableNameExpression("$myVar")))
+	expected = ast.NewSimpleVariableExpression(ast.NewSimpleVariableExpression(ast.NewVariableNameExpression(nil, "$myVar")))
 	actual = ast.ExprToSimpleVarExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
@@ -48,7 +48,7 @@ func TestArrayMember(t *testing.T) {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
 	}
-	expected := ast.NewSubscriptExpression(ast.NewSimpleVariableExpression(ast.NewVariableNameExpression("$myVar")), nil)
+	expected := ast.NewSubscriptExpression(ast.NewSimpleVariableExpression(ast.NewVariableNameExpression(nil, "$myVar")), nil)
 	actual := ast.ExprToSubscriptExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
@@ -60,8 +60,8 @@ func TestArrayMember(t *testing.T) {
 		return
 	}
 	expected = ast.NewSubscriptExpression(
-		ast.NewSimpleVariableExpression(ast.NewVariableNameExpression("$myVar")),
-		ast.NewIntegerLiteralExpression(0),
+		ast.NewSimpleVariableExpression(ast.NewVariableNameExpression(nil, "$myVar")),
+		ast.NewIntegerLiteralExpression(nil, 0),
 	)
 	actual = ast.ExprToSubscriptExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() {
@@ -76,7 +76,7 @@ func TestFunctionCall(t *testing.T) {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
 	}
-	expected := ast.NewFunctionCallExpression("func", []ast.IExpression{})
+	expected := ast.NewFunctionCallExpression(nil, "func", []ast.IExpression{})
 	actual := ast.ExprToFuncCallExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() || expected.GetFunctionName() != actual.GetFunctionName() {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
@@ -88,7 +88,7 @@ func TestFunctionCall(t *testing.T) {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
 	}
-	expected = ast.NewFunctionCallExpression("func", []ast.IExpression{ast.NewIntegerLiteralExpression(42)})
+	expected = ast.NewFunctionCallExpression(nil, "func", []ast.IExpression{ast.NewIntegerLiteralExpression(nil, 42)})
 	actual = ast.ExprToFuncCallExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() || expected.GetFunctionName() != actual.GetFunctionName() {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
@@ -101,10 +101,10 @@ func TestArrayLiteral(t *testing.T) {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
 	}
-	expected := ast.NewArrayLiteralExpression()
-	expected.AddElement(ast.NewIntegerLiteralExpression(0), ast.NewIntegerLiteralExpression(1))
-	expected.AddElement(ast.NewIntegerLiteralExpression(1), ast.NewStringLiteralExpression("a", ast.DoubleQuotedString))
-	expected.AddElement(ast.NewIntegerLiteralExpression(2), ast.NewBooleanLiteralExpression(false))
+	expected := ast.NewArrayLiteralExpression(nil)
+	expected.AddElement(ast.NewIntegerLiteralExpression(nil, 0), ast.NewIntegerLiteralExpression(nil, 1))
+	expected.AddElement(ast.NewIntegerLiteralExpression(nil, 1), ast.NewStringLiteralExpression(nil, "a", ast.DoubleQuotedString))
+	expected.AddElement(ast.NewIntegerLiteralExpression(nil, 2), ast.NewBooleanLiteralExpression(nil, false))
 	actual := ast.ExprToArrayLitExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
@@ -115,10 +115,10 @@ func TestArrayLiteral(t *testing.T) {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
 	}
-	expected = ast.NewArrayLiteralExpression()
-	expected.AddElement(ast.NewIntegerLiteralExpression(0), ast.NewIntegerLiteralExpression(1))
-	expected.AddElement(ast.NewIntegerLiteralExpression(1), ast.NewStringLiteralExpression("a", ast.DoubleQuotedString))
-	expected.AddElement(ast.NewIntegerLiteralExpression(2), ast.NewBooleanLiteralExpression(false))
+	expected = ast.NewArrayLiteralExpression(nil)
+	expected.AddElement(ast.NewIntegerLiteralExpression(nil, 0), ast.NewIntegerLiteralExpression(nil, 1))
+	expected.AddElement(ast.NewIntegerLiteralExpression(nil, 1), ast.NewStringLiteralExpression(nil, "a", ast.DoubleQuotedString))
+	expected.AddElement(ast.NewIntegerLiteralExpression(nil, 2), ast.NewBooleanLiteralExpression(nil, false))
 	actual = ast.ExprToArrayLitExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
@@ -131,7 +131,7 @@ func TestBooleanLiteral(t *testing.T) {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
 	}
-	expected := ast.NewBooleanLiteralExpression(true)
+	expected := ast.NewBooleanLiteralExpression(nil, true)
 	actual := ast.ExprToConstAccessExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() || expected.GetConstantName() != actual.GetConstantName() {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
@@ -142,7 +142,7 @@ func TestBooleanLiteral(t *testing.T) {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
 	}
-	expected = ast.NewBooleanLiteralExpression(false)
+	expected = ast.NewBooleanLiteralExpression(nil, false)
 	actual = ast.ExprToConstAccessExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() || expected.GetConstantName() != actual.GetConstantName() {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
@@ -155,7 +155,7 @@ func TestNullLiteral(t *testing.T) {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
 	}
-	expected := ast.NewNullLiteralExpression()
+	expected := ast.NewNullLiteralExpression(nil)
 	actual := ast.ExprToConstAccessExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() || expected.GetConstantName() != actual.GetConstantName() {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
@@ -169,7 +169,7 @@ func TestIntegerLiteral(t *testing.T) {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
 	}
-	expected := ast.NewIntegerLiteralExpression(42)
+	expected := ast.NewIntegerLiteralExpression(nil, 42)
 	actual := ast.ExprToIntLitExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() || expected.GetValue() != actual.GetValue() {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
@@ -181,7 +181,7 @@ func TestIntegerLiteral(t *testing.T) {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
 	}
-	expected = ast.NewIntegerLiteralExpression(34)
+	expected = ast.NewIntegerLiteralExpression(nil, 34)
 	actual = ast.ExprToIntLitExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() || expected.GetValue() != actual.GetValue() {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
@@ -193,7 +193,7 @@ func TestIntegerLiteral(t *testing.T) {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
 	}
-	expected = ast.NewIntegerLiteralExpression(66)
+	expected = ast.NewIntegerLiteralExpression(nil, 66)
 	actual = ast.ExprToIntLitExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() || expected.GetValue() != actual.GetValue() {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
@@ -205,7 +205,7 @@ func TestIntegerLiteral(t *testing.T) {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
 	}
-	expected = ast.NewIntegerLiteralExpression(437)
+	expected = ast.NewIntegerLiteralExpression(nil, 437)
 	actual = ast.ExprToIntLitExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() || expected.GetValue() != actual.GetValue() {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
@@ -218,7 +218,7 @@ func TestFloatingLiteral(t *testing.T) {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
 	}
-	expected := ast.NewFloatingLiteralExpression(0.5)
+	expected := ast.NewFloatingLiteralExpression(nil, 0.5)
 	actual := ast.ExprToFloatLitExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() || expected.GetValue() != actual.GetValue() {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
@@ -229,7 +229,7 @@ func TestFloatingLiteral(t *testing.T) {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
 	}
-	expected = ast.NewFloatingLiteralExpression(1.2)
+	expected = ast.NewFloatingLiteralExpression(nil, 1.2)
 	actual = ast.ExprToFloatLitExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() || expected.GetValue() != actual.GetValue() {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
@@ -240,7 +240,7 @@ func TestFloatingLiteral(t *testing.T) {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
 	}
-	expected = ast.NewFloatingLiteralExpression(0.5e-4)
+	expected = ast.NewFloatingLiteralExpression(nil, 0.5e-4)
 	actual = ast.ExprToFloatLitExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() || expected.GetValue() != actual.GetValue() {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
@@ -251,7 +251,7 @@ func TestFloatingLiteral(t *testing.T) {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
 	}
-	expected = ast.NewFloatingLiteralExpression(2.5e+4)
+	expected = ast.NewFloatingLiteralExpression(nil, 2.5e+4)
 	actual = ast.ExprToFloatLitExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() || expected.GetValue() != actual.GetValue() {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
@@ -262,7 +262,7 @@ func TestFloatingLiteral(t *testing.T) {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
 	}
-	expected = ast.NewFloatingLiteralExpression(2e4)
+	expected = ast.NewFloatingLiteralExpression(nil, 2e4)
 	actual = ast.ExprToFloatLitExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() || expected.GetValue() != actual.GetValue() {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
@@ -275,7 +275,7 @@ func TestStringLiteral(t *testing.T) {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
 	}
-	expected := ast.NewStringLiteralExpression(`A "single quoted" \'string\'`, ast.SingleQuotedString)
+	expected := ast.NewStringLiteralExpression(nil, `A "single quoted" \'string\'`, ast.SingleQuotedString)
 	actual := ast.ExprToStrLitExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() ||
 		expected.GetValue() != actual.GetValue() || expected.GetStringType() != actual.GetStringType() {
@@ -287,7 +287,7 @@ func TestStringLiteral(t *testing.T) {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
 	}
-	expected = ast.NewStringLiteralExpression(`A "single quoted" \'string\'`, ast.SingleQuotedString)
+	expected = ast.NewStringLiteralExpression(nil, `A "single quoted" \'string\'`, ast.SingleQuotedString)
 	actual = ast.ExprToStrLitExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() ||
 		expected.GetValue() != actual.GetValue() || expected.GetStringType() != actual.GetStringType() {
@@ -299,7 +299,7 @@ func TestStringLiteral(t *testing.T) {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
 	}
-	expected = ast.NewStringLiteralExpression(`A \"single quoted\" 'string'`, ast.DoubleQuotedString)
+	expected = ast.NewStringLiteralExpression(nil, `A \"single quoted\" 'string'`, ast.DoubleQuotedString)
 	actual = ast.ExprToStrLitExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() ||
 		expected.GetValue() != actual.GetValue() || expected.GetStringType() != actual.GetStringType() {
@@ -311,7 +311,7 @@ func TestStringLiteral(t *testing.T) {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
 	}
-	expected = ast.NewStringLiteralExpression(`A \"single quoted\" 'string'`, ast.DoubleQuotedString)
+	expected = ast.NewStringLiteralExpression(nil, `A \"single quoted\" 'string'`, ast.DoubleQuotedString)
 	actual = ast.ExprToStrLitExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() ||
 		expected.GetValue() != actual.GetValue() || expected.GetStringType() != actual.GetStringType() {
@@ -326,20 +326,20 @@ func TestEchoStatement(t *testing.T) {
 		return
 	}
 
-	expected := ast.NewIntegerLiteralExpression(12)
+	expected := ast.NewIntegerLiteralExpression(nil, 12)
 	actual := ast.ExprToIntLitExpr(ast.StmtToEchoStatement(program.GetStatements()[0]).GetExpressions()[0])
 	if expected.String() != actual.String() || expected.GetValue() != actual.GetValue() {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
 	}
 
-	expected1 := ast.NewStringLiteralExpression("abc", ast.DoubleQuotedString)
+	expected1 := ast.NewStringLiteralExpression(nil, "abc", ast.DoubleQuotedString)
 	actual1 := ast.ExprToStrLitExpr(ast.StmtToEchoStatement(program.GetStatements()[0]).GetExpressions()[1])
 	if expected1.String() != actual1.String() ||
 		expected1.GetValue() != actual1.GetValue() || expected1.GetStringType() != actual1.GetStringType() {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected1, actual1)
 	}
 
-	expected2 := ast.NewSimpleVariableExpression(ast.NewVariableNameExpression("$var"))
+	expected2 := ast.NewSimpleVariableExpression(ast.NewVariableNameExpression(nil, "$var"))
 	actual2 := ast.ExprToSimpleVarExpr(ast.StmtToEchoStatement(program.GetStatements()[0]).GetExpressions()[2])
 	if expected2.String() != actual2.String() || expected2.GetVariableName().GetKind() != actual2.GetVariableName().GetKind() {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected2, actual2)
@@ -354,8 +354,8 @@ func TestAssignmentExpression(t *testing.T) {
 		return
 	}
 	expected := ast.NewSimpleAssignmentExpression(
-		ast.NewSimpleVariableExpression(ast.NewVariableNameExpression("$variable")),
-		ast.NewStringLiteralExpression("abc", ast.DoubleQuotedString),
+		ast.NewSimpleVariableExpression(ast.NewVariableNameExpression(nil, "$variable")),
+		ast.NewStringLiteralExpression(nil, "abc", ast.DoubleQuotedString),
 	)
 	actual := ast.ExprToSimpleAssignExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() {
@@ -369,9 +369,9 @@ func TestAssignmentExpression(t *testing.T) {
 		return
 	}
 	expected1 := ast.NewCompoundAssignmentExpression(
-		ast.NewSimpleVariableExpression(ast.NewVariableNameExpression("$a")),
+		ast.NewSimpleVariableExpression(ast.NewVariableNameExpression(nil, "$a")),
 		"+",
-		ast.NewIntegerLiteralExpression(2),
+		ast.NewIntegerLiteralExpression(nil, 2),
 	)
 	actual1 := ast.ExprToCompoundAssignExpr(ast.StmtToExprStatement(program.GetStatements()[1]).GetExpression())
 	if expected1.String() != actual1.String() || expected1.GetOperator() != "+" {
@@ -385,9 +385,9 @@ func TestAssignmentExpression(t *testing.T) {
 		return
 	}
 	expected2 := ast.NewConditionalExpression(
-		ast.NewIntegerLiteralExpression(1),
-		ast.NewStringLiteralExpression("a", ast.DoubleQuotedString),
-		ast.NewStringLiteralExpression("b", ast.DoubleQuotedString),
+		ast.NewIntegerLiteralExpression(nil, 1),
+		ast.NewStringLiteralExpression(nil, "a", ast.DoubleQuotedString),
+		ast.NewStringLiteralExpression(nil, "b", ast.DoubleQuotedString),
 	)
 	actual2 := ast.ExprToCondExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected2.String() != actual2.String() {
@@ -400,9 +400,9 @@ func TestAssignmentExpression(t *testing.T) {
 		return
 	}
 	expected2 = ast.NewConditionalExpression(
-		ast.NewIntegerLiteralExpression(1),
+		ast.NewIntegerLiteralExpression(nil, 1),
 		nil,
-		ast.NewStringLiteralExpression("b", ast.DoubleQuotedString),
+		ast.NewStringLiteralExpression(nil, "b", ast.DoubleQuotedString),
 	)
 	actual2 = ast.ExprToCondExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected2.String() != actual2.String() {
@@ -415,12 +415,12 @@ func TestAssignmentExpression(t *testing.T) {
 		return
 	}
 	expected2 = ast.NewConditionalExpression(
-		ast.NewIntegerLiteralExpression(1),
-		ast.NewStringLiteralExpression("a", ast.DoubleQuotedString),
+		ast.NewIntegerLiteralExpression(nil, 1),
+		ast.NewStringLiteralExpression(nil, "a", ast.DoubleQuotedString),
 		ast.NewConditionalExpression(
-			ast.NewIntegerLiteralExpression(2),
-			ast.NewStringLiteralExpression("b", ast.DoubleQuotedString),
-			ast.NewStringLiteralExpression("c", ast.DoubleQuotedString),
+			ast.NewIntegerLiteralExpression(nil, 2),
+			ast.NewStringLiteralExpression(nil, "b", ast.DoubleQuotedString),
+			ast.NewStringLiteralExpression(nil, "c", ast.DoubleQuotedString),
 		),
 	)
 	actual2 = ast.ExprToCondExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
@@ -436,8 +436,8 @@ func TestCoalesceExpression(t *testing.T) {
 		return
 	}
 	expected := ast.NewCoalesceExpression(
-		ast.NewStringLiteralExpression("a", ast.DoubleQuotedString),
-		ast.NewStringLiteralExpression("b", ast.DoubleQuotedString),
+		ast.NewStringLiteralExpression(nil, "a", ast.DoubleQuotedString),
+		ast.NewStringLiteralExpression(nil, "b", ast.DoubleQuotedString),
 	)
 	actual := ast.ExprToCoalesceExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() {
@@ -450,10 +450,10 @@ func TestCoalesceExpression(t *testing.T) {
 		return
 	}
 	expected = ast.NewCoalesceExpression(
-		ast.NewStringLiteralExpression("a", ast.DoubleQuotedString),
+		ast.NewStringLiteralExpression(nil, "a", ast.DoubleQuotedString),
 		ast.NewCoalesceExpression(
-			ast.NewStringLiteralExpression("b", ast.DoubleQuotedString),
-			ast.NewStringLiteralExpression("c", ast.DoubleQuotedString),
+			ast.NewStringLiteralExpression(nil, "b", ast.DoubleQuotedString),
+			ast.NewStringLiteralExpression(nil, "c", ast.DoubleQuotedString),
 		),
 	)
 	actual = ast.ExprToCoalesceExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
@@ -468,12 +468,12 @@ func TestConstDeclaration(t *testing.T) {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
 	}
-	expected := ast.NewConstDeclarationStatement("PI", ast.NewFloatingLiteralExpression(3.141))
+	expected := ast.NewConstDeclarationStatement(nil, "PI", ast.NewFloatingLiteralExpression(nil, 3.141))
 	actual := ast.StmtToConstDeclStatement(program.GetStatements()[0])
 	if expected.String() != actual.String() || expected.GetName() != actual.GetName() {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
 	}
-	expected = ast.NewConstDeclarationStatement("ZERO", ast.NewIntegerLiteralExpression(0))
+	expected = ast.NewConstDeclarationStatement(nil, "ZERO", ast.NewIntegerLiteralExpression(nil, 0))
 	actual = ast.StmtToConstDeclStatement(program.GetStatements()[1])
 	if expected.String() != actual.String() || expected.GetName() != actual.GetName() {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
@@ -487,7 +487,7 @@ func TestEqualityExpression(t *testing.T) {
 		return
 	}
 	expected := ast.NewEqualityExpression(
-		ast.NewStringLiteralExpression("234", ast.DoubleQuotedString), "!==", ast.NewBooleanLiteralExpression(true),
+		ast.NewStringLiteralExpression(nil, "234", ast.DoubleQuotedString), "!==", ast.NewBooleanLiteralExpression(nil, true),
 	)
 	actual := ast.ExprToBinOpExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() || expected.GetOperator() != actual.GetOperator() {
@@ -502,7 +502,7 @@ func TestShiftExpression(t *testing.T) {
 		return
 	}
 	expected := ast.NewBinaryOpExpression(
-		ast.NewStringLiteralExpression("234", ast.DoubleQuotedString), "<<", ast.NewIntegerLiteralExpression(23),
+		ast.NewStringLiteralExpression(nil, "234", ast.DoubleQuotedString), "<<", ast.NewIntegerLiteralExpression(nil, 23),
 	)
 	actual := ast.ExprToBinOpExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() || expected.GetOperator() != actual.GetOperator() {
@@ -517,7 +517,7 @@ func TestAdditiveExpression(t *testing.T) {
 		return
 	}
 	expected := ast.NewBinaryOpExpression(
-		ast.NewStringLiteralExpression("234", ast.DoubleQuotedString), "+", ast.NewIntegerLiteralExpression(23),
+		ast.NewStringLiteralExpression(nil, "234", ast.DoubleQuotedString), "+", ast.NewIntegerLiteralExpression(nil, 23),
 	)
 	actual := ast.ExprToBinOpExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() || expected.GetOperator() != actual.GetOperator() {
@@ -532,7 +532,7 @@ func TestMultiplicativeExpression(t *testing.T) {
 		return
 	}
 	expected := ast.NewBinaryOpExpression(
-		ast.NewStringLiteralExpression("234", ast.DoubleQuotedString), "*", ast.NewIntegerLiteralExpression(12),
+		ast.NewStringLiteralExpression(nil, "234", ast.DoubleQuotedString), "*", ast.NewIntegerLiteralExpression(nil, 12),
 	)
 	actual := ast.ExprToBinOpExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() || expected.GetOperator() != actual.GetOperator() {
@@ -547,7 +547,7 @@ func TestExponentiationExpression(t *testing.T) {
 		return
 	}
 	expected := ast.NewBinaryOpExpression(
-		ast.NewStringLiteralExpression("234", ast.DoubleQuotedString), "**", ast.NewIntegerLiteralExpression(12),
+		ast.NewStringLiteralExpression(nil, "234", ast.DoubleQuotedString), "**", ast.NewIntegerLiteralExpression(nil, 12),
 	)
 	actual := ast.ExprToBinOpExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() || expected.GetOperator() != actual.GetOperator() {
@@ -562,7 +562,7 @@ func TestBitwiseIncOrExpression(t *testing.T) {
 		return
 	}
 	expected := ast.NewBinaryOpExpression(
-		ast.NewStringLiteralExpression("234", ast.DoubleQuotedString), "|", ast.NewIntegerLiteralExpression(12),
+		ast.NewStringLiteralExpression(nil, "234", ast.DoubleQuotedString), "|", ast.NewIntegerLiteralExpression(nil, 12),
 	)
 	actual := ast.ExprToBinOpExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() || expected.GetOperator() != actual.GetOperator() {
@@ -577,7 +577,7 @@ func TestLogicalIncOrExpression(t *testing.T) {
 		return
 	}
 	expected := ast.NewBinaryOpExpression(
-		ast.NewStringLiteralExpression("234", ast.DoubleQuotedString), "||", ast.NewIntegerLiteralExpression(12),
+		ast.NewStringLiteralExpression(nil, "234", ast.DoubleQuotedString), "||", ast.NewIntegerLiteralExpression(nil, 12),
 	)
 	actual := ast.ExprToBinOpExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() || expected.GetOperator() != actual.GetOperator() {
@@ -592,7 +592,7 @@ func TestLogicalAndExpression(t *testing.T) {
 		return
 	}
 	expected := ast.NewBinaryOpExpression(
-		ast.NewStringLiteralExpression("234", ast.DoubleQuotedString), "&&", ast.NewIntegerLiteralExpression(12),
+		ast.NewStringLiteralExpression(nil, "234", ast.DoubleQuotedString), "&&", ast.NewIntegerLiteralExpression(nil, 12),
 	)
 	actual := ast.ExprToBinOpExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() || expected.GetOperator() != actual.GetOperator() {
@@ -607,7 +607,7 @@ func TestBitwiseExcOrExpression(t *testing.T) {
 		return
 	}
 	expected := ast.NewBinaryOpExpression(
-		ast.NewStringLiteralExpression("234", ast.DoubleQuotedString), "^", ast.NewIntegerLiteralExpression(12),
+		ast.NewStringLiteralExpression(nil, "234", ast.DoubleQuotedString), "^", ast.NewIntegerLiteralExpression(nil, 12),
 	)
 	actual := ast.ExprToBinOpExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() || expected.GetOperator() != actual.GetOperator() {
@@ -622,7 +622,7 @@ func TestBitwiseAndExpression(t *testing.T) {
 		return
 	}
 	expected := ast.NewBinaryOpExpression(
-		ast.NewStringLiteralExpression("234", ast.DoubleQuotedString), "&", ast.NewIntegerLiteralExpression(12),
+		ast.NewStringLiteralExpression(nil, "234", ast.DoubleQuotedString), "&", ast.NewIntegerLiteralExpression(nil, 12),
 	)
 	actual := ast.ExprToBinOpExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() || expected.GetOperator() != actual.GetOperator() {
@@ -636,7 +636,7 @@ func TestCastExpression(t *testing.T) {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
 	}
-	expected := ast.NewCastExpression("string", ast.NewIntegerLiteralExpression(42))
+	expected := ast.NewCastExpression(nil, "string", ast.NewIntegerLiteralExpression(nil, 42))
 	actual := ast.ExprToUnaryOpExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() || expected.GetOperator() != actual.GetOperator() {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
@@ -649,7 +649,7 @@ func TestLogicalNotExpression(t *testing.T) {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
 	}
-	expected := ast.NewLogicalNotExpression(ast.NewBooleanLiteralExpression(true))
+	expected := ast.NewLogicalNotExpression(nil, ast.NewBooleanLiteralExpression(nil, true))
 	actual := ast.ExprToUnaryOpExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() || expected.GetOperator() != actual.GetOperator() {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
@@ -662,7 +662,7 @@ func TestParenthesizedExpression(t *testing.T) {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
 	}
-	expected := ast.NewBinaryOpExpression(ast.NewIntegerLiteralExpression(1), "+", ast.NewIntegerLiteralExpression(2))
+	expected := ast.NewBinaryOpExpression(ast.NewIntegerLiteralExpression(nil, 1), "+", ast.NewIntegerLiteralExpression(nil, 2))
 	actual := ast.ExprToBinOpExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() || expected.GetOperator() != actual.GetOperator() {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
@@ -675,7 +675,7 @@ func TestExitIntrinsic(t *testing.T) {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
 	}
-	expected := ast.NewExitIntrinsic(ast.NewIntegerLiteralExpression(42))
+	expected := ast.NewExitIntrinsic(nil, ast.NewIntegerLiteralExpression(nil, 42))
 	actual := ast.ExprToFuncCallExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
@@ -686,7 +686,7 @@ func TestExitIntrinsic(t *testing.T) {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
 	}
-	expected = ast.NewExitIntrinsic(nil)
+	expected = ast.NewExitIntrinsic(nil, nil)
 	actual = ast.ExprToFuncCallExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
@@ -697,7 +697,7 @@ func TestExitIntrinsic(t *testing.T) {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
 	}
-	expected = ast.NewExitIntrinsic(nil)
+	expected = ast.NewExitIntrinsic(nil, nil)
 	actual = ast.ExprToFuncCallExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
@@ -708,7 +708,7 @@ func TestExitIntrinsic(t *testing.T) {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
 	}
-	expected = ast.NewExitIntrinsic(ast.NewIntegerLiteralExpression(42))
+	expected = ast.NewExitIntrinsic(nil, ast.NewIntegerLiteralExpression(nil, 42))
 	actual = ast.ExprToFuncCallExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
@@ -719,7 +719,7 @@ func TestExitIntrinsic(t *testing.T) {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
 	}
-	expected = ast.NewExitIntrinsic(nil)
+	expected = ast.NewExitIntrinsic(nil, nil)
 	actual = ast.ExprToFuncCallExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
@@ -730,7 +730,7 @@ func TestExitIntrinsic(t *testing.T) {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
 	}
-	expected = ast.NewExitIntrinsic(nil)
+	expected = ast.NewExitIntrinsic(nil, nil)
 	actual = ast.ExprToFuncCallExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
@@ -743,7 +743,7 @@ func TestEmptyIntrinsic(t *testing.T) {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
 	}
-	expected := ast.NewEmptyIntrinsic(ast.NewBooleanLiteralExpression(false))
+	expected := ast.NewEmptyIntrinsic(nil, ast.NewBooleanLiteralExpression(nil, false))
 	actual := ast.ExprToFuncCallExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
@@ -756,7 +756,7 @@ func TestIssetIntrinsic(t *testing.T) {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
 	}
-	expected := ast.NewIssetIntrinsic([]ast.IExpression{ast.NewSimpleVariableExpression(ast.NewVariableNameExpression("$a"))})
+	expected := ast.NewIssetIntrinsic(nil, []ast.IExpression{ast.NewSimpleVariableExpression(ast.NewVariableNameExpression(nil, "$a"))})
 	actual := ast.ExprToFuncCallExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
@@ -769,7 +769,7 @@ func TestUnsetIntrinsic(t *testing.T) {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
 	}
-	expected := ast.NewUnsetIntrinsic([]ast.IExpression{ast.NewSimpleVariableExpression(ast.NewVariableNameExpression("$a"))})
+	expected := ast.NewUnsetIntrinsic(nil, []ast.IExpression{ast.NewSimpleVariableExpression(ast.NewVariableNameExpression(nil, "$a"))})
 	actual := ast.ExprToFuncCallExpr(ast.StmtToExprStatement(program.GetStatements()[0]).GetExpression())
 	if expected.String() != actual.String() {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)

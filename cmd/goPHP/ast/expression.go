@@ -1,6 +1,9 @@
 package ast
 
-import "fmt"
+import (
+	"GoPHP/cmd/goPHP/position"
+	"fmt"
+)
 
 // ------------------- MARK: Expression -------------------
 
@@ -11,10 +14,11 @@ type IExpression interface {
 type Expression struct {
 	id   int64
 	kind NodeType
+	pos  *position.Position
 }
 
-func NewExpression(kind NodeType) *Expression {
-	return &Expression{id: getNextNodeId(), kind: kind}
+func NewExpression(kind NodeType, pos *position.Position) *Expression {
+	return &Expression{id: getNextNodeId(), kind: kind, pos: pos}
 }
 
 func (stmt *Expression) GetId() int64 {
@@ -25,12 +29,16 @@ func (expr *Expression) GetKind() NodeType {
 	return expr.kind
 }
 
+func (expr *Expression) GetPosition() *position.Position {
+	return expr.pos
+}
+
 func (expr *Expression) String() string {
 	return fmt.Sprintf("{%s}", expr.GetKind())
 }
 
 func NewEmptyExpression() *Expression {
-	return NewExpression(EmptyNode)
+	return NewExpression(EmptyNode, nil)
 }
 
 // ------------------- MARK: TextExpression -------------------
@@ -46,7 +54,7 @@ type TextExpression struct {
 }
 
 func NewTextExpression(value string) *TextExpression {
-	return &TextExpression{expr: NewExpression(TextNode), value: value}
+	return &TextExpression{expr: NewExpression(TextNode, nil), value: value}
 }
 
 func (expr *TextExpression) GetId() int64 {
@@ -55,6 +63,10 @@ func (expr *TextExpression) GetId() int64 {
 
 func (expr *TextExpression) GetKind() NodeType {
 	return expr.expr.GetKind()
+}
+
+func (expr *TextExpression) GetPosition() *position.Position {
+	return expr.expr.GetPosition()
 }
 
 func (expr *TextExpression) GetValue() string {
@@ -82,8 +94,8 @@ type VariableNameExpression struct {
 	variableName string
 }
 
-func NewVariableNameExpression(variableName string) *VariableNameExpression {
-	return &VariableNameExpression{expr: NewExpression(VariableNameExpr), variableName: variableName}
+func NewVariableNameExpression(pos *position.Position, variableName string) *VariableNameExpression {
+	return &VariableNameExpression{expr: NewExpression(VariableNameExpr, pos), variableName: variableName}
 }
 
 func (expr *VariableNameExpression) GetId() int64 {
@@ -92,6 +104,10 @@ func (expr *VariableNameExpression) GetId() int64 {
 
 func (expr *VariableNameExpression) GetKind() NodeType {
 	return expr.expr.GetKind()
+}
+
+func (expr *VariableNameExpression) GetPosition() *position.Position {
+	return expr.expr.GetPosition()
 }
 
 func (expr *VariableNameExpression) GetVariableName() string {
@@ -120,7 +136,7 @@ type SimpleVariableExpression struct {
 }
 
 func NewSimpleVariableExpression(variableName IExpression) *SimpleVariableExpression {
-	return &SimpleVariableExpression{expr: NewExpression(SimpleVariableExpr), variableName: variableName}
+	return &SimpleVariableExpression{expr: NewExpression(SimpleVariableExpr, variableName.GetPosition()), variableName: variableName}
 }
 
 func (expr *SimpleVariableExpression) GetId() int64 {
@@ -129,6 +145,10 @@ func (expr *SimpleVariableExpression) GetId() int64 {
 
 func (expr *SimpleVariableExpression) GetKind() NodeType {
 	return expr.expr.GetKind()
+}
+
+func (expr *SimpleVariableExpression) GetPosition() *position.Position {
+	return expr.expr.GetPosition()
 }
 
 func (expr *SimpleVariableExpression) GetVariableName() IExpression {
@@ -159,7 +179,7 @@ type SubscriptExpression struct {
 }
 
 func NewSubscriptExpression(variable IExpression, index IExpression) *SubscriptExpression {
-	return &SubscriptExpression{expr: NewExpression(SubscriptExpr), variable: variable, index: index}
+	return &SubscriptExpression{expr: NewExpression(SubscriptExpr, variable.GetPosition()), variable: variable, index: index}
 }
 
 func (expr *SubscriptExpression) GetId() int64 {
@@ -168,6 +188,10 @@ func (expr *SubscriptExpression) GetId() int64 {
 
 func (expr *SubscriptExpression) GetKind() NodeType {
 	return expr.expr.GetKind()
+}
+
+func (expr *SubscriptExpression) GetPosition() *position.Position {
+	return expr.expr.GetPosition()
 }
 
 func (expr *SubscriptExpression) GetVariable() IExpression {
@@ -201,8 +225,8 @@ type FunctionCallExpression struct {
 	arguments    []IExpression
 }
 
-func NewFunctionCallExpression(functionName string, arguments []IExpression) *FunctionCallExpression {
-	return &FunctionCallExpression{expr: NewExpression(FunctionCallExpr), functionName: functionName, arguments: arguments}
+func NewFunctionCallExpression(pos *position.Position, functionName string, arguments []IExpression) *FunctionCallExpression {
+	return &FunctionCallExpression{expr: NewExpression(FunctionCallExpr, pos), functionName: functionName, arguments: arguments}
 }
 
 func (expr *FunctionCallExpression) GetId() int64 {
@@ -211,6 +235,10 @@ func (expr *FunctionCallExpression) GetId() int64 {
 
 func (expr *FunctionCallExpression) GetKind() NodeType {
 	return expr.expr.GetKind()
+}
+
+func (expr *FunctionCallExpression) GetPosition() *position.Position {
+	return expr.expr.GetPosition()
 }
 
 func (expr *FunctionCallExpression) GetFunctionName() string {
@@ -232,32 +260,32 @@ func ExprToFuncCallExpr(expr IExpression) IFunctionCallExpression {
 
 // ------------------- MARK: EmptyIntrinsic -------------------
 
-func NewExitIntrinsic(expression IExpression) *FunctionCallExpression {
-	return &FunctionCallExpression{expr: NewExpression(ExitIntrinsicExpr),
+func NewExitIntrinsic(pos *position.Position, expression IExpression) *FunctionCallExpression {
+	return &FunctionCallExpression{expr: NewExpression(ExitIntrinsicExpr, pos),
 		functionName: "exit", arguments: []IExpression{expression},
 	}
 }
 
 // ------------------- MARK: EmptyIntrinsic -------------------
 
-func NewEmptyIntrinsic(expression IExpression) *FunctionCallExpression {
-	return &FunctionCallExpression{expr: NewExpression(EmptyIntrinsicExpr),
+func NewEmptyIntrinsic(pos *position.Position, expression IExpression) *FunctionCallExpression {
+	return &FunctionCallExpression{expr: NewExpression(EmptyIntrinsicExpr, pos),
 		functionName: "empty", arguments: []IExpression{expression},
 	}
 }
 
 // ------------------- MARK: IssetIntrinsic -------------------
 
-func NewIssetIntrinsic(arguments []IExpression) *FunctionCallExpression {
-	return &FunctionCallExpression{expr: NewExpression(IssetIntrinsicExpr),
+func NewIssetIntrinsic(pos *position.Position, arguments []IExpression) *FunctionCallExpression {
+	return &FunctionCallExpression{expr: NewExpression(IssetIntrinsicExpr, pos),
 		functionName: "isset", arguments: arguments,
 	}
 }
 
 // ------------------- MARK: UnsetIntrinsic -------------------
 
-func NewUnsetIntrinsic(arguments []IExpression) *FunctionCallExpression {
-	return &FunctionCallExpression{expr: NewExpression(UnsetIntrinsicExpr),
+func NewUnsetIntrinsic(pos *position.Position, arguments []IExpression) *FunctionCallExpression {
+	return &FunctionCallExpression{expr: NewExpression(UnsetIntrinsicExpr, pos),
 		functionName: "unset", arguments: arguments,
 	}
 }
@@ -274,8 +302,8 @@ type ConstantAccessExpression struct {
 	constantName string
 }
 
-func NewConstantAccessExpression(constantName string) *ConstantAccessExpression {
-	return &ConstantAccessExpression{expr: NewExpression(ConstantAccessExpr), constantName: constantName}
+func NewConstantAccessExpression(pos *position.Position, constantName string) *ConstantAccessExpression {
+	return &ConstantAccessExpression{expr: NewExpression(ConstantAccessExpr, pos), constantName: constantName}
 }
 
 func (expr *ConstantAccessExpression) GetId() int64 {
@@ -284,6 +312,10 @@ func (expr *ConstantAccessExpression) GetId() int64 {
 
 func (expr *ConstantAccessExpression) GetKind() NodeType {
 	return expr.expr.GetKind()
+}
+
+func (expr *ConstantAccessExpression) GetPosition() *position.Position {
+	return expr.expr.GetPosition()
 }
 
 func (expr *ConstantAccessExpression) GetConstantName() string {
@@ -314,9 +346,9 @@ type ArrayLiteralExpression struct {
 	elements map[IExpression]IExpression
 }
 
-func NewArrayLiteralExpression() *ArrayLiteralExpression {
+func NewArrayLiteralExpression(pos *position.Position) *ArrayLiteralExpression {
 	return &ArrayLiteralExpression{
-		expr:     NewExpression(ArrayLiteralExpr),
+		expr:     NewExpression(ArrayLiteralExpr, pos),
 		keys:     []IExpression{},
 		elements: map[IExpression]IExpression{},
 	}
@@ -328,6 +360,10 @@ func (expr *ArrayLiteralExpression) GetId() int64 {
 
 func (expr *ArrayLiteralExpression) GetKind() NodeType {
 	return expr.expr.GetKind()
+}
+
+func (expr *ArrayLiteralExpression) GetPosition() *position.Position {
+	return expr.expr.GetPosition()
 }
 
 func (expr *ArrayLiteralExpression) AddElement(key IExpression, value IExpression) {
@@ -354,11 +390,11 @@ func ExprToArrayLitExpr(expr IExpression) IArrayLiteralExpression {
 
 // ------------------- MARK: BooleanLiteralExpression -------------------
 
-func NewBooleanLiteralExpression(value bool) *ConstantAccessExpression {
+func NewBooleanLiteralExpression(pos *position.Position, value bool) *ConstantAccessExpression {
 	if value {
-		return NewConstantAccessExpression("TRUE")
+		return NewConstantAccessExpression(pos, "TRUE")
 	}
-	return NewConstantAccessExpression("FALSE")
+	return NewConstantAccessExpression(pos, "FALSE")
 }
 
 // ------------------- MARK: IntegerLiteralExpression -------------------
@@ -373,8 +409,8 @@ type IntegerLiteralExpression struct {
 	value int64
 }
 
-func NewIntegerLiteralExpression(value int64) *IntegerLiteralExpression {
-	return &IntegerLiteralExpression{expr: NewExpression(IntegerLiteralExpr), value: value}
+func NewIntegerLiteralExpression(pos *position.Position, value int64) *IntegerLiteralExpression {
+	return &IntegerLiteralExpression{expr: NewExpression(IntegerLiteralExpr, pos), value: value}
 }
 
 func (expr *IntegerLiteralExpression) GetId() int64 {
@@ -383,6 +419,10 @@ func (expr *IntegerLiteralExpression) GetId() int64 {
 
 func (expr *IntegerLiteralExpression) GetKind() NodeType {
 	return expr.expr.GetKind()
+}
+
+func (expr *IntegerLiteralExpression) GetPosition() *position.Position {
+	return expr.expr.GetPosition()
 }
 
 func (expr *IntegerLiteralExpression) GetValue() int64 {
@@ -410,8 +450,8 @@ type FloatingLiteralExpression struct {
 	value float64
 }
 
-func NewFloatingLiteralExpression(value float64) *FloatingLiteralExpression {
-	return &FloatingLiteralExpression{expr: NewExpression(FloatingLiteralExpr), value: value}
+func NewFloatingLiteralExpression(pos *position.Position, value float64) *FloatingLiteralExpression {
+	return &FloatingLiteralExpression{expr: NewExpression(FloatingLiteralExpr, pos), value: value}
 }
 
 func (expr *FloatingLiteralExpression) GetId() int64 {
@@ -420,6 +460,10 @@ func (expr *FloatingLiteralExpression) GetId() int64 {
 
 func (expr *FloatingLiteralExpression) GetKind() NodeType {
 	return expr.expr.GetKind()
+}
+
+func (expr *FloatingLiteralExpression) GetPosition() *position.Position {
+	return expr.expr.GetPosition()
 }
 
 func (expr *FloatingLiteralExpression) GetValue() float64 {
@@ -456,8 +500,8 @@ type StringLiteralExpression struct {
 	value      string
 }
 
-func NewStringLiteralExpression(value string, stringType StringType) *StringLiteralExpression {
-	return &StringLiteralExpression{expr: NewExpression(StringLiteralExpr), value: value, stringType: stringType}
+func NewStringLiteralExpression(pos *position.Position, value string, stringType StringType) *StringLiteralExpression {
+	return &StringLiteralExpression{expr: NewExpression(StringLiteralExpr, pos), value: value, stringType: stringType}
 }
 
 func (expr *StringLiteralExpression) GetId() int64 {
@@ -466,6 +510,10 @@ func (expr *StringLiteralExpression) GetId() int64 {
 
 func (expr *StringLiteralExpression) GetKind() NodeType {
 	return expr.expr.GetKind()
+}
+
+func (expr *StringLiteralExpression) GetPosition() *position.Position {
+	return expr.expr.GetPosition()
 }
 
 func (expr *StringLiteralExpression) GetStringType() StringType {
@@ -487,8 +535,8 @@ func ExprToStrLitExpr(expr IExpression) IStringLiteralExpression {
 
 // ------------------- MARK: NullLiteralExpression -------------------
 
-func NewNullLiteralExpression() *ConstantAccessExpression {
-	return NewConstantAccessExpression("NULL")
+func NewNullLiteralExpression(pos *position.Position) *ConstantAccessExpression {
+	return NewConstantAccessExpression(pos, "NULL")
 }
 
 // ------------------- MARK: SimpleAssignmentExpression -------------------
@@ -506,7 +554,7 @@ type SimpleAssignmentExpression struct {
 }
 
 func NewSimpleAssignmentExpression(variable IExpression, value IExpression) *SimpleAssignmentExpression {
-	return &SimpleAssignmentExpression{expr: NewExpression(SimpleAssignmentExpr), variable: variable, value: value}
+	return &SimpleAssignmentExpression{expr: NewExpression(SimpleAssignmentExpr, variable.GetPosition()), variable: variable, value: value}
 }
 
 func (expr *SimpleAssignmentExpression) GetId() int64 {
@@ -515,6 +563,10 @@ func (expr *SimpleAssignmentExpression) GetId() int64 {
 
 func (expr *SimpleAssignmentExpression) GetKind() NodeType {
 	return expr.expr.GetKind()
+}
+
+func (expr *SimpleAssignmentExpression) GetPosition() *position.Position {
+	return expr.expr.GetPosition()
 }
 
 func (expr *SimpleAssignmentExpression) GetVariable() IExpression {
@@ -552,7 +604,7 @@ type CompoundAssignmentExpression struct {
 
 func NewCompoundAssignmentExpression(variable IExpression, operator string, value IExpression) *CompoundAssignmentExpression {
 	return &CompoundAssignmentExpression{
-		expr: NewExpression(CompoundAssignmentExpr), variable: variable, operator: operator, value: value,
+		expr: NewExpression(CompoundAssignmentExpr, variable.GetPosition()), variable: variable, operator: operator, value: value,
 	}
 }
 
@@ -562,6 +614,10 @@ func (expr *CompoundAssignmentExpression) GetId() int64 {
 
 func (expr *CompoundAssignmentExpression) GetKind() NodeType {
 	return expr.expr.GetKind()
+}
+
+func (expr *CompoundAssignmentExpression) GetPosition() *position.Position {
+	return expr.expr.GetPosition()
 }
 
 func (expr *CompoundAssignmentExpression) GetVariable() IExpression {
@@ -605,7 +661,7 @@ type ConditionalExpression struct {
 }
 
 func NewConditionalExpression(cond IExpression, ifExpr IExpression, elseExpr IExpression) *ConditionalExpression {
-	return &ConditionalExpression{expr: NewExpression(ConditionalExpr), cond: cond, ifExpr: ifExpr, elseExpr: elseExpr}
+	return &ConditionalExpression{expr: NewExpression(ConditionalExpr, cond.GetPosition()), cond: cond, ifExpr: ifExpr, elseExpr: elseExpr}
 }
 
 func (expr *ConditionalExpression) GetId() int64 {
@@ -614,6 +670,10 @@ func (expr *ConditionalExpression) GetId() int64 {
 
 func (expr *ConditionalExpression) GetKind() NodeType {
 	return expr.expr.GetKind()
+}
+
+func (expr *ConditionalExpression) GetPosition() *position.Position {
+	return expr.expr.GetPosition()
 }
 
 func (expr *ConditionalExpression) GetCondition() IExpression {
@@ -652,7 +712,7 @@ type CoalesceExpression struct {
 }
 
 func NewCoalesceExpression(cond IExpression, elseExpr IExpression) *CoalesceExpression {
-	return &CoalesceExpression{expr: NewExpression(CoalesceExpr), cond: cond, elseExpr: elseExpr}
+	return &CoalesceExpression{expr: NewExpression(CoalesceExpr, cond.GetPosition()), cond: cond, elseExpr: elseExpr}
 }
 
 func (expr *CoalesceExpression) GetId() int64 {
@@ -661,6 +721,10 @@ func (expr *CoalesceExpression) GetId() int64 {
 
 func (expr *CoalesceExpression) GetKind() NodeType {
 	return expr.expr.GetKind()
+}
+
+func (expr *CoalesceExpression) GetPosition() *position.Position {
+	return expr.expr.GetPosition()
 }
 
 func (expr *CoalesceExpression) GetCondition() IExpression {
@@ -697,15 +761,15 @@ type BinaryOpExpression struct {
 }
 
 func NewRelationalExpression(lhs IExpression, operator string, rhs IExpression) *BinaryOpExpression {
-	return &BinaryOpExpression{expr: NewExpression(RelationalExpr), lhs: lhs, operator: operator, rhs: rhs}
+	return &BinaryOpExpression{expr: NewExpression(RelationalExpr, lhs.GetPosition()), lhs: lhs, operator: operator, rhs: rhs}
 }
 
 func NewEqualityExpression(lhs IExpression, operator string, rhs IExpression) *BinaryOpExpression {
-	return &BinaryOpExpression{expr: NewExpression(EqualityExpr), lhs: lhs, operator: operator, rhs: rhs}
+	return &BinaryOpExpression{expr: NewExpression(EqualityExpr, lhs.GetPosition()), lhs: lhs, operator: operator, rhs: rhs}
 }
 
 func NewBinaryOpExpression(lhs IExpression, operator string, rhs IExpression) *BinaryOpExpression {
-	return &BinaryOpExpression{expr: NewExpression(BinaryOpExpr), lhs: lhs, operator: operator, rhs: rhs}
+	return &BinaryOpExpression{expr: NewExpression(BinaryOpExpr, lhs.GetPosition()), lhs: lhs, operator: operator, rhs: rhs}
 }
 
 func (expr *BinaryOpExpression) GetId() int64 {
@@ -714,6 +778,10 @@ func (expr *BinaryOpExpression) GetId() int64 {
 
 func (expr *BinaryOpExpression) GetKind() NodeType {
 	return expr.expr.GetKind()
+}
+
+func (expr *BinaryOpExpression) GetPosition() *position.Position {
+	return expr.expr.GetPosition()
 }
 
 func (expr *BinaryOpExpression) GetLHS() IExpression {
@@ -751,24 +819,24 @@ type UnaryOpExpression struct {
 	expression IExpression
 }
 
-func NewPrefixIncExpression(expression IExpression, operator string) *UnaryOpExpression {
-	return &UnaryOpExpression{expr: NewExpression(PrefixIncExpr), operator: operator, expression: expression}
+func NewPrefixIncExpression(pos *position.Position, expression IExpression, operator string) *UnaryOpExpression {
+	return &UnaryOpExpression{expr: NewExpression(PrefixIncExpr, pos), operator: operator, expression: expression}
 }
 
-func NewPostfixIncExpression(expression IExpression, operator string) *UnaryOpExpression {
-	return &UnaryOpExpression{expr: NewExpression(PostfixIncExpr), operator: operator, expression: expression}
+func NewPostfixIncExpression(pos *position.Position, expression IExpression, operator string) *UnaryOpExpression {
+	return &UnaryOpExpression{expr: NewExpression(PostfixIncExpr, pos), operator: operator, expression: expression}
 }
 
-func NewLogicalNotExpression(expression IExpression) *UnaryOpExpression {
-	return &UnaryOpExpression{expr: NewExpression(LogicalNotExpr), operator: "!", expression: expression}
+func NewLogicalNotExpression(pos *position.Position, expression IExpression) *UnaryOpExpression {
+	return &UnaryOpExpression{expr: NewExpression(LogicalNotExpr, pos), operator: "!", expression: expression}
 }
 
-func NewCastExpression(castType string, expression IExpression) *UnaryOpExpression {
-	return &UnaryOpExpression{expr: NewExpression(CastExpr), operator: castType, expression: expression}
+func NewCastExpression(pos *position.Position, castType string, expression IExpression) *UnaryOpExpression {
+	return &UnaryOpExpression{expr: NewExpression(CastExpr, pos), operator: castType, expression: expression}
 }
 
-func NewUnaryOpExpression(operator string, expression IExpression) *UnaryOpExpression {
-	return &UnaryOpExpression{expr: NewExpression(UnaryOpExpr), operator: operator, expression: expression}
+func NewUnaryOpExpression(pos *position.Position, operator string, expression IExpression) *UnaryOpExpression {
+	return &UnaryOpExpression{expr: NewExpression(UnaryOpExpr, pos), operator: operator, expression: expression}
 }
 
 func (expr *UnaryOpExpression) GetId() int64 {
@@ -777,6 +845,10 @@ func (expr *UnaryOpExpression) GetId() int64 {
 
 func (expr *UnaryOpExpression) GetKind() NodeType {
 	return expr.expr.GetKind()
+}
+
+func (expr *UnaryOpExpression) GetPosition() *position.Position {
+	return expr.expr.GetPosition()
 }
 
 func (expr *UnaryOpExpression) GetOperator() string {

@@ -1,22 +1,27 @@
 package ast
 
-import "fmt"
+import (
+	"GoPHP/cmd/goPHP/position"
+	"fmt"
+)
 
 // ------------------- MARK: Statement -------------------
 
 type IStatement interface {
 	GetId() int64
 	GetKind() NodeType
+	GetPosition() *position.Position
 	String() string
 }
 
 type Statement struct {
 	id   int64
 	kind NodeType
+	pos  *position.Position
 }
 
-func NewStatement(kind NodeType) *Statement {
-	return &Statement{id: getNextNodeId(), kind: kind}
+func NewStatement(kind NodeType, pos *position.Position) *Statement {
+	return &Statement{id: getNextNodeId(), kind: kind, pos: pos}
 }
 
 func (stmt *Statement) GetId() int64 {
@@ -25,6 +30,10 @@ func (stmt *Statement) GetId() int64 {
 
 func (stmt *Statement) GetKind() NodeType {
 	return stmt.kind
+}
+
+func (stmt *Statement) GetPosition() *position.Position {
+	return stmt.pos
 }
 
 func (stmt *Statement) String() string {
@@ -58,8 +67,8 @@ type FunctionDefinitionStatement struct {
 	returnType   []string
 }
 
-func NewFunctionDefinitionStatement(functionName string, params []FunctionParameter, body ICompoundStatement, returnType []string) *FunctionDefinitionStatement {
-	return &FunctionDefinitionStatement{stmt: NewStatement(FunctionDefinitionStmt),
+func NewFunctionDefinitionStatement(pos *position.Position, functionName string, params []FunctionParameter, body ICompoundStatement, returnType []string) *FunctionDefinitionStatement {
+	return &FunctionDefinitionStatement{stmt: NewStatement(FunctionDefinitionStmt, pos),
 		functionName: functionName, params: params, body: body, returnType: returnType,
 	}
 }
@@ -70,6 +79,10 @@ func (stmt *FunctionDefinitionStatement) GetId() int64 {
 
 func (stmt *FunctionDefinitionStatement) GetKind() NodeType {
 	return stmt.stmt.GetKind()
+}
+
+func (stmt *FunctionDefinitionStatement) GetPosition() *position.Position {
+	return stmt.stmt.GetPosition()
 }
 
 func (stmt *FunctionDefinitionStatement) GetFunctionName() string {
@@ -117,8 +130,8 @@ type IfStatement struct {
 	elseBlock IStatement
 }
 
-func NewIfStatement(condition IExpression, ifBlock IStatement, elseIf []IIfStatement, elseBlock IStatement) *IfStatement {
-	return &IfStatement{stmt: NewStatement(IfStmt), condition: condition, ifBlock: ifBlock, elseIf: elseIf, elseBlock: elseBlock}
+func NewIfStatement(pos *position.Position, condition IExpression, ifBlock IStatement, elseIf []IIfStatement, elseBlock IStatement) *IfStatement {
+	return &IfStatement{stmt: NewStatement(IfStmt, pos), condition: condition, ifBlock: ifBlock, elseIf: elseIf, elseBlock: elseBlock}
 }
 
 func (stmt *IfStatement) GetId() int64 {
@@ -127,6 +140,10 @@ func (stmt *IfStatement) GetId() int64 {
 
 func (stmt *IfStatement) GetKind() NodeType {
 	return stmt.stmt.GetKind()
+}
+
+func (stmt *IfStatement) GetPosition() *position.Position {
+	return stmt.stmt.GetPosition()
 }
 
 func (stmt *IfStatement) GetCondition() IExpression {
@@ -168,7 +185,7 @@ type CompoundStatement struct {
 }
 
 func NewCompoundStatement(statements []IStatement) *CompoundStatement {
-	return &CompoundStatement{stmt: NewStatement(CompoundStmt), statements: statements}
+	return &CompoundStatement{stmt: NewStatement(CompoundStmt, nil), statements: statements}
 }
 
 func (stmt *CompoundStatement) GetId() int64 {
@@ -177,6 +194,10 @@ func (stmt *CompoundStatement) GetId() int64 {
 
 func (stmt *CompoundStatement) GetKind() NodeType {
 	return stmt.stmt.GetKind()
+}
+
+func (stmt *CompoundStatement) GetPosition() *position.Position {
+	return stmt.stmt.GetPosition()
 }
 
 func (stmt *CompoundStatement) GetStatements() []IStatement {
@@ -204,8 +225,8 @@ type EchoStatement struct {
 	expressions []IExpression
 }
 
-func NewEchoStatement(expressions []IExpression) *EchoStatement {
-	return &EchoStatement{stmt: NewStatement(EchoStmt), expressions: expressions}
+func NewEchoStatement(pos *position.Position, expressions []IExpression) *EchoStatement {
+	return &EchoStatement{stmt: NewStatement(EchoStmt, pos), expressions: expressions}
 }
 
 func (stmt *EchoStatement) GetId() int64 {
@@ -214,6 +235,10 @@ func (stmt *EchoStatement) GetId() int64 {
 
 func (stmt *EchoStatement) GetKind() NodeType {
 	return stmt.stmt.GetKind()
+}
+
+func (stmt *EchoStatement) GetPosition() *position.Position {
+	return stmt.stmt.GetPosition()
 }
 
 func (stmt *EchoStatement) GetExpressions() []IExpression {
@@ -243,8 +268,8 @@ type ConstDeclarationStatement struct {
 	value IExpression
 }
 
-func NewConstDeclarationStatement(name string, value IExpression) *ConstDeclarationStatement {
-	return &ConstDeclarationStatement{stmt: NewStatement(ConstDeclarationStmt), name: name, value: value}
+func NewConstDeclarationStatement(pos *position.Position, name string, value IExpression) *ConstDeclarationStatement {
+	return &ConstDeclarationStatement{stmt: NewStatement(ConstDeclarationStmt, pos), name: name, value: value}
 }
 
 func (stmt *ConstDeclarationStatement) GetId() int64 {
@@ -253,6 +278,10 @@ func (stmt *ConstDeclarationStatement) GetId() int64 {
 
 func (stmt *ConstDeclarationStatement) GetKind() NodeType {
 	return stmt.stmt.GetKind()
+}
+
+func (stmt *ConstDeclarationStatement) GetPosition() *position.Position {
+	return stmt.stmt.GetPosition()
 }
 
 func (stmt *ConstDeclarationStatement) GetName() string {
@@ -284,12 +313,12 @@ type ExpressionStatement struct {
 	expr IExpression
 }
 
-func NewReturnStatement(expr IExpression) *ExpressionStatement {
-	return &ExpressionStatement{stmt: NewStatement(ReturnStmt), expr: expr}
+func NewReturnStatement(pos *position.Position, expr IExpression) *ExpressionStatement {
+	return &ExpressionStatement{stmt: NewStatement(ReturnStmt, pos), expr: expr}
 }
 
 func NewExpressionStatement(expr IExpression) *ExpressionStatement {
-	return &ExpressionStatement{stmt: NewStatement(ExpressionStmt), expr: expr}
+	return &ExpressionStatement{stmt: NewStatement(ExpressionStmt, expr.GetPosition()), expr: expr}
 }
 
 func (stmt *ExpressionStatement) GetId() int64 {
@@ -298,6 +327,10 @@ func (stmt *ExpressionStatement) GetId() int64 {
 
 func (stmt *ExpressionStatement) GetKind() NodeType {
 	return stmt.stmt.GetKind()
+}
+
+func (stmt *ExpressionStatement) GetPosition() *position.Position {
+	return stmt.stmt.GetPosition()
 }
 
 func (stmt *ExpressionStatement) GetExpression() IExpression {
