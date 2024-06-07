@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"regexp"
 	"strconv"
+	"strings"
 )
 
 // ------------------- MARK: Integer -------------------
@@ -121,6 +122,29 @@ func IsIntegerLiteral(str string) bool {
 	return IsDecimalLiteral(str) || IsOctalLiteral(str) || IsHexadecimalLiteral(str) || IsBinaryLiteral(str)
 }
 
+func IsIntegerLiteralWithSign(str string) bool {
+	if strings.HasPrefix(str, "-") || strings.HasPrefix(str, "+") {
+		str = str[1:]
+	}
+	return IsIntegerLiteral(str)
+}
+
+func IntegerLiteralToInt64WithSign(str string) (int64, error) {
+	isNegative := strings.HasPrefix(str, "-")
+	if strings.HasPrefix(str, "+") || strings.HasPrefix(str, "-") {
+		str = str[1:]
+	}
+
+	result, err := IntegerLiteralToInt64(str)
+	if err != nil {
+		return 0, err
+	}
+	if isNegative {
+		result = -result
+	}
+	return result, nil
+}
+
 func IntegerLiteralToInt64(str string) (int64, error) {
 	// decimal-literal
 	if IsDecimalLiteral(str) {
@@ -180,7 +204,27 @@ func IsFloatingLiteral(str string) bool {
 	return match
 }
 
+func IsFloatingLiteralWithSign(str string) bool {
+	if strings.HasPrefix(str, "-") || strings.HasPrefix(str, "+") {
+		str = str[1:]
+	}
+	return IsFloatingLiteral(str)
+}
+
 func FloatingLiteralToFloat64(str string) float64 {
 	float, _ := strconv.ParseFloat(str, 64)
 	return float
+}
+
+func FloatingLiteralToFloat64WithSign(str string) float64 {
+	isNegative := strings.HasPrefix(str, "-")
+	if strings.HasPrefix(str, "+") || strings.HasPrefix(str, "-") {
+		str = str[1:]
+	}
+
+	result := FloatingLiteralToFloat64(str)
+	if isNegative {
+		result = -result
+	}
+	return result
 }

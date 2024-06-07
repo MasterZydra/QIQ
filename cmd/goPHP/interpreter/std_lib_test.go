@@ -164,9 +164,11 @@ func TestLibIntval(t *testing.T) {
 	doTest(NewFloatingRuntimeValue(-2.0), -2)
 
 	// string to integer
-	// doTest(NewStringRuntimeValue(""), false)
-	// doTest(NewStringRuntimeValue("0"), false)
-	// doTest(NewStringRuntimeValue("Hi"), true)
+	doTest(NewStringRuntimeValue(""), 0)
+	doTest(NewStringRuntimeValue("0"), 0)
+	doTest(NewStringRuntimeValue("1"), 1)
+	doTest(NewStringRuntimeValue("42"), 42)
+	doTest(NewStringRuntimeValue("Hi"), 0)
 
 	// null to integer
 	doTest(NewNullRuntimeValue(), 0)

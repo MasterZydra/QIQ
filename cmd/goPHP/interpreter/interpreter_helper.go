@@ -2,6 +2,7 @@ package interpreter
 
 import (
 	"GoPHP/cmd/goPHP/ast"
+	"GoPHP/cmd/goPHP/common"
 	"math"
 	"regexp"
 	"runtime"
@@ -853,11 +854,34 @@ func compareRelationFloating(lhs IFloatingRuntimeValue, operator string, rhs IRu
 	//        NULL  bool  int  float  string  array  object  resource
 	// float   <-    ->    2    2      <-      <      3       <-
 
-	// TODO compareRelationFloating - string
 	// TODO compareRelationFloating - object
 	// TODO compareRelationFloating - resource
 
-	if rhs.GetType() == NullValue || rhs.GetType() == IntegerValue {
+	if rhs.GetType() == StringValue {
+		rhsStr := runtimeValToStrRuntimeVal(rhs).GetValue()
+		if strings.Trim(rhsStr, " \t") == "" {
+			switch operator {
+			case "<", "<=":
+				return NewBooleanRuntimeValue(false), nil
+			case "<=>":
+				return NewIntegerRuntimeValue(1), nil
+			default:
+				return NewVoidRuntimeValue(), NewError("compareRelationFloating: Operator \"%s\" not implemented for type string", operator)
+			}
+		}
+		if !common.IsIntegerLiteralWithSign(rhsStr) && !common.IsFloatingLiteralWithSign(rhsStr) {
+			switch operator {
+			case "<", "<=":
+				return NewBooleanRuntimeValue(true), nil
+			case "<=>":
+				return NewIntegerRuntimeValue(-1), nil
+			default:
+				return NewVoidRuntimeValue(), NewError("compareRelationFloating: Operator \"%s\" not implemented for type string", operator)
+			}
+		}
+	}
+
+	if rhs.GetType() == NullValue || rhs.GetType() == IntegerValue || rhs.GetType() == StringValue {
 		var err Error
 		rhs, err = runtimeValueToValueType(FloatingValue, rhs)
 		if err != nil {
@@ -873,7 +897,7 @@ func compareRelationFloating(lhs IFloatingRuntimeValue, operator string, rhs IRu
 		case "<=>":
 			return NewIntegerRuntimeValue(-1), nil
 		default:
-			return NewVoidRuntimeValue(), NewError("compareRelationArray: Operator \"%s\" not implemented", operator)
+			return NewVoidRuntimeValue(), NewError("compareRelationFloating: Operator \"%s\" not implemented for type array", operator)
 		}
 
 	case BooleanValue:
@@ -914,11 +938,34 @@ func compareRelationInteger(lhs IIntegerRuntimeValue, operator string, rhs IRunt
 	//      NULL  bool  int  float  string  array  object  resource
 	// int   <-    ->    2    2      <-      <      3       <-
 
-	// TODO compareRelationInteger - string
 	// TODO compareRelationInteger - object
 	// TODO compareRelationInteger - resource
 
-	if rhs.GetType() == NullValue {
+	if rhs.GetType() == StringValue {
+		rhsStr := runtimeValToStrRuntimeVal(rhs).GetValue()
+		if strings.Trim(rhsStr, " \t") == "" {
+			switch operator {
+			case "<", "<=":
+				return NewBooleanRuntimeValue(false), nil
+			case "<=>":
+				return NewIntegerRuntimeValue(1), nil
+			default:
+				return NewVoidRuntimeValue(), NewError("compareRelationInteger: Operator \"%s\" not implemented for type array", operator)
+			}
+		}
+		if !common.IsIntegerLiteralWithSign(rhsStr) && !common.IsFloatingLiteralWithSign(rhsStr) {
+			switch operator {
+			case "<", "<=":
+				return NewBooleanRuntimeValue(true), nil
+			case "<=>":
+				return NewIntegerRuntimeValue(-1), nil
+			default:
+				return NewVoidRuntimeValue(), NewError("compareRelationInteger: Operator \"%s\" not implemented for type array", operator)
+			}
+		}
+	}
+
+	if rhs.GetType() == NullValue || rhs.GetType() == StringValue {
 		var err Error
 		rhs, err = runtimeValueToValueType(IntegerValue, rhs)
 		if err != nil {
@@ -1045,11 +1092,32 @@ func compareRelationString(lhs IStringRuntimeValue, operator string, rhs IRuntim
 	//         NULL  bool  int  float  string  array  object  resource
 	// string   <-    ->    ->   ->     2, 4    <      3       2
 
-	// TODO compareRelationString - int
-	// TODO compareRelationString - float
-	// TODO compareRelationString - string
 	// TODO compareRelationString - object
 	// TODO compareRelationString - resource
+
+	if rhs.GetType() == FloatingValue || rhs.GetType() == IntegerValue {
+		lhsStr := runtimeValToStrRuntimeVal(lhs).GetValue()
+		if strings.Trim(lhsStr, " \t") == "" {
+			switch operator {
+			case "<", "<=":
+				return NewBooleanRuntimeValue(true), nil
+			case "<=>":
+				return NewIntegerRuntimeValue(-1), nil
+			default:
+				return NewVoidRuntimeValue(), NewError("compareRelationInteger: Operator \"%s\" not implemented for type array", operator)
+			}
+		}
+		if !common.IsIntegerLiteralWithSign(lhsStr) && !common.IsFloatingLiteralWithSign(lhsStr) {
+			switch operator {
+			case "<", "<=":
+				return NewBooleanRuntimeValue(false), nil
+			case "<=>":
+				return NewIntegerRuntimeValue(1), nil
+			default:
+				return NewVoidRuntimeValue(), NewError("compareRelationInteger: Operator \"%s\" not implemented for type array", operator)
+			}
+		}
+	}
 
 	if rhs.GetType() == NullValue {
 		var err Error
@@ -1077,6 +1145,79 @@ func compareRelationString(lhs IStringRuntimeValue, operator string, rhs IRuntim
 		}
 		return compareRelationBoolean(NewBooleanRuntimeValue(lhs), operator, rhs)
 
+	case FloatingValue:
+		lhs, err := lib_floatval(lhs)
+		if err != nil {
+			return NewVoidRuntimeValue(), err
+		}
+		return compareRelationFloating(NewFloatingRuntimeValue(lhs), operator, rhs)
+
+	case IntegerValue:
+		lhs, err := lib_intval(lhs)
+		if err != nil {
+			return NewVoidRuntimeValue(), err
+		}
+		return compareRelationInteger(NewIntegerRuntimeValue(lhs), operator, rhs)
+
+	case StringValue:
+		// Spec: https://phplang.org/spec/10-expressions.html#grammar-relational-expression
+		//   2. If one of the operands [...] is a [...] numeric string,
+		//      which can be represented as int or float without loss of precision,
+		//      the operands are converted to the corresponding arithmetic type, with float taking precedence over int,
+		//      and resources converting to int. The result is the numerical comparison of the two operands after conversion.
+		rhsStr := runtimeValToStrRuntimeVal(rhs).GetValue()
+		if common.IsFloatingLiteralWithSign(lhs.GetValue()) && (common.IsIntegerLiteralWithSign(rhsStr) || common.IsFloatingLiteralWithSign(rhsStr)) {
+			lhs, err := lib_floatval(lhs)
+			if err != nil {
+				return NewVoidRuntimeValue(), err
+			}
+			return compareRelationFloating(NewFloatingRuntimeValue(lhs), operator, rhs)
+		}
+		if common.IsIntegerLiteralWithSign(lhs.GetValue()) && (common.IsIntegerLiteralWithSign(rhsStr) || common.IsFloatingLiteralWithSign(rhsStr)) {
+			lhs, err := lib_intval(lhs)
+			if err != nil {
+				return NewVoidRuntimeValue(), err
+			}
+			return compareRelationInteger(NewIntegerRuntimeValue(lhs), operator, rhs)
+		}
+
+		// Spec: https://phplang.org/spec/10-expressions.html#grammar-relational-expression
+		//   4. If both operands are non-numeric strings, the result is the lexical comparison of the two operands.
+		//      Specifically, the strings are compared byte-by-byte starting with their first byte.
+		//      If the two bytes compare equal and there are no more bytes in either string, the strings are equal and the comparison ends;
+		//      otherwise, if this is the final byte in one string, the shorter string compares less-than the longer string and the comparison ends.
+		//      If the two bytes compare unequal, the string having the lower-valued byte compares less-than the other string, and the comparison ends.
+		//      If there are more bytes in the strings, the process is repeated for the next pair of bytes.
+		var result int64 = 0
+		for index, lhsByte := range []byte(lhs.GetValue()) {
+			if index >= len(rhsStr) {
+				result = 1
+				break
+			}
+			rhsByte := rhsStr[index]
+			if lhsByte > rhsByte {
+				result = 1
+				break
+			}
+			if lhsByte < rhsByte {
+				result = -1
+				break
+			}
+		}
+		if result == 0 && len(lhs.GetValue()) < len(rhsStr) {
+			result = -1
+		}
+		switch operator {
+		case "<":
+			return NewBooleanRuntimeValue(result == -1), nil
+		case "<=":
+			return NewBooleanRuntimeValue(result < 1), nil
+		case "<=>":
+			return NewIntegerRuntimeValue(result), nil
+		default:
+			return NewVoidRuntimeValue(), NewError("compareRelationString: Operator \"%s\" not implemented", operator)
+		}
+
 	default:
 		return NewVoidRuntimeValue(), NewError("compareRelationString: Type \"%s\" not implemented", rhs.GetType())
 	}
@@ -1097,10 +1238,26 @@ func compareRelationString(lhs IStringRuntimeValue, operator string, rhs IRuntim
 func compare(lhs IRuntimeValue, operator string, rhs IRuntimeValue) (IBooleanRuntimeValue, Error) {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-equality-expression
 
-	// TODO compare - "==", "!=", "<>"
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-equality-expression
 	// Operator == represents value equality, operators != and <> are equivalent and represent value inequality.
-	// For operators ==, !=, and <>, the operands of different types are converted and compared according to the same rules as in relational operators. Two objects of different types are always not equal.
+	// For operators ==, !=, and <>, the operands of different types are converted and compared according to the same rules as in relational operators.
+	// Two objects of different types are always not equal.
+	if operator == "<>" {
+		operator = "!="
+	}
+	if operator == "==" || operator == "!=" {
+		resultRuntimeValue, err := compareRelation(lhs, "<=>", rhs)
+		if err != nil {
+			return NewBooleanRuntimeValue(false), err
+		}
+		result := runtimeValToIntRuntimeVal(resultRuntimeValue).GetValue() == 0
+
+		if operator == "!=" {
+			return NewBooleanRuntimeValue(!result), nil
+		} else {
+			return NewBooleanRuntimeValue(result), nil
+		}
+	}
 
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-equality-expression
 	// Operator === represents same type and value equality, or identity, comparison,
@@ -1114,6 +1271,29 @@ func compare(lhs IRuntimeValue, operator string, rhs IRuntimeValue) (IBooleanRun
 		result := lhs.GetType() == rhs.GetType()
 		if result {
 			switch lhs.GetType() {
+			case ArrayValue:
+				lhsArray := runtimeValToArrayRuntimeVal(lhs)
+				rhsArray := runtimeValToArrayRuntimeVal(rhs)
+				if len(lhsArray.GetKeys()) != len(rhsArray.GetKeys()) {
+					result = false
+				} else {
+					for key, lhsValue := range lhsArray.GetElements() {
+						rhsValue, found := rhsArray.GetElement(key)
+						if !found {
+							result = false
+							break
+						}
+						equal, err := compare(lhsValue, "===", rhsValue)
+						if err != nil {
+							return NewBooleanRuntimeValue(false), err
+						}
+						if !runtimeValToBoolRuntimeVal(equal).GetValue() {
+							result = false
+							break
+						}
+					}
+					result = true
+				}
 			case BooleanValue:
 				result = runtimeValToBoolRuntimeVal(lhs).GetValue() == runtimeValToBoolRuntimeVal(rhs).GetValue()
 			case FloatingValue:

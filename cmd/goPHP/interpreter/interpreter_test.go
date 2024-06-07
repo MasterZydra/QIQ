@@ -240,6 +240,208 @@ func TestCalculation(t *testing.T) {
 	testInputOutput(t, `<?php $a = "a"; echo $a .= "bc";`, "abc")
 }
 
+func TestLooseComparisons(t *testing.T) {
+	// Table from https://www.php.net/manual/en/types.comparisons.php
+	// true
+	testInputOutput(t, `<?php var_dump(true == true);`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump(true == false);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(true == 1);`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump(true == 0);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(true == -1);`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump(true == "1");`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump(true == "0");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(true == "-1");`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump(true == null);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(true == []);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(true == "php");`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump(true == "");`, "bool(false)\n")
+	// false
+	testInputOutput(t, `<?php var_dump(false == false);`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump(false == 1);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(false == 0);`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump(false == -1);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(false == "1");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(false == "0");`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump(false == "-1");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(false == null);`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump(false == []);`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump(false == "php");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(false == "");`, "bool(true)\n")
+	// 1
+	testInputOutput(t, `<?php var_dump(1 == 1);`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump(1 == 0);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(1 == -1);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(1 == "1");`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump(1 == "0");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(1 == "-1");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(1 == null);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(1 == []);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(1 == "php");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(1 == "");`, "bool(false)\n")
+	// 0
+	testInputOutput(t, `<?php var_dump(0 == 0);`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump(0 == -1);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(0 == "1");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(0 == "0");`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump(0 == "-1");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(0 == null);`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump(0 == []);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(0 == "php");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(0 == "");`, "bool(false)\n")
+	// -1
+	testInputOutput(t, `<?php var_dump(-1 == -1);`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump(-1 == "1");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(-1 == "0");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(-1 == "-1");`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump(-1 == null);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(-1 == []);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(-1 == "php");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(-1 == "");`, "bool(false)\n")
+	// "1"
+	testInputOutput(t, `<?php var_dump("1" == "1");`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump("1" == "0");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump("1" == "-1");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump("1" == null);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump("1" == []);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump("1" == "php");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump("1" == "");`, "bool(false)\n")
+	// "0"
+	testInputOutput(t, `<?php var_dump("0" == "0");`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump("0" == "-1");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump("0" == null);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump("0" == []);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump("0" == "php");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump("0" == "");`, "bool(false)\n")
+	// "-1"
+	testInputOutput(t, `<?php var_dump("-1" == "-1");`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump("-1" == null);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump("-1" == []);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump("-1" == "php");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump("-1" == "");`, "bool(false)\n")
+	// null
+	testInputOutput(t, `<?php var_dump(null == null);`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump(null == []);`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump(null == "php");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(null == "");`, "bool(true)\n")
+	// []
+	testInputOutput(t, `<?php var_dump([] == []);`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump([] == "php");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump([] == "");`, "bool(false)\n")
+	// "php"
+	testInputOutput(t, `<?php var_dump("php" == "php");`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump("php" == "");`, "bool(false)\n")
+	// ""
+	testInputOutput(t, `<?php var_dump("" == "");`, "bool(true)\n")
+
+	// Warning-Box from https://www.php.net/manual/en/language.operators.comparison.php
+	testInputOutput(t, `<?php var_dump(0 == "a");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump("a" == 0);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump("1" == "01a");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump("01a" == "1");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(1 == "1a");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump("1a" == 1);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump("1" == "01");`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump("01" == "1");`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump("10" == "1e1");`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump("1e1" == "10");`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump(100 == "1e2");`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump(1e2 == "100");`, "bool(true)\n")
+}
+
+func TestStrictComparisons(t *testing.T) {
+	// Table from https://www.php.net/manual/en/types.comparisons.php
+	// true
+	testInputOutput(t, `<?php var_dump(true === true);`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump(true === false);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(true === 1);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(true === 0);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(true === -1);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(true === "1");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(true === "0");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(true === "-1");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(true === null);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(true === []);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(true === "php");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(true === "");`, "bool(false)\n")
+	// false
+	testInputOutput(t, `<?php var_dump(false === false);`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump(false === 1);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(false === 0);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(false === -1);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(false === "1");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(false === "0");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(false === "-1");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(false === null);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(false === []);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(false === "php");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(false === "");`, "bool(false)\n")
+	// 1
+	testInputOutput(t, `<?php var_dump(1 === 1);`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump(1 === 0);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(1 === -1);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(1 === "1");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(1 === "0");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(1 === "-1");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(1 === null);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(1 === []);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(1 === "php");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(1 === "");`, "bool(false)\n")
+	// 0
+	testInputOutput(t, `<?php var_dump(0 === 0);`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump(0 === -1);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(0 === "1");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(0 === "0");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(0 === "-1");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(0 === null);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(0 === []);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(0 === "php");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(0 === "");`, "bool(false)\n")
+	// -1
+	testInputOutput(t, `<?php var_dump(-1 === -1);`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump(-1 === "1");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(-1 === "0");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(-1 === "-1");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(-1 === null);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(-1 === []);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(-1 === "php");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(-1 === "");`, "bool(false)\n")
+	// "1"
+	testInputOutput(t, `<?php var_dump("1" === "1");`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump("1" === "0");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump("1" === "-1");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump("1" === null);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump("1" === []);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump("1" === "php");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump("1" === "");`, "bool(false)\n")
+	// "0"
+	testInputOutput(t, `<?php var_dump("0" === "0");`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump("0" === "-1");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump("0" === null);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump("0" === []);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump("0" === "php");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump("0" === "");`, "bool(false)\n")
+	// "-1"
+	testInputOutput(t, `<?php var_dump("-1" === "-1");`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump("-1" === null);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump("-1" === []);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump("-1" === "php");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump("-1" === "");`, "bool(false)\n")
+	// null
+	testInputOutput(t, `<?php var_dump(null === null);`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump(null === []);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(null === "php");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(null === "");`, "bool(false)\n")
+	// []
+	testInputOutput(t, `<?php var_dump([] === []);`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump([] === "php");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump([] === "");`, "bool(false)\n")
+	// "php"
+	testInputOutput(t, `<?php var_dump("php" === "php");`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump("php" === "");`, "bool(false)\n")
+	// ""
+	testInputOutput(t, `<?php var_dump("" === "");`, "bool(true)\n")
+}
+
 func TestComparison(t *testing.T) {
 	// ===
 	testInputOutput(t, `<?php echo "abc" === "abc" ? "a" : "b";`, "a")
@@ -627,13 +829,12 @@ func TestCompareRelation(t *testing.T) {
 	testInputOutput(t, `<?php var_dump(NULL <= NULL);`, "bool(true)\n")
 	testInputOutput(t, `<?php var_dump(NULL <=> NULL);`, "int(0)\n")
 	// Null - String
-	// TODO if "compareRelationString" - string is implemented
-	// testInputOutput(t, `<?php var_dump(NULL < "");`, "bool(false)\n")
-	// testInputOutput(t, `<?php var_dump(NULL <= "");`, "bool(true)\n")
-	// testInputOutput(t, `<?php var_dump(NULL <=> "");`, "int(0)\n")
-	// testInputOutput(t, `<?php var_dump(NULL < "abc");`, "bool(true)\n")
-	// testInputOutput(t, `<?php var_dump(NULL <= "abc");`, "bool(true)\n")
-	// testInputOutput(t, `<?php var_dump(NULL <=> "abc");`, "int(-1)\n")
+	testInputOutput(t, `<?php var_dump(NULL < "");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(NULL <= "");`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump(NULL <=> "");`, "int(0)\n")
+	testInputOutput(t, `<?php var_dump(NULL < "abc");`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump(NULL <= "abc");`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump(NULL <=> "abc");`, "int(-1)\n")
 
 	// String
 	// String - Array
@@ -654,13 +855,12 @@ func TestCompareRelation(t *testing.T) {
 	testInputOutput(t, `<?php var_dump("a" <= false);`, "bool(false)\n")
 	testInputOutput(t, `<?php var_dump("a" <=> false);`, "int(1)\n")
 	// String - Null
-	// TODO if "compareRelationString" - string is implemented
-	// testInputOutput(t, `<?php var_dump("" < NULL);`, "bool(false)\n")
-	// testInputOutput(t, `<?php var_dump("" <= NULL);`, "bool(true)\n")
-	// testInputOutput(t, `<?php var_dump("" <=> NULL);`, "int(0)\n")
-	// testInputOutput(t, `<?php var_dump("22" < NULL);`, "bool(false)\n")
-	// testInputOutput(t, `<?php var_dump("22" <= NULL);`, "bool(false)\n")
-	// testInputOutput(t, `<?php var_dump("22" <=> NULL);`, "int(1)\n")
+	testInputOutput(t, `<?php var_dump("" < NULL);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump("" <= NULL);`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump("" <=> NULL);`, "int(0)\n")
+	testInputOutput(t, `<?php var_dump("22" < NULL);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump("22" <= NULL);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump("22" <=> NULL);`, "int(1)\n")
 }
 
 func TestUserFunctions(t *testing.T) {

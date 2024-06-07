@@ -1,6 +1,7 @@
 package interpreter
 
 import (
+	"GoPHP/cmd/goPHP/common"
 	"fmt"
 	"math"
 	"slices"
@@ -200,6 +201,26 @@ func lib_floatval(runtimeValue IRuntimeValue) (float64, Error) {
 		// if the precision can be preserved the result value is the closest approximation to the source value;
 		// otherwise, the result is undefined.
 		return float64(runtimeValToIntRuntimeVal(runtimeValue).GetValue()), nil
+	case StringValue:
+		// Spec: https://phplang.org/spec/08-conversions.html#converting-to-floating-point-type
+		// If the source is a numeric string or leading-numeric string having integer format,
+		// the string’s integer value is treated as described above for a conversion from int.
+		// If the source is a numeric string or leading-numeric string having floating-point format,
+		// the result value is the closest approximation to the string’s floating-point value.
+		// The trailing non-numeric characters in leading-numeric strings are ignored.
+		// For any other string, the result value is 0.
+		intStr := runtimeValToStrRuntimeVal(runtimeValue).GetValue()
+		if common.IsFloatingLiteralWithSign(intStr) {
+			return common.FloatingLiteralToFloat64WithSign(intStr), nil
+		}
+		if common.IsIntegerLiteralWithSign(intStr) {
+			intValue, err := common.IntegerLiteralToInt64WithSign(intStr)
+			if err != nil {
+				return 0, NewError(err.Error())
+			}
+			return lib_floatval(NewIntegerRuntimeValue(intValue))
+		}
+		return 0, nil
 	default:
 		// Spec: https://phplang.org/spec/08-conversions.html#converting-to-floating-point-type
 		// For sources of all other types, the conversion result is obtained by first converting
@@ -210,10 +231,6 @@ func lib_floatval(runtimeValue IRuntimeValue) (float64, Error) {
 		}
 		return lib_floatval(NewIntegerRuntimeValue(intValue))
 	}
-
-	// TODO lib_floatval - string
-	// Spec: https://phplang.org/spec/08-conversions.html#converting-to-floating-point-type
-	// If the source is a numeric string or leading-numeric string having integer format, the string’s integer value is treated as described above for a conversion from int. If the source is a numeric string or leading-numeric string having floating-point format, the result value is the closest approximation to the string’s floating-point value. The trailing non-numeric characters in leading-numeric strings are ignored. For any other string, the result value is 0.
 
 	// TODO lib_floatval - object
 	// Spec: https://phplang.org/spec/08-conversions.html#converting-to-floating-point-type
@@ -330,13 +347,30 @@ func lib_intval(runtimeValue IRuntimeValue) (int64, Error) {
 		// Spec: https://phplang.org/spec/08-conversions.html#converting-to-integer-type
 		// If the source value is NULL, the result value is 0.
 		return 0, nil
+	case StringValue:
+		// Spec: https://phplang.org/spec/08-conversions.html#converting-to-integer-type
+		// If the source is a numeric string or leading-numeric string having integer format,
+		// if the precision can be preserved the result value is that string’s integer value;
+		// otherwise, the result is undefined.
+		// If the source is a numeric string or leading-numeric string having floating-point format,
+		// the string’s floating-point value is treated as described above for a conversion from float.
+		// The trailing non-numeric characters in leading-numeric strings are ignored.
+		// For any other string, the result value is 0.
+		intStr := runtimeValToStrRuntimeVal(runtimeValue).GetValue()
+		if common.IsFloatingLiteralWithSign(intStr) {
+			return lib_intval(NewFloatingRuntimeValue(common.FloatingLiteralToFloat64WithSign(intStr)))
+		}
+		if common.IsIntegerLiteralWithSign(intStr) {
+			intValue, err := common.IntegerLiteralToInt64WithSign(intStr)
+			if err != nil {
+				return 0, NewError(err.Error())
+			}
+			return intValue, nil
+		}
+		return 0, nil
 	default:
 		return 0, NewError("lib_intval: Unsupported runtime value %s", runtimeValue.GetType())
 	}
-
-	// TODO lib_intval - string
-	// Spec: https://phplang.org/spec/08-conversions.html#converting-to-integer-type
-	// If the source is a numeric string or leading-numeric string having integer format, if the precision can be preserved the result value is that string’s integer value; otherwise, the result is undefined. If the source is a numeric string or leading-numeric string having floating-point format, the string’s floating-point value is treated as described above for a conversion from float. The trailing non-numeric characters in leading-numeric strings are ignored. For any other string, the result value is 0.
 
 	// TODO lib_intval - object
 	// Spec: https://phplang.org/spec/08-conversions.html#converting-to-integer-type
