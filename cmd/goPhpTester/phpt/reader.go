@@ -33,94 +33,102 @@ func NewReader(filename string) (*Reader, error) {
 }
 
 func (reader *Reader) GetTestFile() (*TestFile, error) {
-	getError := func(section string) error {
-		return fmt.Errorf("Expected \"%s\". Got: \"%s\"", section, reader.at())
-	}
-
-	if reader.at() == "--TEST--" {
-		reader.eat()
-		reader.testFile.Title = reader.eat()
-		reader.sections = append(reader.sections, "--TEST--")
-	} else {
-		return nil, getError("--TEST--")
-	}
-	if reader.at() == "--CREDITS--" {
-		reader.eat()
-		for !reader.isEof() && !reader.isSection(reader.at()) {
+	for !reader.isEof() {
+		if reader.at() == "--TEST--" {
 			reader.eat()
+			reader.testFile.Title = reader.eat()
+			reader.sections = append(reader.sections, "--TEST--")
+			continue
 		}
-	}
-	if reader.at() == "--SKIPIF--" {
-		reader.eat()
-		file := ""
-		for !reader.isEof() && !reader.isSection(reader.at()) {
-			if file != "" {
-				file += "\n"
-			}
-			file += reader.eat()
-		}
-		reader.testFile.File = file
-		reader.sections = append(reader.sections, "--SKIPIF--")
-	}
-	if reader.at() == "--POST--" {
-		reader.eat()
-		params := ""
-		for !reader.isEof() && !reader.isSection(reader.at()) {
-			params += reader.eat()
-		}
-		paramsMap, err := parseQuery(params)
-		if err != nil {
-			return nil, fmt.Errorf("--POST--\n%s", err)
-		}
-		reader.testFile.PostParams = paramsMap
-		reader.sections = append(reader.sections, "--POST--")
-	}
-	if reader.at() == "--GET--" {
-		reader.eat()
-		params := ""
-		for !reader.isEof() && !reader.isSection(reader.at()) {
-			params += reader.eat()
-		}
-		paramsMap, err := parseQuery(params)
-		if err != nil {
-			return nil, fmt.Errorf("--GET--\n%s", err)
-		}
-		reader.testFile.GetParams = paramsMap
-		reader.sections = append(reader.sections, "--GET--")
-	}
 
-	if reader.at() == "--ENV--" {
-		reader.eat()
-		env := map[string]string{}
-		for !reader.isEof() && !reader.isSection(reader.at()) {
-			line := reader.eat()
-			separator := strings.Index(line, "=")
-			env[line[:separator]] = line[separator+1:]
+		if reader.at() == "--CREDITS--" || reader.at() == "--EXTENSIONS--" {
+			reader.eat()
+			for !reader.isEof() && !reader.isSection(reader.at()) {
+				reader.eat()
+			}
+			continue
 		}
-		reader.testFile.Env = env
-		reader.sections = append(reader.sections, "--ENV--")
-	}
-	if reader.at() == "--FILE--" {
-		reader.eat()
-		file := reader.testFile.File
-		for !reader.isEof() && !reader.isSection(reader.at()) {
-			file += reader.eat() + "\n"
+
+		if reader.at() == "--SKIPIF--" {
+			reader.eat()
+			file := ""
+			for !reader.isEof() && !reader.isSection(reader.at()) {
+				if file != "" {
+					file += "\n"
+				}
+				file += reader.eat()
+			}
+			reader.testFile.File = file
+			reader.sections = append(reader.sections, "--SKIPIF--")
+			continue
 		}
-		reader.testFile.File = file
-		reader.sections = append(reader.sections, "--FILE--")
-	} else {
-		return nil, getError("--FILE--")
-	}
-	if reader.at() == "--EXPECT--" {
-		reader.eat()
-		expect := ""
-		for !reader.isEof() && !reader.isSection(reader.at()) {
-			expect += reader.eat() + "\n"
+
+		if reader.at() == "--POST--" {
+			reader.eat()
+			params := ""
+			for !reader.isEof() && !reader.isSection(reader.at()) {
+				params += reader.eat()
+			}
+			paramsMap, err := parseQuery(params)
+			if err != nil {
+				return nil, fmt.Errorf("--POST--\n%s", err)
+			}
+			reader.testFile.PostParams = paramsMap
+			reader.sections = append(reader.sections, "--POST--")
+			continue
 		}
-		reader.testFile.Expect = expect
-		reader.sections = append(reader.sections, "--EXPECT--")
-	} else {
-		return nil, getError("--EXPECT--")
+
+		if reader.at() == "--GET--" {
+			reader.eat()
+			params := ""
+			for !reader.isEof() && !reader.isSection(reader.at()) {
+				params += reader.eat()
+			}
+			paramsMap, err := parseQuery(params)
+			if err != nil {
+				return nil, fmt.Errorf("--GET--\n%s", err)
+			}
+			reader.testFile.GetParams = paramsMap
+			reader.sections = append(reader.sections, "--GET--")
+			continue
+		}
+
+		if reader.at() == "--ENV--" {
+			reader.eat()
+			env := map[string]string{}
+			for !reader.isEof() && !reader.isSection(reader.at()) {
+				line := reader.eat()
+				separator := strings.Index(line, "=")
+				env[line[:separator]] = line[separator+1:]
+			}
+			reader.testFile.Env = env
+			reader.sections = append(reader.sections, "--ENV--")
+			continue
+		}
+
+		if reader.at() == "--FILE--" {
+			reader.eat()
+			file := reader.testFile.File
+			for !reader.isEof() && !reader.isSection(reader.at()) {
+				file += reader.eat() + "\n"
+			}
+			reader.testFile.File = file
+			reader.sections = append(reader.sections, "--FILE--")
+			continue
+		}
+
+		if reader.at() == "--EXPECT--" {
+			reader.eat()
+			expect := ""
+			for !reader.isEof() && !reader.isSection(reader.at()) {
+				expect += reader.eat() + "\n"
+			}
+			reader.testFile.Expect = expect
+			reader.sections = append(reader.sections, "--EXPECT--")
+			continue
+		}
+
+		return reader.testFile, fmt.Errorf("Unsupported section \"%s\"", reader.at())
 	}
 
 	if err := reader.isValid(); err != nil {
@@ -134,9 +142,16 @@ func (reader *Reader) isValid() error {
 	if !reader.hasSection("--TEST--") {
 		return fmt.Errorf("Section \"--TEST--\" is missing")
 	}
+
 	if !reader.hasSection("--FILE--") && !reader.hasSection("--FILEEOF--") &&
 		!reader.hasSection("--FILE_EXTERNAL--") && !reader.hasSection("--REDIRECTTEST--") {
 		return fmt.Errorf("Section \"--FILE-- | --FILEEOF-- | --FILE_EXTERNAL-- | --REDIRECTTEST--\" is missing")
+	}
+
+	if !reader.hasSection("--EXPECT--") && !reader.hasSection("--EXPECTF--") && !reader.hasSection("--EXPECTREGEX--") &&
+		!reader.hasSection("--EXPECT_EXTERNAL--") && !reader.hasSection("--EXPECTF_EXTERNAL--") &&
+		!reader.hasSection("--EXPECTREGEX_EXTERNAL--") {
+		return fmt.Errorf("Section \"--EXPECT-- | --EXPECTF-- | --EXPECTREGEX-- | --EXPECT_EXTERNAL-- | --EXPECTF_EXTERNAL-- | --EXPECTREGEX_EXTERNAL--\" is missing")
 	}
 	return nil
 }

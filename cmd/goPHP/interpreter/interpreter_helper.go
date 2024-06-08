@@ -137,7 +137,7 @@ func getPhpOsFamily() string {
 func (interpreter *Interpreter) scanForFunctionDefinition(statements []ast.IStatement, env *Environment) Error {
 	for _, stmt := range statements {
 		if stmt.GetKind() == ast.CompoundStmt {
-			interpreter.scanForFunctionDefinition(ast.StmtToCompoundStatement(stmt).GetStatements(), env)
+			interpreter.scanForFunctionDefinition(ast.StmtToCompoundStmt(stmt).GetStatements(), env)
 			continue
 		}
 
@@ -145,7 +145,7 @@ func (interpreter *Interpreter) scanForFunctionDefinition(statements []ast.IStat
 			continue
 		}
 
-		_, err := interpreter.processFunctionDefinitionStmt(ast.StmtToFunctionDefinitionStatement(stmt), env)
+		_, err := interpreter.processFunctionDefinitionStmt(ast.StmtToFunctionDefinitionStmt(stmt), env)
 		if err != nil {
 			return err
 		}
@@ -160,6 +160,7 @@ var paramTypeRuntimeValue = map[ValueType]string{
 	IntegerValue:  "int",
 	NullValue:     "NULL",
 	StringValue:   "string",
+	VoidValue:     "void",
 }
 
 func checkParameterTypes(runtimeValue IRuntimeValue, expectedTypes []string) Error {

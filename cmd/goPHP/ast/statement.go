@@ -20,7 +20,7 @@ type Statement struct {
 	pos  *position.Position
 }
 
-func NewStatement(kind NodeType, pos *position.Position) *Statement {
+func NewStmt(kind NodeType, pos *position.Position) *Statement {
 	return &Statement{id: getNextNodeId(), kind: kind, pos: pos}
 }
 
@@ -40,7 +40,7 @@ func (stmt *Statement) String() string {
 	return fmt.Sprintf("{%s}", stmt.GetKind())
 }
 
-func NewEmptyStatement() *Statement {
+func NewEmptyStmt() *Statement {
 	return &Statement{kind: EmptyNode}
 }
 
@@ -67,8 +67,8 @@ type FunctionDefinitionStatement struct {
 	returnType   []string
 }
 
-func NewFunctionDefinitionStatement(pos *position.Position, functionName string, params []FunctionParameter, body ICompoundStatement, returnType []string) *FunctionDefinitionStatement {
-	return &FunctionDefinitionStatement{stmt: NewStatement(FunctionDefinitionStmt, pos),
+func NewFunctionDefinitionStmt(pos *position.Position, functionName string, params []FunctionParameter, body ICompoundStatement, returnType []string) *FunctionDefinitionStatement {
+	return &FunctionDefinitionStatement{stmt: NewStmt(FunctionDefinitionStmt, pos),
 		functionName: functionName, params: params, body: body, returnType: returnType,
 	}
 }
@@ -107,7 +107,7 @@ func (stmt *FunctionDefinitionStatement) String() string {
 	)
 }
 
-func StmtToFunctionDefinitionStatement(stmt IStatement) IFunctionDefinitionStatement {
+func StmtToFunctionDefinitionStmt(stmt IStatement) IFunctionDefinitionStatement {
 	var i interface{} = stmt
 	return i.(IFunctionDefinitionStatement)
 }
@@ -130,8 +130,8 @@ type IfStatement struct {
 	elseBlock IStatement
 }
 
-func NewIfStatement(pos *position.Position, condition IExpression, ifBlock IStatement, elseIf []IIfStatement, elseBlock IStatement) *IfStatement {
-	return &IfStatement{stmt: NewStatement(IfStmt, pos), condition: condition, ifBlock: ifBlock, elseIf: elseIf, elseBlock: elseBlock}
+func NewIfStmt(pos *position.Position, condition IExpression, ifBlock IStatement, elseIf []IIfStatement, elseBlock IStatement) *IfStatement {
+	return &IfStatement{stmt: NewStmt(IfStmt, pos), condition: condition, ifBlock: ifBlock, elseIf: elseIf, elseBlock: elseBlock}
 }
 
 func (stmt *IfStatement) GetId() int64 {
@@ -167,7 +167,7 @@ func (stmt *IfStatement) String() string {
 		stmt.GetKind(), stmt.condition, stmt.ifBlock, stmt.elseIf, stmt.elseBlock)
 }
 
-func StmtToIfStatement(stmt IStatement) IIfStatement {
+func StmtToIfStmt(stmt IStatement) IIfStatement {
 	var i interface{} = stmt
 	return i.(IIfStatement)
 }
@@ -184,8 +184,8 @@ type CompoundStatement struct {
 	statements []IStatement
 }
 
-func NewCompoundStatement(statements []IStatement) *CompoundStatement {
-	return &CompoundStatement{stmt: NewStatement(CompoundStmt, nil), statements: statements}
+func NewCompoundStmt(statements []IStatement) *CompoundStatement {
+	return &CompoundStatement{stmt: NewStmt(CompoundStmt, nil), statements: statements}
 }
 
 func (stmt *CompoundStatement) GetId() int64 {
@@ -208,7 +208,7 @@ func (stmt *CompoundStatement) String() string {
 	return fmt.Sprintf("{%s - %s}", stmt.GetKind(), stmt.statements)
 }
 
-func StmtToCompoundStatement(stmt IStatement) ICompoundStatement {
+func StmtToCompoundStmt(stmt IStatement) ICompoundStatement {
 	var i interface{} = stmt
 	return i.(ICompoundStatement)
 }
@@ -225,8 +225,8 @@ type EchoStatement struct {
 	expressions []IExpression
 }
 
-func NewEchoStatement(pos *position.Position, expressions []IExpression) *EchoStatement {
-	return &EchoStatement{stmt: NewStatement(EchoStmt, pos), expressions: expressions}
+func NewEchoStmt(pos *position.Position, expressions []IExpression) *EchoStatement {
+	return &EchoStatement{stmt: NewStmt(EchoStmt, pos), expressions: expressions}
 }
 
 func (stmt *EchoStatement) GetId() int64 {
@@ -249,7 +249,7 @@ func (stmt *EchoStatement) String() string {
 	return fmt.Sprintf("{%s - %s}", stmt.GetKind(), stmt.expressions)
 }
 
-func StmtToEchoStatement(stmt IStatement) IEchoStatement {
+func StmtToEchoStmt(stmt IStatement) IEchoStatement {
 	var i interface{} = stmt
 	return i.(IEchoStatement)
 }
@@ -268,8 +268,8 @@ type ConstDeclarationStatement struct {
 	value IExpression
 }
 
-func NewConstDeclarationStatement(pos *position.Position, name string, value IExpression) *ConstDeclarationStatement {
-	return &ConstDeclarationStatement{stmt: NewStatement(ConstDeclarationStmt, pos), name: name, value: value}
+func NewConstDeclarationStmt(pos *position.Position, name string, value IExpression) *ConstDeclarationStatement {
+	return &ConstDeclarationStatement{stmt: NewStmt(ConstDeclarationStmt, pos), name: name, value: value}
 }
 
 func (stmt *ConstDeclarationStatement) GetId() int64 {
@@ -296,7 +296,7 @@ func (stmt *ConstDeclarationStatement) String() string {
 	return fmt.Sprintf("{%s - name: \"%s\" value: %s}", stmt.GetKind(), stmt.name, stmt.value)
 }
 
-func StmtToConstDeclStatement(stmt IStatement) IConstDeclarationStatement {
+func StmtToConstDeclStmt(stmt IStatement) IConstDeclarationStatement {
 	var i interface{} = stmt
 	return i.(IConstDeclarationStatement)
 }
@@ -313,12 +313,12 @@ type ExpressionStatement struct {
 	expr IExpression
 }
 
-func NewReturnStatement(pos *position.Position, expr IExpression) *ExpressionStatement {
-	return &ExpressionStatement{stmt: NewStatement(ReturnStmt, pos), expr: expr}
+func NewReturnStmt(pos *position.Position, expr IExpression) *ExpressionStatement {
+	return &ExpressionStatement{stmt: NewStmt(ReturnStmt, pos), expr: expr}
 }
 
-func NewExpressionStatement(expr IExpression) *ExpressionStatement {
-	return &ExpressionStatement{stmt: NewStatement(ExpressionStmt, expr.GetPosition()), expr: expr}
+func NewExpressionStmt(expr IExpression) *ExpressionStatement {
+	return &ExpressionStatement{stmt: NewStmt(ExpressionStmt, expr.GetPosition()), expr: expr}
 }
 
 func (stmt *ExpressionStatement) GetId() int64 {
@@ -341,7 +341,7 @@ func (stmt *ExpressionStatement) String() string {
 	return fmt.Sprintf("{%s - %s}", stmt.GetKind(), stmt.expr)
 }
 
-func StmtToExprStatement(stmt IStatement) IExpressionStatement {
+func StmtToExprStmt(stmt IStatement) IExpressionStatement {
 	var i interface{} = stmt
 	return i.(IExpressionStatement)
 }

@@ -5,51 +5,51 @@ import (
 )
 
 // Spec: https://phplang.org/spec/10-expressions.html#grammar-relational-expression
-var relationalExpressionOperators = []string{"<", ">", "<=", ">=", "<=>"}
+var relationalExpressionOps = []string{"<", ">", "<=", ">=", "<=>"}
 
-func IsRelationalExpressionOperators(op string) bool {
+func IsRelationalExpressionOp(op string) bool {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-relational-expression
-	return slices.Contains(relationalExpressionOperators, op)
+	return slices.Contains(relationalExpressionOps, op)
 }
 
 // Spec: https://phplang.org/spec/10-expressions.html#grammar-compound-assignment-operator
-var compoundAssignmentOperators = []string{
+var compoundAssignmentOps = []string{
 	"**=", "*=", "/=", "%=", "+=", "-=", ".=", "<<=", ">>=", "&=", "^=", "|=",
 }
 
-func IsCompoundAssignmentOperator(op string) bool {
+func IsCompoundAssignmentOp(op string) bool {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-compound-assignment-operator
-	return slices.Contains(compoundAssignmentOperators, op)
+	return slices.Contains(compoundAssignmentOps, op)
 }
 
 // Spec: https://phplang.org/spec/10-expressions.html#grammar-equality-expression
-var equalityOperators = []string{"==", "!=", "<>", "===", "!=="}
+var equalityOps = []string{"==", "!=", "<>", "===", "!=="}
 
-func IsEqualityOperator(op string) bool {
+func IsEqualityOp(op string) bool {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-equality-expression
-	return slices.Contains(equalityOperators, op)
+	return slices.Contains(equalityOps, op)
 }
 
 // Spec: https://phplang.org/spec/10-expressions.html#grammar-additive-expression
-var additiveOperators = []string{"+", "-", "."}
+var additiveOps = []string{"+", "-", "."}
 
-func IsAdditiveOperator(op string) bool {
+func IsAdditiveOp(op string) bool {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-additive-expression
-	return slices.Contains(additiveOperators, op)
+	return slices.Contains(additiveOps, op)
 }
 
 // Spec: https://phplang.org/spec/10-expressions.html#grammar-multiplicative-expression
-var multiplicativeOperators = []string{"*", "/", "%"}
+var multiplicativeOps = []string{"*", "/", "%"}
 
-func IsMultiplicativeOperator(op string) bool {
+func IsMultiplicativeOp(op string) bool {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-multiplicative-expression
-	return slices.Contains(multiplicativeOperators, op)
+	return slices.Contains(multiplicativeOps, op)
 }
 
 // Spec: https://phplang.org/spec/10-expressions.html#grammar-unary-operator
-var unaryOperators = []string{"+", "-", "~"}
+var unaryOps = []string{"+", "-", "~"}
 
-func IsUnaryOperator(op string) bool {
+func IsUnaryOp(op string) bool {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-unary-operator
-	return slices.Contains(unaryOperators, op)
+	return slices.Contains(unaryOps, op)
 }

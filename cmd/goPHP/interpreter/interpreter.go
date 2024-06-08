@@ -62,19 +62,19 @@ func (interpreter *Interpreter) processStmt(stmt ast.IStatement, env *Environmen
 	switch stmt.GetKind() {
 	// Statements
 	case ast.ConstDeclarationStmt:
-		return interpreter.processConstDeclarationStmt(ast.StmtToConstDeclStatement(stmt), env)
+		return interpreter.processConstDeclarationStmt(ast.StmtToConstDeclStmt(stmt), env)
 	case ast.CompoundStmt:
-		return interpreter.processCompoundStmt(ast.StmtToCompoundStatement(stmt), env)
+		return interpreter.processCompoundStmt(ast.StmtToCompoundStmt(stmt), env)
 	case ast.EchoStmt:
-		return interpreter.processEchoStmt(ast.StmtToEchoStatement(stmt), env)
+		return interpreter.processEchoStmt(ast.StmtToEchoStmt(stmt), env)
 	case ast.ExpressionStmt:
-		return interpreter.processStmt(ast.StmtToExprStatement(stmt).GetExpression(), env)
+		return interpreter.processStmt(ast.StmtToExprStmt(stmt).GetExpression(), env)
 	case ast.FunctionDefinitionStmt:
-		return interpreter.processFunctionDefinitionStmt(ast.StmtToFunctionDefinitionStatement(stmt), env)
+		return interpreter.processFunctionDefinitionStmt(ast.StmtToFunctionDefinitionStmt(stmt), env)
 	case ast.ReturnStmt:
-		return interpreter.processReturnStmt(ast.StmtToExprStatement(stmt), env)
+		return interpreter.processReturnStmt(ast.StmtToExprStmt(stmt), env)
 	case ast.IfStmt:
-		return interpreter.processIfStmt(ast.StmtToIfStatement(stmt), env)
+		return interpreter.processIfStmt(ast.StmtToIfStmt(stmt), env)
 
 	// Expressions
 	case ast.ArrayLiteralExpr, ast.IntegerLiteralExpr, ast.FloatingLiteralExpr, ast.StringLiteralExpr:
@@ -83,45 +83,45 @@ func (interpreter *Interpreter) processStmt(stmt ast.IStatement, env *Environmen
 		interpreter.print(ast.ExprToTextExpr(stmt).GetValue())
 		return NewVoidRuntimeValue(), nil
 	case ast.SimpleVariableExpr:
-		return interpreter.processSimpleVariableExpression(ast.ExprToSimpleVarExpr(stmt), env)
+		return interpreter.processSimpleVariableExpr(ast.ExprToSimpleVarExpr(stmt), env)
 	case ast.SimpleAssignmentExpr:
-		return interpreter.processSimpleAssignmentExpression(ast.ExprToSimpleAssignExpr(stmt), env)
+		return interpreter.processSimpleAssignmentExpr(ast.ExprToSimpleAssignExpr(stmt), env)
 	case ast.SubscriptExpr:
-		return interpreter.processSubscriptExpression(ast.ExprToSubscriptExpr(stmt), env)
+		return interpreter.processSubscriptExpr(ast.ExprToSubscriptExpr(stmt), env)
 	case ast.FunctionCallExpr:
-		return interpreter.processFunctionCallExpression(ast.ExprToFuncCallExpr(stmt), env)
+		return interpreter.processFunctionCallExpr(ast.ExprToFuncCallExpr(stmt), env)
 	case ast.EmptyIntrinsicExpr:
-		return interpreter.processEmptyIntrinsicExpression(ast.ExprToFuncCallExpr(stmt), env)
+		return interpreter.processEmptyIntrinsicExpr(ast.ExprToFuncCallExpr(stmt), env)
 	case ast.ExitIntrinsicExpr:
-		return interpreter.processExitIntrinsicExpression(ast.ExprToFuncCallExpr(stmt), env)
+		return interpreter.processExitIntrinsicExpr(ast.ExprToFuncCallExpr(stmt), env)
 	case ast.IssetIntrinsicExpr:
-		return interpreter.processIssetExpression(ast.ExprToFuncCallExpr(stmt), env)
+		return interpreter.processIssetExpr(ast.ExprToFuncCallExpr(stmt), env)
 	case ast.UnsetIntrinsicExpr:
-		return interpreter.processUnsetExpression(ast.ExprToFuncCallExpr(stmt), env)
+		return interpreter.processUnsetExpr(ast.ExprToFuncCallExpr(stmt), env)
 	case ast.ConstantAccessExpr:
-		return interpreter.processConstantAccessExpression(ast.ExprToConstAccessExpr(stmt), env)
+		return interpreter.processConstantAccessExpr(ast.ExprToConstAccessExpr(stmt), env)
 	case ast.CompoundAssignmentExpr:
-		return interpreter.processCompoundAssignmentExpression(ast.ExprToCompoundAssignExpr(stmt), env)
+		return interpreter.processCompoundAssignmentExpr(ast.ExprToCompoundAssignExpr(stmt), env)
 	case ast.ConditionalExpr:
-		return interpreter.processConditionalExpression(ast.ExprToCondExpr(stmt), env)
+		return interpreter.processConditionalExpr(ast.ExprToCondExpr(stmt), env)
 	case ast.CoalesceExpr:
-		return interpreter.processCoalesceExpression(ast.ExprToCoalesceExpr(stmt), env)
+		return interpreter.processCoalesceExpr(ast.ExprToCoalesceExpr(stmt), env)
 	case ast.RelationalExpr:
-		return interpreter.processRelationalExpression(ast.ExprToBinOpExpr(stmt), env)
+		return interpreter.processRelationalExpr(ast.ExprToBinOpExpr(stmt), env)
 	case ast.EqualityExpr:
-		return interpreter.processEqualityExpression(ast.ExprToBinOpExpr(stmt), env)
+		return interpreter.processEqualityExpr(ast.ExprToBinOpExpr(stmt), env)
 	case ast.BinaryOpExpr:
-		return interpreter.processAdditiveExpression(ast.ExprToBinOpExpr(stmt), env)
+		return interpreter.processBinaryOpExpr(ast.ExprToBinOpExpr(stmt), env)
 	case ast.UnaryOpExpr:
-		return interpreter.processUnaryExpression(ast.ExprToUnaryOpExpr(stmt), env)
+		return interpreter.processUnaryExpr(ast.ExprToUnaryOpExpr(stmt), env)
 	case ast.CastExpr:
-		return interpreter.processCastExpression(ast.ExprToUnaryOpExpr(stmt), env)
+		return interpreter.processCastExpr(ast.ExprToUnaryOpExpr(stmt), env)
 	case ast.LogicalNotExpr:
-		return interpreter.processLogicalNotExpression(ast.ExprToUnaryOpExpr(stmt), env)
+		return interpreter.processLogicalNotExpr(ast.ExprToUnaryOpExpr(stmt), env)
 	case ast.PostfixIncExpr:
-		return interpreter.processPostfixIncExpression(ast.ExprToUnaryOpExpr(stmt), env)
+		return interpreter.processPostfixIncExpr(ast.ExprToUnaryOpExpr(stmt), env)
 	case ast.PrefixIncExpr:
-		return interpreter.processPrefixIncExpression(ast.ExprToUnaryOpExpr(stmt), env)
+		return interpreter.processPrefixIncExpr(ast.ExprToUnaryOpExpr(stmt), env)
 
 	default:
 		return NewVoidRuntimeValue(), NewError("Unsupported statement or expression: %s", stmt)
@@ -169,7 +169,7 @@ func (interpreter *Interpreter) processFunctionDefinitionStmt(stmt ast.IFunction
 	}
 
 	function := userFunction{
-		FunctionName: stmt.GetFunctionName(), Parameters: stmt.GetParams(), Body: stmt.GetBody(),
+		FunctionName: stmt.GetFunctionName(), Parameters: stmt.GetParams(), Body: stmt.GetBody(), ReturnType: stmt.GetReturnType(),
 	}
 	if err := env.defineUserFunction(function); err != nil {
 		return NewVoidRuntimeValue(), err
@@ -243,14 +243,14 @@ func (interpreter *Interpreter) processIfStmt(stmt ast.IIfStatement, env *Enviro
 	return NewVoidRuntimeValue(), nil
 }
 
-func (interpreter *Interpreter) processSimpleVariableExpression(expr ast.ISimpleVariableExpression, env *Environment) (IRuntimeValue, Error) {
+func (interpreter *Interpreter) processSimpleVariableExpr(expr ast.ISimpleVariableExpression, env *Environment) (IRuntimeValue, Error) {
 	return interpreter.lookupVariable(expr, env, false)
 }
 
-func (interpreter *Interpreter) processSimpleAssignmentExpression(expr ast.ISimpleAssignmentExpression, env *Environment) (IRuntimeValue, Error) {
-	if !ast.IsVariableExpression(expr.GetVariable()) {
+func (interpreter *Interpreter) processSimpleAssignmentExpr(expr ast.ISimpleAssignmentExpression, env *Environment) (IRuntimeValue, Error) {
+	if !ast.IsVariableExpr(expr.GetVariable()) {
 		return NewVoidRuntimeValue(),
-			NewError("processSimpleAssignmentExpression: Invalid variable: %s", expr.GetVariable())
+			NewError("processSimpleAssignmentExpr: Invalid variable: %s", expr.GetVariable())
 	}
 
 	value, err := interpreter.processStmt(expr.GetValue(), env)
@@ -267,7 +267,7 @@ func (interpreter *Interpreter) processSimpleAssignmentExpression(expr ast.ISimp
 
 	if currentValue.GetType() == ArrayValue {
 		if expr.GetVariable().GetKind() != ast.SubscriptExpr {
-			return NewVoidRuntimeValue(), NewError("processSimpleAssignmentExpression: Unsupported variable type %s", expr.GetVariable().GetKind())
+			return NewVoidRuntimeValue(), NewError("processSimpleAssignmentExpr: Unsupported variable type %s", expr.GetVariable().GetKind())
 		}
 
 		var key ast.IExpression = ast.ExprToSubscriptExpr(expr.GetVariable()).GetIndex()
@@ -279,7 +279,7 @@ func (interpreter *Interpreter) processSimpleAssignmentExpression(expr ast.ISimp
 				lastIndex = array.GetKeys()[len(array.GetKeys())-1]
 			}
 			if lastIndex.GetType() != IntegerValue {
-				return NewVoidRuntimeValue(), NewError("processSimpleAssignmentExpression: Unsupported array key %s", lastIndex.GetType())
+				return NewVoidRuntimeValue(), NewError("processSimpleAssignmentExpr: Unsupported array key %s", lastIndex.GetType())
 			}
 			var nextIndex = lastIndex
 			if len(array.GetKeys()) > 0 {
@@ -300,7 +300,7 @@ func (interpreter *Interpreter) processSimpleAssignmentExpression(expr ast.ISimp
 	return env.declareVariable(variableName, value)
 }
 
-func (interpreter *Interpreter) processSubscriptExpression(expr ast.ISubscriptExpression, env *Environment) (IRuntimeValue, Error) {
+func (interpreter *Interpreter) processSubscriptExpr(expr ast.ISubscriptExpression, env *Environment) (IRuntimeValue, Error) {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-subscript-expression
 
 	variable, err := interpreter.lookupVariable(expr.GetVariable(), env, false)
@@ -311,7 +311,7 @@ func (interpreter *Interpreter) processSubscriptExpression(expr ast.ISubscriptEx
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-subscript-expression
 	// dereferencable-expression designates an array
 	if variable.GetType() == ArrayValue {
-		// TODO processSubscriptExpression - no key
+		// TODO processSubscriptExpr - no key
 		// Spec: https://phplang.org/spec/10-expressions.html#grammar-subscript-expression
 		// If expression is omitted, a new element is inserted. Its key has type int and is one more than the highest, previously assigned int key for this array. If this is the first element with an int key, key 0 is used. If the largest previously assigned int key is the largest integer value that can be represented, the new element is not added. The result is the added new element, or NULL if the element was not added.
 
@@ -338,7 +338,7 @@ func (interpreter *Interpreter) processSubscriptExpression(expr ast.ISubscriptEx
 			return NewNullRuntimeValue(), nil
 		}
 
-		// TODO processSubscriptExpression
+		// TODO processSubscriptExpr
 		// If the usage context is as the left-hand side of a simple-assignment-expression, the value of the new element is the value of the right-hand side of that simple-assignment-expression.
 		// If the usage context is as the left-hand side of a compound-assignment-expression: the expression e1 op= e2 is evaluated as e1 = NULL op (e2).
 		// If the usage context is as the operand of a postfix- or prefix-increment or decrement operator, the value of the new element is considered to be NULL.
@@ -415,7 +415,7 @@ func (interpreter *Interpreter) processSubscriptExpression(expr ast.ISubscriptEx
 	*/
 }
 
-func (interpreter *Interpreter) processFunctionCallExpression(expr ast.IFunctionCallExpression, env *Environment) (IRuntimeValue, Error) {
+func (interpreter *Interpreter) processFunctionCallExpr(expr ast.IFunctionCallExpression, env *Environment) (IRuntimeValue, Error) {
 	// Lookup native function
 	nativeFunction, err := env.lookupNativeFunction(expr.GetFunctionName())
 	if err == nil {
@@ -427,7 +427,6 @@ func (interpreter *Interpreter) processFunctionCallExpression(expr ast.IFunction
 			}
 			functionArguments[index] = deepCopy(runtimeValue)
 		}
-		// TODO processFunctionCallExpression - Check return type
 		return nativeFunction(functionArguments, interpreter)
 	}
 
@@ -470,11 +469,25 @@ func (interpreter *Interpreter) processFunctionCallExpression(expr ast.IFunction
 	if err != nil && !(err.GetErrorType() == EventError && err.GetMessage() == ReturnEvent) {
 		return runtimeValue, err
 	}
+	err = checkParameterTypes(runtimeValue, userFunction.ReturnType)
+	if err != nil && err.GetMessage() == "Types do not match" {
+		givenType, err := lib_gettype(runtimeValue)
+		if runtimeValue.GetType() == VoidValue {
+			givenType = "void"
+		}
+		if err != nil {
+			return runtimeValue, err
+		}
+		return runtimeValue, NewError(
+			"Uncaught TypeError: %s(): Return value must be of type %s, %s given",
+			userFunction.FunctionName, strings.Join(userFunction.ReturnType, "|"), givenType,
+		)
+	}
 	return runtimeValue, nil
 
 }
 
-func (interpreter *Interpreter) processEmptyIntrinsicExpression(expr ast.IFunctionCallExpression, env *Environment) (IRuntimeValue, Error) {
+func (interpreter *Interpreter) processEmptyIntrinsicExpr(expr ast.IFunctionCallExpression, env *Environment) (IRuntimeValue, Error) {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-empty-intrinsic
 
 	// This intrinsic returns TRUE if the variable or value designated by expression is empty,
@@ -491,7 +504,7 @@ func (interpreter *Interpreter) processEmptyIntrinsicExpression(expr ast.IFuncti
 
 	var runtimeValue IRuntimeValue
 	var err Error
-	if ast.IsVariableExpression(expr.GetArguments()[0]) {
+	if ast.IsVariableExpr(expr.GetArguments()[0]) {
 		runtimeValue, err = interpreter.lookupVariable(expr.GetArguments()[0], env, true)
 		if err != nil {
 			return NewBooleanRuntimeValue(true), nil
@@ -510,7 +523,7 @@ func (interpreter *Interpreter) processEmptyIntrinsicExpression(expr ast.IFuncti
 	return NewBooleanRuntimeValue(!boolean), nil
 }
 
-func (interpreter *Interpreter) processExitIntrinsicExpression(expr ast.IFunctionCallExpression, env *Environment) (IRuntimeValue, Error) {
+func (interpreter *Interpreter) processExitIntrinsicExpr(expr ast.IFunctionCallExpression, env *Environment) (IRuntimeValue, Error) {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-exit-intrinsic
 
 	// "exit" and "die" are equivalent.
@@ -543,13 +556,13 @@ func (interpreter *Interpreter) processExitIntrinsicExpression(expr ast.IFunctio
 		}
 	}
 
-	// TODO processExitIntrinsicExpression - call shutdown functions
-	// TODO processExitIntrinsicExpression - call destructors
+	// TODO processExitIntrinsicExpr - call shutdown functions
+	// TODO processExitIntrinsicExpr - call destructors
 
 	return NewVoidRuntimeValue(), NewEvent(ExitEvent)
 }
 
-func (interpreter *Interpreter) processIssetExpression(expr ast.IFunctionCallExpression, env *Environment) (IRuntimeValue, Error) {
+func (interpreter *Interpreter) processIssetExpr(expr ast.IFunctionCallExpression, env *Environment) (IRuntimeValue, Error) {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-isset-intrinsic
 
 	// This intrinsic returns TRUE if all the variables designated by variabless are set and their values are not NULL.
@@ -569,7 +582,7 @@ func (interpreter *Interpreter) processIssetExpression(expr ast.IFunctionCallExp
 	return NewBooleanRuntimeValue(true), nil
 }
 
-func (interpreter *Interpreter) processUnsetExpression(expr ast.IFunctionCallExpression, env *Environment) (IRuntimeValue, Error) {
+func (interpreter *Interpreter) processUnsetExpr(expr ast.IFunctionCallExpression, env *Environment) (IRuntimeValue, Error) {
 	// Spec: https://phplang.org/spec/11-statements.html#grammar-unset-statement
 
 	// This statement unsets the variables designated by each variable in variable-list. No value is returned.
@@ -585,14 +598,14 @@ func (interpreter *Interpreter) processUnsetExpression(expr ast.IFunctionCallExp
 	return NewVoidRuntimeValue(), nil
 }
 
-func (interpreter *Interpreter) processConstantAccessExpression(expr ast.IConstantAccessExpression, env *Environment) (IRuntimeValue, Error) {
+func (interpreter *Interpreter) processConstantAccessExpr(expr ast.IConstantAccessExpression, env *Environment) (IRuntimeValue, Error) {
 	return env.lookupConstant(expr.GetConstantName())
 }
 
-func (interpreter *Interpreter) processCompoundAssignmentExpression(expr ast.ICompoundAssignmentExpression, env *Environment) (IRuntimeValue, Error) {
-	if !ast.IsVariableExpression(expr.GetVariable()) {
+func (interpreter *Interpreter) processCompoundAssignmentExpr(expr ast.ICompoundAssignmentExpression, env *Environment) (IRuntimeValue, Error) {
+	if !ast.IsVariableExpr(expr.GetVariable()) {
 		return NewVoidRuntimeValue(),
-			NewError("processCompoundAssignmentExpression: Invalid variable: %s", expr.GetVariable())
+			NewError("processCompoundAssignmentExpr: Invalid variable: %s", expr.GetVariable())
 	}
 
 	operand1, err := interpreter.processStmt(expr.GetVariable(), env)
@@ -618,7 +631,7 @@ func (interpreter *Interpreter) processCompoundAssignmentExpression(expr ast.ICo
 	return env.declareVariable(variableName, newValue)
 }
 
-func (interpreter *Interpreter) processConditionalExpression(expr ast.IConditionalExpression, env *Environment) (IRuntimeValue, Error) {
+func (interpreter *Interpreter) processConditionalExpr(expr ast.IConditionalExpression, env *Environment) (IRuntimeValue, Error) {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-conditional-expression
 
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-conditional-expression
@@ -649,7 +662,7 @@ func (interpreter *Interpreter) processConditionalExpression(expr ast.ICondition
 	}
 }
 
-func (interpreter *Interpreter) processCoalesceExpression(expr ast.ICoalesceExpression, env *Environment) (IRuntimeValue, Error) {
+func (interpreter *Interpreter) processCoalesceExpr(expr ast.ICoalesceExpression, env *Environment) (IRuntimeValue, Error) {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-coalesce-expression
 
 	// Store current error reporting
@@ -677,13 +690,13 @@ func (interpreter *Interpreter) processCoalesceExpression(expr ast.ICoalesceExpr
 	// There is a sequence point after the evaluation of e1.
 	return interpreter.processStmt(expr.GetElseExpr(), env)
 
-	// TODO processCoalesceExpression - handle uninitialized variables
+	// TODO processCoalesceExpr - handle uninitialized variables
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-coalesce-expression
 	// Note that the semantics of ?? is similar to isset so that uninitialized variables will not produce warnings when used in e1.
 	// TODO use isset here - Steps: Add caching of expression results - map[exprId]IRuntimeValue
 }
 
-func (interpreter *Interpreter) processRelationalExpression(expr ast.IBinaryOpExpression, env *Environment) (IRuntimeValue, Error) {
+func (interpreter *Interpreter) processRelationalExpr(expr ast.IBinaryOpExpression, env *Environment) (IRuntimeValue, Error) {
 	lhs, err := interpreter.processStmt(expr.GetLHS(), env)
 	if err != nil {
 		return lhs, err
@@ -696,7 +709,7 @@ func (interpreter *Interpreter) processRelationalExpression(expr ast.IBinaryOpEx
 	return compareRelation(lhs, expr.GetOperator(), rhs)
 }
 
-func (interpreter *Interpreter) processEqualityExpression(expr ast.IBinaryOpExpression, env *Environment) (IRuntimeValue, Error) {
+func (interpreter *Interpreter) processEqualityExpr(expr ast.IBinaryOpExpression, env *Environment) (IRuntimeValue, Error) {
 	lhs, err := interpreter.processStmt(expr.GetLHS(), env)
 	if err != nil {
 		return lhs, err
@@ -709,7 +722,7 @@ func (interpreter *Interpreter) processEqualityExpression(expr ast.IBinaryOpExpr
 	return compare(lhs, expr.GetOperator(), rhs)
 }
 
-func (interpreter *Interpreter) processAdditiveExpression(expr ast.IBinaryOpExpression, env *Environment) (IRuntimeValue, Error) {
+func (interpreter *Interpreter) processBinaryOpExpr(expr ast.IBinaryOpExpression, env *Environment) (IRuntimeValue, Error) {
 	lhs, err := interpreter.processStmt(expr.GetLHS(), env)
 	if err != nil {
 		return lhs, err
@@ -722,7 +735,7 @@ func (interpreter *Interpreter) processAdditiveExpression(expr ast.IBinaryOpExpr
 	return calculate(lhs, expr.GetOperator(), rhs)
 }
 
-func (interpreter *Interpreter) processUnaryExpression(expr ast.IUnaryOpExpression, env *Environment) (IRuntimeValue, Error) {
+func (interpreter *Interpreter) processUnaryExpr(expr ast.IUnaryOpExpression, env *Environment) (IRuntimeValue, Error) {
 	operand, err := interpreter.processStmt(expr.GetExpression(), env)
 	if err != nil {
 		return operand, err
@@ -730,7 +743,7 @@ func (interpreter *Interpreter) processUnaryExpression(expr ast.IUnaryOpExpressi
 	return calculateUnary(expr.GetOperator(), operand)
 }
 
-func (interpreter *Interpreter) processCastExpression(expr ast.IUnaryOpExpression, env *Environment) (IRuntimeValue, Error) {
+func (interpreter *Interpreter) processCastExpr(expr ast.IUnaryOpExpression, env *Environment) (IRuntimeValue, Error) {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-cast-type
 
 	// A cast-type of "unset" is no longer supported and results in a compile-time error.
@@ -738,7 +751,7 @@ func (interpreter *Interpreter) processCastExpression(expr ast.IUnaryOpExpressio
 
 	// A cast can result in a loss of information.
 
-	// TODO processCastExpression - object
+	// TODO processCastExpr - object
 	// A cast-type of "object" results in a conversion to type "object".
 
 	value, err := interpreter.processStmt(expr.GetExpression(), env)
@@ -769,11 +782,11 @@ func (interpreter *Interpreter) processCastExpression(expr ast.IUnaryOpExpressio
 		// A cast-type of "int" or "integer" results in a conversion to type "int".
 		return runtimeValueToValueType(IntegerValue, value)
 	default:
-		return NewVoidRuntimeValue(), NewError("processCastExpression: Unsupported cast type %s", expr.GetOperator())
+		return NewVoidRuntimeValue(), NewError("processCastExpr: Unsupported cast type %s", expr.GetOperator())
 	}
 }
 
-func (interpreter *Interpreter) processLogicalNotExpression(expr ast.IUnaryOpExpression, env *Environment) (IRuntimeValue, Error) {
+func (interpreter *Interpreter) processLogicalNotExpr(expr ast.IUnaryOpExpression, env *Environment) (IRuntimeValue, Error) {
 	runtimeValue, err := interpreter.processStmt(expr.GetExpression(), env)
 	if err != nil {
 		return runtimeValue, err
@@ -785,7 +798,7 @@ func (interpreter *Interpreter) processLogicalNotExpression(expr ast.IUnaryOpExp
 	return NewBooleanRuntimeValue(!boolValue), nil
 }
 
-func (interpreter *Interpreter) processPostfixIncExpression(expr ast.IUnaryOpExpression, env *Environment) (IRuntimeValue, Error) {
+func (interpreter *Interpreter) processPostfixIncExpr(expr ast.IUnaryOpExpression, env *Environment) (IRuntimeValue, Error) {
 	// Spec: https://phplang.org/spec/10-expressions.html#postfix-increment-and-decrement-operators
 	// These operators behave like their prefix counterparts except that the value of a postfix ++ or – expression is the value
 	// before any increment or decrement takes place.
@@ -809,7 +822,7 @@ func (interpreter *Interpreter) processPostfixIncExpression(expr ast.IUnaryOpExp
 	return previous, nil
 }
 
-func (interpreter *Interpreter) processPrefixIncExpression(expr ast.IUnaryOpExpression, env *Environment) (IRuntimeValue, Error) {
+func (interpreter *Interpreter) processPrefixIncExpr(expr ast.IUnaryOpExpression, env *Environment) (IRuntimeValue, Error) {
 	previous, err := interpreter.processStmt(expr.GetExpression(), env)
 	if err != nil {
 		return previous, err

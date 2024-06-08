@@ -9,7 +9,7 @@ var variableExpressions = []NodeType{
 	SimpleVariableExpr, SubscriptExpr, FunctionCallExpr,
 }
 
-func IsVariableExpression(expr IExpression) bool {
+func IsVariableExpr(expr IExpression) bool {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-variable
 
 	// variable:

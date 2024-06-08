@@ -48,7 +48,7 @@ func TestEndTag(t *testing.T) {
 		"<?php ?>",
 		[]*Token{
 			NewToken(StartTagToken, "", position.NewPosition(testFile, 1, 1)),
-			NewToken(OperatorOrPunctuatorToken, ";", position.NewPosition(testFile, 1, 7)),
+			NewToken(OpOrPuncToken, ";", position.NewPosition(testFile, 1, 7)),
 			NewToken(EndTagToken, "", position.NewPosition(testFile, 1, 7)),
 		},
 	)
@@ -58,7 +58,7 @@ func TestEndTag(t *testing.T) {
 		[]*Token{
 			NewToken(StartTagToken, "", position.NewPosition(testFile, 1, 1)),
 			NewToken(KeywordToken, "echo", position.NewPosition(testFile, 1, 1)),
-			NewToken(OperatorOrPunctuatorToken, ";", position.NewPosition(testFile, 1, 5)),
+			NewToken(OpOrPuncToken, ";", position.NewPosition(testFile, 1, 5)),
 			NewToken(EndTagToken, "", position.NewPosition(testFile, 1, 5)),
 		},
 	)
@@ -67,7 +67,7 @@ func TestEndTag(t *testing.T) {
 		"<?php ?> ?>",
 		[]*Token{
 			NewToken(StartTagToken, "", position.NewPosition(testFile, 1, 1)),
-			NewToken(OperatorOrPunctuatorToken, ";", position.NewPosition(testFile, 1, 7)),
+			NewToken(OpOrPuncToken, ";", position.NewPosition(testFile, 1, 7)),
 			NewToken(EndTagToken, "", position.NewPosition(testFile, 1, 7)),
 			NewToken(TextToken, " ?>", nil),
 		},
@@ -181,25 +181,25 @@ func TestOperatorOrPunctuator(t *testing.T) {
 	testTokenize(t, "<?php a === 1", []*Token{
 		NewToken(StartTagToken, "", position.NewPosition(testFile, 1, 1)),
 		NewToken(NameToken, "a", position.NewPosition(testFile, 1, 7)),
-		NewToken(OperatorOrPunctuatorToken, "===", position.NewPosition(testFile, 1, 9)),
+		NewToken(OpOrPuncToken, "===", position.NewPosition(testFile, 1, 9)),
 	})
 
 	testTokenize(t, "<?php a == 1", []*Token{
 		NewToken(StartTagToken, "", position.NewPosition(testFile, 1, 1)),
 		NewToken(NameToken, "a", position.NewPosition(testFile, 1, 7)),
-		NewToken(OperatorOrPunctuatorToken, "==", position.NewPosition(testFile, 1, 9)),
+		NewToken(OpOrPuncToken, "==", position.NewPosition(testFile, 1, 9)),
 	})
 
 	testTokenize(t, "<?php a = 1", []*Token{
 		NewToken(StartTagToken, "", position.NewPosition(testFile, 1, 1)),
 		NewToken(NameToken, "a", position.NewPosition(testFile, 1, 7)),
-		NewToken(OperatorOrPunctuatorToken, "=", position.NewPosition(testFile, 1, 9)),
+		NewToken(OpOrPuncToken, "=", position.NewPosition(testFile, 1, 9)),
 	})
 
 	testTokenize(t, "<?php a ** 1", []*Token{
 		NewToken(StartTagToken, "", position.NewPosition(testFile, 1, 1)),
 		NewToken(NameToken, "a", position.NewPosition(testFile, 1, 7)),
-		NewToken(OperatorOrPunctuatorToken, "**", position.NewPosition(testFile, 1, 9)),
+		NewToken(OpOrPuncToken, "**", position.NewPosition(testFile, 1, 9)),
 	})
 }
 
@@ -207,11 +207,11 @@ func TestVariableVarname(t *testing.T) {
 	testTokenize(t, `<?php $$var = "someValue";`,
 		[]*Token{
 			NewToken(StartTagToken, "", position.NewPosition(testFile, 1, 1)),
-			NewToken(OperatorOrPunctuatorToken, "$", position.NewPosition(testFile, 1, 7)),
+			NewToken(OpOrPuncToken, "$", position.NewPosition(testFile, 1, 7)),
 			NewToken(VariableNameToken, "$var", position.NewPosition(testFile, 1, 8)),
-			NewToken(OperatorOrPunctuatorToken, "=", position.NewPosition(testFile, 1, 13)),
+			NewToken(OpOrPuncToken, "=", position.NewPosition(testFile, 1, 13)),
 			NewToken(StringLiteralToken, `"someValue"`, position.NewPosition(testFile, 1, 15)),
-			NewToken(OperatorOrPunctuatorToken, ";", position.NewPosition(testFile, 1, 26)),
+			NewToken(OpOrPuncToken, ";", position.NewPosition(testFile, 1, 26)),
 		})
 
 	testTokenize(t, `<?php echo 12, $var;`,
@@ -219,7 +219,7 @@ func TestVariableVarname(t *testing.T) {
 			NewToken(StartTagToken, "", position.NewPosition(testFile, 1, 1)),
 			NewToken(KeywordToken, "echo", position.NewPosition(testFile, 1, 7)),
 			NewToken(IntegerLiteralToken, "12", position.NewPosition(testFile, 1, 12)),
-			NewToken(OperatorOrPunctuatorToken, ",", position.NewPosition(testFile, 1, 14)),
+			NewToken(OpOrPuncToken, ",", position.NewPosition(testFile, 1, 14)),
 			NewToken(VariableNameToken, "$var", position.NewPosition(testFile, 1, 16)),
 		})
 }
@@ -230,15 +230,15 @@ func TestHtmlAndPhp(t *testing.T) {
 			NewToken(TextToken, "<body>\n    ", nil),
 			NewToken(StartTagToken, "", position.NewPosition(testFile, 2, 5)),
 			NewToken(VariableNameToken, "$heading", position.NewPosition(testFile, 2, 11)),
-			NewToken(OperatorOrPunctuatorToken, "=", position.NewPosition(testFile, 2, 20)),
+			NewToken(OpOrPuncToken, "=", position.NewPosition(testFile, 2, 20)),
 			NewToken(StringLiteralToken, `"My Heading"`, position.NewPosition(testFile, 2, 22)),
-			NewToken(OperatorOrPunctuatorToken, ";", position.NewPosition(testFile, 2, 34)),
+			NewToken(OpOrPuncToken, ";", position.NewPosition(testFile, 2, 34)),
 			NewToken(EndTagToken, "", position.NewPosition(testFile, 2, 36)),
 			NewToken(TextToken, "\n    <h1>", nil),
 			NewToken(StartTagToken, "", position.NewPosition(testFile, 3, 9)),
 			NewToken(KeywordToken, "echo", position.NewPosition(testFile, 3, 9)),
 			NewToken(VariableNameToken, "$heading", position.NewPosition(testFile, 3, 13)),
-			NewToken(OperatorOrPunctuatorToken, ";", position.NewPosition(testFile, 3, 22)),
+			NewToken(OpOrPuncToken, ";", position.NewPosition(testFile, 3, 22)),
 			NewToken(EndTagToken, "", position.NewPosition(testFile, 3, 22)),
 			NewToken(TextToken, "</h1>", nil),
 		})

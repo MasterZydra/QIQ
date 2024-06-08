@@ -13,7 +13,7 @@ func TestVariableExprToVariableName(t *testing.T) {
 
 	// $var
 	interpreter := NewInterpreter(NewDevConfig(), &Request{}, "test.php")
-	actual, err := interpreter.varExprToVarName(ast.NewSimpleVariableExpression(ast.NewVariableNameExpression(nil, "$var")), interpreter.env)
+	actual, err := interpreter.varExprToVarName(ast.NewSimpleVariableExpr(ast.NewVariableNameExpr(nil, "$var")), interpreter.env)
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -27,8 +27,8 @@ func TestVariableExprToVariableName(t *testing.T) {
 	interpreter = NewInterpreter(NewDevConfig(), &Request{}, "test.php")
 	interpreter.env.declareVariable("$var", NewStringRuntimeValue("hi"))
 	actual, err = interpreter.varExprToVarName(
-		ast.NewSimpleVariableExpression(
-			ast.NewSimpleVariableExpression(ast.NewVariableNameExpression(nil, "$var"))), interpreter.env)
+		ast.NewSimpleVariableExpr(
+			ast.NewSimpleVariableExpr(ast.NewVariableNameExpr(nil, "$var"))), interpreter.env)
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -43,9 +43,9 @@ func TestVariableExprToVariableName(t *testing.T) {
 	interpreter.env.declareVariable("$var1", NewStringRuntimeValue("hi"))
 	interpreter.env.declareVariable("$var", NewStringRuntimeValue("var1"))
 	actual, err = interpreter.varExprToVarName(
-		ast.NewSimpleVariableExpression(
-			ast.NewSimpleVariableExpression(
-				ast.NewSimpleVariableExpression(ast.NewVariableNameExpression(nil, "$var")))), interpreter.env)
+		ast.NewSimpleVariableExpr(
+			ast.NewSimpleVariableExpr(
+				ast.NewSimpleVariableExpr(ast.NewVariableNameExpr(nil, "$var")))), interpreter.env)
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -73,48 +73,195 @@ func testInputOutput(t *testing.T, php string, output string) *Interpreter {
 	return interpreter
 }
 
-func TestText(t *testing.T) {
+func TestOutput(t *testing.T) {
+	// Without PHP
 	testInputOutput(t, "<html>...</html>", "<html>...</html>")
-}
 
-func TestEchoShortTag(t *testing.T) {
-	testInputOutput(t, `<html><?= "abc" ?><?= 42; ?></html>`, "<html>abc42</html>")
-}
-
-func TestEchoExpression(t *testing.T) {
+	// Echo short tag
+	testInputOutput(t, `<html><?= "abc\n" ?><?= 42; ?></html>`, "<html>abc\n42</html>")
+	// Echo
 	testInputOutput(t,
-		`<html><?php echo "abc", 42 ?><?php echo "def", 24; ?></html>`,
-		"<html>abc42def24</html>",
+		`<html><?php echo "abc\t", 42 ?><?php echo "def", 24; ?></html>`, "<html>abc\t42def24</html>",
 	)
-}
 
-func TestStringVariableSubstitution(t *testing.T) {
+	// Simple variable substitution
 	testInputOutput(t, `<?php $a = 42; echo "a{$a}b";`, "a42b")
 }
 
-func TestVariableDeclaration(t *testing.T) {
+func TestConstants(t *testing.T) {
+	// Predefined constants
+	testInputOutput(t, `<?php echo E_USER_NOTICE;`, fmt.Sprintf("%d", E_USER_NOTICE))
+	testInputOutput(t, `<?php echo E_ALL;`, fmt.Sprintf("%d", E_ALL))
+
+	// Userdefined constants
+	testInputOutput(t, `<?php const TRUTH = 42; const PI = "3.141";echo TRUTH, PI;`, "423.141")
+}
+
+func TestVariable(t *testing.T) {
+	// Undefined variable
+	testInputOutput(t, `<?php echo is_null($a) ? "a" : "b";`, "Warning: Undefined variable $a\na")
+	testInputOutput(t, `<?php echo intval($a);`, "Warning: Undefined variable $a\n0")
+	testInputOutput(t, `<?php echo intval($$a);`, "Warning: Undefined variable $a\nWarning: Undefined variable $\n0")
+
 	// Simple variable
-	testInputOutput(t,
-		`<?php $var = "hi"; $var = "hello"; echo $var, " world";`,
-		"hello world",
-	)
+	testInputOutput(t, `<?php $var = "hi"; $var = "hello"; echo $var, " world";`, "hello world")
 
 	// Variable variable name
-	testInputOutput(t,
-		`<?php $var = "hi"; $$var = "hello"; echo $hi, " world";`,
-		"hello world",
-	)
+	testInputOutput(t, `<?php $var = "hi"; $$var = "hello"; echo $hi, " world";`, "hello world")
 
 	// Chained variable declarations
-	testInputOutput(t,
-		`<?php $a = $b = $c = 42; echo $a, $b, $c;`,
-		"424242",
-	)
+	testInputOutput(t, `<?php $a = $b = $c = 42; echo $a, $b, $c;`, "424242")
 
 	// Compound assignment
+	testInputOutput(t, `<?php $a = 42; echo $a; $a += 2; echo $a; $a += $a; echo $a;`, "424488")
+}
+
+func TestConditionals(t *testing.T) {
+	// Conditional
+	testInputOutput(t, `<?php echo 1 ? "y" : "n"; echo 0 ? "n" : "y"; echo false ?: "y";`, "yyy")
+
+	// Coalesce
 	testInputOutput(t,
-		`<?php $a = 42; echo $a; $a += 2; echo $a; $a += $a; echo $a;`,
-		"424488",
+		`<?php $a = null; echo $a ?? "a"; $a = "b"; echo $a ?? "a"; echo "c" ?? "d";`, "abc",
+	)
+	testInputOutput(t, `<?php echo $a ?? "a";`, "a")
+
+	// If statment
+	testInputOutput(t, `<?php $a = 42; if ($a === 42) { echo "42"; } elseif ($a === 41) { echo "41"; } else { echo "??"; }`, "42")
+	testInputOutput(t, `<?php $a = 41; if ($a === 42) { echo "42"; } elseif ($a === 41) { echo "41"; } else { echo "??"; }`, "41")
+	testInputOutput(t, `<?php $a = 40; if ($a === 42) { echo "42"; } elseif ($a === 41) { echo "41"; } else { echo "??"; }`, "??")
+	// Alternative syntax
+	testInputOutput(t, `<?php $a = 42; if ($a === 42): echo "42"; elseif ($a === 41): echo "41"; else: echo "??"; endif;`, "42")
+	testInputOutput(t, `<?php $a = 41; if ($a === 42): echo "42"; elseif ($a === 41): echo "41"; else: echo "??"; endif;`, "41")
+	testInputOutput(t, `<?php $a = 40; if ($a === 42): echo "42"; elseif ($a === 41): echo "41"; else: echo "??"; endif;`, "??")
+}
+
+func TestIntrinsic(t *testing.T) {
+	// Exit
+	interpreter := testInputOutput(t, `Hello <?php exit("world");`, "Hello world")
+	if interpreter.GetExitCode() != 0 {
+		t.Errorf("Expected: \"%d\", Got \"%d\"", 0, interpreter.GetExitCode())
+	}
+	interpreter = testInputOutput(t, `Hello<?php exit;`, "Hello")
+	if interpreter.GetExitCode() != 0 {
+		t.Errorf("Expected: \"%d\", Got \"%d\"", 0, interpreter.GetExitCode())
+	}
+	interpreter = testInputOutput(t, `Hello<?php exit(42);`, "Hello")
+	if interpreter.GetExitCode() != 42 {
+		t.Errorf("Expected: \"%d\", Got \"%d\"", 42, interpreter.GetExitCode())
+	}
+
+	// Empty
+	testInputOutput(t, `<?php echo empty(false) ? "y" : "n";`, "y")
+	testInputOutput(t, `<?php echo empty(true) ? "y" : "n";`, "n")
+	testInputOutput(t, `<?php echo empty(0) ? "y" : "n";`, "y")
+	testInputOutput(t, `<?php echo empty(1) ? "y" : "n";`, "n")
+	testInputOutput(t, `<?php echo empty(0.0) ? "y" : "n";`, "y")
+	testInputOutput(t, `<?php echo empty(2.0) ? "y" : "n";`, "n")
+	testInputOutput(t, `<?php echo empty("") ? "y" : "n";`, "y")
+	testInputOutput(t, `<?php echo empty("0") ? "y" : "n";`, "y")
+	testInputOutput(t, `<?php echo empty("1") ? "y" : "n";`, "n")
+	testInputOutput(t, `<?php echo empty("00") ? "y" : "n";`, "n")
+	testInputOutput(t, `<?php echo empty(null) ? "y" : "n";`, "y")
+	testInputOutput(t, `<?php echo empty($a) ? "y" : "n";`, "y")
+	testInputOutput(t, `<?php $a = 1; echo empty($a) ? "y" : "n";`, "n")
+
+	// Isset
+	testInputOutput(t, `<?php $a = 1; echo isset($a) ? "y" : "n";`, "y")
+	testInputOutput(t, `<?php echo isset($a) ? "y" : "n";`, "n")
+	testInputOutput(t, `<?php $a = 1; echo isset($a, $b) ? "y" : "n";`, "n")
+	testInputOutput(t, `<?php echo isset($a, $b) ? "y" : "n";`, "n")
+
+	// Unset
+	testInputOutput(t, `<?php $a = 1; echo isset($a) ? "y" : "n"; unset($a); echo isset($a) ? "y" : "n";`, "yn")
+	testInputOutput(t, `<?php echo isset($a) ? "y" : "n"; unset($a); echo isset($a) ? "y" : "n";`, "nn")
+}
+
+func TestUserFunctions(t *testing.T) {
+	// Simple user defined function without types, params, ...
+	// Check if function definition can be after the function call
+	testInputOutput(t,
+		`<?php
+			echo "a";
+			helloWorld();
+			echo "b";
+			function helloWorld() { echo "Hello World"; }
+			echo "c";
+		`,
+		"aHello Worldbc",
+	)
+	testInputOutput(t,
+		`<?php
+			echo "a";
+			helloWorld();
+			echo "b";
+			{{{ function helloWorld() { echo "Hello World"; } }}}
+			echo "c";
+		`,
+		"aHello Worldbc",
+	)
+
+	// Test correct scoping: $a is available in the function body
+	testInputOutput(t,
+		`<?php
+			$a = 1;
+			func();
+			function func() {
+				echo isset($a) ? "y" : "n";
+				$b = 2;
+			}
+			echo isset($b) ? "y" : "n";
+		`,
+		"nn",
+	)
+
+	// Parameters
+	testInputOutput(t,
+		`<?php
+			$a = 1;
+			func($a);
+			func(2);
+			function func($param) {
+				echo $param;
+			}
+		`,
+		"12",
+	)
+	testInputOutput(t,
+		`<?php
+			$a = 1;
+			func($a, 2);
+			func(1, 1+1);
+			function func($param1, $param2) {
+				echo $param1 + $param2;
+			}
+		`,
+		"33",
+	)
+	// Typed parameters
+	testInputOutput(t,
+		`<?php
+			$a = 1;
+			func($a, 2);
+			func(1, 1+1);
+			function func(int|float $param1, int|float $param2) {
+				echo $param1 + $param2;
+			}
+		`,
+		"33",
+	)
+
+	// Return type
+	testInputOutput(t,
+		`<?php
+			$a = 1;
+			echo func($a, 2);
+			echo func(1, 1+1);
+			function func(int|float $param1, int|float $param2,): int|float {
+				return $param1 + $param2;
+			}
+		`,
+		"33",
 	)
 }
 
@@ -135,11 +282,6 @@ func TestArray(t *testing.T) {
 	)
 }
 
-func TestPredefinedConstants(t *testing.T) {
-	testInputOutput(t, `<?php echo E_USER_NOTICE;`, fmt.Sprintf("%d", E_USER_NOTICE))
-	testInputOutput(t, `<?php echo E_ALL;`, fmt.Sprintf("%d", E_ALL))
-}
-
 func TestCastExpression(t *testing.T) {
 	testInputOutput(t, `<?php var_dump((array)42);`, "array(1) {\n  [0]=>\n  int(42)\n}\n")
 	testInputOutput(t, `<?php var_dump((binary)42);`, `string(2) "42"`+"\n")
@@ -154,30 +296,13 @@ func TestCastExpression(t *testing.T) {
 	testInputOutput(t, `<?php var_dump((string)42);`, `string(2) "42"`+"\n")
 }
 
-func TestConstantDeclaration(t *testing.T) {
-	testInputOutput(t,
-		`<?php const TRUTH = 42; const PI = "3.141";echo TRUTH, PI;`,
-		"423.141",
-	)
-}
+func TestOperators(t *testing.T) {
+	// Logical "not"
+	testInputOutput(t, `<?php echo !true ? "y" : "y";`, "y")
+	testInputOutput(t, `<?php echo !false ? "y" : "y";`, "y")
+	testInputOutput(t, `<?php echo !42 ? "y" : "y";`, "y")
 
-func TestConditional(t *testing.T) {
-	testInputOutput(t,
-		`<?php echo 1 ? "a" : "b"; echo 0 ? "b" : "a"; echo false ?: "a";`,
-		"aaa",
-	)
-}
-
-func TestCoalesce(t *testing.T) {
-	testInputOutput(t,
-		`<?php $a = null; echo $a ?? "a"; $a = "b"; echo $a ?? "a"; echo "c" ?? "d";`,
-		"abc",
-	)
-	testInputOutput(t, `<?php echo $a ?? "a";`, "a")
-}
-
-func TestCalculation(t *testing.T) {
-	// Boolean
+	// Logical "and" and "or"
 	testInputOutput(t, `<?php echo 4 && 0 ? "t" : "f";`, "f")
 	testInputOutput(t, `<?php echo 4 && 1 ? "t" : "f";`, "t")
 	testInputOutput(t, `<?php echo 4 && false ? "t" : "f";`, "f")
@@ -187,6 +312,49 @@ func TestCalculation(t *testing.T) {
 	testInputOutput(t, `<?php echo false || false ? "t" : "f";`, "f")
 	testInputOutput(t, `<?php echo 4 || true ? "t" : "f";`, "t")
 
+	// Unary expression
+	// Boolean
+	testInputOutput(t, `<?php var_dump(+true);`, "int(1)\n")
+	testInputOutput(t, `<?php var_dump(-true);`, "int(-1)\n")
+	testInputOutput(t, `<?php var_dump(+false);`, "int(0)\n")
+	testInputOutput(t, `<?php var_dump(-false);`, "int(0)\n")
+	// Floating
+	testInputOutput(t, `<?php var_dump(+2.5);`, "float(2.5)\n")
+	testInputOutput(t, `<?php var_dump(+(-2.5));`, "float(-2.5)\n")
+	testInputOutput(t, `<?php var_dump(-3.0);`, "float(-3)\n")
+	testInputOutput(t, `<?php var_dump(-(-3.0));`, "float(3)\n")
+	testInputOutput(t, `<?php var_dump(~(-3.0));`, "int(2)\n")
+	testInputOutput(t, `<?php var_dump(~3.0);`, "int(-4)\n")
+	// Integer
+	testInputOutput(t, `<?php var_dump(+2);`, "int(2)\n")
+	testInputOutput(t, `<?php var_dump(+(-2));`, "int(-2)\n")
+	testInputOutput(t, `<?php var_dump(-3);`, "int(-3)\n")
+	testInputOutput(t, `<?php var_dump(-(-3));`, "int(3)\n")
+	testInputOutput(t, `<?php var_dump(~(-3));`, "int(2)\n")
+	testInputOutput(t, `<?php var_dump(~3);`, "int(-4)\n")
+
+	// Post-/Prefix Inc-/Decrement
+	// Integer
+	testInputOutput(t, `<?php $a = 42; var_dump($a++); var_dump($a);`, "int(42)\nint(43)\n")
+	testInputOutput(t, `<?php $a = 42; var_dump($a--); var_dump($a);`, "int(42)\nint(41)\n")
+	testInputOutput(t, `<?php $a = 42; var_dump(++$a); var_dump($a);`, "int(43)\nint(43)\n")
+	testInputOutput(t, `<?php $a = 42; var_dump(--$a); var_dump($a);`, "int(41)\nint(41)\n")
+	// Boolean
+	testInputOutput(t, `<?php $a = true; var_dump($a++); var_dump($a);`, "bool(true)\nbool(true)\n")
+	testInputOutput(t, `<?php $a = true; var_dump($a--); var_dump($a);`, "bool(true)\nbool(true)\n")
+	testInputOutput(t, `<?php $a = false; var_dump($a++); var_dump($a);`, "bool(false)\nbool(false)\n")
+	testInputOutput(t, `<?php $a = false; var_dump($a--); var_dump($a);`, "bool(false)\nbool(false)\n")
+	// Floating
+	testInputOutput(t, `<?php $a = 42.0; var_dump($a++); var_dump($a);`, "float(42)\nfloat(43)\n")
+	testInputOutput(t, `<?php $a = 42.0; var_dump($a--); var_dump($a);`, "float(42)\nfloat(41)\n")
+	// Null
+	testInputOutput(t, `<?php $a = null; var_dump($a++); var_dump($a);`, "NULL\nint(1)\n")
+	testInputOutput(t, `<?php $a = null; var_dump($a--); var_dump($a);`, "NULL\nNULL\n")
+	// String
+	testInputOutput(t, `<?php $a = ""; var_dump($a++); var_dump($a);`, `string(0) ""`+"\n"+`string(1) "1"`+"\n")
+	testInputOutput(t, `<?php $a = ""; var_dump($a--); var_dump($a);`, `string(0) ""`+"\nint(-1)\n")
+
+	// Base operators
 	// Integer
 	testInputOutput(t, `<?php echo 4 >> 2;`, "1")
 	testInputOutput(t, `<?php echo 8 << 2;`, "32")
@@ -213,16 +381,6 @@ func TestCalculation(t *testing.T) {
 	testInputOutput(t, `<?php echo 2 ** 4;`, "16")
 	testInputOutput(t, `<?php echo 2 ** 2 ** 2;`, "16")
 	testInputOutput(t, `<?php $a = 2; echo $a **= 4;`, "16")
-
-	// Combined additions and multiplications
-	testInputOutput(t, `<?php echo 31 + 21 + 11;`, "63")
-	testInputOutput(t, `<?php echo 4 * 3 * 2;`, "24")
-	testInputOutput(t, `<?php echo 2 + 3 * 4;`, "14")
-	testInputOutput(t, `<?php echo (2 + 3) * 4;`, "20")
-	testInputOutput(t, `<?php echo 2 * 3 + 4 * 5 + 6;`, "32")
-	testInputOutput(t, `<?php echo 2 * (3 + 4) * 5 + 6;`, "76")
-	testInputOutput(t, `<?php echo 2 + 3 * 4 + 5 * 6;`, "44")
-
 	// Floating
 	testInputOutput(t, `<?php echo 42.0 + 1.5;`, "43.5")
 	testInputOutput(t, `<?php $a = 42.0; echo $a += 1.5;`, "43.5")
@@ -234,13 +392,114 @@ func TestCalculation(t *testing.T) {
 	testInputOutput(t, `<?php $a = 43.0; echo $a /= 2;`, "21.5")
 	testInputOutput(t, `<?php echo 2.0 ** 4;`, "16")
 	testInputOutput(t, `<?php $a = 2.0; echo $a **= 4;`, "16")
-
 	// String
 	testInputOutput(t, `<?php echo "a" . "bc";`, "abc")
 	testInputOutput(t, `<?php $a = "a"; echo $a .= "bc";`, "abc")
+	// Combined additions and multiplications
+	testInputOutput(t, `<?php echo 31 + 21 + 11;`, "63")
+	testInputOutput(t, `<?php echo 4 * 3 * 2;`, "24")
+	testInputOutput(t, `<?php echo 2 + 3 * 4;`, "14")
+	testInputOutput(t, `<?php echo (2 + 3) * 4;`, "20")
+	testInputOutput(t, `<?php echo 2 * 3 + 4 * 5 + 6;`, "32")
+	testInputOutput(t, `<?php echo 2 * (3 + 4) * 5 + 6;`, "76")
+	testInputOutput(t, `<?php echo 2 + 3 * 4 + 5 * 6;`, "44")
 }
 
-func TestLooseComparisons(t *testing.T) {
+func TestStrictComparison(t *testing.T) {
+	// Table from https://www.php.net/manual/en/types.comparisons.php
+	// true
+	testInputOutput(t, `<?php var_dump(true === true);`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump(true === false);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(true === 1);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(true === 0);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(true === -1);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(true === "1");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(true === "0");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(true === "-1");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(true === null);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(true === []);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(true === "php");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(true === "");`, "bool(false)\n")
+	// false
+	testInputOutput(t, `<?php var_dump(false === false);`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump(false === 1);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(false === 0);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(false === -1);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(false === "1");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(false === "0");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(false === "-1");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(false === null);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(false === []);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(false === "php");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(false === "");`, "bool(false)\n")
+	// 1
+	testInputOutput(t, `<?php var_dump(1 === 1);`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump(1 === 0);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(1 === -1);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(1 === "1");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(1 === "0");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(1 === "-1");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(1 === null);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(1 === []);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(1 === "php");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(1 === "");`, "bool(false)\n")
+	// 0
+	testInputOutput(t, `<?php var_dump(0 === 0);`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump(0 === -1);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(0 === "1");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(0 === "0");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(0 === "-1");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(0 === null);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(0 === []);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(0 === "php");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(0 === "");`, "bool(false)\n")
+	// -1
+	testInputOutput(t, `<?php var_dump(-1 === -1);`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump(-1 === "1");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(-1 === "0");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(-1 === "-1");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(-1 === null);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(-1 === []);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(-1 === "php");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(-1 === "");`, "bool(false)\n")
+	// "1"
+	testInputOutput(t, `<?php var_dump("1" === "1");`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump("1" === "0");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump("1" === "-1");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump("1" === null);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump("1" === []);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump("1" === "php");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump("1" === "");`, "bool(false)\n")
+	// "0"
+	testInputOutput(t, `<?php var_dump("0" === "0");`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump("0" === "-1");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump("0" === null);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump("0" === []);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump("0" === "php");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump("0" === "");`, "bool(false)\n")
+	// "-1"
+	testInputOutput(t, `<?php var_dump("-1" === "-1");`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump("-1" === null);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump("-1" === []);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump("-1" === "php");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump("-1" === "");`, "bool(false)\n")
+	// null
+	testInputOutput(t, `<?php var_dump(null === null);`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump(null === []);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(null === "php");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(null === "");`, "bool(false)\n")
+	// []
+	testInputOutput(t, `<?php var_dump([] === []);`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump([] === "php");`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump([] === "");`, "bool(false)\n")
+	// "php"
+	testInputOutput(t, `<?php var_dump("php" === "php");`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump("php" === "");`, "bool(false)\n")
+	// ""
+	testInputOutput(t, `<?php var_dump("" === "");`, "bool(true)\n")
+}
+
+func TestLooseComparison(t *testing.T) {
 	// Table from https://www.php.net/manual/en/types.comparisons.php
 	// true
 	testInputOutput(t, `<?php var_dump(true == true);`, "bool(true)\n")
@@ -346,249 +605,6 @@ func TestLooseComparisons(t *testing.T) {
 	testInputOutput(t, `<?php var_dump("1e1" == "10");`, "bool(true)\n")
 	testInputOutput(t, `<?php var_dump(100 == "1e2");`, "bool(true)\n")
 	testInputOutput(t, `<?php var_dump(1e2 == "100");`, "bool(true)\n")
-}
-
-func TestStrictComparisons(t *testing.T) {
-	// Table from https://www.php.net/manual/en/types.comparisons.php
-	// true
-	testInputOutput(t, `<?php var_dump(true === true);`, "bool(true)\n")
-	testInputOutput(t, `<?php var_dump(true === false);`, "bool(false)\n")
-	testInputOutput(t, `<?php var_dump(true === 1);`, "bool(false)\n")
-	testInputOutput(t, `<?php var_dump(true === 0);`, "bool(false)\n")
-	testInputOutput(t, `<?php var_dump(true === -1);`, "bool(false)\n")
-	testInputOutput(t, `<?php var_dump(true === "1");`, "bool(false)\n")
-	testInputOutput(t, `<?php var_dump(true === "0");`, "bool(false)\n")
-	testInputOutput(t, `<?php var_dump(true === "-1");`, "bool(false)\n")
-	testInputOutput(t, `<?php var_dump(true === null);`, "bool(false)\n")
-	testInputOutput(t, `<?php var_dump(true === []);`, "bool(false)\n")
-	testInputOutput(t, `<?php var_dump(true === "php");`, "bool(false)\n")
-	testInputOutput(t, `<?php var_dump(true === "");`, "bool(false)\n")
-	// false
-	testInputOutput(t, `<?php var_dump(false === false);`, "bool(true)\n")
-	testInputOutput(t, `<?php var_dump(false === 1);`, "bool(false)\n")
-	testInputOutput(t, `<?php var_dump(false === 0);`, "bool(false)\n")
-	testInputOutput(t, `<?php var_dump(false === -1);`, "bool(false)\n")
-	testInputOutput(t, `<?php var_dump(false === "1");`, "bool(false)\n")
-	testInputOutput(t, `<?php var_dump(false === "0");`, "bool(false)\n")
-	testInputOutput(t, `<?php var_dump(false === "-1");`, "bool(false)\n")
-	testInputOutput(t, `<?php var_dump(false === null);`, "bool(false)\n")
-	testInputOutput(t, `<?php var_dump(false === []);`, "bool(false)\n")
-	testInputOutput(t, `<?php var_dump(false === "php");`, "bool(false)\n")
-	testInputOutput(t, `<?php var_dump(false === "");`, "bool(false)\n")
-	// 1
-	testInputOutput(t, `<?php var_dump(1 === 1);`, "bool(true)\n")
-	testInputOutput(t, `<?php var_dump(1 === 0);`, "bool(false)\n")
-	testInputOutput(t, `<?php var_dump(1 === -1);`, "bool(false)\n")
-	testInputOutput(t, `<?php var_dump(1 === "1");`, "bool(false)\n")
-	testInputOutput(t, `<?php var_dump(1 === "0");`, "bool(false)\n")
-	testInputOutput(t, `<?php var_dump(1 === "-1");`, "bool(false)\n")
-	testInputOutput(t, `<?php var_dump(1 === null);`, "bool(false)\n")
-	testInputOutput(t, `<?php var_dump(1 === []);`, "bool(false)\n")
-	testInputOutput(t, `<?php var_dump(1 === "php");`, "bool(false)\n")
-	testInputOutput(t, `<?php var_dump(1 === "");`, "bool(false)\n")
-	// 0
-	testInputOutput(t, `<?php var_dump(0 === 0);`, "bool(true)\n")
-	testInputOutput(t, `<?php var_dump(0 === -1);`, "bool(false)\n")
-	testInputOutput(t, `<?php var_dump(0 === "1");`, "bool(false)\n")
-	testInputOutput(t, `<?php var_dump(0 === "0");`, "bool(false)\n")
-	testInputOutput(t, `<?php var_dump(0 === "-1");`, "bool(false)\n")
-	testInputOutput(t, `<?php var_dump(0 === null);`, "bool(false)\n")
-	testInputOutput(t, `<?php var_dump(0 === []);`, "bool(false)\n")
-	testInputOutput(t, `<?php var_dump(0 === "php");`, "bool(false)\n")
-	testInputOutput(t, `<?php var_dump(0 === "");`, "bool(false)\n")
-	// -1
-	testInputOutput(t, `<?php var_dump(-1 === -1);`, "bool(true)\n")
-	testInputOutput(t, `<?php var_dump(-1 === "1");`, "bool(false)\n")
-	testInputOutput(t, `<?php var_dump(-1 === "0");`, "bool(false)\n")
-	testInputOutput(t, `<?php var_dump(-1 === "-1");`, "bool(false)\n")
-	testInputOutput(t, `<?php var_dump(-1 === null);`, "bool(false)\n")
-	testInputOutput(t, `<?php var_dump(-1 === []);`, "bool(false)\n")
-	testInputOutput(t, `<?php var_dump(-1 === "php");`, "bool(false)\n")
-	testInputOutput(t, `<?php var_dump(-1 === "");`, "bool(false)\n")
-	// "1"
-	testInputOutput(t, `<?php var_dump("1" === "1");`, "bool(true)\n")
-	testInputOutput(t, `<?php var_dump("1" === "0");`, "bool(false)\n")
-	testInputOutput(t, `<?php var_dump("1" === "-1");`, "bool(false)\n")
-	testInputOutput(t, `<?php var_dump("1" === null);`, "bool(false)\n")
-	testInputOutput(t, `<?php var_dump("1" === []);`, "bool(false)\n")
-	testInputOutput(t, `<?php var_dump("1" === "php");`, "bool(false)\n")
-	testInputOutput(t, `<?php var_dump("1" === "");`, "bool(false)\n")
-	// "0"
-	testInputOutput(t, `<?php var_dump("0" === "0");`, "bool(true)\n")
-	testInputOutput(t, `<?php var_dump("0" === "-1");`, "bool(false)\n")
-	testInputOutput(t, `<?php var_dump("0" === null);`, "bool(false)\n")
-	testInputOutput(t, `<?php var_dump("0" === []);`, "bool(false)\n")
-	testInputOutput(t, `<?php var_dump("0" === "php");`, "bool(false)\n")
-	testInputOutput(t, `<?php var_dump("0" === "");`, "bool(false)\n")
-	// "-1"
-	testInputOutput(t, `<?php var_dump("-1" === "-1");`, "bool(true)\n")
-	testInputOutput(t, `<?php var_dump("-1" === null);`, "bool(false)\n")
-	testInputOutput(t, `<?php var_dump("-1" === []);`, "bool(false)\n")
-	testInputOutput(t, `<?php var_dump("-1" === "php");`, "bool(false)\n")
-	testInputOutput(t, `<?php var_dump("-1" === "");`, "bool(false)\n")
-	// null
-	testInputOutput(t, `<?php var_dump(null === null);`, "bool(true)\n")
-	testInputOutput(t, `<?php var_dump(null === []);`, "bool(false)\n")
-	testInputOutput(t, `<?php var_dump(null === "php");`, "bool(false)\n")
-	testInputOutput(t, `<?php var_dump(null === "");`, "bool(false)\n")
-	// []
-	testInputOutput(t, `<?php var_dump([] === []);`, "bool(true)\n")
-	testInputOutput(t, `<?php var_dump([] === "php");`, "bool(false)\n")
-	testInputOutput(t, `<?php var_dump([] === "");`, "bool(false)\n")
-	// "php"
-	testInputOutput(t, `<?php var_dump("php" === "php");`, "bool(true)\n")
-	testInputOutput(t, `<?php var_dump("php" === "");`, "bool(false)\n")
-	// ""
-	testInputOutput(t, `<?php var_dump("" === "");`, "bool(true)\n")
-}
-
-func TestComparison(t *testing.T) {
-	// ===
-	testInputOutput(t, `<?php echo "abc" === "abc" ? "a" : "b";`, "a")
-	testInputOutput(t, `<?php echo "abc" !== "abc" ? "a" : "b";`, "b")
-	testInputOutput(t, `<?php echo "abc" !== "abcd" ? "a" : "b";`, "a")
-	testInputOutput(t, `<?php echo "abc" === "abcd" ? "a" : "b";`, "b")
-	testInputOutput(t, `<?php echo "123" !== 123 ? "a" : "b";`, "a")
-	testInputOutput(t, `<?php echo "123" === 123 ? "a" : "b";`, "b")
-}
-
-func TestIncDec(t *testing.T) {
-	// Boolean
-	testInputOutput(t, `<?php $a = true; var_dump($a++); var_dump($a);`, "bool(true)\nbool(true)\n")
-	testInputOutput(t, `<?php $a = true; var_dump($a--); var_dump($a);`, "bool(true)\nbool(true)\n")
-	testInputOutput(t, `<?php $a = true; var_dump(++$a); var_dump($a);`, "bool(true)\nbool(true)\n")
-	testInputOutput(t, `<?php $a = true; var_dump(--$a); var_dump($a);`, "bool(true)\nbool(true)\n")
-	testInputOutput(t, `<?php $a = false; var_dump($a++); var_dump($a);`, "bool(false)\nbool(false)\n")
-	testInputOutput(t, `<?php $a = false; var_dump($a--); var_dump($a);`, "bool(false)\nbool(false)\n")
-	testInputOutput(t, `<?php $a = false; var_dump(++$a); var_dump($a);`, "bool(false)\nbool(false)\n")
-	testInputOutput(t, `<?php $a = false; var_dump(--$a); var_dump($a);`, "bool(false)\nbool(false)\n")
-
-	// Floating
-	testInputOutput(t, `<?php $a = 42.0; var_dump($a++); var_dump($a);`, "float(42)\nfloat(43)\n")
-	testInputOutput(t, `<?php $a = 42.0; var_dump($a--); var_dump($a);`, "float(42)\nfloat(41)\n")
-	testInputOutput(t, `<?php $a = 42.0; var_dump(++$a); var_dump($a);`, "float(43)\nfloat(43)\n")
-	testInputOutput(t, `<?php $a = 42.0; var_dump(--$a); var_dump($a);`, "float(41)\nfloat(41)\n")
-
-	// Integer
-	testInputOutput(t, `<?php $a = 42; var_dump($a++); var_dump($a);`, "int(42)\nint(43)\n")
-	testInputOutput(t, `<?php $a = 42; var_dump($a--); var_dump($a);`, "int(42)\nint(41)\n")
-	testInputOutput(t, `<?php $a = 42; var_dump(++$a); var_dump($a);`, "int(43)\nint(43)\n")
-	testInputOutput(t, `<?php $a = 42; var_dump(--$a); var_dump($a);`, "int(41)\nint(41)\n")
-
-	// Null
-	testInputOutput(t, `<?php $a = null; var_dump($a++); var_dump($a);`, "NULL\nint(1)\n")
-	testInputOutput(t, `<?php $a = null; var_dump($a--); var_dump($a);`, "NULL\nNULL\n")
-	testInputOutput(t, `<?php $a = null; var_dump(++$a); var_dump($a);`, "int(1)\nint(1)\n")
-	testInputOutput(t, `<?php $a = null; var_dump(--$a); var_dump($a);`, "NULL\nNULL\n")
-
-	// String
-	testInputOutput(t, `<?php $a = ""; var_dump($a++); var_dump($a);`, `string(0) ""`+"\n"+`string(1) "1"`+"\n")
-	testInputOutput(t, `<?php $a = ""; var_dump($a--); var_dump($a);`, `string(0) ""`+"\nint(-1)\n")
-	testInputOutput(t, `<?php $a = ""; var_dump(++$a); var_dump($a);`, `string(1) "1"`+"\n"+`string(1) "1"`+"\n")
-	testInputOutput(t, `<?php $a = ""; var_dump(--$a); var_dump($a);`, "int(-1)\nint(-1)\n")
-}
-
-func TestUnaryExpression(t *testing.T) {
-	// Boolean
-	testInputOutput(t, `<?php var_dump(+true);`, "int(1)\n")
-	testInputOutput(t, `<?php var_dump(-true);`, "int(-1)\n")
-	testInputOutput(t, `<?php var_dump(+false);`, "int(0)\n")
-	testInputOutput(t, `<?php var_dump(-false);`, "int(0)\n")
-
-	// Floating
-	testInputOutput(t, `<?php var_dump(+2.5);`, "float(2.5)\n")
-	testInputOutput(t, `<?php var_dump(+(-2.5));`, "float(-2.5)\n")
-	testInputOutput(t, `<?php var_dump(-3.0);`, "float(-3)\n")
-	testInputOutput(t, `<?php var_dump(-(-3.0));`, "float(3)\n")
-	testInputOutput(t, `<?php var_dump(~(-3.0));`, "int(2)\n")
-	testInputOutput(t, `<?php var_dump(~3.0);`, "int(-4)\n")
-
-	// Integer
-	testInputOutput(t, `<?php var_dump(+2);`, "int(2)\n")
-	testInputOutput(t, `<?php var_dump(+(-2));`, "int(-2)\n")
-	testInputOutput(t, `<?php var_dump(-3);`, "int(-3)\n")
-	testInputOutput(t, `<?php var_dump(-(-3));`, "int(3)\n")
-	testInputOutput(t, `<?php var_dump(~(-3));`, "int(2)\n")
-	testInputOutput(t, `<?php var_dump(~3);`, "int(-4)\n")
-}
-
-func TestLogicalExpression(t *testing.T) {
-	// Not
-	testInputOutput(t, `<?php echo !true ? "a" : "b";`, "b")
-	testInputOutput(t, `<?php echo !false ? "a" : "b";`, "a")
-	testInputOutput(t, `<?php echo !42 ? "a" : "b";`, "b")
-}
-
-func TestWarningUndefinedVariable(t *testing.T) {
-	testInputOutput(t,
-		`<?php echo is_null($a) ? "a" : "b";`,
-		"Warning: Undefined variable $a\na",
-	)
-
-	testInputOutput(t,
-		`<?php echo intval($a);`,
-		"Warning: Undefined variable $a\n0",
-	)
-
-	testInputOutput(t,
-		`<?php echo intval($$a);`,
-		"Warning: Undefined variable $a\nWarning: Undefined variable $\n0",
-	)
-}
-
-func TestIntrinsic(t *testing.T) {
-	// Exit
-	interpreter := testInputOutput(t, `Hello <?php exit("world");`, "Hello world")
-	if interpreter.GetExitCode() != 0 {
-		t.Errorf("Expected: \"%d\", Got \"%d\"", 0, interpreter.GetExitCode())
-	}
-	interpreter = testInputOutput(t, `Hello<?php exit;`, "Hello")
-	if interpreter.GetExitCode() != 0 {
-		t.Errorf("Expected: \"%d\", Got \"%d\"", 0, interpreter.GetExitCode())
-	}
-	interpreter = testInputOutput(t, `Hello<?php exit(42);`, "Hello")
-	if interpreter.GetExitCode() != 42 {
-		t.Errorf("Expected: \"%d\", Got \"%d\"", 42, interpreter.GetExitCode())
-	}
-
-	// Empty
-	testInputOutput(t, `<?php echo empty(false) ? "a" : "b";`, "a")
-	testInputOutput(t, `<?php echo empty(true) ? "a" : "b";`, "b")
-	testInputOutput(t, `<?php echo empty(0) ? "a" : "b";`, "a")
-	testInputOutput(t, `<?php echo empty(1) ? "a" : "b";`, "b")
-	testInputOutput(t, `<?php echo empty(0.0) ? "a" : "b";`, "a")
-	testInputOutput(t, `<?php echo empty(2.0) ? "a" : "b";`, "b")
-	testInputOutput(t, `<?php echo empty("") ? "a" : "b";`, "a")
-	testInputOutput(t, `<?php echo empty("0") ? "a" : "b";`, "a")
-	testInputOutput(t, `<?php echo empty("1") ? "a" : "b";`, "b")
-	testInputOutput(t, `<?php echo empty("00") ? "a" : "b";`, "b")
-	testInputOutput(t, `<?php echo empty(null) ? "a" : "b";`, "a")
-	testInputOutput(t, `<?php echo empty($a) ? "a" : "b";`, "a")
-	testInputOutput(t, `<?php $a = 1; echo empty($a) ? "a" : "b";`, "b")
-
-	// Isset
-	testInputOutput(t, `<?php $a = 1; echo isset($a) ? "a" : "b";`, "a")
-	testInputOutput(t, `<?php echo isset($a) ? "a" : "b";`, "b")
-	testInputOutput(t, `<?php $a = 1; echo isset($a, $b) ? "a" : "b";`, "b")
-	testInputOutput(t, `<?php echo isset($a, $b) ? "a" : "b";`, "b")
-
-	// Unset
-	testInputOutput(t, `<?php $a = 1; echo isset($a) ? "y" : "n"; unset($a); echo isset($a) ? "y" : "n";`, "yn")
-	testInputOutput(t, `<?php echo isset($a) ? "y" : "n"; unset($a); echo isset($a) ? "y" : "n";`, "nn")
-}
-
-func TestCompoundStmt(t *testing.T) {
-	testInputOutput(t, `<?php { echo "1"; echo "2";} {}`, "12")
-}
-
-func TestIfStmt(t *testing.T) {
-	testInputOutput(t, `<?php $a = 42; if ($a === 42) { echo "42"; } elseif ($a === 41) { echo "41"; } else { echo "??"; }`, "42")
-	testInputOutput(t, `<?php $a = 41; if ($a === 42) { echo "42"; } elseif ($a === 41) { echo "41"; } else { echo "??"; }`, "41")
-	testInputOutput(t, `<?php $a = 40; if ($a === 42) { echo "42"; } elseif ($a === 41) { echo "41"; } else { echo "??"; }`, "??")
-	// Alternative syntax
-	testInputOutput(t, `<?php $a = 42; if ($a === 42): echo "42"; elseif ($a === 41): echo "41"; else: echo "??"; endif;`, "42")
-	testInputOutput(t, `<?php $a = 41; if ($a === 42): echo "42"; elseif ($a === 41): echo "41"; else: echo "??"; endif;`, "41")
-	testInputOutput(t, `<?php $a = 40; if ($a === 42): echo "42"; elseif ($a === 41): echo "41"; else: echo "??"; endif;`, "??")
 }
 
 func TestCompareRelation(t *testing.T) {
@@ -861,92 +877,4 @@ func TestCompareRelation(t *testing.T) {
 	testInputOutput(t, `<?php var_dump("22" < NULL);`, "bool(false)\n")
 	testInputOutput(t, `<?php var_dump("22" <= NULL);`, "bool(false)\n")
 	testInputOutput(t, `<?php var_dump("22" <=> NULL);`, "int(1)\n")
-}
-
-func TestUserFunctions(t *testing.T) {
-	// Simple user defined function without types, params, ...
-	// Check if function definition can be after the function call
-	testInputOutput(t,
-		`<?php
-			echo "a";
-			helloWorld();
-			echo "b";
-			function helloWorld() { echo "Hello World"; }
-			echo "c";
-		`,
-		"aHello Worldbc",
-	)
-	testInputOutput(t,
-		`<?php
-			echo "a";
-			helloWorld();
-			echo "b";
-			{{{ function helloWorld() { echo "Hello World"; } }}}
-			echo "c";
-		`,
-		"aHello Worldbc",
-	)
-
-	// Test correct scoping: $a is available in the function body
-	testInputOutput(t,
-		`<?php
-			$a = 1;
-			func();
-			function func() {
-				echo isset($a) ? "y" : "n";
-				$b = 2;
-			}
-			echo isset($b) ? "y" : "n";
-		`,
-		"nn",
-	)
-
-	// Parameters
-	testInputOutput(t,
-		`<?php
-			$a = 1;
-			func($a);
-			func(2);
-			function func($param) {
-				echo $param;
-			}
-		`,
-		"12",
-	)
-	testInputOutput(t,
-		`<?php
-			$a = 1;
-			func($a, 2);
-			func(1, 1+1);
-			function func($param1, $param2) {
-				echo $param1 + $param2;
-			}
-		`,
-		"33",
-	)
-	// Typed parameters
-	testInputOutput(t,
-		`<?php
-			$a = 1;
-			func($a, 2);
-			func(1, 1+1);
-			function func(int|float $param1, int|float $param2) {
-				echo $param1 + $param2;
-			}
-		`,
-		"33",
-	)
-
-	// Return type
-	testInputOutput(t,
-		`<?php
-			$a = 1;
-			echo func($a, 2);
-			echo func(1, 1+1);
-			function func(int|float $param1, int|float $param2,): int|float {
-				return $param1 + $param2;
-			}
-		`,
-		"33",
-	)
 }

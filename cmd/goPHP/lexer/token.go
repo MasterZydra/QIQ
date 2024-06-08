@@ -28,11 +28,11 @@ const (
 	StartTagToken TokenType = "StartTag"
 	EndTagToken   TokenType = "EndTag"
 	// Spec: https://phplang.org/spec/09-lexical-structure.html#general-1
-	VariableNameToken         TokenType = "VariableName"
-	NameToken                 TokenType = "Name"
-	KeywordToken              TokenType = "Keyword"
-	IntegerLiteralToken       TokenType = "IntegerLiteral"
-	FloatingLiteralToken      TokenType = "FloatingLiteral"
-	StringLiteralToken        TokenType = "StringLiteral"
-	OperatorOrPunctuatorToken TokenType = "OperatorOrPunctuator"
+	VariableNameToken    TokenType = "VariableName"
+	NameToken            TokenType = "Name"
+	KeywordToken         TokenType = "Keyword"
+	IntegerLiteralToken  TokenType = "IntegerLiteral"
+	FloatingLiteralToken TokenType = "FloatingLiteral"
+	StringLiteralToken   TokenType = "StringLiteral"
+	OpOrPuncToken        TokenType = "OperatorOrPunctuator"
 )

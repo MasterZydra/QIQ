@@ -260,6 +260,7 @@ type userFunction struct {
 	FunctionName string
 	Parameters   []ast.FunctionParameter
 	Body         ast.ICompoundStatement
+	ReturnType   []string
 }
 
 func (env *Environment) defineUserFunction(function userFunction) Error {

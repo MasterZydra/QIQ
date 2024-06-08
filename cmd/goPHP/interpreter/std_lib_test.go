@@ -104,9 +104,12 @@ func TestLibFloatval(t *testing.T) {
 	doTest(NewFloatingRuntimeValue(-2.0), -2)
 
 	// string to floating
-	// doTest(NewStringRuntimeValue(""), false)
-	// doTest(NewStringRuntimeValue("0"), false)
-	// doTest(NewStringRuntimeValue("Hi"), true)
+	doTest(NewStringRuntimeValue(""), 0)
+	doTest(NewStringRuntimeValue("0"), 0)
+	doTest(NewStringRuntimeValue("42"), 42)
+	doTest(NewStringRuntimeValue("+42"), 42)
+	doTest(NewStringRuntimeValue("-42.4"), -42.4)
+	doTest(NewStringRuntimeValue("Hi"), 0)
 
 	// null to floating
 	doTest(NewNullRuntimeValue(), 0)
@@ -168,6 +171,8 @@ func TestLibIntval(t *testing.T) {
 	doTest(NewStringRuntimeValue("0"), 0)
 	doTest(NewStringRuntimeValue("1"), 1)
 	doTest(NewStringRuntimeValue("42"), 42)
+	doTest(NewStringRuntimeValue("+42"), 42)
+	doTest(NewStringRuntimeValue("-42"), -42)
 	doTest(NewStringRuntimeValue("Hi"), 0)
 
 	// null to integer

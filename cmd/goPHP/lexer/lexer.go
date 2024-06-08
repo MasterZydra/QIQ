@@ -120,8 +120,8 @@ func (lexer *Lexer) tokenizeInputFile() error {
 		// End-Tag
 		if lexer.nextN(2) == "?>" {
 			lexer.eatN(2)
-			if lexer.lastToken().TokenType != OperatorOrPunctuatorToken || lexer.lastToken().Value != ";" {
-				lexer.pushToken(OperatorOrPunctuatorToken, ";")
+			if lexer.lastToken().TokenType != OpOrPuncToken || lexer.lastToken().Value != ";" {
+				lexer.pushToken(OpOrPuncToken, ";")
 			}
 			lexer.pushToken(EndTagToken, "")
 			return nil
@@ -318,7 +318,7 @@ func (lexer *Lexer) tokenizeToken() error {
 		// operator-or-punctuator
 		if op := lexer.getOperatorOrPunctuator(false); op != "" {
 			lexer.getOperatorOrPunctuator(true)
-			lexer.pushToken(OperatorOrPunctuatorToken, op)
+			lexer.pushToken(OpOrPuncToken, op)
 			return nil
 		}
 
