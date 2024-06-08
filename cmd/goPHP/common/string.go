@@ -125,6 +125,34 @@ func IsDoubleQuotedStringLiteral(str string) bool {
 	return match
 }
 
+func ReplaceControlChars(str string) string {
+	findCtrlChars := regexp.MustCompile(
+		`(\\"|\\\\|\\\$|\\e|\\f|\\n|\\r|\\t|\\v)|` +
+			`(\\[0-7]{1,3})|` +
+			`(\\[xX][0-9a-fA-F]{1,2})|` +
+			`(\\u\{[0-9a-fA-F]+\})|` +
+			`([^"\\])|` +
+			`(\\[^"\\$efnrtvxX]|\\[0-7])`,
+	)
+
+	return findCtrlChars.ReplaceAllStringFunc(str,
+		func(sub string) string {
+			switch sub {
+			case `\\`:
+				return `\`
+			case `\r`:
+				return "\r"
+			case `\n`:
+				return "\n"
+			case `\t`:
+				return "\t"
+			default:
+				return sub
+			}
+		},
+	)
+}
+
 func DoubleQuotedStringLiteralToString(str string) string {
-	return SingleQuotedStringLiteralToString(str)
+	return SingleQuotedStringLiteralToString(ReplaceControlChars(str))
 }
