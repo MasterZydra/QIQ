@@ -59,6 +59,8 @@ func TestVariableExprToVariableName(t *testing.T) {
 // ------------------- MARK: input output tests -------------------
 
 func testInputOutput(t *testing.T, php string, output string) *Interpreter {
+	// Always use "\n" for tests so that they also pass on Windows
+	PHP_EOL = "\n"
 	interpreter := NewInterpreter(NewDevConfig(), &Request{}, "test.php")
 	actual, err := interpreter.Process(php)
 	if err != nil {
