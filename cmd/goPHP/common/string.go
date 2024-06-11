@@ -156,3 +156,17 @@ func ReplaceControlChars(str string) string {
 func DoubleQuotedStringLiteralToString(str string) string {
 	return SingleQuotedStringLiteralToString(ReplaceControlChars(str))
 }
+
+func TrimTrailingLineBreak(str string) string {
+	if len(str) > 0 && str[len(str)-1] == '\n' {
+		str = str[:len(str)-1]
+	}
+	return str
+}
+
+func TrimTrailingLineBreaks(str string) string {
+	for len(str) > 0 && str[len(str)-1] == '\n' {
+		str = str[:len(str)-1]
+	}
+	return str
+}

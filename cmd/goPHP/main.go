@@ -62,7 +62,7 @@ func processStdin() {
 	}
 
 	output, exitCode := processContent(string(content), "main.php")
-	fmt.Println(output)
+	fmt.Print(output)
 	os.Exit(exitCode)
 }
 
@@ -75,8 +75,8 @@ func processFile(filename string) {
 		os.Exit(1)
 	}
 
-	output, exitCode := processContent(string(content), "main.php")
-	fmt.Println(output)
+	output, exitCode := processContent(string(content), filename)
+	fmt.Print(output)
 	if exitCode == 500 {
 		exitCode = 1
 	}

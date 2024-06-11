@@ -35,27 +35,34 @@ func (interpreter *Interpreter) Process(sourceCode string) (string, Error) {
 
 func (interpreter *Interpreter) process(sourceCode string, env *Environment) (string, Error) {
 	interpreter.result = ""
-	program, err := interpreter.parser.ProduceAST(sourceCode, interpreter.filename)
+	program, parserErr := interpreter.parser.ProduceAST(sourceCode, interpreter.filename)
+	if parserErr != nil {
+		return interpreter.result, NewParseError(parserErr)
+	}
+
+	_, err := interpreter.processProgram(program, env)
+
+	return interpreter.result, err
+	// return strings.ReplaceAll(interpreter.result, "\n\n", "\n"), err
+}
+
+func (interpreter *Interpreter) processProgram(program *ast.Program, env *Environment) (IRuntimeValue, Error) {
+	err := interpreter.scanForFunctionDefinition(program.GetStatements(), env)
 	if err != nil {
-		return interpreter.result, NewParseError(err)
+		return NewVoidRuntimeValue(), err
 	}
 
-	runtimeErr := interpreter.scanForFunctionDefinition(program.GetStatements(), env)
-	if runtimeErr != nil {
-		return interpreter.result, runtimeErr
-	}
-
+	var runtimeValue IRuntimeValue = NewVoidRuntimeValue()
 	for _, stmt := range program.GetStatements() {
-		if _, err := interpreter.processStmt(stmt, env); err != nil {
+		if runtimeValue, err = interpreter.processStmt(stmt, env); err != nil {
 			// Handle exit event - Stop code execution
 			if err.GetErrorType() == EventError && err.GetMessage() == ExitEvent {
 				break
 			}
-			return interpreter.result, err
+			return runtimeValue, err
 		}
 	}
-
-	return strings.ReplaceAll(interpreter.result, "\n\n", "\n"), nil
+	return runtimeValue, nil
 }
 
 func (interpreter *Interpreter) processStmt(stmt ast.IStatement, env *Environment) (IRuntimeValue, Error) {

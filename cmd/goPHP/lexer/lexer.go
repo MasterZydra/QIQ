@@ -42,7 +42,7 @@ func (lexer *Lexer) init(input string, filename string) {
 }
 
 func (lexer *Lexer) Tokenize(sourceCode string, filename string) ([]*Token, error) {
-	lexer.init(sourceCode, filename)
+	lexer.init(common.TrimTrailingLineBreak(sourceCode), filename)
 
 	err := lexer.tokenizeScript()
 
@@ -124,6 +124,11 @@ func (lexer *Lexer) tokenizeInputFile() error {
 				lexer.pushToken(OpOrPuncToken, ";")
 			}
 			lexer.pushToken(EndTagToken, "")
+
+			// Line breaks directly after closing tags are discarded
+			if lexer.at() == "\n" {
+				lexer.eat()
+			}
 			return nil
 		}
 

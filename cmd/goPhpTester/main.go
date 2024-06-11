@@ -1,6 +1,7 @@
 package main
 
 import (
+	"GoPHP/cmd/goPHP/common"
 	"GoPHP/cmd/goPHP/interpreter"
 	"GoPHP/cmd/goPhpTester/phpt"
 	"fmt"
@@ -91,16 +92,16 @@ func doTest(path string, info os.FileInfo, err error) error {
 		return nil
 	}
 
-	if testFile.Expect == result {
+	if testFile.Expect == common.TrimTrailingLineBreaks(result) {
 		fmt.Println("OK   ", path)
 		succeeded++
 		return nil
 	} else {
 		fmt.Println("FAIL ", path)
 		fmt.Println("--------------- Expected ---------------")
-		fmt.Print(testFile.Expect)
+		fmt.Println(testFile.Expect)
 		fmt.Println("---------------   Got    ---------------")
-		fmt.Print(result)
+		fmt.Println(result)
 		fmt.Println("----------------------------------------")
 		fmt.Println("")
 		// return fmt.Errorf("Test \"%s\" failed", path)

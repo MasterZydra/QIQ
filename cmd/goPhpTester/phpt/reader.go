@@ -1,6 +1,7 @@
 package phpt
 
 import (
+	"GoPHP/cmd/goPHP/common"
 	"bufio"
 	"fmt"
 	"os"
@@ -123,7 +124,7 @@ func (reader *Reader) GetTestFile() (*TestFile, error) {
 			for !reader.isEof() && !reader.isSection(reader.at()) {
 				expect += reader.eat() + "\n"
 			}
-			reader.testFile.Expect = expect
+			reader.testFile.Expect = common.TrimTrailingLineBreaks(expect)
 			reader.sections = append(reader.sections, "--EXPECT--")
 			continue
 		}

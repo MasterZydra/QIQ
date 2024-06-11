@@ -234,7 +234,7 @@ func TestHtmlAndPhp(t *testing.T) {
 			NewToken(StringLiteralToken, `"My Heading"`, position.NewPosition(testFile, 2, 22)),
 			NewToken(OpOrPuncToken, ";", position.NewPosition(testFile, 2, 34)),
 			NewToken(EndTagToken, "", position.NewPosition(testFile, 2, 36)),
-			NewToken(TextToken, "\n    <h1>", nil),
+			NewToken(TextToken, "    <h1>", nil),
 			NewToken(StartTagToken, "", position.NewPosition(testFile, 3, 9)),
 			NewToken(KeywordToken, "echo", position.NewPosition(testFile, 3, 9)),
 			NewToken(VariableNameToken, "$heading", position.NewPosition(testFile, 3, 13)),
