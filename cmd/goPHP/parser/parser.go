@@ -670,10 +670,77 @@ func (parser *Parser) parseExpr() (ast.IExpression, error) {
 
 	// TODO logical-inc-OR-expression-2:
 
-	// TODO include-expression
-	// TODO include-once-expression
-	// TODO require-expression
-	// TODO require-once-expression
+	// ------------------- MARK: include-expression -------------------
+
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-include-expression
+
+	// include-expression:
+	//    include   expression
+
+	if parser.isToken(lexer.KeywordToken, "include", false) {
+		pos := parser.eat().Position
+
+		expr, err := parser.parseExpr()
+		if err != nil {
+			return ast.NewEmptyExpr(), err
+		}
+
+		return ast.NewIncludeExpr(pos, expr), nil
+	}
+
+	// ------------------- MARK: include-once-expression -------------------
+
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-include-once-expression
+
+	// include-once-expression:
+	//    include_once   expression
+
+	if parser.isToken(lexer.KeywordToken, "include_once", false) {
+		pos := parser.eat().Position
+
+		expr, err := parser.parseExpr()
+		if err != nil {
+			return ast.NewEmptyExpr(), err
+		}
+
+		return ast.NewIncludeOnceExpr(pos, expr), nil
+	}
+
+	// ------------------- MARK: require-expression -------------------
+
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-require-expression
+
+	// require-expression:
+	//    require   expression
+
+	if parser.isToken(lexer.KeywordToken, "require", false) {
+		pos := parser.eat().Position
+
+		expr, err := parser.parseExpr()
+		if err != nil {
+			return ast.NewEmptyExpr(), err
+		}
+
+		return ast.NewRequireExpr(pos, expr), nil
+	}
+
+	// ------------------- MARK: require-once-expression -------------------
+
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-require-once-expression
+
+	// require-once-expression:
+	//    require_once   expression
+
+	if parser.isToken(lexer.KeywordToken, "require_once", false) {
+		pos := parser.eat().Position
+
+		expr, err := parser.parseExpr()
+		if err != nil {
+			return ast.NewEmptyExpr(), err
+		}
+
+		return ast.NewRequireOnceExpr(pos, expr), nil
+	}
 
 	// assignment-expression
 	return parser.parseAssignmentExpr()

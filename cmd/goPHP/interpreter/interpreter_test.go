@@ -99,6 +99,30 @@ func TestConstants(t *testing.T) {
 	testInputOutput(t, `<?php const TRUTH = 42; const PI = "3.141";echo TRUTH, PI;`, "423.141")
 }
 
+func TestFileIncludes(t *testing.T) {
+	doTest := func(t *testing.T, php string, expected Error) {
+		_, err := NewInterpreter(NewDevConfig(), &Request{}, "/home/admin/test.php").Process(php)
+		if err.GetErrorType() != expected.GetErrorType() || err.GetMessage() != expected.GetMessage() {
+			fmt.Println("    Code:", php)
+			t.Errorf("\nExpected: %s\nGot:      %s", expected, err)
+		}
+	}
+
+	doTest(t, `<?php require "include.php"; ?>`,
+		NewError("Uncaught Error: Failed opening required 'include.php' (include_path='/home/admin') in /home/admin/test.php:1:15"),
+	)
+	doTest(t, `<?php require_once "include.php"; ?>`,
+		NewError("Uncaught Error: Failed opening required 'include.php' (include_path='/home/admin') in /home/admin/test.php:1:20"),
+	)
+	doTest(t, `<?php include "include.php"; ?>`,
+		NewWarning("include(): Failed opening 'include.php' for inclusion (include_path='/home/admin') in /home/admin/test.php:1:15"),
+	)
+	doTest(t, `<?php include_once "include.php"; ?>`,
+		NewWarning("include(): Failed opening 'include.php' for inclusion (include_path='/home/admin') in /home/admin/test.php:1:20"),
+	)
+
+}
+
 func TestVariable(t *testing.T) {
 	// Undefined variable
 	testInputOutput(t, `<?php echo is_null($a) ? "a" : "b";`, "Warning: Undefined variable $a\na")

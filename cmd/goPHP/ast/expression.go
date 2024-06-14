@@ -867,3 +867,56 @@ func ExprToUnaryOpExpr(expr IExpression) IUnaryOpExpression {
 	var i interface{} = expr
 	return i.(IUnaryOpExpression)
 }
+
+// ------------------- MARK: ExprExpression -------------------
+
+type IExprExpression interface {
+	IExpression
+	GetExpression() IExpression
+}
+
+type ExprExpression struct {
+	expr       IExpression
+	expression IExpression
+}
+
+func NewIncludeExpr(pos *position.Position, expression IExpression) *ExprExpression {
+	return &ExprExpression{expr: NewExpr(IncludeExpr, pos), expression: expression}
+}
+
+func NewIncludeOnceExpr(pos *position.Position, expression IExpression) *ExprExpression {
+	return &ExprExpression{expr: NewExpr(IncludeOnceExpr, pos), expression: expression}
+}
+
+func NewRequireExpr(pos *position.Position, expression IExpression) *ExprExpression {
+	return &ExprExpression{expr: NewExpr(RequireExpr, pos), expression: expression}
+}
+
+func NewRequireOnceExpr(pos *position.Position, expression IExpression) *ExprExpression {
+	return &ExprExpression{expr: NewExpr(RequireOnceExpr, pos), expression: expression}
+}
+
+func (expr *ExprExpression) GetId() int64 {
+	return expr.expr.GetId()
+}
+
+func (expr *ExprExpression) GetKind() NodeType {
+	return expr.expr.GetKind()
+}
+
+func (expr *ExprExpression) GetPosition() *position.Position {
+	return expr.expr.GetPosition()
+}
+
+func (expr *ExprExpression) GetExpression() IExpression {
+	return expr.expression
+}
+
+func (expr *ExprExpression) String() string {
+	return fmt.Sprintf("{%s - expression: %s }", expr.GetKind(), expr.expression)
+}
+
+func ExprToExprExpr(expr IExpression) IExprExpression {
+	var i interface{} = expr
+	return i.(IExprExpression)
+}

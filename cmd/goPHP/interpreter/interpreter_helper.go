@@ -3,7 +3,10 @@ package interpreter
 import (
 	"GoPHP/cmd/goPHP/ast"
 	"GoPHP/cmd/goPHP/common"
+	"GoPHP/cmd/goPHP/parser"
+	"fmt"
 	"math"
+	"os"
 	"regexp"
 	"runtime"
 	"slices"
@@ -81,12 +84,28 @@ func (interpreter *Interpreter) varExprToVarName(expr ast.IExpression, env *Envi
 	}
 }
 
-func (interpreter *Interpreter) printError(err Error) {
-	if err.GetErrorType() == WarningPhpError && interpreter.config.ErrorReporting&E_WARNING != 0 {
-		interpreter.println("Warning: " + err.GetMessage())
+func (interpreter *Interpreter) ErrorToString(err Error) string {
+	if err.GetErrorType() == WarningPhpError {
+		if interpreter.config.ErrorReporting&E_WARNING != 0 {
+			return "Warning: " + err.GetMessage()
+		}
+		return ""
 	}
-	// TODO implement
-	// Depending on interpreter.config.ErrorReporting
+	if err.GetErrorType() == ErrorPhpError {
+		if interpreter.config.ErrorReporting&E_ERROR != 0 {
+			return "Fatal error: " + err.GetMessage()
+		}
+		return ""
+	}
+	return "Unsupported error type \"" + string(err.GetErrorType()) + "\": " + err.GetMessage()
+}
+
+func (interpreter *Interpreter) printError(err Error) {
+	if errStr := interpreter.ErrorToString(err); errStr == "" {
+		return
+	} else {
+		interpreter.println(errStr)
+	}
 }
 
 func getPhpOs() string {
@@ -179,6 +198,76 @@ func checkParameterTypes(runtimeValue IRuntimeValue, expectedTypes []string) Err
 		}
 	}
 	return NewError("Types do not match")
+}
+
+func (interpreter *Interpreter) includeFile(filepathExpr ast.IExpression, env *Environment, include bool, once bool) (IRuntimeValue, Error) {
+	runtimeValue, err := interpreter.processStmt(filepathExpr, env)
+	if err != nil {
+		return runtimeValue, err
+	}
+	if runtimeValue.GetType() == NullValue {
+		return runtimeValue, NewError("Uncaught ValueError: Path cannot be empty in %s", filepathExpr.GetPosition().ToPosString())
+	}
+
+	filename, err := lib_strval(runtimeValue)
+	if err != nil {
+		return runtimeValue, err
+	}
+
+	// Spec: https://phplang.org/spec/10-expressions.html#the-require-operator
+	// Once an include file has been included, a subsequent use of require_once on that include file
+	// results in a return value of TRUE but nothing else happens.
+	if once && slices.Contains(interpreter.includedFiles, filename) {
+		return NewBooleanRuntimeValue(true), nil
+	}
+
+	absFilename := filename
+	if !common.IsAbsPath(filename) {
+		absFilename = common.GetAbsPathForWorkingDir(common.ExtractPath(filename), filename)
+	}
+
+	var functionName string
+	if include {
+		functionName = "include"
+	} else {
+		functionName = "require"
+	}
+
+	// Spec: https://phplang.org/spec/10-expressions.html#the-require-operator
+	// This operator is identical to operator include except that in the case of require,
+	// failure to find/open the designated include file produces a fatal error.
+	getError := func() (IRuntimeValue, Error) {
+		if include {
+			return NewVoidRuntimeValue(), NewWarning(
+				"%s(): Failed opening '%s' for inclusion (include_path='%s') in %s",
+				functionName, filename, common.ExtractPath(filepathExpr.GetPosition().Filename), filepathExpr.GetPosition().ToPosString(),
+			)
+		} else {
+			return NewVoidRuntimeValue(), NewError(
+				"Uncaught Error: Failed opening required '%s' (include_path='%s') in %s",
+				filename, common.ExtractPath(filepathExpr.GetPosition().Filename), filepathExpr.GetPosition().ToPosString(),
+			)
+		}
+	}
+
+	if !common.PathExists(absFilename) {
+		interpreter.printError(NewWarning(
+			"%s(%s): Failed to open stream: No such file or directory in %s",
+			functionName, filename, filepathExpr.GetPosition().ToPosString(),
+		))
+		return getError()
+	}
+
+	content, fileErr := os.ReadFile(filename)
+	if fileErr != nil {
+		return getError()
+	}
+	program, parserErr := parser.NewParser().ProduceAST(string(content), filename)
+	fmt.Println(program)
+	if parserErr != nil {
+		return runtimeValue, NewParseError(parserErr)
+	}
+	return interpreter.processProgram(program, env)
 }
 
 // ------------------- MARK: Caching -------------------

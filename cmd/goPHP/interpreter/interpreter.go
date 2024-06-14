@@ -2,24 +2,26 @@ package interpreter
 
 import (
 	"GoPHP/cmd/goPHP/ast"
+	"GoPHP/cmd/goPHP/common"
 	"GoPHP/cmd/goPHP/parser"
 	"strings"
 )
 
 type Interpreter struct {
-	filename string
-	config   *Config
-	request  *Request
-	parser   *parser.Parser
-	env      *Environment
-	cache    map[int64]IRuntimeValue
-	result   string
-	exitCode int64
+	filename      string
+	includedFiles []string
+	config        *Config
+	request       *Request
+	parser        *parser.Parser
+	env           *Environment
+	cache         map[int64]IRuntimeValue
+	result        string
+	exitCode      int64
 }
 
 func NewInterpreter(config *Config, request *Request, filename string) *Interpreter {
 	return &Interpreter{
-		filename: filename, config: config, request: request, parser: parser.NewParser(),
+		filename: filename, includedFiles: []string{}, config: config, request: request, parser: parser.NewParser(),
 		env: NewEnvironment(nil, request), cache: map[int64]IRuntimeValue{},
 		exitCode: 0,
 	}
@@ -43,7 +45,6 @@ func (interpreter *Interpreter) process(sourceCode string, env *Environment) (st
 	_, err := interpreter.processProgram(program, env)
 
 	return interpreter.result, err
-	// return strings.ReplaceAll(interpreter.result, "\n\n", "\n"), err
 }
 
 func (interpreter *Interpreter) processProgram(program *ast.Program, env *Environment) (IRuntimeValue, Error) {
@@ -129,6 +130,14 @@ func (interpreter *Interpreter) processStmt(stmt ast.IStatement, env *Environmen
 		return interpreter.processPostfixIncExpr(ast.ExprToUnaryOpExpr(stmt), env)
 	case ast.PrefixIncExpr:
 		return interpreter.processPrefixIncExpr(ast.ExprToUnaryOpExpr(stmt), env)
+	case ast.RequireExpr:
+		return interpreter.processRequireExpr(ast.ExprToExprExpr(stmt), env)
+	case ast.RequireOnceExpr:
+		return interpreter.processRequireOnceExpr(ast.ExprToExprExpr(stmt), env)
+	case ast.IncludeExpr:
+		return interpreter.processIncludeExpr(ast.ExprToExprExpr(stmt), env)
+	case ast.IncludeOnceExpr:
+		return interpreter.processIncludeOnceExpr(ast.ExprToExprExpr(stmt), env)
 
 	default:
 		return NewVoidRuntimeValue(), NewError("Unsupported statement or expression: %s", stmt)
@@ -606,6 +615,11 @@ func (interpreter *Interpreter) processUnsetExpr(expr ast.IFunctionCallExpressio
 }
 
 func (interpreter *Interpreter) processConstantAccessExpr(expr ast.IConstantAccessExpression, env *Environment) (IRuntimeValue, Error) {
+	// Context-dependent constants
+	if expr.GetConstantName() == "__DIR__" {
+		return NewStringRuntimeValue(common.ExtractPath(expr.GetPosition().Filename)), nil
+	}
+
 	return env.lookupConstant(expr.GetConstantName())
 }
 
@@ -847,4 +861,20 @@ func (interpreter *Interpreter) processPrefixIncExpr(expr ast.IUnaryOpExpression
 	env.declareVariable(variableName, newValue)
 
 	return newValue, nil
+}
+
+func (interpreter *Interpreter) processRequireExpr(expr ast.IExprExpression, env *Environment) (IRuntimeValue, Error) {
+	return interpreter.includeFile(expr.GetExpression(), env, false, false)
+}
+
+func (interpreter *Interpreter) processRequireOnceExpr(expr ast.IExprExpression, env *Environment) (IRuntimeValue, Error) {
+	return interpreter.includeFile(expr.GetExpression(), env, false, true)
+}
+
+func (interpreter *Interpreter) processIncludeExpr(expr ast.IExprExpression, env *Environment) (IRuntimeValue, Error) {
+	return interpreter.includeFile(expr.GetExpression(), env, true, false)
+}
+
+func (interpreter *Interpreter) processIncludeOnceExpr(expr ast.IExprExpression, env *Environment) (IRuntimeValue, Error) {
+	return interpreter.includeFile(expr.GetExpression(), env, true, true)
 }

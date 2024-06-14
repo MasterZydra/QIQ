@@ -233,7 +233,7 @@ func TestOperatorExpression(t *testing.T) {
 	)
 }
 
-func TestExitIntrinsic(t *testing.T) {
+func TestIntrinsic(t *testing.T) {
 	// Die
 	testExpr(t, `<?php die(42);`, ast.NewExitIntrinsic(nil, ast.NewIntegerLiteralExpr(nil, 42)))
 	testExpr(t, `<?php die();`, ast.NewExitIntrinsic(nil, nil))

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"GoPHP/cmd/goPHP/common"
 	"GoPHP/cmd/goPHP/config"
 	"GoPHP/cmd/goPHP/interpreter"
 	"bufio"
@@ -9,7 +10,6 @@ import (
 	"net/http"
 	"os"
 	"path"
-	"path/filepath"
 	"time"
 )
 
@@ -34,7 +34,7 @@ func main() {
 
 	// Parse given file
 	if *file != "" {
-		absFilePath, err := filepath.Abs(*file)
+		absFilePath, err := common.GetAbsPath(*file)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -89,7 +89,7 @@ func webServer() {
 	if documentRoot == "" {
 		documentRoot, _ = os.Getwd()
 	} else {
-		absPath, err := filepath.Abs(documentRoot)
+		absPath, err := common.GetAbsPath(documentRoot)
 		if err != nil {
 			fmt.Println("Error: Could not find directory " + documentRoot)
 			os.Exit(1)
@@ -141,7 +141,7 @@ func processContent(content string, filename string) (output string, exitCode in
 	interpreter := interpreter.NewInterpreter(interpreter.NewDevConfig(), &interpreter.Request{}, filename)
 	result, err := interpreter.Process(content)
 	if err != nil {
-		result += err.GetMessage()
+		result += interpreter.ErrorToString(err)
 		return result, 500
 	}
 	return result, interpreter.GetExitCode()
