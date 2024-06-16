@@ -4,6 +4,7 @@ import (
 	"GoPHP/cmd/goPHP/ast"
 	"GoPHP/cmd/goPHP/common"
 	"GoPHP/cmd/goPHP/parser"
+	"GoPHP/cmd/goPHP/phpError"
 	"fmt"
 	"math"
 	"os"
@@ -27,7 +28,7 @@ func (interpreter *Interpreter) println(str string) {
 	interpreter.print(str + PHP_EOL)
 }
 
-func (interpreter *Interpreter) processCondition(expr ast.IExpression, env *Environment) (IRuntimeValue, bool, Error) {
+func (interpreter *Interpreter) processCondition(expr ast.IExpression, env *Environment) (IRuntimeValue, bool, phpError.Error) {
 	runtimeValue, err := interpreter.processStmt(expr, env)
 	if err != nil {
 		return runtimeValue, false, err
@@ -37,7 +38,7 @@ func (interpreter *Interpreter) processCondition(expr ast.IExpression, env *Envi
 	return runtimeValue, boolean, err
 }
 
-func (interpreter *Interpreter) lookupVariable(expr ast.IExpression, env *Environment, suppressWarning bool) (IRuntimeValue, Error) {
+func (interpreter *Interpreter) lookupVariable(expr ast.IExpression, env *Environment, suppressWarning bool) (IRuntimeValue, phpError.Error) {
 	variableName, err := interpreter.varExprToVarName(expr, env)
 	if err != nil {
 		return NewVoidRuntimeValue(), err
@@ -51,7 +52,7 @@ func (interpreter *Interpreter) lookupVariable(expr ast.IExpression, env *Enviro
 }
 
 // Convert a variable expression into the interpreted variable name
-func (interpreter *Interpreter) varExprToVarName(expr ast.IExpression, env *Environment) (string, Error) {
+func (interpreter *Interpreter) varExprToVarName(expr ast.IExpression, env *Environment) (string, phpError.Error) {
 	switch expr.GetKind() {
 	case ast.SimpleVariableExpr:
 		variableNameExpr := ast.ExprToSimpleVarExpr(expr).GetVariableName()
@@ -76,31 +77,37 @@ func (interpreter *Interpreter) varExprToVarName(expr ast.IExpression, env *Envi
 			return "$" + valueStr, nil
 		}
 
-		return "", NewError("varExprToVarName - SimpleVariableExpr: Unsupported expression: %s", expr)
+		return "", phpError.NewError("varExprToVarName - SimpleVariableExpr: Unsupported expression: %s", expr)
 	case ast.SubscriptExpr:
 		return interpreter.varExprToVarName(ast.ExprToSubscriptExpr(expr).GetVariable(), env)
 	default:
-		return "", NewError("varExprToVarName: Unsupported expression: %s", expr)
+		return "", phpError.NewError("varExprToVarName: Unsupported expression: %s", expr)
 	}
 }
 
-func (interpreter *Interpreter) ErrorToString(err Error) string {
-	if err.GetErrorType() == WarningPhpError {
-		if interpreter.config.ErrorReporting&E_WARNING != 0 {
+func (interpreter *Interpreter) ErrorToString(err phpError.Error) string {
+	if err.GetErrorType() == phpError.WarningPhpError {
+		if interpreter.ini.ErrorReporting&phpError.E_WARNING != 0 {
 			return "Warning: " + err.GetMessage()
 		}
 		return ""
 	}
-	if err.GetErrorType() == ErrorPhpError {
-		if interpreter.config.ErrorReporting&E_ERROR != 0 {
+	if err.GetErrorType() == phpError.ErrorPhpError {
+		if interpreter.ini.ErrorReporting&phpError.E_ERROR != 0 {
 			return "Fatal error: " + err.GetMessage()
+		}
+		return ""
+	}
+	if err.GetErrorType() == phpError.ParsePhpError {
+		if interpreter.ini.ErrorReporting&phpError.E_PARSE != 0 {
+			return "Parse error: " + err.GetMessage()
 		}
 		return ""
 	}
 	return "Unsupported error type \"" + string(err.GetErrorType()) + "\": " + err.GetMessage()
 }
 
-func (interpreter *Interpreter) printError(err Error) {
+func (interpreter *Interpreter) printError(err phpError.Error) {
 	if errStr := interpreter.ErrorToString(err); errStr == "" {
 		return
 	} else {
@@ -153,7 +160,7 @@ func getPhpOsFamily() string {
 }
 
 // Scan and process program for function definitions on root level and in compound statements
-func (interpreter *Interpreter) scanForFunctionDefinition(statements []ast.IStatement, env *Environment) Error {
+func (interpreter *Interpreter) scanForFunctionDefinition(statements []ast.IStatement, env *Environment) phpError.Error {
 	for _, stmt := range statements {
 		if stmt.GetKind() == ast.CompoundStmt {
 			interpreter.scanForFunctionDefinition(ast.StmtToCompoundStmt(stmt).GetStatements(), env)
@@ -182,10 +189,10 @@ var paramTypeRuntimeValue = map[ValueType]string{
 	VoidValue:     "void",
 }
 
-func checkParameterTypes(runtimeValue IRuntimeValue, expectedTypes []string) Error {
+func checkParameterTypes(runtimeValue IRuntimeValue, expectedTypes []string) phpError.Error {
 	typeStr, found := paramTypeRuntimeValue[runtimeValue.GetType()]
 	if !found {
-		return NewError("checkParameterTypes: No mapping for type %s", runtimeValue.GetType())
+		return phpError.NewError("checkParameterTypes: No mapping for type %s", runtimeValue.GetType())
 	}
 
 	for _, expectedType := range expectedTypes {
@@ -197,16 +204,16 @@ func checkParameterTypes(runtimeValue IRuntimeValue, expectedTypes []string) Err
 			return nil
 		}
 	}
-	return NewError("Types do not match")
+	return phpError.NewError("Types do not match")
 }
 
-func (interpreter *Interpreter) includeFile(filepathExpr ast.IExpression, env *Environment, include bool, once bool) (IRuntimeValue, Error) {
+func (interpreter *Interpreter) includeFile(filepathExpr ast.IExpression, env *Environment, include bool, once bool) (IRuntimeValue, phpError.Error) {
 	runtimeValue, err := interpreter.processStmt(filepathExpr, env)
 	if err != nil {
 		return runtimeValue, err
 	}
 	if runtimeValue.GetType() == NullValue {
-		return runtimeValue, NewError("Uncaught ValueError: Path cannot be empty in %s", filepathExpr.GetPosition().ToPosString())
+		return runtimeValue, phpError.NewError("Uncaught ValueError: Path cannot be empty in %s", filepathExpr.GetPosition().ToPosString())
 	}
 
 	filename, err := lib_strval(runtimeValue)
@@ -236,14 +243,14 @@ func (interpreter *Interpreter) includeFile(filepathExpr ast.IExpression, env *E
 	// Spec: https://phplang.org/spec/10-expressions.html#the-require-operator
 	// This operator is identical to operator include except that in the case of require,
 	// failure to find/open the designated include file produces a fatal error.
-	getError := func() (IRuntimeValue, Error) {
+	getError := func() (IRuntimeValue, phpError.Error) {
 		if include {
-			return NewVoidRuntimeValue(), NewWarning(
+			return NewVoidRuntimeValue(), phpError.NewWarning(
 				"%s(): Failed opening '%s' for inclusion (include_path='%s') in %s",
 				functionName, filename, common.ExtractPath(filepathExpr.GetPosition().Filename), filepathExpr.GetPosition().ToPosString(),
 			)
 		} else {
-			return NewVoidRuntimeValue(), NewError(
+			return NewVoidRuntimeValue(), phpError.NewError(
 				"Uncaught Error: Failed opening required '%s' (include_path='%s') in %s",
 				filename, common.ExtractPath(filepathExpr.GetPosition().Filename), filepathExpr.GetPosition().ToPosString(),
 			)
@@ -251,7 +258,7 @@ func (interpreter *Interpreter) includeFile(filepathExpr ast.IExpression, env *E
 	}
 
 	if !common.PathExists(absFilename) {
-		interpreter.printError(NewWarning(
+		interpreter.printError(phpError.NewWarning(
 			"%s(%s): Failed to open stream: No such file or directory in %s",
 			functionName, filename, filepathExpr.GetPosition().ToPosString(),
 		))
@@ -262,10 +269,10 @@ func (interpreter *Interpreter) includeFile(filepathExpr ast.IExpression, env *E
 	if fileErr != nil {
 		return getError()
 	}
-	program, parserErr := parser.NewParser().ProduceAST(string(content), filename)
+	program, parserErr := parser.NewParser(interpreter.ini).ProduceAST(string(content), filename)
 	fmt.Println(program)
 	if parserErr != nil {
-		return runtimeValue, NewParseError(parserErr)
+		return runtimeValue, parserErr
 	}
 	return interpreter.processProgram(program, env)
 }
@@ -284,7 +291,7 @@ func (interpreter *Interpreter) writeCache(stmt ast.IStatement, value IRuntimeVa
 
 // ------------------- MARK: RuntimeValue -------------------
 
-func (interpreter *Interpreter) exprToRuntimeValue(expr ast.IExpression, env *Environment) (IRuntimeValue, Error) {
+func (interpreter *Interpreter) exprToRuntimeValue(expr ast.IExpression, env *Environment) (IRuntimeValue, phpError.Error) {
 	switch expr.GetKind() {
 	case ast.ArrayLiteralExpr:
 		arrayRuntimeValue := NewArrayRuntimeValue()
@@ -307,13 +314,14 @@ func (interpreter *Interpreter) exprToRuntimeValue(expr ast.IExpression, env *En
 	case ast.StringLiteralExpr:
 		str := ast.ExprToStrLitExpr(expr).GetValue()
 		// variable substitution
+		// Test - tests/lang/017.phpt
 		// TODO move to area where it is called before printing it
 		if ast.ExprToStrLitExpr(expr).GetStringType() == ast.DoubleQuotedString {
 			r, _ := regexp.Compile(`{\$[A-Za-z_][A-Za-z0-9_]*['A-Za-z0-9\[\]]*}`)
 			matches := r.FindAllString(str, -1)
 			for _, match := range matches {
 				exprStr := "<?= " + match[1:len(match)-1] + ";"
-				result, err := NewInterpreter(interpreter.config, interpreter.request, "").process(exprStr, env)
+				result, err := NewInterpreter(interpreter.ini, interpreter.request, "").process(exprStr, env)
 				if err != nil {
 					return NewVoidRuntimeValue(), err
 				}
@@ -322,11 +330,11 @@ func (interpreter *Interpreter) exprToRuntimeValue(expr ast.IExpression, env *En
 		}
 		return NewStringRuntimeValue(str), nil
 	default:
-		return NewVoidRuntimeValue(), NewError("exprToRuntimeValue: Unsupported expression: %s", expr)
+		return NewVoidRuntimeValue(), phpError.NewError("exprToRuntimeValue: Unsupported expression: %s", expr)
 	}
 }
 
-func runtimeValueToValueType(valueType ValueType, runtimeValue IRuntimeValue) (IRuntimeValue, Error) {
+func runtimeValueToValueType(valueType ValueType, runtimeValue IRuntimeValue) (IRuntimeValue, phpError.Error) {
 	switch valueType {
 	case BooleanValue:
 		boolean, err := lib_boolval(runtimeValue)
@@ -341,7 +349,7 @@ func runtimeValueToValueType(valueType ValueType, runtimeValue IRuntimeValue) (I
 		str, err := lib_strval(runtimeValue)
 		return NewStringRuntimeValue(str), err
 	default:
-		return NewVoidRuntimeValue(), NewError("runtimeValueToValueType: Unsupported runtime value: %s", valueType)
+		return NewVoidRuntimeValue(), phpError.NewError("runtimeValueToValueType: Unsupported runtime value: %s", valueType)
 	}
 }
 
@@ -360,7 +368,7 @@ func deepCopy(value IRuntimeValue) IRuntimeValue {
 
 // ------------------- MARK: inc-dec-calculation -------------------
 
-func calculateIncDec(operator string, operand IRuntimeValue) (IRuntimeValue, Error) {
+func calculateIncDec(operator string, operand IRuntimeValue) (IRuntimeValue, phpError.Error) {
 	switch operand.GetType() {
 	case BooleanValue:
 		// Spec: https://phplang.org/spec/10-expressions.html#prefix-increment-and-decrement-operators
@@ -375,7 +383,7 @@ func calculateIncDec(operator string, operand IRuntimeValue) (IRuntimeValue, Err
 	case StringValue:
 		return calculateIncDecString(operator, runtimeValToStrRuntimeVal(operand))
 	default:
-		return NewVoidRuntimeValue(), NewError("calculateIncDec: Type \"%s\" not implemented", operand.GetType())
+		return NewVoidRuntimeValue(), phpError.NewError("calculateIncDec: Type \"%s\" not implemented", operand.GetType())
 	}
 
 	// TODO calculateIncDec - object
@@ -383,7 +391,7 @@ func calculateIncDec(operator string, operand IRuntimeValue) (IRuntimeValue, Err
 	// If the operand has an object type supporting the operation, then the object semantics defines the result. Otherwise, the operation has no effect and the result is the operand.
 }
 
-func calculateIncDecInteger(operator string, operand IIntegerRuntimeValue) (IRuntimeValue, Error) {
+func calculateIncDecInteger(operator string, operand IIntegerRuntimeValue) (IRuntimeValue, phpError.Error) {
 	switch operator {
 	case "++":
 		// Spec: https://phplang.org/spec/10-expressions.html#prefix-increment-and-decrement-operators
@@ -406,11 +414,11 @@ func calculateIncDecInteger(operator string, operand IIntegerRuntimeValue) (IRun
 		return calculateInteger(operand, "-", NewIntegerRuntimeValue(1))
 
 	default:
-		return NewIntegerRuntimeValue(0), NewError("calculateIncDecInteger: Operator \"%s\" not implemented", operator)
+		return NewIntegerRuntimeValue(0), phpError.NewError("calculateIncDecInteger: Operator \"%s\" not implemented", operator)
 	}
 }
 
-func calculateIncDecFloating(operator string, operand IFloatingRuntimeValue) (IRuntimeValue, Error) {
+func calculateIncDecFloating(operator string, operand IFloatingRuntimeValue) (IRuntimeValue, phpError.Error) {
 	switch operator {
 	case "++":
 		// Spec: https://phplang.org/spec/10-expressions.html#prefix-increment-and-decrement-operators
@@ -433,11 +441,11 @@ func calculateIncDecFloating(operator string, operand IFloatingRuntimeValue) (IR
 		return calculateFloating(operand, "-", NewFloatingRuntimeValue(1))
 
 	default:
-		return NewIntegerRuntimeValue(0), NewError("calculateIncDecFloating: Operator \"%s\" not implemented", operator)
+		return NewIntegerRuntimeValue(0), phpError.NewError("calculateIncDecFloating: Operator \"%s\" not implemented", operator)
 	}
 }
 
-func calculateIncDecNull(operator string) (IRuntimeValue, Error) {
+func calculateIncDecNull(operator string) (IRuntimeValue, phpError.Error) {
 	switch operator {
 	case "++":
 		// Spec: https://phplang.org/spec/10-expressions.html#prefix-increment-and-decrement-operators
@@ -452,11 +460,11 @@ func calculateIncDecNull(operator string) (IRuntimeValue, Error) {
 		return NewNullRuntimeValue(), nil
 
 	default:
-		return NewIntegerRuntimeValue(0), NewError("calculateIncDecNull: Operator \"%s\" not implemented", operator)
+		return NewIntegerRuntimeValue(0), phpError.NewError("calculateIncDecNull: Operator \"%s\" not implemented", operator)
 	}
 }
 
-func calculateIncDecString(operator string, operand IStringRuntimeValue) (IRuntimeValue, Error) {
+func calculateIncDecString(operator string, operand IStringRuntimeValue) (IRuntimeValue, phpError.Error) {
 	switch operator {
 	case "++":
 		// Spec: https://phplang.org/spec/10-expressions.html#prefix-increment-and-decrement-operators
@@ -466,7 +474,7 @@ func calculateIncDecString(operator string, operand IStringRuntimeValue) (IRunti
 		if runtimeValToStrRuntimeVal(operand).GetValue() == "" {
 			return NewStringRuntimeValue("1"), nil
 		}
-		return NewVoidRuntimeValue(), NewError("TODO calculateIncDecString")
+		return NewVoidRuntimeValue(), phpError.NewError("TODO calculateIncDecString")
 
 	case "--":
 		// Spec: https://phplang.org/spec/10-expressions.html#prefix-increment-and-decrement-operators
@@ -476,10 +484,10 @@ func calculateIncDecString(operator string, operand IStringRuntimeValue) (IRunti
 		if runtimeValToStrRuntimeVal(operand).GetValue() == "" {
 			return NewIntegerRuntimeValue(-1), nil
 		}
-		return NewVoidRuntimeValue(), NewError("TODO calculateIncDecString")
+		return NewVoidRuntimeValue(), phpError.NewError("TODO calculateIncDecString")
 
 	default:
-		return NewIntegerRuntimeValue(0), NewError("calculateIncDecNull: Operator \"%s\" not implemented", operator)
+		return NewIntegerRuntimeValue(0), phpError.NewError("calculateIncDecNull: Operator \"%s\" not implemented", operator)
 	}
 
 	// TODO calculateIncDecString
@@ -499,7 +507,7 @@ func calculateIncDecString(operator string, operand IStringRuntimeValue) (IRunti
 
 // ------------------- MARK: unary-op-calculation -------------------
 
-func calculateUnary(operator string, operand IRuntimeValue) (IRuntimeValue, Error) {
+func calculateUnary(operator string, operand IRuntimeValue) (IRuntimeValue, phpError.Error) {
 	switch operand.GetType() {
 	case BooleanValue:
 		return calculateUnaryBoolean(operator, runtimeValToBoolRuntimeVal(operand))
@@ -512,7 +520,7 @@ func calculateUnary(operator string, operand IRuntimeValue) (IRuntimeValue, Erro
 		// For a unary + or unary - operator used with a NULL-valued operand, the value of the result is zero and the type is int.
 		return NewIntegerRuntimeValue(0), nil
 	default:
-		return NewVoidRuntimeValue(), NewError("calculateUnary: Type \"%s\" not implemented", operand.GetType())
+		return NewVoidRuntimeValue(), phpError.NewError("calculateUnary: Type \"%s\" not implemented", operand.GetType())
 	}
 
 	// TODO calculateUnary - string
@@ -524,7 +532,7 @@ func calculateUnary(operator string, operand IRuntimeValue) (IRuntimeValue, Erro
 	// If the operand has an object type supporting the operation, then the object semantics defines the result. Otherwise, for ~ the fatal error is issued and for + and - the object is converted to int.
 }
 
-func calculateUnaryBoolean(operator string, operand IBooleanRuntimeValue) (IIntegerRuntimeValue, Error) {
+func calculateUnaryBoolean(operator string, operand IBooleanRuntimeValue) (IIntegerRuntimeValue, phpError.Error) {
 	switch operator {
 	case "+":
 		// Spec: https://phplang.org/spec/10-expressions.html#unary-arithmetic-operators
@@ -545,11 +553,11 @@ func calculateUnaryBoolean(operator string, operand IBooleanRuntimeValue) (IInte
 		return NewIntegerRuntimeValue(0), nil
 
 	default:
-		return NewIntegerRuntimeValue(0), NewError("calculateUnaryBoolean: Operator \"%s\" not implemented", operator)
+		return NewIntegerRuntimeValue(0), phpError.NewError("calculateUnaryBoolean: Operator \"%s\" not implemented", operator)
 	}
 }
 
-func calculateUnaryFloating(operator string, operand IFloatingRuntimeValue) (IRuntimeValue, Error) {
+func calculateUnaryFloating(operator string, operand IFloatingRuntimeValue) (IRuntimeValue, phpError.Error) {
 	switch operator {
 	case "+":
 		// Spec: https://phplang.org/spec/10-expressions.html#unary-arithmetic-operators
@@ -573,11 +581,11 @@ func calculateUnaryFloating(operator string, operand IFloatingRuntimeValue) (IRu
 		return calculateUnaryInteger(operator, runtimeValToIntRuntimeVal(intRuntimeValue))
 
 	default:
-		return NewFloatingRuntimeValue(0), NewError("calculateUnaryFloating: Operator \"%s\" not implemented", operator)
+		return NewFloatingRuntimeValue(0), phpError.NewError("calculateUnaryFloating: Operator \"%s\" not implemented", operator)
 	}
 }
 
-func calculateUnaryInteger(operator string, operand IIntegerRuntimeValue) (IIntegerRuntimeValue, Error) {
+func calculateUnaryInteger(operator string, operand IIntegerRuntimeValue) (IIntegerRuntimeValue, phpError.Error) {
 	switch operator {
 	case "+":
 		// Spec: https://phplang.org/spec/10-expressions.html#unary-arithmetic-operators
@@ -598,13 +606,13 @@ func calculateUnaryInteger(operator string, operand IIntegerRuntimeValue) (IInte
 		// (that is, each bit in the result is set if and only if the corresponding bit in the operand is clear).
 		return NewIntegerRuntimeValue(^runtimeValToIntRuntimeVal(operand).GetValue()), nil
 	default:
-		return NewIntegerRuntimeValue(0), NewError("calculateUnaryInteger: Operator \"%s\" not implemented", operator)
+		return NewIntegerRuntimeValue(0), phpError.NewError("calculateUnaryInteger: Operator \"%s\" not implemented", operator)
 	}
 }
 
 // ------------------- MARK: binary-op-calculation -------------------
 
-func calculate(operand1 IRuntimeValue, operator string, operand2 IRuntimeValue) (IRuntimeValue, Error) {
+func calculate(operand1 IRuntimeValue, operator string, operand2 IRuntimeValue) (IRuntimeValue, phpError.Error) {
 	resultType := VoidValue
 	if slices.Contains([]string{"."}, operator) {
 		resultType = StringValue
@@ -619,7 +627,7 @@ func calculate(operand1 IRuntimeValue, operator string, operand2 IRuntimeValue) 
 		}
 	}
 
-	var err Error
+	var err phpError.Error
 	operand1, err = runtimeValueToValueType(resultType, operand1)
 	if err != nil {
 		return NewVoidRuntimeValue(), err
@@ -647,22 +655,22 @@ func calculate(operand1 IRuntimeValue, operator string, operand2 IRuntimeValue) 
 	case StringValue:
 		return calculateString(runtimeValToStrRuntimeVal(operand1), operator, runtimeValToStrRuntimeVal(operand2))
 	default:
-		return NewVoidRuntimeValue(), NewError("calculate: Type \"%s\" not implemented", resultType)
+		return NewVoidRuntimeValue(), phpError.NewError("calculate: Type \"%s\" not implemented", resultType)
 	}
 }
 
-func calculateBoolean(operand1 IBooleanRuntimeValue, operator string, operand2 IBooleanRuntimeValue) (IBooleanRuntimeValue, Error) {
+func calculateBoolean(operand1 IBooleanRuntimeValue, operator string, operand2 IBooleanRuntimeValue) (IBooleanRuntimeValue, phpError.Error) {
 	switch operator {
 	case "&&":
 		return NewBooleanRuntimeValue(operand1.GetValue() && operand2.GetValue()), nil
 	case "||":
 		return NewBooleanRuntimeValue(operand1.GetValue() || operand2.GetValue()), nil
 	default:
-		return NewBooleanRuntimeValue(false), NewError("calculateBoolean: Operator \"%s\" not implemented", operator)
+		return NewBooleanRuntimeValue(false), phpError.NewError("calculateBoolean: Operator \"%s\" not implemented", operator)
 	}
 }
 
-func calculateFloating(operand1 IFloatingRuntimeValue, operator string, operand2 IFloatingRuntimeValue) (IFloatingRuntimeValue, Error) {
+func calculateFloating(operand1 IFloatingRuntimeValue, operator string, operand2 IFloatingRuntimeValue) (IFloatingRuntimeValue, phpError.Error) {
 	switch operator {
 	case "+":
 		return NewFloatingRuntimeValue(operand1.GetValue() + operand2.GetValue()), nil
@@ -675,11 +683,11 @@ func calculateFloating(operand1 IFloatingRuntimeValue, operator string, operand2
 	case "**":
 		return NewFloatingRuntimeValue(math.Pow(operand1.GetValue(), operand2.GetValue())), nil
 	default:
-		return NewFloatingRuntimeValue(0), NewError("calculateInteger: Operator \"%s\" not implemented", operator)
+		return NewFloatingRuntimeValue(0), phpError.NewError("calculateInteger: Operator \"%s\" not implemented", operator)
 	}
 }
 
-func calculateInteger(operand1 IIntegerRuntimeValue, operator string, operand2 IIntegerRuntimeValue) (IIntegerRuntimeValue, Error) {
+func calculateInteger(operand1 IIntegerRuntimeValue, operator string, operand2 IIntegerRuntimeValue) (IIntegerRuntimeValue, phpError.Error) {
 	switch operator {
 	case "<<":
 		return NewIntegerRuntimeValue(operand1.GetValue() << operand2.GetValue()), nil
@@ -704,22 +712,22 @@ func calculateInteger(operand1 IIntegerRuntimeValue, operator string, operand2 I
 	case "**":
 		return NewIntegerRuntimeValue(int64(math.Pow(float64(operand1.GetValue()), float64(operand2.GetValue())))), nil
 	default:
-		return NewIntegerRuntimeValue(0), NewError("calculateInteger: Operator \"%s\" not implemented", operator)
+		return NewIntegerRuntimeValue(0), phpError.NewError("calculateInteger: Operator \"%s\" not implemented", operator)
 	}
 }
 
-func calculateString(operand1 IStringRuntimeValue, operator string, operand2 IStringRuntimeValue) (IStringRuntimeValue, Error) {
+func calculateString(operand1 IStringRuntimeValue, operator string, operand2 IStringRuntimeValue) (IStringRuntimeValue, phpError.Error) {
 	switch operator {
 	case ".":
 		return NewStringRuntimeValue(operand1.GetValue() + operand2.GetValue()), nil
 	default:
-		return NewStringRuntimeValue(""), NewError("calculateString: Operator \"%s\" not implemented", operator)
+		return NewStringRuntimeValue(""), phpError.NewError("calculateString: Operator \"%s\" not implemented", operator)
 	}
 }
 
 // ------------------- MARK: compareRelation -------------------
 
-func compareRelation(lhs IRuntimeValue, operator string, rhs IRuntimeValue) (IRuntimeValue, Error) {
+func compareRelation(lhs IRuntimeValue, operator string, rhs IRuntimeValue) (IRuntimeValue, phpError.Error) {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-relational-expression
 
 	// Note that greater-than semantics is implemented as the reverse of less-than, i.e. "$a > $b" is the same as "$b < $a".
@@ -788,12 +796,12 @@ func compareRelation(lhs IRuntimeValue, operator string, rhs IRuntimeValue) (IRu
 	case NullValue:
 		return compareRelationNull(operator, rhs)
 	default:
-		return NewVoidRuntimeValue(), NewError("compareRelation: Type \"%s\" not implemented", lhs.GetType())
+		return NewVoidRuntimeValue(), phpError.NewError("compareRelation: Type \"%s\" not implemented", lhs.GetType())
 	}
 
 }
 
-func compareRelationArray(lhs IArrayRuntimeValue, operator string, rhs IRuntimeValue) (IRuntimeValue, Error) {
+func compareRelationArray(lhs IArrayRuntimeValue, operator string, rhs IRuntimeValue) (IRuntimeValue, phpError.Error) {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-relational-expression
 
 	//        NULL  bool  int  float  string  array  object  resource
@@ -812,7 +820,7 @@ func compareRelationArray(lhs IArrayRuntimeValue, operator string, rhs IRuntimeV
 	// TODO compareRelationArray - resource
 
 	if rhs.GetType() == NullValue {
-		var err Error
+		var err phpError.Error
 		rhs, err = lib_arrayval(rhs)
 		if err != nil {
 			return NewVoidRuntimeValue(), err
@@ -867,7 +875,7 @@ func compareRelationArray(lhs IArrayRuntimeValue, operator string, rhs IRuntimeV
 		case "<=>":
 			return NewIntegerRuntimeValue(result), nil
 		default:
-			return NewVoidRuntimeValue(), NewError("compareRelationArray: Operator \"%s\" not implemented", operator)
+			return NewVoidRuntimeValue(), phpError.NewError("compareRelationArray: Operator \"%s\" not implemented", operator)
 		}
 
 	case BooleanValue:
@@ -884,15 +892,15 @@ func compareRelationArray(lhs IArrayRuntimeValue, operator string, rhs IRuntimeV
 		case "<=>":
 			return NewIntegerRuntimeValue(1), nil
 		default:
-			return NewVoidRuntimeValue(), NewError("compareRelationArray: Operator \"%s\" not implemented", operator)
+			return NewVoidRuntimeValue(), phpError.NewError("compareRelationArray: Operator \"%s\" not implemented", operator)
 		}
 
 	default:
-		return NewVoidRuntimeValue(), NewError("compareRelationArray: Type \"%s\" not implemented", rhs.GetType())
+		return NewVoidRuntimeValue(), phpError.NewError("compareRelationArray: Type \"%s\" not implemented", rhs.GetType())
 	}
 }
 
-func compareRelationBoolean(lhs IBooleanRuntimeValue, operator string, rhs IRuntimeValue) (IRuntimeValue, Error) {
+func compareRelationBoolean(lhs IBooleanRuntimeValue, operator string, rhs IRuntimeValue) (IRuntimeValue, phpError.Error) {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-relational-expression
 
 	//       NULL  bool  int  float  string  array  object  resource
@@ -934,11 +942,11 @@ func compareRelationBoolean(lhs IBooleanRuntimeValue, operator string, rhs IRunt
 		return NewIntegerRuntimeValue(-1), nil
 
 	default:
-		return NewVoidRuntimeValue(), NewError("compareRelationBoolean: Operator \"%s\" not implemented", operator)
+		return NewVoidRuntimeValue(), phpError.NewError("compareRelationBoolean: Operator \"%s\" not implemented", operator)
 	}
 }
 
-func compareRelationFloating(lhs IFloatingRuntimeValue, operator string, rhs IRuntimeValue) (IRuntimeValue, Error) {
+func compareRelationFloating(lhs IFloatingRuntimeValue, operator string, rhs IRuntimeValue) (IRuntimeValue, phpError.Error) {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-relational-expression
 
 	//        NULL  bool  int  float  string  array  object  resource
@@ -956,7 +964,7 @@ func compareRelationFloating(lhs IFloatingRuntimeValue, operator string, rhs IRu
 			case "<=>":
 				return NewIntegerRuntimeValue(1), nil
 			default:
-				return NewVoidRuntimeValue(), NewError("compareRelationFloating: Operator \"%s\" not implemented for type string", operator)
+				return NewVoidRuntimeValue(), phpError.NewError("compareRelationFloating: Operator \"%s\" not implemented for type string", operator)
 			}
 		}
 		if !common.IsIntegerLiteralWithSign(rhsStr) && !common.IsFloatingLiteralWithSign(rhsStr) {
@@ -966,13 +974,13 @@ func compareRelationFloating(lhs IFloatingRuntimeValue, operator string, rhs IRu
 			case "<=>":
 				return NewIntegerRuntimeValue(-1), nil
 			default:
-				return NewVoidRuntimeValue(), NewError("compareRelationFloating: Operator \"%s\" not implemented for type string", operator)
+				return NewVoidRuntimeValue(), phpError.NewError("compareRelationFloating: Operator \"%s\" not implemented for type string", operator)
 			}
 		}
 	}
 
 	if rhs.GetType() == NullValue || rhs.GetType() == IntegerValue || rhs.GetType() == StringValue {
-		var err Error
+		var err phpError.Error
 		rhs, err = runtimeValueToValueType(FloatingValue, rhs)
 		if err != nil {
 			return NewVoidRuntimeValue(), err
@@ -987,7 +995,7 @@ func compareRelationFloating(lhs IFloatingRuntimeValue, operator string, rhs IRu
 		case "<=>":
 			return NewIntegerRuntimeValue(-1), nil
 		default:
-			return NewVoidRuntimeValue(), NewError("compareRelationFloating: Operator \"%s\" not implemented for type array", operator)
+			return NewVoidRuntimeValue(), phpError.NewError("compareRelationFloating: Operator \"%s\" not implemented for type array", operator)
 		}
 
 	case BooleanValue:
@@ -1014,15 +1022,15 @@ func compareRelationFloating(lhs IFloatingRuntimeValue, operator string, rhs IRu
 			}
 			return NewIntegerRuntimeValue(-1), nil
 		default:
-			return NewVoidRuntimeValue(), NewError("compareRelationFloating: Operator \"%s\" not implemented", operator)
+			return NewVoidRuntimeValue(), phpError.NewError("compareRelationFloating: Operator \"%s\" not implemented", operator)
 		}
 
 	default:
-		return NewVoidRuntimeValue(), NewError("compareRelationFloating: Type \"%s\" not implemented", rhs.GetType())
+		return NewVoidRuntimeValue(), phpError.NewError("compareRelationFloating: Type \"%s\" not implemented", rhs.GetType())
 	}
 }
 
-func compareRelationInteger(lhs IIntegerRuntimeValue, operator string, rhs IRuntimeValue) (IRuntimeValue, Error) {
+func compareRelationInteger(lhs IIntegerRuntimeValue, operator string, rhs IRuntimeValue) (IRuntimeValue, phpError.Error) {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-relational-expression
 
 	//      NULL  bool  int  float  string  array  object  resource
@@ -1040,7 +1048,7 @@ func compareRelationInteger(lhs IIntegerRuntimeValue, operator string, rhs IRunt
 			case "<=>":
 				return NewIntegerRuntimeValue(1), nil
 			default:
-				return NewVoidRuntimeValue(), NewError("compareRelationInteger: Operator \"%s\" not implemented for type array", operator)
+				return NewVoidRuntimeValue(), phpError.NewError("compareRelationInteger: Operator \"%s\" not implemented for type array", operator)
 			}
 		}
 		if !common.IsIntegerLiteralWithSign(rhsStr) && !common.IsFloatingLiteralWithSign(rhsStr) {
@@ -1050,13 +1058,13 @@ func compareRelationInteger(lhs IIntegerRuntimeValue, operator string, rhs IRunt
 			case "<=>":
 				return NewIntegerRuntimeValue(-1), nil
 			default:
-				return NewVoidRuntimeValue(), NewError("compareRelationInteger: Operator \"%s\" not implemented for type array", operator)
+				return NewVoidRuntimeValue(), phpError.NewError("compareRelationInteger: Operator \"%s\" not implemented for type array", operator)
 			}
 		}
 	}
 
 	if rhs.GetType() == NullValue || rhs.GetType() == StringValue {
-		var err Error
+		var err phpError.Error
 		rhs, err = runtimeValueToValueType(IntegerValue, rhs)
 		if err != nil {
 			return NewVoidRuntimeValue(), err
@@ -1071,7 +1079,7 @@ func compareRelationInteger(lhs IIntegerRuntimeValue, operator string, rhs IRunt
 		case "<=>":
 			return NewIntegerRuntimeValue(-1), nil
 		default:
-			return NewVoidRuntimeValue(), NewError("compareRelationInteger: Operator \"%s\" not implemented for type array", operator)
+			return NewVoidRuntimeValue(), phpError.NewError("compareRelationInteger: Operator \"%s\" not implemented for type array", operator)
 		}
 
 	case BooleanValue:
@@ -1105,15 +1113,15 @@ func compareRelationInteger(lhs IIntegerRuntimeValue, operator string, rhs IRunt
 			}
 			return NewIntegerRuntimeValue(-1), nil
 		default:
-			return NewVoidRuntimeValue(), NewError("compareRelationInteger: Operator \"%s\" not implemented", operator)
+			return NewVoidRuntimeValue(), phpError.NewError("compareRelationInteger: Operator \"%s\" not implemented", operator)
 		}
 
 	default:
-		return NewVoidRuntimeValue(), NewError("compareRelationInteger: Type \"%s\" not implemented", rhs.GetType())
+		return NewVoidRuntimeValue(), phpError.NewError("compareRelationInteger: Type \"%s\" not implemented", rhs.GetType())
 	}
 }
 
-func compareRelationNull(operator string, rhs IRuntimeValue) (IRuntimeValue, Error) {
+func compareRelationNull(operator string, rhs IRuntimeValue) (IRuntimeValue, phpError.Error) {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-relational-expression
 
 	//       NULL  bool  int  float  string  array  object  resource
@@ -1159,7 +1167,7 @@ func compareRelationNull(operator string, rhs IRuntimeValue) (IRuntimeValue, Err
 		case "<=>":
 			return NewIntegerRuntimeValue(0), nil
 		}
-		return NewVoidRuntimeValue(), NewError("compareRelationNull: Operator \"%s\" not implemented for type NULL", operator)
+		return NewVoidRuntimeValue(), phpError.NewError("compareRelationNull: Operator \"%s\" not implemented for type NULL", operator)
 
 		// TODO compareRelationNull - object
 		// TODO compareRelationNull - resource
@@ -1172,11 +1180,11 @@ func compareRelationNull(operator string, rhs IRuntimeValue) (IRuntimeValue, Err
 		return compareRelationString(NewStringRuntimeValue(lhs), operator, rhs)
 
 	default:
-		return NewVoidRuntimeValue(), NewError("compareRelationNull: Type \"%s\" not implemented", rhs.GetType())
+		return NewVoidRuntimeValue(), phpError.NewError("compareRelationNull: Type \"%s\" not implemented", rhs.GetType())
 	}
 }
 
-func compareRelationString(lhs IStringRuntimeValue, operator string, rhs IRuntimeValue) (IRuntimeValue, Error) {
+func compareRelationString(lhs IStringRuntimeValue, operator string, rhs IRuntimeValue) (IRuntimeValue, phpError.Error) {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-relational-expression
 
 	//         NULL  bool  int  float  string  array  object  resource
@@ -1194,7 +1202,7 @@ func compareRelationString(lhs IStringRuntimeValue, operator string, rhs IRuntim
 			case "<=>":
 				return NewIntegerRuntimeValue(-1), nil
 			default:
-				return NewVoidRuntimeValue(), NewError("compareRelationInteger: Operator \"%s\" not implemented for type array", operator)
+				return NewVoidRuntimeValue(), phpError.NewError("compareRelationInteger: Operator \"%s\" not implemented for type array", operator)
 			}
 		}
 		if !common.IsIntegerLiteralWithSign(lhsStr) && !common.IsFloatingLiteralWithSign(lhsStr) {
@@ -1204,13 +1212,13 @@ func compareRelationString(lhs IStringRuntimeValue, operator string, rhs IRuntim
 			case "<=>":
 				return NewIntegerRuntimeValue(1), nil
 			default:
-				return NewVoidRuntimeValue(), NewError("compareRelationInteger: Operator \"%s\" not implemented for type array", operator)
+				return NewVoidRuntimeValue(), phpError.NewError("compareRelationInteger: Operator \"%s\" not implemented for type array", operator)
 			}
 		}
 	}
 
 	if rhs.GetType() == NullValue {
-		var err Error
+		var err phpError.Error
 		rhs, err = runtimeValueToValueType(StringValue, rhs)
 		if err != nil {
 			return NewVoidRuntimeValue(), err
@@ -1225,7 +1233,7 @@ func compareRelationString(lhs IStringRuntimeValue, operator string, rhs IRuntim
 		case "<=>":
 			return NewIntegerRuntimeValue(-1), nil
 		default:
-			return NewVoidRuntimeValue(), NewError("compareRelationArray: Operator \"%s\" not implemented", operator)
+			return NewVoidRuntimeValue(), phpError.NewError("compareRelationArray: Operator \"%s\" not implemented", operator)
 		}
 
 	case BooleanValue:
@@ -1305,11 +1313,11 @@ func compareRelationString(lhs IStringRuntimeValue, operator string, rhs IRuntim
 		case "<=>":
 			return NewIntegerRuntimeValue(result), nil
 		default:
-			return NewVoidRuntimeValue(), NewError("compareRelationString: Operator \"%s\" not implemented", operator)
+			return NewVoidRuntimeValue(), phpError.NewError("compareRelationString: Operator \"%s\" not implemented", operator)
 		}
 
 	default:
-		return NewVoidRuntimeValue(), NewError("compareRelationString: Type \"%s\" not implemented", rhs.GetType())
+		return NewVoidRuntimeValue(), phpError.NewError("compareRelationString: Type \"%s\" not implemented", rhs.GetType())
 	}
 }
 
@@ -1325,7 +1333,7 @@ func compareRelationString(lhs IStringRuntimeValue, operator string, rhs IRuntim
 
 // ------------------- MARK: comparison -------------------
 
-func compare(lhs IRuntimeValue, operator string, rhs IRuntimeValue) (IBooleanRuntimeValue, Error) {
+func compare(lhs IRuntimeValue, operator string, rhs IRuntimeValue) (IBooleanRuntimeValue, phpError.Error) {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-equality-expression
 
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-equality-expression
@@ -1395,7 +1403,7 @@ func compare(lhs IRuntimeValue, operator string, rhs IRuntimeValue) (IBooleanRun
 			case StringValue:
 				result = runtimeValToStrRuntimeVal(lhs).GetValue() == runtimeValToStrRuntimeVal(rhs).GetValue()
 			default:
-				return NewBooleanRuntimeValue(false), NewError("compare: Runtime type %s for operator \"===\" not implemented", lhs.GetType())
+				return NewBooleanRuntimeValue(false), phpError.NewError("compare: Runtime type %s for operator \"===\" not implemented", lhs.GetType())
 			}
 		}
 
@@ -1406,5 +1414,5 @@ func compare(lhs IRuntimeValue, operator string, rhs IRuntimeValue) (IBooleanRun
 		}
 	}
 
-	return NewBooleanRuntimeValue(false), NewError("compare: Operator \"%s\" not implemented", operator)
+	return NewBooleanRuntimeValue(false), phpError.NewError("compare: Operator \"%s\" not implemented", operator)
 }

@@ -1,6 +1,7 @@
 package lexer
 
 import (
+	"GoPHP/cmd/goPHP/ini"
 	"GoPHP/cmd/goPHP/position"
 	"fmt"
 	"testing"
@@ -16,7 +17,7 @@ func testTokenize(t *testing.T, php string, expected []*Token) {
 		return t1.String() == t2.String()
 	}
 
-	tokens, err := NewLexer().Tokenize(php, testFile)
+	tokens, err := NewLexer(ini.NewDevIni()).Tokenize(php, testFile)
 	if err != nil {
 		fmt.Println("    Code:", php)
 		t.Errorf("Unexpected error: \"%s\"", err)

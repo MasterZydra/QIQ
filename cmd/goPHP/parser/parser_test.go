@@ -2,6 +2,7 @@ package parser
 
 import (
 	"GoPHP/cmd/goPHP/ast"
+	"GoPHP/cmd/goPHP/ini"
 	"testing"
 )
 
@@ -10,7 +11,7 @@ func testExpr(t *testing.T, php string, expected ast.IExpression) {
 }
 
 func testExprs(t *testing.T, php string, expected []ast.IExpression) {
-	program, err := NewParser().ProduceAST(php, "test.php")
+	program, err := NewParser(ini.NewDevIni()).ProduceAST(php, "test.php")
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -29,7 +30,7 @@ func testStmt(t *testing.T, php string, expected ast.IStatement) {
 }
 
 func testStmts(t *testing.T, php string, expected []ast.IStatement) {
-	program, err := NewParser().ProduceAST(php, "test.php")
+	program, err := NewParser(ini.NewDevIni()).ProduceAST(php, "test.php")
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return

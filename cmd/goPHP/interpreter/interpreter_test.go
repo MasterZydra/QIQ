@@ -2,6 +2,8 @@ package interpreter
 
 import (
 	"GoPHP/cmd/goPHP/ast"
+	"GoPHP/cmd/goPHP/ini"
+	"GoPHP/cmd/goPHP/phpError"
 	"fmt"
 	"testing"
 )
@@ -12,7 +14,7 @@ func TestVariableExprToVariableName(t *testing.T) {
 	// simple-variable-expression
 
 	// $var
-	interpreter := NewInterpreter(NewDevConfig(), &Request{}, "test.php")
+	interpreter := NewInterpreter(ini.NewDevIni(), &Request{}, "test.php")
 	actual, err := interpreter.varExprToVarName(ast.NewSimpleVariableExpr(ast.NewVariableNameExpr(nil, "$var")), interpreter.env)
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
@@ -24,7 +26,7 @@ func TestVariableExprToVariableName(t *testing.T) {
 	}
 
 	// $$var
-	interpreter = NewInterpreter(NewDevConfig(), &Request{}, "test.php")
+	interpreter = NewInterpreter(ini.NewDevIni(), &Request{}, "test.php")
 	interpreter.env.declareVariable("$var", NewStringRuntimeValue("hi"))
 	actual, err = interpreter.varExprToVarName(
 		ast.NewSimpleVariableExpr(
@@ -39,7 +41,7 @@ func TestVariableExprToVariableName(t *testing.T) {
 	}
 
 	// $$$var
-	interpreter = NewInterpreter(NewDevConfig(), &Request{}, "test.php")
+	interpreter = NewInterpreter(ini.NewDevIni(), &Request{}, "test.php")
 	interpreter.env.declareVariable("$var1", NewStringRuntimeValue("hi"))
 	interpreter.env.declareVariable("$var", NewStringRuntimeValue("var1"))
 	actual, err = interpreter.varExprToVarName(
@@ -61,7 +63,7 @@ func TestVariableExprToVariableName(t *testing.T) {
 func testInputOutput(t *testing.T, php string, output string) *Interpreter {
 	// Always use "\n" for tests so that they also pass on Windows
 	PHP_EOL = "\n"
-	interpreter := NewInterpreter(NewDevConfig(), &Request{}, "test.php")
+	interpreter := NewInterpreter(ini.NewDevIni(), &Request{}, "test.php")
 	actual, err := interpreter.Process(php)
 	if err != nil {
 		fmt.Println("    Code:", php)
@@ -92,16 +94,16 @@ func TestOutput(t *testing.T) {
 
 func TestConstants(t *testing.T) {
 	// Predefined constants
-	testInputOutput(t, `<?php echo E_USER_NOTICE;`, fmt.Sprintf("%d", E_USER_NOTICE))
-	testInputOutput(t, `<?php echo E_ALL;`, fmt.Sprintf("%d", E_ALL))
+	testInputOutput(t, `<?php echo E_USER_NOTICE;`, fmt.Sprintf("%d", phpError.E_USER_NOTICE))
+	testInputOutput(t, `<?php echo E_ALL;`, fmt.Sprintf("%d", phpError.E_ALL))
 
 	// Userdefined constants
 	testInputOutput(t, `<?php const TRUTH = 42; const PI = "3.141";echo TRUTH, PI;`, "423.141")
 }
 
 func TestFileIncludes(t *testing.T) {
-	doTest := func(t *testing.T, php string, expected Error) {
-		_, err := NewInterpreter(NewDevConfig(), &Request{}, "/home/admin/test.php").Process(php)
+	doTest := func(t *testing.T, php string, expected phpError.Error) {
+		_, err := NewInterpreter(ini.NewDevIni(), &Request{}, "/home/admin/test.php").Process(php)
 		if err.GetErrorType() != expected.GetErrorType() || err.GetMessage() != expected.GetMessage() {
 			fmt.Println("    Code:", php)
 			t.Errorf("\nExpected: %s\nGot:      %s", expected, err)
@@ -109,16 +111,16 @@ func TestFileIncludes(t *testing.T) {
 	}
 
 	doTest(t, `<?php require "include.php"; ?>`,
-		NewError("Uncaught Error: Failed opening required 'include.php' (include_path='/home/admin') in /home/admin/test.php:1:15"),
+		phpError.NewError("Uncaught Error: Failed opening required 'include.php' (include_path='/home/admin') in /home/admin/test.php:1:15"),
 	)
 	doTest(t, `<?php require_once "include.php"; ?>`,
-		NewError("Uncaught Error: Failed opening required 'include.php' (include_path='/home/admin') in /home/admin/test.php:1:20"),
+		phpError.NewError("Uncaught Error: Failed opening required 'include.php' (include_path='/home/admin') in /home/admin/test.php:1:20"),
 	)
 	doTest(t, `<?php include "include.php"; ?>`,
-		NewWarning("include(): Failed opening 'include.php' for inclusion (include_path='/home/admin') in /home/admin/test.php:1:15"),
+		phpError.NewWarning("include(): Failed opening 'include.php' for inclusion (include_path='/home/admin') in /home/admin/test.php:1:15"),
 	)
 	doTest(t, `<?php include_once "include.php"; ?>`,
-		NewWarning("include(): Failed opening 'include.php' for inclusion (include_path='/home/admin') in /home/admin/test.php:1:20"),
+		phpError.NewWarning("include(): Failed opening 'include.php' for inclusion (include_path='/home/admin') in /home/admin/test.php:1:20"),
 	)
 
 }

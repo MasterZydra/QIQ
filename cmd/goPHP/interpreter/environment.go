@@ -2,6 +2,8 @@ package interpreter
 
 import (
 	"GoPHP/cmd/goPHP/ast"
+	"GoPHP/cmd/goPHP/ini"
+	"GoPHP/cmd/goPHP/phpError"
 	"fmt"
 	"regexp"
 	"strings"
@@ -93,7 +95,7 @@ func paramToArray(params [][]string) IArrayRuntimeValue {
 		env.declareVariable("$"+paramName, arrayValue)
 
 		// Execute PHP to store new array values in env
-		interpreter := NewInterpreter(NewProdConfig(), NewRequest(), "")
+		interpreter := NewInterpreter(ini.NewDefaultIni(), NewRequest(), "")
 		interpreter.process(fmt.Sprintf(`<?php $%s = "%s";`, key, value), env)
 
 		// Extract array from environment
@@ -119,45 +121,45 @@ func registerPredefinedConstants(environment *Environment) {
 	}
 
 	// Spec: https://www.php.net/manual/en/errorfunc.constants.php
-	environment.predefinedConstants["E_ERROR"] = NewIntegerRuntimeValue(E_ERROR)
-	environment.predefinedConstants["E_WARNING"] = NewIntegerRuntimeValue(E_WARNING)
-	environment.predefinedConstants["E_PARSE"] = NewIntegerRuntimeValue(E_PARSE)
-	environment.predefinedConstants["E_NOTICE"] = NewIntegerRuntimeValue(E_NOTICE)
-	environment.predefinedConstants["E_CORE_ERROR"] = NewIntegerRuntimeValue(E_CORE_ERROR)
-	environment.predefinedConstants["E_CORE_WARNING"] = NewIntegerRuntimeValue(E_CORE_WARNING)
-	environment.predefinedConstants["E_COMPILE_ERROR"] = NewIntegerRuntimeValue(E_COMPILE_ERROR)
-	environment.predefinedConstants["E_COMPILE_WARNING"] = NewIntegerRuntimeValue(E_COMPILE_WARNING)
-	environment.predefinedConstants["E_USER_ERROR"] = NewIntegerRuntimeValue(E_USER_ERROR)
-	environment.predefinedConstants["E_USER_WARNING"] = NewIntegerRuntimeValue(E_USER_WARNING)
-	environment.predefinedConstants["E_USER_NOTICE"] = NewIntegerRuntimeValue(E_USER_NOTICE)
-	environment.predefinedConstants["E_STRICT"] = NewIntegerRuntimeValue(E_STRICT)
-	environment.predefinedConstants["E_RECOVERABLE_ERROR"] = NewIntegerRuntimeValue(E_RECOVERABLE_ERROR)
-	environment.predefinedConstants["E_DEPRECATED"] = NewIntegerRuntimeValue(E_DEPRECATED)
-	environment.predefinedConstants["E_USER_DEPRECATED"] = NewIntegerRuntimeValue(E_USER_DEPRECATED)
-	environment.predefinedConstants["E_ALL"] = NewIntegerRuntimeValue(E_ALL)
+	environment.predefinedConstants["E_ERROR"] = NewIntegerRuntimeValue(phpError.E_ERROR)
+	environment.predefinedConstants["E_WARNING"] = NewIntegerRuntimeValue(phpError.E_WARNING)
+	environment.predefinedConstants["E_PARSE"] = NewIntegerRuntimeValue(phpError.E_PARSE)
+	environment.predefinedConstants["E_NOTICE"] = NewIntegerRuntimeValue(phpError.E_NOTICE)
+	environment.predefinedConstants["E_CORE_ERROR"] = NewIntegerRuntimeValue(phpError.E_CORE_ERROR)
+	environment.predefinedConstants["E_CORE_WARNING"] = NewIntegerRuntimeValue(phpError.E_CORE_WARNING)
+	environment.predefinedConstants["E_COMPILE_ERROR"] = NewIntegerRuntimeValue(phpError.E_COMPILE_ERROR)
+	environment.predefinedConstants["E_COMPILE_WARNING"] = NewIntegerRuntimeValue(phpError.E_COMPILE_WARNING)
+	environment.predefinedConstants["E_USER_ERROR"] = NewIntegerRuntimeValue(phpError.E_USER_ERROR)
+	environment.predefinedConstants["E_USER_WARNING"] = NewIntegerRuntimeValue(phpError.E_USER_WARNING)
+	environment.predefinedConstants["E_USER_NOTICE"] = NewIntegerRuntimeValue(phpError.E_USER_NOTICE)
+	environment.predefinedConstants["E_STRICT"] = NewIntegerRuntimeValue(phpError.E_STRICT)
+	environment.predefinedConstants["E_RECOVERABLE_ERROR"] = NewIntegerRuntimeValue(phpError.E_RECOVERABLE_ERROR)
+	environment.predefinedConstants["E_DEPRECATED"] = NewIntegerRuntimeValue(phpError.E_DEPRECATED)
+	environment.predefinedConstants["E_USER_DEPRECATED"] = NewIntegerRuntimeValue(phpError.E_USER_DEPRECATED)
+	environment.predefinedConstants["E_ALL"] = NewIntegerRuntimeValue(phpError.E_ALL)
 }
 
 // ------------------- MARK: Variables -------------------
 
-func (env *Environment) declareVariable(variableName string, value IRuntimeValue) (IRuntimeValue, Error) {
+func (env *Environment) declareVariable(variableName string, value IRuntimeValue) (IRuntimeValue, phpError.Error) {
 	env.variables[variableName] = deepCopy(value)
 
 	return value, nil
 }
 
-func (env *Environment) resolvePredefinedVariable(variableName string) (*Environment, Error) {
+func (env *Environment) resolvePredefinedVariable(variableName string) (*Environment, phpError.Error) {
 	if _, ok := env.predefinedVariables[variableName]; ok {
 		return env, nil
 	}
 
 	if env.parent == nil {
-		return nil, NewWarning("Undefined variable %s", variableName)
+		return nil, phpError.NewWarning("Undefined variable %s", variableName)
 	}
 
 	return env.parent.resolvePredefinedVariable(variableName)
 }
 
-func (env *Environment) resolveVariable(variableName string) (*Environment, Error) {
+func (env *Environment) resolveVariable(variableName string) (*Environment, phpError.Error) {
 	environment, err := env.resolvePredefinedVariable(variableName)
 	if err != nil {
 		if _, ok := env.variables[variableName]; ok {
@@ -169,7 +171,7 @@ func (env *Environment) resolveVariable(variableName string) (*Environment, Erro
 	return environment, nil
 }
 
-func (env *Environment) lookupVariable(variableName string) (IRuntimeValue, Error) {
+func (env *Environment) lookupVariable(variableName string) (IRuntimeValue, phpError.Error) {
 	environment, err := env.resolveVariable(variableName)
 	if err != nil {
 		return NewNullRuntimeValue(), err
@@ -180,7 +182,7 @@ func (env *Environment) lookupVariable(variableName string) (IRuntimeValue, Erro
 	if value, ok := environment.variables[variableName]; ok {
 		return value, nil
 	}
-	return NewNullRuntimeValue(), NewWarning("Undefined variable %s", variableName)
+	return NewNullRuntimeValue(), phpError.NewWarning("Undefined variable %s", variableName)
 }
 
 func (env *Environment) unsetVariable(variableName string) {
@@ -193,7 +195,7 @@ func (env *Environment) unsetVariable(variableName string) {
 
 // ------------------- MARK: Constants -------------------
 
-func (env *Environment) declareConstant(constantName string, value IRuntimeValue) (IRuntimeValue, Error) {
+func (env *Environment) declareConstant(constantName string, value IRuntimeValue) (IRuntimeValue, phpError.Error) {
 	// Get "global" environment
 	var environment *Environment = env
 	for environment.parent != nil {
@@ -201,7 +203,7 @@ func (env *Environment) declareConstant(constantName string, value IRuntimeValue
 	}
 
 	if _, err := environment.lookupConstant(constantName); err == nil {
-		return NewVoidRuntimeValue(), NewWarning("Constant %s already defined", constantName)
+		return NewVoidRuntimeValue(), phpError.NewWarning("Constant %s already defined", constantName)
 	}
 
 	environment.constants[constantName] = value
@@ -209,7 +211,7 @@ func (env *Environment) declareConstant(constantName string, value IRuntimeValue
 	return value, nil
 }
 
-func (env *Environment) lookupConstant(constantName string) (IRuntimeValue, Error) {
+func (env *Environment) lookupConstant(constantName string) (IRuntimeValue, phpError.Error) {
 	// Get "global" environment
 	var environment *Environment = env
 	for environment.parent != nil {
@@ -222,24 +224,24 @@ func (env *Environment) lookupConstant(constantName string) (IRuntimeValue, Erro
 	if value, ok := environment.constants[constantName]; ok {
 		return value, nil
 	}
-	return NewVoidRuntimeValue(), NewError("Undefined constant \"%s\"", constantName)
+	return NewVoidRuntimeValue(), phpError.NewError("Undefined constant \"%s\"", constantName)
 }
 
 // ------------------- MARK: Native functions -------------------
 
-func (env *Environment) resolveNativeFunction(functionName string) (*Environment, Error) {
+func (env *Environment) resolveNativeFunction(functionName string) (*Environment, phpError.Error) {
 	if _, ok := env.nativeFunctions[functionName]; ok {
 		return env, nil
 	}
 
 	if env.parent == nil {
-		return nil, NewError("Call to undefined function %s()", functionName)
+		return nil, phpError.NewError("Call to undefined function %s()", functionName)
 	}
 
 	return env.parent.resolveNativeFunction(functionName)
 }
 
-func (env *Environment) lookupNativeFunction(functionName string) (nativeFunction, Error) {
+func (env *Environment) lookupNativeFunction(functionName string) (nativeFunction, phpError.Error) {
 	functionName = strings.ToLower(functionName)
 
 	environment, err := env.resolveNativeFunction(functionName)
@@ -249,7 +251,7 @@ func (env *Environment) lookupNativeFunction(functionName string) (nativeFunctio
 
 	value, ok := environment.nativeFunctions[functionName]
 	if !ok {
-		return nil, NewError("Call to undefined function %s()", functionName)
+		return nil, phpError.NewError("Call to undefined function %s()", functionName)
 	}
 	return value, nil
 }
@@ -263,14 +265,14 @@ type userFunction struct {
 	ReturnType   []string
 }
 
-func (env *Environment) defineUserFunction(function userFunction) Error {
+func (env *Environment) defineUserFunction(function userFunction) phpError.Error {
 	_, err := env.lookupNativeFunction(function.FunctionName)
 	if err == nil {
-		return NewError("Cannot redeclare %s()", function.FunctionName)
+		return phpError.NewError("Cannot redeclare %s()", function.FunctionName)
 	}
 	_, err = env.lookupUserFunction(function.FunctionName)
 	if err == nil {
-		return NewError("Cannot redeclare %s()", function.FunctionName)
+		return phpError.NewError("Cannot redeclare %s()", function.FunctionName)
 	}
 
 	functionName := strings.ToLower(function.FunctionName)
@@ -280,19 +282,19 @@ func (env *Environment) defineUserFunction(function userFunction) Error {
 	return nil
 }
 
-func (env *Environment) resolveUserFunction(functionName string) (*Environment, Error) {
+func (env *Environment) resolveUserFunction(functionName string) (*Environment, phpError.Error) {
 	if _, ok := env.functions[functionName]; ok {
 		return env, nil
 	}
 
 	if env.parent == nil {
-		return nil, NewError("Call to undefined function %s()", functionName)
+		return nil, phpError.NewError("Call to undefined function %s()", functionName)
 	}
 
 	return env.parent.resolveUserFunction(functionName)
 }
 
-func (env *Environment) lookupUserFunction(functionName string) (userFunction, Error) {
+func (env *Environment) lookupUserFunction(functionName string) (userFunction, phpError.Error) {
 	functionName = strings.ToLower(functionName)
 
 	environment, err := env.resolveUserFunction(functionName)
@@ -302,7 +304,7 @@ func (env *Environment) lookupUserFunction(functionName string) (userFunction, E
 
 	value, ok := environment.functions[functionName]
 	if !ok {
-		return userFunction{}, NewError("Call to undefined function %s()", functionName)
+		return userFunction{}, phpError.NewError("Call to undefined function %s()", functionName)
 	}
 	return value, nil
 }

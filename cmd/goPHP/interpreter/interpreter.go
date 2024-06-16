@@ -3,14 +3,16 @@ package interpreter
 import (
 	"GoPHP/cmd/goPHP/ast"
 	"GoPHP/cmd/goPHP/common"
+	"GoPHP/cmd/goPHP/ini"
 	"GoPHP/cmd/goPHP/parser"
+	"GoPHP/cmd/goPHP/phpError"
 	"strings"
 )
 
 type Interpreter struct {
 	filename      string
 	includedFiles []string
-	config        *Config
+	ini           *ini.Ini
 	request       *Request
 	parser        *parser.Parser
 	env           *Environment
@@ -19,9 +21,9 @@ type Interpreter struct {
 	exitCode      int64
 }
 
-func NewInterpreter(config *Config, request *Request, filename string) *Interpreter {
+func NewInterpreter(ini *ini.Ini, request *Request, filename string) *Interpreter {
 	return &Interpreter{
-		filename: filename, includedFiles: []string{}, config: config, request: request, parser: parser.NewParser(),
+		filename: filename, includedFiles: []string{}, ini: ini, request: request, parser: parser.NewParser(ini),
 		env: NewEnvironment(nil, request), cache: map[int64]IRuntimeValue{},
 		exitCode: 0,
 	}
@@ -31,15 +33,15 @@ func (interpreter *Interpreter) GetExitCode() int {
 	return int(interpreter.exitCode)
 }
 
-func (interpreter *Interpreter) Process(sourceCode string) (string, Error) {
+func (interpreter *Interpreter) Process(sourceCode string) (string, phpError.Error) {
 	return interpreter.process(sourceCode, interpreter.env)
 }
 
-func (interpreter *Interpreter) process(sourceCode string, env *Environment) (string, Error) {
+func (interpreter *Interpreter) process(sourceCode string, env *Environment) (string, phpError.Error) {
 	interpreter.result = ""
 	program, parserErr := interpreter.parser.ProduceAST(sourceCode, interpreter.filename)
 	if parserErr != nil {
-		return interpreter.result, NewParseError(parserErr)
+		return interpreter.result, parserErr
 	}
 
 	_, err := interpreter.processProgram(program, env)
@@ -47,7 +49,7 @@ func (interpreter *Interpreter) process(sourceCode string, env *Environment) (st
 	return interpreter.result, err
 }
 
-func (interpreter *Interpreter) processProgram(program *ast.Program, env *Environment) (IRuntimeValue, Error) {
+func (interpreter *Interpreter) processProgram(program *ast.Program, env *Environment) (IRuntimeValue, phpError.Error) {
 	err := interpreter.scanForFunctionDefinition(program.GetStatements(), env)
 	if err != nil {
 		return NewVoidRuntimeValue(), err
@@ -57,7 +59,7 @@ func (interpreter *Interpreter) processProgram(program *ast.Program, env *Enviro
 	for _, stmt := range program.GetStatements() {
 		if runtimeValue, err = interpreter.processStmt(stmt, env); err != nil {
 			// Handle exit event - Stop code execution
-			if err.GetErrorType() == EventError && err.GetMessage() == ExitEvent {
+			if err.GetErrorType() == phpError.EventError && err.GetMessage() == phpError.ExitEvent {
 				break
 			}
 			return runtimeValue, err
@@ -66,7 +68,7 @@ func (interpreter *Interpreter) processProgram(program *ast.Program, env *Enviro
 	return runtimeValue, nil
 }
 
-func (interpreter *Interpreter) processStmt(stmt ast.IStatement, env *Environment) (IRuntimeValue, Error) {
+func (interpreter *Interpreter) processStmt(stmt ast.IStatement, env *Environment) (IRuntimeValue, phpError.Error) {
 	switch stmt.GetKind() {
 	// Statements
 	case ast.ConstDeclarationStmt:
@@ -140,11 +142,11 @@ func (interpreter *Interpreter) processStmt(stmt ast.IStatement, env *Environmen
 		return interpreter.processIncludeOnceExpr(ast.ExprToExprExpr(stmt), env)
 
 	default:
-		return NewVoidRuntimeValue(), NewError("Unsupported statement or expression: %s", stmt)
+		return NewVoidRuntimeValue(), phpError.NewError("Unsupported statement or expression: %s", stmt)
 	}
 }
 
-func (interpreter *Interpreter) processConstDeclarationStmt(stmt ast.IConstDeclarationStatement, env *Environment) (IRuntimeValue, Error) {
+func (interpreter *Interpreter) processConstDeclarationStmt(stmt ast.IConstDeclarationStatement, env *Environment) (IRuntimeValue, phpError.Error) {
 	value, err := interpreter.processStmt(stmt.GetValue(), env)
 	if err != nil {
 		return value, err
@@ -152,7 +154,7 @@ func (interpreter *Interpreter) processConstDeclarationStmt(stmt ast.IConstDecla
 	return env.declareConstant(stmt.GetName(), value)
 }
 
-func (interpreter *Interpreter) processCompoundStmt(stmt ast.ICompoundStatement, env *Environment) (IRuntimeValue, Error) {
+func (interpreter *Interpreter) processCompoundStmt(stmt ast.ICompoundStatement, env *Environment) (IRuntimeValue, phpError.Error) {
 	for _, statement := range stmt.GetStatements() {
 		runtimeValue, err := interpreter.processStmt(statement, env)
 		if err != nil {
@@ -162,7 +164,7 @@ func (interpreter *Interpreter) processCompoundStmt(stmt ast.ICompoundStatement,
 	return NewVoidRuntimeValue(), nil
 }
 
-func (interpreter *Interpreter) processEchoStmt(stmt ast.IEchoStatement, env *Environment) (IRuntimeValue, Error) {
+func (interpreter *Interpreter) processEchoStmt(stmt ast.IEchoStatement, env *Environment) (IRuntimeValue, phpError.Error) {
 	for _, expr := range stmt.GetExpressions() {
 		if runtimeValue, err := interpreter.processStmt(expr, env); err != nil {
 			return runtimeValue, err
@@ -178,7 +180,7 @@ func (interpreter *Interpreter) processEchoStmt(stmt ast.IEchoStatement, env *En
 	return NewVoidRuntimeValue(), nil
 }
 
-func (interpreter *Interpreter) processFunctionDefinitionStmt(stmt ast.IFunctionDefinitionStatement, env *Environment) (IRuntimeValue, Error) {
+func (interpreter *Interpreter) processFunctionDefinitionStmt(stmt ast.IFunctionDefinitionStatement, env *Environment) (IRuntimeValue, phpError.Error) {
 	// Check if this function definition was already processed before interpreting the code
 	if interpreter.isCached(stmt) {
 		return NewVoidRuntimeValue(), nil
@@ -194,18 +196,18 @@ func (interpreter *Interpreter) processFunctionDefinitionStmt(stmt ast.IFunction
 	return interpreter.writeCache(stmt, NewVoidRuntimeValue()), nil
 }
 
-func (interpreter *Interpreter) processReturnStmt(stmt ast.IExpressionStatement, env *Environment) (IRuntimeValue, Error) {
+func (interpreter *Interpreter) processReturnStmt(stmt ast.IExpressionStatement, env *Environment) (IRuntimeValue, phpError.Error) {
 	if stmt.GetExpression() == nil {
-		return NewVoidRuntimeValue(), NewEvent(ReturnEvent)
+		return NewVoidRuntimeValue(), phpError.NewEvent(phpError.ReturnEvent)
 	}
 	runtimeValue, err := interpreter.processStmt(stmt.GetExpression(), env)
 	if err != nil {
 		return runtimeValue, err
 	}
-	return runtimeValue, NewEvent(ReturnEvent)
+	return runtimeValue, phpError.NewEvent(phpError.ReturnEvent)
 }
 
-func (interpreter *Interpreter) processIfStmt(stmt ast.IIfStatement, env *Environment) (IRuntimeValue, Error) {
+func (interpreter *Interpreter) processIfStmt(stmt ast.IIfStatement, env *Environment) (IRuntimeValue, phpError.Error) {
 	conditionRuntimeValue, err := interpreter.processStmt(stmt.GetCondition(), env)
 	if err != nil {
 		return conditionRuntimeValue, err
@@ -259,14 +261,14 @@ func (interpreter *Interpreter) processIfStmt(stmt ast.IIfStatement, env *Enviro
 	return NewVoidRuntimeValue(), nil
 }
 
-func (interpreter *Interpreter) processSimpleVariableExpr(expr ast.ISimpleVariableExpression, env *Environment) (IRuntimeValue, Error) {
+func (interpreter *Interpreter) processSimpleVariableExpr(expr ast.ISimpleVariableExpression, env *Environment) (IRuntimeValue, phpError.Error) {
 	return interpreter.lookupVariable(expr, env, false)
 }
 
-func (interpreter *Interpreter) processSimpleAssignmentExpr(expr ast.ISimpleAssignmentExpression, env *Environment) (IRuntimeValue, Error) {
+func (interpreter *Interpreter) processSimpleAssignmentExpr(expr ast.ISimpleAssignmentExpression, env *Environment) (IRuntimeValue, phpError.Error) {
 	if !ast.IsVariableExpr(expr.GetVariable()) {
 		return NewVoidRuntimeValue(),
-			NewError("processSimpleAssignmentExpr: Invalid variable: %s", expr.GetVariable())
+			phpError.NewError("processSimpleAssignmentExpr: Invalid variable: %s", expr.GetVariable())
 	}
 
 	value, err := interpreter.processStmt(expr.GetValue(), env)
@@ -283,7 +285,7 @@ func (interpreter *Interpreter) processSimpleAssignmentExpr(expr ast.ISimpleAssi
 
 	if currentValue.GetType() == ArrayValue {
 		if expr.GetVariable().GetKind() != ast.SubscriptExpr {
-			return NewVoidRuntimeValue(), NewError("processSimpleAssignmentExpr: Unsupported variable type %s", expr.GetVariable().GetKind())
+			return NewVoidRuntimeValue(), phpError.NewError("processSimpleAssignmentExpr: Unsupported variable type %s", expr.GetVariable().GetKind())
 		}
 
 		var key ast.IExpression = ast.ExprToSubscriptExpr(expr.GetVariable()).GetIndex()
@@ -295,7 +297,7 @@ func (interpreter *Interpreter) processSimpleAssignmentExpr(expr ast.ISimpleAssi
 				lastIndex = array.GetKeys()[len(array.GetKeys())-1]
 			}
 			if lastIndex.GetType() != IntegerValue {
-				return NewVoidRuntimeValue(), NewError("processSimpleAssignmentExpr: Unsupported array key %s", lastIndex.GetType())
+				return NewVoidRuntimeValue(), phpError.NewError("processSimpleAssignmentExpr: Unsupported array key %s", lastIndex.GetType())
 			}
 			var nextIndex = lastIndex
 			if len(array.GetKeys()) > 0 {
@@ -316,7 +318,7 @@ func (interpreter *Interpreter) processSimpleAssignmentExpr(expr ast.ISimpleAssi
 	return env.declareVariable(variableName, value)
 }
 
-func (interpreter *Interpreter) processSubscriptExpr(expr ast.ISubscriptExpression, env *Environment) (IRuntimeValue, Error) {
+func (interpreter *Interpreter) processSubscriptExpr(expr ast.ISubscriptExpression, env *Environment) (IRuntimeValue, phpError.Error) {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-subscript-expression
 
 	variable, err := interpreter.lookupVariable(expr.GetVariable(), env, false)
@@ -360,7 +362,7 @@ func (interpreter *Interpreter) processSubscriptExpr(expr ast.ISubscriptExpressi
 		// If the usage context is as the operand of a postfix- or prefix-increment or decrement operator, the value of the new element is considered to be NULL.
 	}
 
-	return NewVoidRuntimeValue(), NewError("Unsupported subscript expression: %s", expr)
+	return NewVoidRuntimeValue(), phpError.NewError("Unsupported subscript expression: %s", expr)
 
 	/*
 	   If dereferencable-expression designates a string, expression must not designate a string.
@@ -431,7 +433,7 @@ func (interpreter *Interpreter) processSubscriptExpr(expr ast.ISubscriptExpressi
 	*/
 }
 
-func (interpreter *Interpreter) processFunctionCallExpr(expr ast.IFunctionCallExpression, env *Environment) (IRuntimeValue, Error) {
+func (interpreter *Interpreter) processFunctionCallExpr(expr ast.IFunctionCallExpression, env *Environment) (IRuntimeValue, phpError.Error) {
 	// Lookup native function
 	nativeFunction, err := env.lookupNativeFunction(expr.GetFunctionName())
 	if err == nil {
@@ -455,7 +457,7 @@ func (interpreter *Interpreter) processFunctionCallExpr(expr ast.IFunctionCallEx
 	functionEnv := NewEnvironment(env, nil)
 
 	if len(userFunction.Parameters) != len(expr.GetArguments()) {
-		return NewVoidRuntimeValue(), NewError(
+		return NewVoidRuntimeValue(), phpError.NewError(
 			"Uncaught ArgumentCountError: %s() expects exactly %d arguments, %d given",
 			userFunction.FunctionName, len(userFunction.Parameters), len(expr.GetArguments()),
 		)
@@ -472,7 +474,7 @@ func (interpreter *Interpreter) processFunctionCallExpr(expr ast.IFunctionCallEx
 			if err != nil {
 				return NewVoidRuntimeValue(), err
 			}
-			return NewVoidRuntimeValue(), NewError(
+			return NewVoidRuntimeValue(), phpError.NewError(
 				"Uncaught TypeError: %s(): Argument #%d (%s) must be of type %s, %s given",
 				userFunction.FunctionName, index+1, param.Name, strings.Join(param.Type, "|"), givenType,
 			)
@@ -482,7 +484,7 @@ func (interpreter *Interpreter) processFunctionCallExpr(expr ast.IFunctionCallEx
 	}
 
 	runtimeValue, err := interpreter.processStmt(userFunction.Body, functionEnv)
-	if err != nil && !(err.GetErrorType() == EventError && err.GetMessage() == ReturnEvent) {
+	if err != nil && !(err.GetErrorType() == phpError.EventError && err.GetMessage() == phpError.ReturnEvent) {
 		return runtimeValue, err
 	}
 	err = checkParameterTypes(runtimeValue, userFunction.ReturnType)
@@ -494,7 +496,7 @@ func (interpreter *Interpreter) processFunctionCallExpr(expr ast.IFunctionCallEx
 		if err != nil {
 			return runtimeValue, err
 		}
-		return runtimeValue, NewError(
+		return runtimeValue, phpError.NewError(
 			"Uncaught TypeError: %s(): Return value must be of type %s, %s given",
 			userFunction.FunctionName, strings.Join(userFunction.ReturnType, "|"), givenType,
 		)
@@ -503,7 +505,7 @@ func (interpreter *Interpreter) processFunctionCallExpr(expr ast.IFunctionCallEx
 
 }
 
-func (interpreter *Interpreter) processEmptyIntrinsicExpr(expr ast.IFunctionCallExpression, env *Environment) (IRuntimeValue, Error) {
+func (interpreter *Interpreter) processEmptyIntrinsicExpr(expr ast.IFunctionCallExpression, env *Environment) (IRuntimeValue, phpError.Error) {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-empty-intrinsic
 
 	// This intrinsic returns TRUE if the variable or value designated by expression is empty,
@@ -519,7 +521,7 @@ func (interpreter *Interpreter) processEmptyIntrinsicExpr(expr ast.IFunctionCall
 	// and compared to FALSE as described above. Otherwise, the result is FALSE.
 
 	var runtimeValue IRuntimeValue
-	var err Error
+	var err phpError.Error
 	if ast.IsVariableExpr(expr.GetArguments()[0]) {
 		runtimeValue, err = interpreter.lookupVariable(expr.GetArguments()[0], env, true)
 		if err != nil {
@@ -539,7 +541,7 @@ func (interpreter *Interpreter) processEmptyIntrinsicExpr(expr ast.IFunctionCall
 	return NewBooleanRuntimeValue(!boolean), nil
 }
 
-func (interpreter *Interpreter) processExitIntrinsicExpr(expr ast.IFunctionCallExpression, env *Environment) (IRuntimeValue, Error) {
+func (interpreter *Interpreter) processExitIntrinsicExpr(expr ast.IFunctionCallExpression, env *Environment) (IRuntimeValue, phpError.Error) {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-exit-intrinsic
 
 	// "exit" and "die" are equivalent.
@@ -575,10 +577,10 @@ func (interpreter *Interpreter) processExitIntrinsicExpr(expr ast.IFunctionCallE
 	// TODO processExitIntrinsicExpr - call shutdown functions
 	// TODO processExitIntrinsicExpr - call destructors
 
-	return NewVoidRuntimeValue(), NewEvent(ExitEvent)
+	return NewVoidRuntimeValue(), phpError.NewEvent(phpError.ExitEvent)
 }
 
-func (interpreter *Interpreter) processIssetExpr(expr ast.IFunctionCallExpression, env *Environment) (IRuntimeValue, Error) {
+func (interpreter *Interpreter) processIssetExpr(expr ast.IFunctionCallExpression, env *Environment) (IRuntimeValue, phpError.Error) {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-isset-intrinsic
 
 	// This intrinsic returns TRUE if all the variables designated by variabless are set and their values are not NULL.
@@ -598,7 +600,7 @@ func (interpreter *Interpreter) processIssetExpr(expr ast.IFunctionCallExpressio
 	return NewBooleanRuntimeValue(true), nil
 }
 
-func (interpreter *Interpreter) processUnsetExpr(expr ast.IFunctionCallExpression, env *Environment) (IRuntimeValue, Error) {
+func (interpreter *Interpreter) processUnsetExpr(expr ast.IFunctionCallExpression, env *Environment) (IRuntimeValue, phpError.Error) {
 	// Spec: https://phplang.org/spec/11-statements.html#grammar-unset-statement
 
 	// This statement unsets the variables designated by each variable in variable-list. No value is returned.
@@ -614,7 +616,7 @@ func (interpreter *Interpreter) processUnsetExpr(expr ast.IFunctionCallExpressio
 	return NewVoidRuntimeValue(), nil
 }
 
-func (interpreter *Interpreter) processConstantAccessExpr(expr ast.IConstantAccessExpression, env *Environment) (IRuntimeValue, Error) {
+func (interpreter *Interpreter) processConstantAccessExpr(expr ast.IConstantAccessExpression, env *Environment) (IRuntimeValue, phpError.Error) {
 	// Context-dependent constants
 	if expr.GetConstantName() == "__DIR__" {
 		return NewStringRuntimeValue(common.ExtractPath(expr.GetPosition().Filename)), nil
@@ -623,10 +625,10 @@ func (interpreter *Interpreter) processConstantAccessExpr(expr ast.IConstantAcce
 	return env.lookupConstant(expr.GetConstantName())
 }
 
-func (interpreter *Interpreter) processCompoundAssignmentExpr(expr ast.ICompoundAssignmentExpression, env *Environment) (IRuntimeValue, Error) {
+func (interpreter *Interpreter) processCompoundAssignmentExpr(expr ast.ICompoundAssignmentExpression, env *Environment) (IRuntimeValue, phpError.Error) {
 	if !ast.IsVariableExpr(expr.GetVariable()) {
 		return NewVoidRuntimeValue(),
-			NewError("processCompoundAssignmentExpr: Invalid variable: %s", expr.GetVariable())
+			phpError.NewError("processCompoundAssignmentExpr: Invalid variable: %s", expr.GetVariable())
 	}
 
 	operand1, err := interpreter.processStmt(expr.GetVariable(), env)
@@ -652,7 +654,7 @@ func (interpreter *Interpreter) processCompoundAssignmentExpr(expr ast.ICompound
 	return env.declareVariable(variableName, newValue)
 }
 
-func (interpreter *Interpreter) processConditionalExpr(expr ast.IConditionalExpression, env *Environment) (IRuntimeValue, Error) {
+func (interpreter *Interpreter) processConditionalExpr(expr ast.IConditionalExpression, env *Environment) (IRuntimeValue, phpError.Error) {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-conditional-expression
 
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-conditional-expression
@@ -683,18 +685,18 @@ func (interpreter *Interpreter) processConditionalExpr(expr ast.IConditionalExpr
 	}
 }
 
-func (interpreter *Interpreter) processCoalesceExpr(expr ast.ICoalesceExpression, env *Environment) (IRuntimeValue, Error) {
+func (interpreter *Interpreter) processCoalesceExpr(expr ast.ICoalesceExpression, env *Environment) (IRuntimeValue, phpError.Error) {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-coalesce-expression
 
 	// Store current error reporting
-	errorReporting := interpreter.config.ErrorReporting
+	errorReporting := interpreter.ini.ErrorReporting
 	// Suppress all errors
-	interpreter.config.ErrorReporting = 0
+	interpreter.ini.ErrorReporting = 0
 
 	cond, err := interpreter.processStmt(expr.GetCondition(), env)
 
 	// Restore previous error reporting
-	interpreter.config.ErrorReporting = errorReporting
+	interpreter.ini.ErrorReporting = errorReporting
 
 	if err != nil {
 		return cond, err
@@ -717,7 +719,7 @@ func (interpreter *Interpreter) processCoalesceExpr(expr ast.ICoalesceExpression
 	// TODO use isset here - Steps: Add caching of expression results - map[exprId]IRuntimeValue
 }
 
-func (interpreter *Interpreter) processRelationalExpr(expr ast.IBinaryOpExpression, env *Environment) (IRuntimeValue, Error) {
+func (interpreter *Interpreter) processRelationalExpr(expr ast.IBinaryOpExpression, env *Environment) (IRuntimeValue, phpError.Error) {
 	lhs, err := interpreter.processStmt(expr.GetLHS(), env)
 	if err != nil {
 		return lhs, err
@@ -730,7 +732,7 @@ func (interpreter *Interpreter) processRelationalExpr(expr ast.IBinaryOpExpressi
 	return compareRelation(lhs, expr.GetOperator(), rhs)
 }
 
-func (interpreter *Interpreter) processEqualityExpr(expr ast.IBinaryOpExpression, env *Environment) (IRuntimeValue, Error) {
+func (interpreter *Interpreter) processEqualityExpr(expr ast.IBinaryOpExpression, env *Environment) (IRuntimeValue, phpError.Error) {
 	lhs, err := interpreter.processStmt(expr.GetLHS(), env)
 	if err != nil {
 		return lhs, err
@@ -743,7 +745,7 @@ func (interpreter *Interpreter) processEqualityExpr(expr ast.IBinaryOpExpression
 	return compare(lhs, expr.GetOperator(), rhs)
 }
 
-func (interpreter *Interpreter) processBinaryOpExpr(expr ast.IBinaryOpExpression, env *Environment) (IRuntimeValue, Error) {
+func (interpreter *Interpreter) processBinaryOpExpr(expr ast.IBinaryOpExpression, env *Environment) (IRuntimeValue, phpError.Error) {
 	lhs, err := interpreter.processStmt(expr.GetLHS(), env)
 	if err != nil {
 		return lhs, err
@@ -756,7 +758,7 @@ func (interpreter *Interpreter) processBinaryOpExpr(expr ast.IBinaryOpExpression
 	return calculate(lhs, expr.GetOperator(), rhs)
 }
 
-func (interpreter *Interpreter) processUnaryExpr(expr ast.IUnaryOpExpression, env *Environment) (IRuntimeValue, Error) {
+func (interpreter *Interpreter) processUnaryExpr(expr ast.IUnaryOpExpression, env *Environment) (IRuntimeValue, phpError.Error) {
 	operand, err := interpreter.processStmt(expr.GetExpression(), env)
 	if err != nil {
 		return operand, err
@@ -764,7 +766,7 @@ func (interpreter *Interpreter) processUnaryExpr(expr ast.IUnaryOpExpression, en
 	return calculateUnary(expr.GetOperator(), operand)
 }
 
-func (interpreter *Interpreter) processCastExpr(expr ast.IUnaryOpExpression, env *Environment) (IRuntimeValue, Error) {
+func (interpreter *Interpreter) processCastExpr(expr ast.IUnaryOpExpression, env *Environment) (IRuntimeValue, phpError.Error) {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-cast-type
 
 	// A cast-type of "unset" is no longer supported and results in a compile-time error.
@@ -803,11 +805,11 @@ func (interpreter *Interpreter) processCastExpr(expr ast.IUnaryOpExpression, env
 		// A cast-type of "int" or "integer" results in a conversion to type "int".
 		return runtimeValueToValueType(IntegerValue, value)
 	default:
-		return NewVoidRuntimeValue(), NewError("processCastExpr: Unsupported cast type %s", expr.GetOperator())
+		return NewVoidRuntimeValue(), phpError.NewError("processCastExpr: Unsupported cast type %s", expr.GetOperator())
 	}
 }
 
-func (interpreter *Interpreter) processLogicalNotExpr(expr ast.IUnaryOpExpression, env *Environment) (IRuntimeValue, Error) {
+func (interpreter *Interpreter) processLogicalNotExpr(expr ast.IUnaryOpExpression, env *Environment) (IRuntimeValue, phpError.Error) {
 	runtimeValue, err := interpreter.processStmt(expr.GetExpression(), env)
 	if err != nil {
 		return runtimeValue, err
@@ -819,7 +821,7 @@ func (interpreter *Interpreter) processLogicalNotExpr(expr ast.IUnaryOpExpressio
 	return NewBooleanRuntimeValue(!boolValue), nil
 }
 
-func (interpreter *Interpreter) processPostfixIncExpr(expr ast.IUnaryOpExpression, env *Environment) (IRuntimeValue, Error) {
+func (interpreter *Interpreter) processPostfixIncExpr(expr ast.IUnaryOpExpression, env *Environment) (IRuntimeValue, phpError.Error) {
 	// Spec: https://phplang.org/spec/10-expressions.html#postfix-increment-and-decrement-operators
 	// These operators behave like their prefix counterparts except that the value of a postfix ++ or – expression is the value
 	// before any increment or decrement takes place.
@@ -843,7 +845,7 @@ func (interpreter *Interpreter) processPostfixIncExpr(expr ast.IUnaryOpExpressio
 	return previous, nil
 }
 
-func (interpreter *Interpreter) processPrefixIncExpr(expr ast.IUnaryOpExpression, env *Environment) (IRuntimeValue, Error) {
+func (interpreter *Interpreter) processPrefixIncExpr(expr ast.IUnaryOpExpression, env *Environment) (IRuntimeValue, phpError.Error) {
 	previous, err := interpreter.processStmt(expr.GetExpression(), env)
 	if err != nil {
 		return previous, err
@@ -863,18 +865,18 @@ func (interpreter *Interpreter) processPrefixIncExpr(expr ast.IUnaryOpExpression
 	return newValue, nil
 }
 
-func (interpreter *Interpreter) processRequireExpr(expr ast.IExprExpression, env *Environment) (IRuntimeValue, Error) {
+func (interpreter *Interpreter) processRequireExpr(expr ast.IExprExpression, env *Environment) (IRuntimeValue, phpError.Error) {
 	return interpreter.includeFile(expr.GetExpression(), env, false, false)
 }
 
-func (interpreter *Interpreter) processRequireOnceExpr(expr ast.IExprExpression, env *Environment) (IRuntimeValue, Error) {
+func (interpreter *Interpreter) processRequireOnceExpr(expr ast.IExprExpression, env *Environment) (IRuntimeValue, phpError.Error) {
 	return interpreter.includeFile(expr.GetExpression(), env, false, true)
 }
 
-func (interpreter *Interpreter) processIncludeExpr(expr ast.IExprExpression, env *Environment) (IRuntimeValue, Error) {
+func (interpreter *Interpreter) processIncludeExpr(expr ast.IExprExpression, env *Environment) (IRuntimeValue, phpError.Error) {
 	return interpreter.includeFile(expr.GetExpression(), env, true, false)
 }
 
-func (interpreter *Interpreter) processIncludeOnceExpr(expr ast.IExprExpression, env *Environment) (IRuntimeValue, Error) {
+func (interpreter *Interpreter) processIncludeOnceExpr(expr ast.IExprExpression, env *Environment) (IRuntimeValue, phpError.Error) {
 	return interpreter.includeFile(expr.GetExpression(), env, true, true)
 }

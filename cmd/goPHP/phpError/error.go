@@ -1,4 +1,4 @@
-package interpreter
+package phpError
 
 import "fmt"
 
@@ -65,8 +65,8 @@ func (err *PhpError) String() string {
 	return err.message
 }
 
-func NewParseError(err error) Error {
-	return &PhpError{errorType: ParsePhpError, message: err.Error()}
+func NewParseError(format string, a ...any) Error {
+	return &PhpError{errorType: ParsePhpError, message: fmt.Sprintf(format, a...)}
 }
 
 func NewError(format string, a ...any) Error {

@@ -2,6 +2,7 @@ package lexer
 
 import (
 	"GoPHP/cmd/goPHP/common"
+	"GoPHP/cmd/goPHP/ini"
 	"fmt"
 	"regexp"
 	"slices"
@@ -9,6 +10,7 @@ import (
 )
 
 type Lexer struct {
+	ini    *ini.Ini
 	input  string
 	tokens []*Token
 	// Position info
@@ -26,8 +28,8 @@ type PositionSnapshot struct {
 	SearchTokenStart bool
 }
 
-func NewLexer() *Lexer {
-	return &Lexer{}
+func NewLexer(ini *ini.Ini) *Lexer {
+	return &Lexer{ini: ini}
 }
 
 func (lexer *Lexer) init(input string, filename string) {
@@ -71,6 +73,15 @@ func (lexer *Lexer) tokenizeScript() error {
 		// Push optional text token if a start-tag is detected
 		if lexer.nextN(3) == "<?=" || strings.ToLower(lexer.nextN(5)) == "<?php" {
 			pushTextToken()
+		}
+
+		if lexer.ini.ShortOpenTag && lexer.nextN(2) == "<?" {
+			lexer.eatN(2)
+			lexer.pushToken(StartTagToken, "")
+			if err := lexer.tokenizeInputFile(); err != nil {
+				return err
+			}
+			continue
 		}
 
 		if strings.ToLower(lexer.nextN(5)) == "<?php" {

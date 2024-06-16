@@ -3,37 +3,39 @@ package parser
 import (
 	"GoPHP/cmd/goPHP/ast"
 	"GoPHP/cmd/goPHP/common"
+	"GoPHP/cmd/goPHP/ini"
 	"GoPHP/cmd/goPHP/lexer"
+	"GoPHP/cmd/goPHP/phpError"
 	"GoPHP/cmd/goPHP/position"
-	"fmt"
 	"slices"
 	"strings"
 )
 
 type Parser struct {
+	ini     *ini.Ini
 	program *ast.Program
 	lexer   *lexer.Lexer
 	tokens  []*lexer.Token
 	currPos int
 }
 
-func NewParser() *Parser {
-	return &Parser{}
+func NewParser(ini *ini.Ini) *Parser {
+	return &Parser{ini: ini}
 }
 
 func (parser *Parser) init() {
 	parser.program = ast.NewProgram()
-	parser.lexer = lexer.NewLexer()
+	parser.lexer = lexer.NewLexer(parser.ini)
 	parser.currPos = 0
 }
 
-func (parser *Parser) ProduceAST(sourceCode string, filename string) (*ast.Program, error) {
+func (parser *Parser) ProduceAST(sourceCode string, filename string) (*ast.Program, phpError.Error) {
 	parser.init()
 
-	var err error
-	parser.tokens, err = parser.lexer.Tokenize(sourceCode, filename)
-	if err != nil {
-		return parser.program, err
+	var lexerErr error
+	parser.tokens, lexerErr = parser.lexer.Tokenize(sourceCode, filename)
+	if lexerErr != nil {
+		return parser.program, phpError.NewParseError(lexerErr.Error())
 	}
 
 	for !parser.isEof() {
@@ -48,10 +50,10 @@ func (parser *Parser) ProduceAST(sourceCode string, filename string) (*ast.Progr
 		parser.program.Append(stmt)
 	}
 
-	return parser.program, err
+	return parser.program, nil
 }
 
-func (parser *Parser) parseStmt() (ast.IStatement, error) {
+func (parser *Parser) parseStmt() (ast.IStatement, phpError.Error) {
 	// Spec: https://phplang.org/spec/11-statements.html#general
 
 	// statement:
@@ -101,7 +103,7 @@ func (parser *Parser) parseStmt() (ast.IStatement, error) {
 		}
 
 		if !parser.isToken(lexer.OpOrPuncToken, "}", true) {
-			return ast.NewEmptyStmt(), fmt.Errorf("Expected \"}\", Got: %s", parser.at())
+			return ast.NewEmptyStmt(), phpError.NewParseError("Expected \"}\", Got: %s", parser.at())
 		}
 		return ast.NewCompoundStmt(statements), nil
 	}
@@ -157,11 +159,11 @@ func (parser *Parser) parseStmt() (ast.IStatement, error) {
 			if parser.isToken(lexer.OpOrPuncToken, ";", true) {
 				break
 			}
-			return ast.NewEmptyStmt(), fmt.Errorf("Parser error: Invalid echo statement detected")
+			return ast.NewEmptyStmt(), phpError.NewParseError("Invalid echo statement detected")
 		}
 
 		if len(expressions) == 0 {
-			return ast.NewEmptyStmt(), fmt.Errorf("Parser error: Invalid echo statement detected")
+			return ast.NewEmptyStmt(), phpError.NewParseError("Invalid echo statement detected")
 		}
 
 		return ast.NewEchoStmt(pos, expressions), nil
@@ -181,7 +183,7 @@ func (parser *Parser) parseStmt() (ast.IStatement, error) {
 	if parser.isToken(lexer.KeywordToken, "unset", false) {
 		pos := parser.eat().Position
 		if !parser.isToken(lexer.OpOrPuncToken, "(", true) {
-			return ast.NewEmptyStmt(), fmt.Errorf("Expected \"(\". Got: \"%s\"", parser.at())
+			return ast.NewEmptyStmt(), phpError.NewParseError("Expected \"(\". Got: \"%s\"", parser.at())
 		}
 		args := []ast.IExpression{}
 		for {
@@ -194,7 +196,7 @@ func (parser *Parser) parseStmt() (ast.IStatement, error) {
 				return ast.NewEmptyStmt(), err
 			}
 			if !ast.IsVariableExpr(arg) {
-				return ast.NewEmptyStmt(), fmt.Errorf("Fatal error: Cannot use unset() on the result of an expression")
+				return ast.NewEmptyStmt(), phpError.NewParseError("Fatal error: Cannot use unset() on the result of an expression")
 			}
 			args = append(args, arg)
 
@@ -202,10 +204,10 @@ func (parser *Parser) parseStmt() (ast.IStatement, error) {
 				parser.isToken(lexer.OpOrPuncToken, ")", false) {
 				continue
 			}
-			return ast.NewEmptyStmt(), fmt.Errorf("Expected \",\" or \")\". Got: %s", parser.at())
+			return ast.NewEmptyStmt(), phpError.NewParseError("Expected \",\" or \")\". Got: %s", parser.at())
 		}
 		if !parser.isToken(lexer.OpOrPuncToken, ";", true) {
-			return ast.NewEmptyStmt(), fmt.Errorf("Expected \";\". Got: \"%s\"", parser.at())
+			return ast.NewEmptyStmt(), phpError.NewParseError("Expected \";\". Got: \"%s\"", parser.at())
 		}
 		return ast.NewExpressionStmt(ast.NewUnsetIntrinsic(pos, args)), nil
 	}
@@ -248,7 +250,7 @@ func (parser *Parser) parseStmt() (ast.IStatement, error) {
 			if parser.isToken(lexer.OpOrPuncToken, ";", true) {
 				return stmt, nil
 			}
-			return ast.NewEmptyStmt(), fmt.Errorf("Parser error: Const declaration - unexpected token %s", parser.at())
+			return ast.NewEmptyStmt(), phpError.NewParseError("Const declaration - unexpected token %s", parser.at())
 		}
 	}
 
@@ -282,11 +284,11 @@ func (parser *Parser) parseStmt() (ast.IStatement, error) {
 		if parser.isToken(lexer.OpOrPuncToken, ";", true) {
 			return ast.NewExpressionStmt(expr), nil
 		}
-		return ast.NewEmptyExpr(), fmt.Errorf("Parser error: Statement must end with a semicolon. Got: %s", parser.at())
+		return ast.NewEmptyExpr(), phpError.NewParseError("Statement must end with a semicolon. Got: %s", parser.at())
 	}
 }
 
-func (parser *Parser) parseSelectionStmt() (ast.IStatement, error) {
+func (parser *Parser) parseSelectionStmt() (ast.IStatement, phpError.Error) {
 	// ------------------- MARK: selection-statement -------------------
 
 	// Spec: https://phplang.org/spec/11-statements.html#grammar-selection-statement
@@ -325,7 +327,7 @@ func (parser *Parser) parseSelectionStmt() (ast.IStatement, error) {
 		// if
 		ifPos := parser.eat().Position
 		if !parser.isToken(lexer.OpOrPuncToken, "(", true) {
-			return ast.NewEmptyStmt(), fmt.Errorf("Expected \"(\". Got %s", parser.at())
+			return ast.NewEmptyStmt(), phpError.NewParseError("Expected \"(\". Got %s", parser.at())
 		}
 
 		condition, err := parser.parseExpr()
@@ -334,7 +336,7 @@ func (parser *Parser) parseSelectionStmt() (ast.IStatement, error) {
 		}
 
 		if !parser.isToken(lexer.OpOrPuncToken, ")", true) {
-			return ast.NewEmptyStmt(), fmt.Errorf("Expected \")\". Got %s", parser.at())
+			return ast.NewEmptyStmt(), phpError.NewParseError("Expected \")\". Got %s", parser.at())
 		}
 
 		isAltSytax := parser.isToken(lexer.OpOrPuncToken, ":", true)
@@ -363,7 +365,7 @@ func (parser *Parser) parseSelectionStmt() (ast.IStatement, error) {
 		for parser.isToken(lexer.KeywordToken, "elseif", false) {
 			elseIfPos := parser.eat().Position
 			if !parser.isToken(lexer.OpOrPuncToken, "(", true) {
-				return ast.NewEmptyStmt(), fmt.Errorf("Expected \"(\". Got %s", parser.at())
+				return ast.NewEmptyStmt(), phpError.NewParseError("Expected \"(\". Got %s", parser.at())
 			}
 
 			elseIfCondition, err := parser.parseExpr()
@@ -372,11 +374,11 @@ func (parser *Parser) parseSelectionStmt() (ast.IStatement, error) {
 			}
 
 			if !parser.isToken(lexer.OpOrPuncToken, ")", true) {
-				return ast.NewEmptyStmt(), fmt.Errorf("Expected \")\". Got %s", parser.at())
+				return ast.NewEmptyStmt(), phpError.NewParseError("Expected \")\". Got %s", parser.at())
 			}
 
 			if isAltSytax && !parser.isToken(lexer.OpOrPuncToken, ":", true) {
-				return ast.NewEmptyStmt(), fmt.Errorf("Expected \":\". Got %s", parser.at())
+				return ast.NewEmptyStmt(), phpError.NewParseError("Expected \":\". Got %s", parser.at())
 			}
 
 			var elseIfBlock ast.IStatement
@@ -405,7 +407,7 @@ func (parser *Parser) parseSelectionStmt() (ast.IStatement, error) {
 		var elseBlock ast.IStatement = nil
 		if parser.isToken(lexer.KeywordToken, "else", true) {
 			if isAltSytax && !parser.isToken(lexer.OpOrPuncToken, ":", true) {
-				return ast.NewEmptyStmt(), fmt.Errorf("Expected \":\". Got %s", parser.at())
+				return ast.NewEmptyStmt(), phpError.NewParseError("Expected \":\". Got %s", parser.at())
 			}
 
 			if !isAltSytax {
@@ -427,10 +429,10 @@ func (parser *Parser) parseSelectionStmt() (ast.IStatement, error) {
 		}
 
 		if isAltSytax && !parser.isToken(lexer.KeywordToken, "endif", true) {
-			return ast.NewEmptyStmt(), fmt.Errorf("Expected \"endif\". Got %s", parser.at())
+			return ast.NewEmptyStmt(), phpError.NewParseError("Expected \"endif\". Got %s", parser.at())
 		}
 		if isAltSytax && !parser.isToken(lexer.OpOrPuncToken, ";", true) {
-			return ast.NewEmptyStmt(), fmt.Errorf("Expected \";\". Got %s", parser.at())
+			return ast.NewEmptyStmt(), phpError.NewParseError("Expected \";\". Got %s", parser.at())
 		}
 
 		return ast.NewIfStmt(ifPos, condition, ifBlock, elseIf, elseBlock), nil
@@ -440,10 +442,10 @@ func (parser *Parser) parseSelectionStmt() (ast.IStatement, error) {
 	// if parser.isToken(lexer.KeywordToken, "switch", false) {
 	// }
 
-	return ast.NewEmptyStmt(), fmt.Errorf("Unsupported selection statement %s", parser.at())
+	return ast.NewEmptyStmt(), phpError.NewParseError("Unsupported selection statement %s", parser.at())
 }
 
-func (parser *Parser) parseIterationStmt() (ast.IStatement, error) {
+func (parser *Parser) parseIterationStmt() (ast.IStatement, phpError.Error) {
 	// ------------------- MARK: iteration-statement -------------------
 
 	// Spec: https://phplang.org/spec/11-statements.html#grammar-iteration-statement
@@ -459,10 +461,10 @@ func (parser *Parser) parseIterationStmt() (ast.IStatement, error) {
 	// TODO for-statement
 	// TODO foreach-statement
 
-	return ast.NewEmptyStmt(), fmt.Errorf("Unsupported iteration statement %s", parser.at())
+	return ast.NewEmptyStmt(), phpError.NewParseError("Unsupported iteration statement %s", parser.at())
 }
 
-func (parser *Parser) parseJumpStmt() (ast.IStatement, error) {
+func (parser *Parser) parseJumpStmt() (ast.IStatement, phpError.Error) {
 	// ------------------- MARK: jump-statement -------------------
 
 	// Spec: https://phplang.org/spec/11-statements.html#grammar-jump-statement
@@ -489,14 +491,14 @@ func (parser *Parser) parseJumpStmt() (ast.IStatement, error) {
 		pos := parser.eat().Position
 		var expr ast.IExpression = nil
 		if !parser.isToken(lexer.OpOrPuncToken, ";", false) {
-			var err error
+			var err phpError.Error
 			expr, err = parser.parseExpr()
 			if err != nil {
 				return ast.NewEmptyStmt(), err
 			}
 		}
 		if !parser.isToken(lexer.OpOrPuncToken, ";", true) {
-			return ast.NewEmptyStmt(), fmt.Errorf("Expected: \";\". Got: \"%s\"", parser.at())
+			return ast.NewEmptyStmt(), phpError.NewParseError("Expected: \";\". Got: \"%s\"", parser.at())
 		}
 
 		return ast.NewReturnStmt(pos, expr), nil
@@ -504,10 +506,10 @@ func (parser *Parser) parseJumpStmt() (ast.IStatement, error) {
 
 	// TODO throw-statement
 
-	return ast.NewEmptyStmt(), fmt.Errorf("Unsupported jump statement %s", parser.at())
+	return ast.NewEmptyStmt(), phpError.NewParseError("Unsupported jump statement %s", parser.at())
 }
 
-func (parser *Parser) parseFunctionDefinition() (ast.IStatement, error) {
+func (parser *Parser) parseFunctionDefinition() (ast.IStatement, phpError.Error) {
 	// ------------------- MARK: function-definition -------------------
 	// Spec: https://phplang.org/spec/13-functions.html#grammar-function-definition
 
@@ -559,7 +561,7 @@ func (parser *Parser) parseFunctionDefinition() (ast.IStatement, error) {
 	//    =   constant-expression
 
 	if !parser.isToken(lexer.KeywordToken, "function", false) {
-		return ast.NewEmptyStmt(), fmt.Errorf("Expected \"function\". Got %s", parser.at())
+		return ast.NewEmptyStmt(), phpError.NewParseError("Expected \"function\". Got %s", parser.at())
 	}
 
 	pos := parser.eat().Position
@@ -567,13 +569,13 @@ func (parser *Parser) parseFunctionDefinition() (ast.IStatement, error) {
 	// TODO function-definition - &(opt)
 
 	if parser.at().TokenType != lexer.NameToken {
-		return ast.NewEmptyStmt(), fmt.Errorf("Function name expected. Got %s", parser.at().TokenType)
+		return ast.NewEmptyStmt(), phpError.NewParseError("Function name expected. Got %s", parser.at().TokenType)
 	}
 
 	functionName := parser.eat().Value
 
 	if !parser.isToken(lexer.OpOrPuncToken, "(", true) {
-		return ast.NewEmptyStmt(), fmt.Errorf("Expected \"(\". Got %s", parser.at())
+		return ast.NewEmptyStmt(), phpError.NewParseError("Expected \"(\". Got %s", parser.at())
 	}
 
 	parameters := []ast.FunctionParameter{}
@@ -602,7 +604,7 @@ func (parser *Parser) parseFunctionDefinition() (ast.IStatement, error) {
 			// TODO function-definition - parameter-declaration - &(opt)
 
 			if parser.at().TokenType != lexer.VariableNameToken {
-				return ast.NewEmptyExpr(), fmt.Errorf("Expected variable. Got %s", parser.at().TokenType)
+				return ast.NewEmptyExpr(), phpError.NewParseError("Expected variable. Got %s", parser.at().TokenType)
 			}
 			parameters = append(parameters, ast.FunctionParameter{Name: parser.eat().Value, Type: paramTypes})
 
@@ -612,7 +614,7 @@ func (parser *Parser) parseFunctionDefinition() (ast.IStatement, error) {
 			if parser.isToken(lexer.OpOrPuncToken, ")", false) {
 				break
 			}
-			return ast.NewEmptyExpr(), fmt.Errorf("Expected \",\" or \")\". Got %s", parser.at())
+			return ast.NewEmptyExpr(), phpError.NewParseError("Expected \",\" or \")\". Got %s", parser.at())
 		}
 
 		// TODO function-definition - parameter-declaration - default-argument-specifier(opt)
@@ -621,7 +623,7 @@ func (parser *Parser) parseFunctionDefinition() (ast.IStatement, error) {
 	}
 
 	if !parser.isToken(lexer.OpOrPuncToken, ")", true) {
-		return ast.NewEmptyStmt(), fmt.Errorf("Expected \")\". Got %s", parser.at())
+		return ast.NewEmptyStmt(), phpError.NewParseError("Expected \")\". Got %s", parser.at())
 	}
 
 	returnTypes := []string{}
@@ -643,13 +645,13 @@ func (parser *Parser) parseFunctionDefinition() (ast.IStatement, error) {
 		return ast.NewEmptyStmt(), err
 	}
 	if body.GetKind() != ast.CompoundStmt {
-		return ast.NewEmptyStmt(), fmt.Errorf("Expected compound statement. Got %s", body.GetKind())
+		return ast.NewEmptyStmt(), phpError.NewParseError("Expected compound statement. Got %s", body.GetKind())
 	}
 
 	return ast.NewFunctionDefinitionStmt(pos, functionName, parameters, ast.StmtToCompoundStmt(body), returnTypes), nil
 }
 
-func (parser *Parser) parseExpr() (ast.IExpression, error) {
+func (parser *Parser) parseExpr() (ast.IExpression, phpError.Error) {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-expression
 
 	// expression:
@@ -746,7 +748,7 @@ func (parser *Parser) parseExpr() (ast.IExpression, error) {
 	return parser.parseAssignmentExpr()
 }
 
-func (parser *Parser) parseAssignmentExpr() (ast.IExpression, error) {
+func (parser *Parser) parseAssignmentExpr() (ast.IExpression, phpError.Error) {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-assignment-expression
 
 	// assignment-expression:
@@ -823,7 +825,7 @@ func (parser *Parser) parseAssignmentExpr() (ast.IExpression, error) {
 	return expr, nil
 }
 
-func (parser *Parser) parseCoalesceExpr() (ast.IExpression, error) {
+func (parser *Parser) parseCoalesceExpr() (ast.IExpression, phpError.Error) {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-coalesce-expression
 
 	// coalesce-expression:
@@ -849,7 +851,7 @@ func (parser *Parser) parseCoalesceExpr() (ast.IExpression, error) {
 	return expr, nil
 }
 
-func (parser *Parser) parseLogicalIncOrExpr1() (ast.IExpression, error) {
+func (parser *Parser) parseLogicalIncOrExpr1() (ast.IExpression, phpError.Error) {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-logical-inc-OR-expression-1
 
 	// logical-inc-OR-expression-1:
@@ -871,7 +873,7 @@ func (parser *Parser) parseLogicalIncOrExpr1() (ast.IExpression, error) {
 	return lhs, nil
 }
 
-func (parser *Parser) parseLogicalAndExpr1() (ast.IExpression, error) {
+func (parser *Parser) parseLogicalAndExpr1() (ast.IExpression, phpError.Error) {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-logical-AND-expression-1
 
 	// logical-AND-expression-1:
@@ -893,7 +895,7 @@ func (parser *Parser) parseLogicalAndExpr1() (ast.IExpression, error) {
 	return lhs, nil
 }
 
-func (parser *Parser) parseBitwiseIncOrExpr() (ast.IExpression, error) {
+func (parser *Parser) parseBitwiseIncOrExpr() (ast.IExpression, phpError.Error) {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-bitwise-inc-OR-expression
 
 	// bitwise-inc-OR-expression:
@@ -915,7 +917,7 @@ func (parser *Parser) parseBitwiseIncOrExpr() (ast.IExpression, error) {
 	return lhs, nil
 }
 
-func (parser *Parser) parseBitwiseExcOrExpr() (ast.IExpression, error) {
+func (parser *Parser) parseBitwiseExcOrExpr() (ast.IExpression, phpError.Error) {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-bitwise-exc-OR-expression
 
 	// bitwise-exc-OR-expression:
@@ -937,7 +939,7 @@ func (parser *Parser) parseBitwiseExcOrExpr() (ast.IExpression, error) {
 	return lhs, nil
 }
 
-func (parser *Parser) parseBitwiseAndExpr() (ast.IExpression, error) {
+func (parser *Parser) parseBitwiseAndExpr() (ast.IExpression, phpError.Error) {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-bitwise-AND-expression
 
 	// bitwise-AND-expression:
@@ -959,7 +961,7 @@ func (parser *Parser) parseBitwiseAndExpr() (ast.IExpression, error) {
 	return lhs, nil
 }
 
-func (parser *Parser) parseEqualityExpr() (ast.IExpression, error) {
+func (parser *Parser) parseEqualityExpr() (ast.IExpression, phpError.Error) {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-equality-expression
 
 	// equality-expression:
@@ -986,7 +988,7 @@ func (parser *Parser) parseEqualityExpr() (ast.IExpression, error) {
 	return lhs, nil
 }
 
-func (parser *Parser) parserRelationalExpr() (ast.IExpression, error) {
+func (parser *Parser) parserRelationalExpr() (ast.IExpression, phpError.Error) {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-relational-expression
 
 	// relational-expression:
@@ -1013,7 +1015,7 @@ func (parser *Parser) parserRelationalExpr() (ast.IExpression, error) {
 	return lhs, nil
 }
 
-func (parser *Parser) parseShiftExpr() (ast.IExpression, error) {
+func (parser *Parser) parseShiftExpr() (ast.IExpression, phpError.Error) {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-shift-expression
 
 	// shift-expression:
@@ -1037,7 +1039,7 @@ func (parser *Parser) parseShiftExpr() (ast.IExpression, error) {
 	return lhs, nil
 }
 
-func (parser *Parser) parseAdditiveExpr() (ast.IExpression, error) {
+func (parser *Parser) parseAdditiveExpr() (ast.IExpression, phpError.Error) {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-additive-expression
 
 	// additive-expression:
@@ -1063,7 +1065,7 @@ func (parser *Parser) parseAdditiveExpr() (ast.IExpression, error) {
 	return lhs, nil
 }
 
-func (parser *Parser) parseMultiplicativeExpr() (ast.IExpression, error) {
+func (parser *Parser) parseMultiplicativeExpr() (ast.IExpression, phpError.Error) {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-multiplicative-expression
 
 	// multiplicative-expression:
@@ -1088,7 +1090,7 @@ func (parser *Parser) parseMultiplicativeExpr() (ast.IExpression, error) {
 	return lhs, nil
 }
 
-func (parser *Parser) parseLogicalNotExpr() (ast.IExpression, error) {
+func (parser *Parser) parseLogicalNotExpr() (ast.IExpression, phpError.Error) {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-logical-NOT-expression
 
 	// logical-NOT-expression:
@@ -1112,7 +1114,7 @@ func (parser *Parser) parseLogicalNotExpr() (ast.IExpression, error) {
 	return expr, nil
 }
 
-func (parser *Parser) parseInstanceofExpr() (ast.IExpression, error) {
+func (parser *Parser) parseInstanceofExpr() (ast.IExpression, phpError.Error) {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-instanceof-expression
 
 	// instanceof-expression:
@@ -1126,7 +1128,7 @@ func (parser *Parser) parseInstanceofExpr() (ast.IExpression, error) {
 	return parser.parseUnaryExpr()
 }
 
-func (parser *Parser) parseUnaryExpr() (ast.IExpression, error) {
+func (parser *Parser) parseUnaryExpr() (ast.IExpression, phpError.Error) {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-unary-expression
 
 	// unary-expression:
@@ -1172,7 +1174,7 @@ func (parser *Parser) parseUnaryExpr() (ast.IExpression, error) {
 		pos := parser.eat().Position
 		castType := parser.eat().Value
 		if !parser.isToken(lexer.OpOrPuncToken, ")", true) {
-			return ast.NewEmptyExpr(), fmt.Errorf("Expected \")\". Got %s", parser.at())
+			return ast.NewEmptyExpr(), phpError.NewParseError("Expected \")\". Got %s", parser.at())
 		}
 		expr, err := parser.parseUnaryExpr()
 		if err != nil {
@@ -1184,7 +1186,7 @@ func (parser *Parser) parseUnaryExpr() (ast.IExpression, error) {
 	return parser.parseExponentiationExpr()
 }
 
-func (parser *Parser) parseExponentiationExpr() (ast.IExpression, error) {
+func (parser *Parser) parseExponentiationExpr() (ast.IExpression, phpError.Error) {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-exponentiation-expression
 
 	// exponentiation-expression:
@@ -1205,7 +1207,7 @@ func (parser *Parser) parseExponentiationExpr() (ast.IExpression, error) {
 	return lhs, nil
 }
 
-func (parser *Parser) parseCloneExpr() (ast.IExpression, error) {
+func (parser *Parser) parseCloneExpr() (ast.IExpression, phpError.Error) {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-clone-expression
 
 	// clone-expression:
@@ -1216,7 +1218,7 @@ func (parser *Parser) parseCloneExpr() (ast.IExpression, error) {
 	return parser.parsePrimaryExpr()
 }
 
-func (parser *Parser) parsePrimaryExpr() (ast.IExpression, error) {
+func (parser *Parser) parsePrimaryExpr() (ast.IExpression, phpError.Error) {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-primary-expression
 
 	// primary-expression:
@@ -1288,7 +1290,7 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, error) {
 			parser.eat()
 			variable = ast.NewSimpleVariableExpr(expr)
 		} else {
-			return ast.NewEmptyExpr(), fmt.Errorf("Parser error: End of simple variable expression not detected")
+			return ast.NewEmptyExpr(), phpError.NewParseError("End of simple variable expression not detected")
 		}
 	}
 
@@ -1330,7 +1332,7 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, error) {
 	// TODO allow nesting
 	if ast.IsVariableExpr(variable) && parser.isToken(lexer.OpOrPuncToken, "[", false) {
 		for ast.IsVariableExpr(variable) && parser.isToken(lexer.OpOrPuncToken, "[", true) {
-			var err error
+			var err phpError.Error
 			var index ast.IExpression
 			if !parser.isToken(lexer.OpOrPuncToken, "]", false) {
 				index, err = parser.parseExpr()
@@ -1339,7 +1341,7 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, error) {
 				}
 			}
 			if !parser.isToken(lexer.OpOrPuncToken, "]", true) {
-				return ast.NewEmptyExpr(), fmt.Errorf("Expected \"]\". Got: %s", parser.at())
+				return ast.NewEmptyExpr(), phpError.NewParseError("Expected \"]\". Got: %s", parser.at())
 			}
 			variable = ast.NewSubscriptExpr(variable, index)
 		}
@@ -1391,7 +1393,7 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, error) {
 			if parser.isToken(lexer.OpOrPuncToken, ",", true) || parser.isToken(lexer.OpOrPuncToken, ")", false) {
 				continue
 			}
-			return ast.NewEmptyExpr(), fmt.Errorf("Expected \",\" or \")\". Got: %s", parser.at())
+			return ast.NewEmptyExpr(), phpError.NewParseError("Expected \",\" or \")\". Got: %s", parser.at())
 		}
 		return ast.NewFunctionCallExpr(pos, functionName, args), nil
 	}
@@ -1482,7 +1484,7 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, error) {
 			return ast.NewEmptyExpr(), err
 		}
 		if !ast.IsVariableExpr(variable) {
-			return ast.NewEmptyExpr(), fmt.Errorf("Syntax error, unexpected %s", variable)
+			return ast.NewEmptyExpr(), phpError.NewParseError("Syntax error, unexpected %s", variable)
 		}
 		return ast.NewPrefixIncExpr(pos, variable, operator), nil
 	}
@@ -1500,14 +1502,14 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, error) {
 		if parser.isToken(lexer.OpOrPuncToken, ")", true) {
 			return expr, nil
 		} else {
-			return ast.NewEmptyExpr(), fmt.Errorf("Parser error: Expected \")\". Got: %s", parser.at())
+			return ast.NewEmptyExpr(), phpError.NewParseError("Expected \")\". Got: %s", parser.at())
 		}
 	}
 
-	return ast.NewEmptyExpr(), fmt.Errorf("Parser error: Unsupported expression type: %s", parser.at())
+	return ast.NewEmptyExpr(), phpError.NewParseError("Unsupported expression type: %s", parser.at())
 }
 
-func (parser *Parser) parseLiteral() (ast.IExpression, error) {
+func (parser *Parser) parseLiteral() (ast.IExpression, phpError.Error) {
 	// ------------------- MARK: literal -------------------
 
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-literal
@@ -1523,7 +1525,7 @@ func (parser *Parser) parseLiteral() (ast.IExpression, error) {
 	if parser.isTokenType(lexer.IntegerLiteralToken, false) {
 		intValue, err := common.IntegerLiteralToInt64(parser.at().Value)
 		if err != nil {
-			return ast.NewEmptyExpr(), fmt.Errorf("Parser error: Unsupported integer literal \"%s\"", parser.at().Value)
+			return ast.NewEmptyExpr(), phpError.NewParseError("Unsupported integer literal \"%s\"", parser.at().Value)
 		}
 
 		return ast.NewIntegerLiteralExpr(parser.eat().Position, intValue), nil
@@ -1535,7 +1537,7 @@ func (parser *Parser) parseLiteral() (ast.IExpression, error) {
 			return ast.NewFloatingLiteralExpr(parser.at().Position, common.FloatingLiteralToFloat64(parser.eat().Value)), nil
 		}
 
-		return ast.NewEmptyExpr(), fmt.Errorf("Parser error: Unsupported floating literal \"%s\"", parser.at().Value)
+		return ast.NewEmptyExpr(), phpError.NewParseError("Unsupported floating literal \"%s\"", parser.at().Value)
 	}
 
 	// string-literal
@@ -1558,10 +1560,10 @@ func (parser *Parser) parseLiteral() (ast.IExpression, error) {
 		// TODO nowdoc-string-literal
 	}
 
-	return ast.NewEmptyExpr(), fmt.Errorf("parseLiteral: Unsupported literal: %s", parser.at())
+	return ast.NewEmptyExpr(), phpError.NewParseError("parseLiteral: Unsupported literal: %s", parser.at())
 }
 
-func (parser *Parser) parseArrayCreationExpr() (ast.IExpression, error) {
+func (parser *Parser) parseArrayCreationExpr() (ast.IExpression, phpError.Error) {
 	// ------------------- MARK: array-creation-expression -------------------
 
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-array-creation-expression
@@ -1590,7 +1592,7 @@ func (parser *Parser) parseArrayCreationExpr() (ast.IExpression, error) {
 	if !((parser.isToken(lexer.KeywordToken, "array", false) &&
 		parser.next(0).TokenType == lexer.OpOrPuncToken && parser.next(0).Value == "(") ||
 		parser.isToken(lexer.OpOrPuncToken, "[", false)) {
-		return ast.NewEmptyExpr(), fmt.Errorf("Parser error: Unsupported array creation: %s", parser.at())
+		return ast.NewEmptyExpr(), phpError.NewParseError("Unsupported array creation: %s", parser.at())
 	}
 
 	isShortSyntax := true
@@ -1626,15 +1628,15 @@ func (parser *Parser) parseArrayCreationExpr() (ast.IExpression, error) {
 			continue
 		}
 		if isShortSyntax {
-			return ast.NewEmptyExpr(), fmt.Errorf("Expected \",\" or \"]\". Got: %s", parser.at())
+			return ast.NewEmptyExpr(), phpError.NewParseError("Expected \",\" or \"]\". Got: %s", parser.at())
 		} else {
-			return ast.NewEmptyExpr(), fmt.Errorf("Expected \",\" or \")\". Got: %s", parser.at())
+			return ast.NewEmptyExpr(), phpError.NewParseError("Expected \",\" or \")\". Got: %s", parser.at())
 		}
 	}
 	return arrayExpr, nil
 }
 
-func (parser *Parser) parseIntrinsic() (ast.IExpression, error) {
+func (parser *Parser) parseIntrinsic() (ast.IExpression, phpError.Error) {
 	// ------------------- MARK: intrinsic -------------------
 
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-intrinsic
@@ -1655,14 +1657,14 @@ func (parser *Parser) parseIntrinsic() (ast.IExpression, error) {
 	if parser.isToken(lexer.KeywordToken, "empty", false) {
 		pos := parser.eat().Position
 		if !parser.isToken(lexer.OpOrPuncToken, "(", true) {
-			return ast.NewEmptyExpr(), fmt.Errorf("Expected \"(\". Got: \"%s\"", parser.at())
+			return ast.NewEmptyExpr(), phpError.NewParseError("Expected \"(\". Got: \"%s\"", parser.at())
 		}
 		expr, err := parser.parseExpr()
 		if err != nil {
 			return ast.NewEmptyExpr(), err
 		}
 		if !parser.isToken(lexer.OpOrPuncToken, ")", true) {
-			return ast.NewEmptyExpr(), fmt.Errorf("Expected \")\". Got: \"%s\"", parser.at())
+			return ast.NewEmptyExpr(), phpError.NewParseError("Expected \")\". Got: \"%s\"", parser.at())
 		}
 		return ast.NewEmptyIntrinsic(pos, expr), nil
 	}
@@ -1684,14 +1686,14 @@ func (parser *Parser) parseIntrinsic() (ast.IExpression, error) {
 		var expr ast.IExpression = nil
 		if parser.isToken(lexer.OpOrPuncToken, "(", true) {
 			if !parser.isToken(lexer.OpOrPuncToken, ")", false) {
-				var err error
+				var err phpError.Error
 				expr, err = parser.parseExpr()
 				if err != nil {
 					return ast.NewEmptyExpr(), err
 				}
 			}
 			if !parser.isToken(lexer.OpOrPuncToken, ")", true) {
-				return ast.NewEmptyExpr(), fmt.Errorf("Expected \")\". Got %s", parser.at())
+				return ast.NewEmptyExpr(), phpError.NewParseError("Expected \")\". Got %s", parser.at())
 			}
 		}
 		return ast.NewExitIntrinsic(pos, expr), nil
@@ -1711,7 +1713,7 @@ func (parser *Parser) parseIntrinsic() (ast.IExpression, error) {
 	if parser.isToken(lexer.KeywordToken, "isset", false) {
 		pos := parser.eat().Position
 		if !parser.isToken(lexer.OpOrPuncToken, "(", true) {
-			return ast.NewEmptyExpr(), fmt.Errorf("Expected \"(\". Got: \"%s\"", parser.at())
+			return ast.NewEmptyExpr(), phpError.NewParseError("Expected \"(\". Got: \"%s\"", parser.at())
 		}
 		args := []ast.IExpression{}
 		for {
@@ -1724,7 +1726,7 @@ func (parser *Parser) parseIntrinsic() (ast.IExpression, error) {
 				return ast.NewEmptyExpr(), err
 			}
 			if !ast.IsVariableExpr(arg) {
-				return ast.NewEmptyExpr(), fmt.Errorf("Fatal error: Cannot use isset() on the result of an expression")
+				return ast.NewEmptyExpr(), phpError.NewParseError("Fatal error: Cannot use isset() on the result of an expression")
 			}
 			args = append(args, arg)
 
@@ -1732,10 +1734,10 @@ func (parser *Parser) parseIntrinsic() (ast.IExpression, error) {
 				parser.isToken(lexer.OpOrPuncToken, ")", false) {
 				continue
 			}
-			return ast.NewEmptyExpr(), fmt.Errorf("Expected \",\" or \")\". Got: %s", parser.at())
+			return ast.NewEmptyExpr(), phpError.NewParseError("Expected \",\" or \")\". Got: %s", parser.at())
 		}
 		return ast.NewIssetIntrinsic(pos, args), nil
 	}
 
-	return ast.NewEmptyExpr(), fmt.Errorf("Parser error: Unsupported intrinsic: %s", parser.at())
+	return ast.NewEmptyExpr(), phpError.NewParseError("Unsupported intrinsic: %s", parser.at())
 }

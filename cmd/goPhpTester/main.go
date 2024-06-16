@@ -2,6 +2,7 @@ package main
 
 import (
 	"GoPHP/cmd/goPHP/common"
+	"GoPHP/cmd/goPHP/ini"
 	"GoPHP/cmd/goPHP/interpreter"
 	"GoPHP/cmd/goPhpTester/phpt"
 	"fmt"
@@ -83,7 +84,7 @@ func doTest(path string, info os.FileInfo, err error) error {
 	request.GetParams = testFile.GetParams
 	request.PostParams = testFile.PostParams
 
-	result, phpError := interpreter.NewInterpreter(interpreter.NewDevConfig(), request, "").Process(testFile.File)
+	result, phpError := interpreter.NewInterpreter(ini.NewIniFromArray(testFile.Ini), request, "").Process(testFile.File)
 	if phpError != nil {
 		fmt.Println("FAIL ", path)
 		fmt.Println("     ", phpError)
@@ -92,7 +93,17 @@ func doTest(path string, info os.FileInfo, err error) error {
 		return nil
 	}
 
-	if testFile.Expect == common.TrimTrailingLineBreaks(result) {
+	var equal bool
+	switch testFile.ExpectType {
+	case "--EXPECT--":
+		equal = testFile.Expect == common.TrimTrailingLineBreaks(result)
+	default:
+		failed++
+		fmt.Errorf("Unsupported expect section: %s", testFile.ExpectType)
+		return nil
+	}
+
+	if equal {
 		fmt.Println("OK   ", path)
 		succeeded++
 		return nil

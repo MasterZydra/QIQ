@@ -2,7 +2,7 @@ package parser
 
 import (
 	"GoPHP/cmd/goPHP/lexer"
-	"fmt"
+	"GoPHP/cmd/goPHP/phpError"
 )
 
 func (parser *Parser) isEof() bool {
@@ -60,16 +60,16 @@ func (parser *Parser) isToken(tokenType lexer.TokenType, value string, eat bool)
 	return result
 }
 
-func (parser *Parser) expectTokenType(tokenType lexer.TokenType, eat bool) error {
+func (parser *Parser) expectTokenType(tokenType lexer.TokenType, eat bool) phpError.Error {
 	if parser.isTokenType(tokenType, eat) {
 		return nil
 	}
-	return fmt.Errorf("Parser error: Unexpected token %s. Expected: %s", parser.at().TokenType, tokenType)
+	return phpError.NewParseError("Unexpected token %s. Expected: %s", parser.at().TokenType, tokenType)
 }
 
-func (parser *Parser) expect(tokenType lexer.TokenType, value string, eat bool) error {
+func (parser *Parser) expect(tokenType lexer.TokenType, value string, eat bool) phpError.Error {
 	if parser.isToken(tokenType, value, eat) {
 		return nil
 	}
-	return fmt.Errorf("Parser error: Unexpected token %s. Expected: %s", parser.at(), lexer.NewToken(tokenType, value, nil))
+	return phpError.NewParseError("Unexpected token %s. Expected: %s", parser.at(), lexer.NewToken(tokenType, value, nil))
 }

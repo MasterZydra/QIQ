@@ -3,6 +3,7 @@ package main
 import (
 	"GoPHP/cmd/goPHP/common"
 	"GoPHP/cmd/goPHP/config"
+	"GoPHP/cmd/goPHP/ini"
 	"GoPHP/cmd/goPHP/interpreter"
 	"bufio"
 	"flag"
@@ -138,7 +139,7 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 // ------------------- MARK: core logic -------------------
 
 func processContent(content string, filename string) (output string, exitCode int) {
-	interpreter := interpreter.NewInterpreter(interpreter.NewDevConfig(), &interpreter.Request{}, filename)
+	interpreter := interpreter.NewInterpreter(ini.NewDefaultIni(), &interpreter.Request{}, filename)
 	result, err := interpreter.Process(content)
 	if err != nil {
 		result += interpreter.ErrorToString(err)

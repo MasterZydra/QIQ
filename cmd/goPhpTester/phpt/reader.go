@@ -94,6 +94,16 @@ func (reader *Reader) GetTestFile() (*TestFile, error) {
 			continue
 		}
 
+		if reader.at() == "--INI--" {
+			ini := []string{}
+			reader.eat()
+			for !reader.isEof() && !reader.isSection(reader.at()) {
+				ini = append(ini, reader.eat())
+			}
+			reader.testFile.Ini = ini
+			continue
+		}
+
 		if reader.at() == "--ENV--" {
 			reader.eat()
 			env := map[string]string{}
@@ -118,14 +128,15 @@ func (reader *Reader) GetTestFile() (*TestFile, error) {
 			continue
 		}
 
-		if reader.at() == "--EXPECT--" {
-			reader.eat()
+		if reader.at() == "--EXPECT--" || reader.at() == "--EXPECTF--" {
+			section := reader.eat()
 			expect := ""
 			for !reader.isEof() && !reader.isSection(reader.at()) {
 				expect += reader.eat() + "\n"
 			}
 			reader.testFile.Expect = common.TrimTrailingLineBreaks(expect)
-			reader.sections = append(reader.sections, "--EXPECT--")
+			reader.testFile.ExpectType = section
+			reader.sections = append(reader.sections, section)
 			continue
 		}
 
