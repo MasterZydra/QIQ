@@ -140,6 +140,16 @@ func (reader *Reader) GetTestFile() (*TestFile, error) {
 			continue
 		}
 
+		if reader.at() == "--CLEAN--" {
+			reader.eat()
+			file := reader.testFile.File
+			for !reader.isEof() && !reader.isSection(reader.at()) {
+				file += reader.eat() + "\n"
+			}
+			reader.testFile.File = file
+			continue
+		}
+
 		return reader.testFile, fmt.Errorf("Unsupported section \"%s\"", reader.at())
 	}
 

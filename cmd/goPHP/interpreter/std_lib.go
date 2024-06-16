@@ -16,10 +16,12 @@ func registerNativeFunctions(environment *Environment) {
 	environment.nativeFunctions["floatval"] = nativeFn_floatval
 	environment.nativeFunctions["getenv"] = nativeFn_getenv
 	environment.nativeFunctions["gettype"] = nativeFn_gettype
+	environment.nativeFunctions["ini_get"] = nativeFn_ini_get
 	environment.nativeFunctions["intval"] = nativeFn_intval
 	environment.nativeFunctions["is_null"] = nativeFn_is_null
 	environment.nativeFunctions["is_scalar"] = nativeFn_is_scalar
 	environment.nativeFunctions["key_exits"] = nativeFn_array_key_exists
+	environment.nativeFunctions["strlen"] = nativeFn_strlen
 	environment.nativeFunctions["strval"] = nativeFn_strval
 	environment.nativeFunctions["var_dump"] = nativeFn_var_dump
 }
@@ -164,7 +166,7 @@ func nativeFn_error_reporting(args []IRuntimeValue, interpreter *Interpreter) (I
 
 	if args[0].GetType() != IntegerValue {
 		return NewVoidRuntimeValue(),
-			phpError.NewError("Uncaught ArgumentError: error_reporting() expects most integer for $error_level argument, %s given", args[0].GetType())
+			phpError.NewError("Uncaught ArgumentError: error_reporting() expects integer for $error_level argument, %s given", args[0].GetType())
 	}
 
 	newValue := runtimeValToIntRuntimeVal(args[0]).GetValue()
@@ -306,6 +308,34 @@ func lib_gettype(runtimeValue IRuntimeValue) (string, phpError.Error) {
 	}
 }
 
+// ------------------- MARK: ini_get -------------------
+
+func nativeFn_ini_get(args []IRuntimeValue, interpreter *Interpreter) (IRuntimeValue, phpError.Error) {
+	// Spec: https://www.php.net/manual/en/function.ini-get
+
+	if len(args) != 1 {
+		return NewVoidRuntimeValue(),
+			phpError.NewError("Uncaught ArgumentCountError: ini_get() expects most 1 argument, %d given", len(args))
+	}
+
+	if args[0].GetType() != StringValue {
+		return NewVoidRuntimeValue(),
+			phpError.NewError("Uncaught ArgumentError: ini_get() expects string for $option argument, %s given", args[0].GetType())
+	}
+
+	switch runtimeValToStrRuntimeVal(args[0]).GetValue() {
+	case "error_reporting":
+		return NewStringRuntimeValue(fmt.Sprintf("%d", interpreter.ini.ErrorReporting)), nil
+	case "short_open_tag":
+		if interpreter.ini.ShortOpenTag {
+			return NewStringRuntimeValue("1"), nil
+		}
+		return NewStringRuntimeValue("0"), nil
+	default:
+		return NewBooleanRuntimeValue(false), nil
+	}
+}
+
 // ------------------- MARK: intval -------------------
 
 func nativeFn_intval(args []IRuntimeValue, _ *Interpreter) (IRuntimeValue, phpError.Error) {
@@ -412,6 +442,24 @@ func nativeFn_is_scalar(args []IRuntimeValue, _ *Interpreter) (IRuntimeValue, ph
 func lib_is_scalar(runtimeValue IRuntimeValue) bool {
 	// Spec: https://www.php.net/manual/en/function.is-scalar.php
 	return slices.Contains([]ValueType{BooleanValue, IntegerValue, FloatingValue, StringValue}, runtimeValue.GetType())
+}
+
+// ------------------- MARK: strlen -------------------
+
+func nativeFn_strlen(args []IRuntimeValue, _ *Interpreter) (IRuntimeValue, phpError.Error) {
+	// Spec: https://www.php.net/manual/en/function.strlen
+
+	if len(args) != 1 {
+		return NewVoidRuntimeValue(),
+			phpError.NewError("Uncaught ArgumentCountError: ini_get() expects most 1 argument, %d given", len(args))
+	}
+
+	if args[0].GetType() != StringValue {
+		return NewVoidRuntimeValue(),
+			phpError.NewError("Uncaught ArgumentError: ini_get() expects string for $option argument, %s given", args[0].GetType())
+	}
+
+	return NewIntegerRuntimeValue(int64(len(runtimeValToStrRuntimeVal(args[0]).GetValue()))), nil
 }
 
 // ------------------- MARK: strval -------------------

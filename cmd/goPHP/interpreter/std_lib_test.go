@@ -200,6 +200,12 @@ func TestLibIsScalar(t *testing.T) {
 	testInputOutput(t, `<?php $a = []; var_dump(is_scalar($a));`, "bool(false)\n")
 }
 
+func TestLibStrlen(t *testing.T) {
+	testInputOutput(t, `<?php var_dump(strlen("abcdef"));`, "int(6)\n")
+	testInputOutput(t, `<?php var_dump(strlen(" ab cd "));`, "int(7)\n")
+	testInputOutput(t, `<?php var_dump(strlen(" äb ćd "));`, "int(9)\n")
+}
+
 func TestLibStrval(t *testing.T) {
 	doTest := func(runtimeValue IRuntimeValue, expected string) {
 		actual, err := lib_strval(runtimeValue)
