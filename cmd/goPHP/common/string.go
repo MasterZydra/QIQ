@@ -54,11 +54,31 @@ func IsSingleQuotedStringLiteral(str string) bool {
 	return match
 }
 
-func SingleQuotedStringLiteralToString(str string) string {
+func ReplaceSingleQuoteControlChars(str string) string {
+	findCtrlChars := regexp.MustCompile(`(\\?[^'\\]|\\'|\\\\)`)
+	return findCtrlChars.ReplaceAllStringFunc(str,
+		func(sub string) string {
+			switch sub {
+			case `\'`:
+				return `'`
+			case `\\`:
+				return `\`
+			default:
+				return sub
+			}
+		},
+	)
+}
+
+func extractStringContent(str string) string {
 	if strings.ToLower(str[0:1]) == "b" {
 		return str[2 : len(str)-1]
 	}
 	return str[1 : len(str)-1]
+}
+
+func SingleQuotedStringLiteralToString(str string) string {
+	return ReplaceSingleQuoteControlChars(extractStringContent(str))
 }
 
 func IsDoubleQuotedStringLiteral(str string) bool {
@@ -125,7 +145,7 @@ func IsDoubleQuotedStringLiteral(str string) bool {
 	return match
 }
 
-func ReplaceControlChars(str string) string {
+func ReplaceDoubleQuoteControlChars(str string) string {
 	findCtrlChars := regexp.MustCompile(
 		`(\\"|\\\\|\\\$|\\e|\\f|\\n|\\r|\\t|\\v)|` +
 			`(\\[0-7]{1,3})|` +
@@ -138,6 +158,8 @@ func ReplaceControlChars(str string) string {
 	return findCtrlChars.ReplaceAllStringFunc(str,
 		func(sub string) string {
 			switch sub {
+			case `\"`:
+				return `"`
 			case `\\`:
 				return `\`
 			case `\r`:
@@ -154,7 +176,7 @@ func ReplaceControlChars(str string) string {
 }
 
 func DoubleQuotedStringLiteralToString(str string) string {
-	return SingleQuotedStringLiteralToString(ReplaceControlChars(str))
+	return ReplaceDoubleQuoteControlChars(extractStringContent(str))
 }
 
 func TrimTrailingLineBreak(str string) string {

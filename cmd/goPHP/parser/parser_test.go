@@ -115,10 +115,10 @@ func TestLiteral(t *testing.T) {
 	testExpr(t, "<?php 2e4;", ast.NewFloatingLiteralExpr(nil, 2e4))
 
 	// String literal
-	testExpr(t, `<?php b'A "single quoted" \'string\'';`, ast.NewStringLiteralExpr(nil, `A "single quoted" \'string\'`, ast.SingleQuotedString))
-	testExpr(t, `<?php 'A "single quoted" \'string\'';`, ast.NewStringLiteralExpr(nil, `A "single quoted" \'string\'`, ast.SingleQuotedString))
-	testExpr(t, `<?php b"A \"double quoted\" 'string'";`, ast.NewStringLiteralExpr(nil, `A \"double quoted\" 'string'`, ast.DoubleQuotedString))
-	testExpr(t, `<?php "A \"double quoted\" 'string'";`, ast.NewStringLiteralExpr(nil, `A \"double quoted\" 'string'`, ast.DoubleQuotedString))
+	testExpr(t, `<?php b'A "single quoted" \'string\'';`, ast.NewStringLiteralExpr(nil, `A "single quoted" 'string'`, ast.SingleQuotedString))
+	testExpr(t, `<?php 'A "single quoted" \'string\'';`, ast.NewStringLiteralExpr(nil, `A "single quoted" 'string'`, ast.SingleQuotedString))
+	testExpr(t, `<?php b"A \"double quoted\" 'string'";`, ast.NewStringLiteralExpr(nil, `A "double quoted" 'string'`, ast.DoubleQuotedString))
+	testExpr(t, `<?php "A \"double quoted\" 'string'";`, ast.NewStringLiteralExpr(nil, `A "double quoted" 'string'`, ast.DoubleQuotedString))
 }
 
 func TestEchoStatement(t *testing.T) {
