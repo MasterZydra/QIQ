@@ -1,0 +1,32 @@
+name: Official PHP Tests
+
+on:
+  push:
+    branches:
+      - '*'
+  pull_request:
+    branches:
+      - '*'
+
+jobs:
+  build:
+    name: Build & Run official PHP Tests
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Set up Go 1.22
+      uses: actions/setup-go@v5
+      with:
+        go-version: ^1.22
+
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v4
+
+    - name: Download php-src repository
+      run: git clone https://github.com/php/php-src.git
+
+    - name: Building
+      run: go build -v -o . ./...
+
+    - name: Testing against official PHP Tests
+      run: ./goPhpTester php-src/tests
