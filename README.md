@@ -11,6 +11,7 @@ The goals of the project are:
 ```
 Usage of ./goPHP:
   -h            Show help
+  -dev          Run in developer mode.
   -S string     Run with built-in web server. <addr>:<port>
   -t string     Specify document root <docroot> for built-in web server.
   -f string     Parse and execute <file>.
@@ -21,6 +22,7 @@ Usage of ./goPHP:
 
 **Run web server:**  
 `./goPHP -S localhost:8080` - Document root is current working directory  
+`./goPHP -S localhost:8080 -dev` - Web server in developer mode  
 `./goPHP -S localhost:8080 -t /srv/www/html` - Document root is `/srv/www/html`
 
 ## Development

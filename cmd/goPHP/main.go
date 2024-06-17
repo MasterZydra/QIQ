@@ -17,14 +17,18 @@ import (
 
 var serverAddr string
 var documentRoot string
+var isDevMode bool
 
 func main() {
 	file := flag.String("f", "", "Parse and execute <file>.")
+	isDev := flag.Bool("dev", false, "Run in developer mode.")
 	// Web server
 	addr := flag.String("S", "", "Run with built-in web server. <addr>:<port>")
 	docRoot := flag.String("t", "", "Specify document root <docroot> for built-in web server.")
 
 	flag.Parse()
+
+	isDevMode = *isDev
 
 	// Serve with built-in web server
 	if *addr != "" {
@@ -99,10 +103,15 @@ func webServer() {
 		documentRoot = absPath
 	}
 
-	fmt.Printf("[%s] GoPHP %s Development Server (%s) started\n",
-		time.Now().Format("Mon Jan 02 15:04:05 2006"),
-		config.Version,
-		serverAddr,
+	var mode string
+	if isDevMode {
+		mode = "Development"
+	} else {
+		mode = "Production"
+	}
+
+	fmt.Printf("[%s] GoPHP %s %s Server (%s) started\n",
+		time.Now().Format("Mon Jan 02 15:04:05 2006"), config.Version, mode, serverAddr,
 	)
 	fmt.Println("Document root is " + documentRoot)
 	fmt.Println("Press Ctrl-C to quit")
@@ -144,7 +153,14 @@ func processContent(content string, filename string) (output string, exitCode in
 		return content, exitCode
 	}
 
-	interpreter := interpreter.NewInterpreter(ini.NewDefaultIni(), &interpreter.Request{}, filename)
+	var initIni *ini.Ini
+	if isDevMode {
+		initIni = ini.NewDevIni()
+	} else {
+		initIni = ini.NewDefaultIni()
+	}
+
+	interpreter := interpreter.NewInterpreter(initIni, &interpreter.Request{}, filename)
 	result, err := interpreter.Process(content)
 	if err != nil {
 		result += interpreter.ErrorToString(err)
