@@ -5,7 +5,6 @@ import (
 	"GoPHP/cmd/goPHP/common"
 	"GoPHP/cmd/goPHP/parser"
 	"GoPHP/cmd/goPHP/phpError"
-	"fmt"
 	"math"
 	"os"
 	"regexp"
@@ -224,7 +223,10 @@ func (interpreter *Interpreter) includeFile(filepathExpr ast.IExpression, env *E
 	// Spec: https://phplang.org/spec/10-expressions.html#the-require-operator
 	// Once an include file has been included, a subsequent use of require_once on that include file
 	// results in a return value of TRUE but nothing else happens.
-	if once && slices.Contains(interpreter.includedFiles, filename) {
+	if once && slices.Contains(interpreter.includedFiles, filename) && runtime.GOOS != "windows" {
+		return NewBooleanRuntimeValue(true), nil
+	}
+	if once && slices.Contains(interpreter.includedFiles, strings.ToLower(filename)) && runtime.GOOS == "windows" {
 		return NewBooleanRuntimeValue(true), nil
 	}
 
@@ -265,12 +267,17 @@ func (interpreter *Interpreter) includeFile(filepathExpr ast.IExpression, env *E
 		return getError()
 	}
 
-	content, fileErr := os.ReadFile(filename)
+	content, fileErr := os.ReadFile(absFilename)
 	if fileErr != nil {
 		return getError()
 	}
 	program, parserErr := parser.NewParser(interpreter.ini).ProduceAST(string(content), filename)
-	fmt.Println(program)
+
+	if runtime.GOOS != "windows" {
+		interpreter.includedFiles = append(interpreter.includedFiles, absFilename)
+	} else {
+		interpreter.includedFiles = append(interpreter.includedFiles, strings.ToLower(absFilename))
+	}
 	if parserErr != nil {
 		return runtimeValue, parserErr
 	}
