@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"strings"
 	"time"
 )
 
@@ -139,6 +140,10 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 // ------------------- MARK: core logic -------------------
 
 func processContent(content string, filename string) (output string, exitCode int) {
+	if !strings.HasSuffix(filename, ".php") {
+		return content, exitCode
+	}
+
 	interpreter := interpreter.NewInterpreter(ini.NewDefaultIni(), &interpreter.Request{}, filename)
 	result, err := interpreter.Process(content)
 	if err != nil {
