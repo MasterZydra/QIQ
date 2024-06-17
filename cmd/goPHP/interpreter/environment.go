@@ -2,6 +2,7 @@ package interpreter
 
 import (
 	"GoPHP/cmd/goPHP/ast"
+	"GoPHP/cmd/goPHP/config"
 	"GoPHP/cmd/goPHP/ini"
 	"GoPHP/cmd/goPHP/phpError"
 	"fmt"
@@ -109,6 +110,7 @@ func paramToArray(params [][]string) IArrayRuntimeValue {
 
 func registerPredefinedConstants(environment *Environment) {
 	// Spec: https://phplang.org/spec/06-constants.html#core-predefined-constants
+	// Spec: https://www.php.net/manual/en/reserved.constants.php
 	environment.predefinedConstants["FALSE"] = NewBooleanRuntimeValue(false)
 	environment.predefinedConstants["TRUE"] = NewBooleanRuntimeValue(true)
 	environment.predefinedConstants["NULL"] = NewNullRuntimeValue()
@@ -119,6 +121,12 @@ func registerPredefinedConstants(environment *Environment) {
 	} else {
 		environment.predefinedConstants["PHP_EOL"] = NewStringRuntimeValue("\n")
 	}
+	environment.predefinedConstants["PHP_VERSION"] = NewStringRuntimeValue(config.Version)
+	environment.predefinedConstants["PHP_MAJOR_VERSION"] = NewIntegerRuntimeValue(config.MajorVersion)
+	environment.predefinedConstants["PHP_MINOR_VERSION"] = NewIntegerRuntimeValue(config.MinorVersion)
+	environment.predefinedConstants["PHP_RELEASE_VERSION"] = NewIntegerRuntimeValue(config.ReleaseVersion)
+	environment.predefinedConstants["PHP_EXTRA_VERSION"] = NewStringRuntimeValue(config.ExtraVersion)
+	environment.predefinedConstants["PHP_VERSION_ID"] = NewIntegerRuntimeValue(config.VersionId)
 
 	// Spec: https://www.php.net/manual/en/errorfunc.constants.php
 	environment.predefinedConstants["E_ERROR"] = NewIntegerRuntimeValue(phpError.E_ERROR)

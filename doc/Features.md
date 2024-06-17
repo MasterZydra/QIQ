@@ -42,7 +42,37 @@
 
 ## Predefined variables
 - [x] $_GET
-- [x] $_POST 
+- [x] $_POST
+
+## Predefined constants
+- [x] E_ALL
+- [x] E_COMPILE_ERROR
+- [x] E_COMPILE_WARNING
+- [x] E_CORE_ERROR
+- [x] E_CORE_WARNING
+- [x] E_DEPRECATED
+- [x] E_ERROR
+- [x] E_NOTICE
+- [x] E_PARSE
+- [x] E_RECOVERABLE_ERROR
+- [x] E_STRICT
+- [x] E_USER_DEPRECATED
+- [x] E_USER_ERROR
+- [x] E_USER_NOTICE
+- [x] E_USER_WARNING
+- [x] E_WARNING
+- [x] FALSE
+- [x] NULL
+- [x] PHP_EOL
+- [x] PHP_EXTRA_VERSION
+- [x] PHP_MAJOR_VERSION
+- [x] PHP_MINOR_VERSION
+- [x] PHP_OS
+- [x] PHP_OS_FAMILY
+- [x] PHP_RELEASE_VERSION
+- [x] PHP_VERSION
+- [x] PHP_VERSION_ID
+- [x] TRUE
 
 ## Standard library
 - [x] array_key_exists
