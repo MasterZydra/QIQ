@@ -123,14 +123,43 @@ func webServer() {
 	}
 }
 
+func getNotFoundText(resource string) string {
+	return `<!doctype html><html><head><title>404 Not Found</title><style>
+			body { background-color: #fcfcfc; color: #333333; margin: 0; padding:0; }
+			h1 { font-size: 1.5em; font-weight: normal; background-color: #9999cc; min-height:2em; line-height:2em; border-bottom: 1px inset black; margin: 0; }
+			h1, p { padding-left: 10px; }
+			code.url { background-color: #eeeeee; font-family:monospace; padding:0 2px;}
+			</style>
+			</head><body><h1>Not Found</h1><p>The requested resource <code class="url">` + resource + `</code> was not found on this server.</p></body></html>
+		`
+}
+
 func requestHandler(w http.ResponseWriter, r *http.Request) {
 	absFilePath := path.Join(documentRoot, r.URL.Path)
 	_, err := os.Stat(absFilePath)
 	if err != nil {
-		fmt.Println("404", absFilePath)
+		if isDevMode {
+			fmt.Println("404", absFilePath)
+		}
 		w.WriteHeader(http.StatusNotFound)
-		fmt.Fprintln(w, http.StatusText(http.StatusNotFound))
+		fmt.Fprintln(w, getNotFoundText(r.URL.Path))
 		return
+	}
+
+	if common.IsDir(absFilePath) {
+		index := path.Join(absFilePath, "index.html")
+		if common.PathExists(index) && !common.IsDir(index) {
+			absFilePath = index
+		} else if index = path.Join(absFilePath, "index.php"); common.PathExists(index) && !common.IsDir(index) {
+			absFilePath = index
+		} else {
+			if isDevMode {
+				fmt.Println("404", absFilePath)
+			}
+			w.WriteHeader(http.StatusNotFound)
+			fmt.Fprintln(w, getNotFoundText(r.URL.Path))
+			return
+		}
 	}
 
 	content, err := os.ReadFile(absFilePath)
