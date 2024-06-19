@@ -6,6 +6,7 @@ import (
 	"GoPHP/cmd/goPHP/ini"
 	"GoPHP/cmd/goPHP/phpError"
 	"fmt"
+	"math"
 	"regexp"
 	"strings"
 )
@@ -127,6 +128,23 @@ func registerPredefinedConstants(environment *Environment) {
 	environment.predefinedConstants["PHP_RELEASE_VERSION"] = NewIntegerRuntimeValue(config.ReleaseVersion)
 	environment.predefinedConstants["PHP_EXTRA_VERSION"] = NewStringRuntimeValue(config.ExtraVersion)
 	environment.predefinedConstants["PHP_VERSION_ID"] = NewIntegerRuntimeValue(config.VersionId)
+	environment.predefinedConstants["M_1_PI"] = NewFloatingRuntimeValue(1 / math.Pi)
+	environment.predefinedConstants["M_2_PI"] = NewFloatingRuntimeValue(2 / math.Pi)
+	environment.predefinedConstants["M_2_SQRTPI"] = NewFloatingRuntimeValue(2 / math.SqrtPi)
+	environment.predefinedConstants["M_E"] = NewFloatingRuntimeValue(math.E)
+	environment.predefinedConstants["M_EULER"] = NewFloatingRuntimeValue(math.E)
+	environment.predefinedConstants["M_LN10"] = NewFloatingRuntimeValue(math.Ln10)
+	environment.predefinedConstants["M_LN2"] = NewFloatingRuntimeValue(math.Ln2)
+	environment.predefinedConstants["M_LNPI"] = NewFloatingRuntimeValue(math.Log(math.Pi))
+	environment.predefinedConstants["M_LOG10E"] = NewFloatingRuntimeValue(math.Log10E)
+	environment.predefinedConstants["M_LOG2E"] = NewFloatingRuntimeValue(math.Log2E)
+	environment.predefinedConstants["M_PI"] = NewFloatingRuntimeValue(math.Pi)
+	environment.predefinedConstants["M_PI_2"] = NewFloatingRuntimeValue(math.Pi / 2)
+	environment.predefinedConstants["M_PI_4"] = NewFloatingRuntimeValue(math.Pi / 4)
+	environment.predefinedConstants["M_SQRT1_2"] = NewFloatingRuntimeValue(1 / math.Sqrt2)
+	environment.predefinedConstants["M_SQRT2"] = NewFloatingRuntimeValue(math.Sqrt2)
+	environment.predefinedConstants["M_SQRT3"] = NewFloatingRuntimeValue(math.Sqrt(3))
+	environment.predefinedConstants["M_SQRTPI"] = NewFloatingRuntimeValue(math.SqrtPi)
 
 	// Spec: https://www.php.net/manual/en/errorfunc.constants.php
 	environment.predefinedConstants["E_ERROR"] = NewIntegerRuntimeValue(phpError.E_ERROR)
