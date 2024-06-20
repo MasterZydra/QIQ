@@ -179,18 +179,24 @@ func TestLibIntval(t *testing.T) {
 	doTest(NewNullRuntimeValue(), 0)
 }
 
-func TestLibIsNull(t *testing.T) {
-	actual := lib_is_null(NewNullRuntimeValue())
-	if expected := true; actual != expected {
-		t.Errorf("Expected: \"%t\", Got \"%t\"", expected, actual)
-	}
-	actual = lib_is_null(NewIntegerRuntimeValue(42))
-	if expected := false; actual != expected {
-		t.Errorf("Expected: \"%t\", Got \"%t\"", expected, actual)
-	}
-}
+func TestLibIsType(t *testing.T) {
+	// is_bool
+	testInputOutput(t, `<?php $a = true; var_dump(is_bool($a));`, "bool(true)\n")
+	testInputOutput(t, `<?php $a = 0; var_dump(is_bool($a));`, "bool(false)\n")
 
-func TestLibIsScalar(t *testing.T) {
+	// is_float
+	testInputOutput(t, `<?php $a = 42.0; var_dump(is_float($a));`, "bool(true)\n")
+	testInputOutput(t, `<?php $a = 0; var_dump(is_float($a));`, "bool(false)\n")
+
+	// is_int
+	testInputOutput(t, `<?php $a = 42; var_dump(is_int($a));`, "bool(true)\n")
+	testInputOutput(t, `<?php $a = "42"; var_dump(is_int($a));`, "bool(false)\n")
+
+	// is_null
+	testInputOutput(t, `<?php $a = null; var_dump(is_null($a));`, "bool(true)\n")
+	testInputOutput(t, `<?php $a = 42; var_dump(is_null($a));`, "bool(false)\n")
+
+	// is_scalar
 	testInputOutput(t, `<?php $a = true; var_dump(is_scalar($a));`, "bool(true)\n")
 	testInputOutput(t, `<?php $a = false; var_dump(is_scalar($a));`, "bool(true)\n")
 	testInputOutput(t, `<?php $a = 42; var_dump(is_scalar($a));`, "bool(true)\n")
@@ -198,6 +204,10 @@ func TestLibIsScalar(t *testing.T) {
 	testInputOutput(t, `<?php $a = "abc"; var_dump(is_scalar($a));`, "bool(true)\n")
 	testInputOutput(t, `<?php $a = null; var_dump(is_scalar($a));`, "bool(false)\n")
 	testInputOutput(t, `<?php $a = []; var_dump(is_scalar($a));`, "bool(false)\n")
+
+	// is_string
+	testInputOutput(t, `<?php $a = " "; var_dump(is_string($a));`, "bool(true)\n")
+	testInputOutput(t, `<?php $a = 42; var_dump(is_string($a));`, "bool(false)\n")
 }
 
 func TestLibStrlen(t *testing.T) {

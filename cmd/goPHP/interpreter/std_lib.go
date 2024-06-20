@@ -18,8 +18,13 @@ func registerNativeFunctions(environment *Environment) {
 	environment.nativeFunctions["gettype"] = nativeFn_gettype
 	environment.nativeFunctions["ini_get"] = nativeFn_ini_get
 	environment.nativeFunctions["intval"] = nativeFn_intval
+	environment.nativeFunctions["is_bool"] = nativeFn_is_bool
+	environment.nativeFunctions["is_float"] = nativeFn_is_float
+	environment.nativeFunctions["is_int"] = nativeFn_is_int
+	environment.nativeFunctions["is_integer"] = nativeFn_is_int
 	environment.nativeFunctions["is_null"] = nativeFn_is_null
 	environment.nativeFunctions["is_scalar"] = nativeFn_is_scalar
+	environment.nativeFunctions["is_string"] = nativeFn_is_string
 	environment.nativeFunctions["key_exits"] = nativeFn_array_key_exists
 	environment.nativeFunctions["strlen"] = nativeFn_strlen
 	environment.nativeFunctions["strval"] = nativeFn_strval
@@ -403,6 +408,54 @@ func lib_intval(runtimeValue IRuntimeValue) (int64, phpError.Error) {
 	// If the source is a resource, the result is the resource’s unique ID.
 }
 
+// ------------------- MARK: is_bool -------------------
+
+func nativeFn_is_bool(args []IRuntimeValue, _ *Interpreter) (IRuntimeValue, phpError.Error) {
+	args, err := NewFuncParamValidator("is_bool").addParam("$value", []string{"mixed"}, nil).validate(args)
+	if err != nil {
+		return NewVoidRuntimeValue(), err
+	}
+
+	return NewBooleanRuntimeValue(lib_is_bool(args[0])), nil
+}
+
+func lib_is_bool(runtimeValue IRuntimeValue) bool {
+	// Spec: https://www.php.net/manual/en/function.is-bool
+	return runtimeValue.GetType() == BooleanValue
+}
+
+// ------------------- MARK: is_float -------------------
+
+func nativeFn_is_float(args []IRuntimeValue, _ *Interpreter) (IRuntimeValue, phpError.Error) {
+	args, err := NewFuncParamValidator("is_float").addParam("$value", []string{"mixed"}, nil).validate(args)
+	if err != nil {
+		return NewVoidRuntimeValue(), err
+	}
+
+	return NewBooleanRuntimeValue(lib_is_float(args[0])), nil
+}
+
+func lib_is_float(runtimeValue IRuntimeValue) bool {
+	// Spec: https://www.php.net/manual/en/function.is-float
+	return runtimeValue.GetType() == FloatingValue
+}
+
+// ------------------- MARK: is_int -------------------
+
+func nativeFn_is_int(args []IRuntimeValue, _ *Interpreter) (IRuntimeValue, phpError.Error) {
+	args, err := NewFuncParamValidator("is_int").addParam("$value", []string{"mixed"}, nil).validate(args)
+	if err != nil {
+		return NewVoidRuntimeValue(), err
+	}
+
+	return NewBooleanRuntimeValue(lib_is_int(args[0])), nil
+}
+
+func lib_is_int(runtimeValue IRuntimeValue) bool {
+	// Spec: https://www.php.net/manual/en/function.is-int
+	return runtimeValue.GetType() == IntegerValue
+}
+
 // ------------------- MARK: is_null -------------------
 
 func nativeFn_is_null(args []IRuntimeValue, _ *Interpreter) (IRuntimeValue, phpError.Error) {
@@ -433,6 +486,22 @@ func nativeFn_is_scalar(args []IRuntimeValue, _ *Interpreter) (IRuntimeValue, ph
 func lib_is_scalar(runtimeValue IRuntimeValue) bool {
 	// Spec: https://www.php.net/manual/en/function.is-scalar.php
 	return slices.Contains([]ValueType{BooleanValue, IntegerValue, FloatingValue, StringValue}, runtimeValue.GetType())
+}
+
+// ------------------- MARK: is_string -------------------
+
+func nativeFn_is_string(args []IRuntimeValue, _ *Interpreter) (IRuntimeValue, phpError.Error) {
+	args, err := NewFuncParamValidator("is_string").addParam("$value", []string{"mixed"}, nil).validate(args)
+	if err != nil {
+		return NewVoidRuntimeValue(), err
+	}
+
+	return NewBooleanRuntimeValue(lib_is_string(args[0])), nil
+}
+
+func lib_is_string(runtimeValue IRuntimeValue) bool {
+	// Spec: https://www.php.net/manual/en/function.is-string
+	return runtimeValue.GetType() == StringValue
 }
 
 // ------------------- MARK: strlen -------------------

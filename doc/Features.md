@@ -103,8 +103,12 @@
 - [x] gettype
 - [x] ini_get
 - [x] intval
+- [x] is_bool
+- [x] is_float
+- [x] is_int, is_integer
 - [x] is_null
 - [x] is_scalar
+- [x] is_string
 - [x] isset
 - [x] key_exists
 - [x] strlen
