@@ -248,6 +248,7 @@ func TestLibStrval(t *testing.T) {
 }
 
 func TestLibVarDump(t *testing.T) {
+	testInputOutput(t, `<?php var_dump(3.5);`, "float(3.5)\n")
 	testInputOutput(t, `<?php var_dump(3.5, 42, true, false, null);`, "float(3.5)\nint(42)\nbool(true)\nbool(false)\nNULL\n")
 	testInputOutput(t, `<?php var_dump([]);`, "array(0) {\n}\n")
 	testInputOutput(t, `<?php var_dump([1,2]);`, "array(2) {\n  [0]=>\n  int(1)\n  [1]=>\n  int(2)\n}\n")
