@@ -85,6 +85,8 @@ func (interpreter *Interpreter) processStmt(stmt ast.IStatement, env *Environmen
 		return interpreter.processReturnStmt(ast.StmtToExprStmt(stmt), env)
 	case ast.IfStmt:
 		return interpreter.processIfStmt(ast.StmtToIfStmt(stmt), env)
+	case ast.WhileStmt:
+		return interpreter.processWhileStmt(ast.StmtToIfStmt(stmt), env)
 
 	// Expressions
 	case ast.ArrayLiteralExpr, ast.IntegerLiteralExpr, ast.FloatingLiteralExpr, ast.StringLiteralExpr:
@@ -258,6 +260,29 @@ func (interpreter *Interpreter) processIfStmt(stmt ast.IIfStatement, env *Enviro
 		return NewVoidRuntimeValue(), nil
 	}
 
+	return NewVoidRuntimeValue(), nil
+}
+
+func (interpreter *Interpreter) processWhileStmt(stmt ast.IIfStatement, env *Environment) (IRuntimeValue, phpError.Error) {
+	var condition bool = true
+	for condition {
+		conditionRuntimeValue, err := interpreter.processStmt(stmt.GetCondition(), env)
+		if err != nil {
+			return conditionRuntimeValue, err
+		}
+
+		condition, err = lib_boolval(conditionRuntimeValue)
+		if err != nil {
+			return NewVoidRuntimeValue(), err
+		}
+
+		if condition {
+			runtimeValue, err := interpreter.processStmt(stmt.GetIfBlock(), env)
+			if err != nil {
+				return runtimeValue, err
+			}
+		}
+	}
 	return NewVoidRuntimeValue(), nil
 }
 

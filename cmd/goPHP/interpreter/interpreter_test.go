@@ -159,6 +159,13 @@ func TestConditionals(t *testing.T) {
 	testInputOutput(t, `<?php $a = 42; if ($a === 42): echo "42"; elseif ($a === 41): echo "41"; else: echo "??"; endif;`, "42")
 	testInputOutput(t, `<?php $a = 41; if ($a === 42): echo "42"; elseif ($a === 41): echo "41"; else: echo "??"; endif;`, "41")
 	testInputOutput(t, `<?php $a = 40; if ($a === 42): echo "42"; elseif ($a === 41): echo "41"; else: echo "??"; endif;`, "??")
+
+	// While statment
+	testInputOutput(t, `<?php $a = 40; while ($a < 42) { echo "1"; $a++; }`, "11")
+	testInputOutput(t, `<?php $a = 42; while ($a < 42) { echo "1"; $a++; }`, "")
+	// Alternative syntax
+	testInputOutput(t, `<?php $a = 40; while ($a < 42): echo "1";  $a++; endwhile;`, "11")
+	testInputOutput(t, `<?php $a = 42; while ($a < 42): echo "1";  $a++; endwhile;`, "")
 }
 
 func TestIntrinsic(t *testing.T) {

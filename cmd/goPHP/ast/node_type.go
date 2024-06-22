@@ -44,5 +44,6 @@ const (
 	ExpressionStmt         NodeType = "ExpressionStatement"
 	FunctionDefinitionStmt NodeType = "FunctionDefinitionStatement"
 	IfStmt                 NodeType = "IfStatement"
+	WhileStmt              NodeType = "WhileStatement"
 	ReturnStmt             NodeType = "ReturnStatement"
 )

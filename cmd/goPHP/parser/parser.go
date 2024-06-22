@@ -456,7 +456,58 @@ func (parser *Parser) parseIterationStmt() (ast.IStatement, phpError.Error) {
 	//    for-statement
 	//    foreach-statement
 
-	// TODO while-statement
+	if parser.isToken(lexer.KeywordToken, "while", false) {
+		// Spec: https://phplang.org/spec/11-statements.html#grammar-iteration-statement
+
+		// while-statement:
+		//    while   (   expression   )   statement
+		//    while   (   expression   )   :   statement-list   endwhile   ;
+
+		// condition
+		whilePos := parser.eat().Position
+		if !parser.isToken(lexer.OpOrPuncToken, "(", true) {
+			return ast.NewEmptyStmt(), phpError.NewParseError("Expected \"(\". Got %s", parser.at())
+		}
+
+		condition, err := parser.parseExpr()
+		if err != nil {
+			return ast.NewEmptyStmt(), err
+		}
+
+		if !parser.isToken(lexer.OpOrPuncToken, ")", true) {
+			return ast.NewEmptyStmt(), phpError.NewParseError("Expected \")\". Got %s", parser.at())
+		}
+
+		isAltSytax := parser.isToken(lexer.OpOrPuncToken, ":", true)
+
+		var block ast.IStatement
+		if !isAltSytax {
+			block, err = parser.parseStmt()
+			if err != nil {
+				return ast.NewEmptyStmt(), err
+			}
+		} else {
+			statements := []ast.IStatement{}
+			for !parser.isToken(lexer.KeywordToken, "endwhile", false) {
+				statement, err := parser.parseStmt()
+				if err != nil {
+					return ast.NewEmptyStmt(), err
+				}
+				statements = append(statements, statement)
+			}
+			block = ast.NewCompoundStmt(statements)
+		}
+
+		if isAltSytax && !parser.isToken(lexer.KeywordToken, "endwhile", true) {
+			return ast.NewEmptyStmt(), phpError.NewParseError("Expected \"endwhile\". Got %s", parser.at())
+		}
+		if isAltSytax && !parser.isToken(lexer.OpOrPuncToken, ";", true) {
+			return ast.NewEmptyStmt(), phpError.NewParseError("Expected \";\". Got %s", parser.at())
+		}
+
+		return ast.NewWhileStmt(whilePos, condition, block), nil
+	}
+
 	// TODO do-statement
 	// TODO for-statement
 	// TODO foreach-statement

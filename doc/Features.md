@@ -27,8 +27,9 @@
 - parenthesized expression: `(1 + 2) * 3;`
 - subscript expression: `$a[1];`
 - variable substitution: `echo "{$a}";`
-- if statement: `if (true) { ...} elseif (false) { ... } else { ... }`
-- function definition: `function func1($param1) {...}`
+- if statement: `if (true) { ... } elseif (false) { ... } else { ... }`
+- while statement: `while (true) { ... }`
+- function definition: `function func1($param1) { ... }`
 - return statement: `return 42;`
 - require(_once), include(_once): `require 'lib.php';`
 
