@@ -66,13 +66,11 @@ func testInputOutput(t *testing.T, php string, output string) *Interpreter {
 	interpreter := NewInterpreter(ini.NewDevIni(), &Request{}, "test.php")
 	actual, err := interpreter.Process(php)
 	if err != nil {
-		fmt.Println("    Code:", php)
-		t.Errorf("Unexpected error: \"%s\"", err)
+		t.Errorf("\nCode: \"%s\"\nUnexpected error: \"%s\"", php, err)
 		return interpreter
 	}
 	if actual != output {
-		fmt.Println("    Code:", php)
-		t.Errorf("Expected: \"%s\", Got \"%s\"", output, actual)
+		t.Errorf("\nCode: \"%s\"\nExpected: \"%s\",\nGot \"%s\"", php, output, actual)
 	}
 	return interpreter
 }
@@ -105,8 +103,7 @@ func TestFileIncludes(t *testing.T) {
 	doTest := func(t *testing.T, php string, expected phpError.Error) {
 		_, err := NewInterpreter(ini.NewDevIni(), &Request{}, "/home/admin/test.php").Process(php)
 		if err.GetErrorType() != expected.GetErrorType() || err.GetMessage() != expected.GetMessage() {
-			fmt.Println("    Code:", php)
-			t.Errorf("\nExpected: %s\nGot:      %s", expected, err)
+			t.Errorf("\nCode: \"%s\"\nExpected: %s\nGot:      %s", php, expected, err)
 		}
 	}
 

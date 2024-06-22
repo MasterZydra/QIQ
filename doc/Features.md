@@ -1,117 +1,127 @@
 # Supported syntax and features
 
 ## Expressions and statements
-- [x] short open tag: `<? 1 + 2;`
-- [x] declare and access variable: `$var = "abc"; echo $abc;`
-- [x] declare and access constant: `const PI = 3.141; echo PI;`
-- [x] simple assignment: `$var = 42;`
-- [x] compound assignment: `$var += 42;`
-- [x] cast expression: `(int)$a;(string)$a;`
-- [x] conditional expression: `$var ? $a : "b";`
-- [x] coalesce expression: `$var ?? "b";`
-- [x] equality expression: `$var === 42;`
-- [x] relational expression: `$var >= 42;`
-- [x] additive expression: `$var + 42; $var - 42; "a" . "b";`
-- [x] multiplicative expression: `$var * 42; $var / 42; $var % 42;`
-- [x] logical and expression: `$var && 8`;
-- [x] logical inc or expression: `$var || 8`;
-- [x] bitwise exc or expression: `$var ^ 8;`
-- [x] bitwise inc or expression: `$var | 8;`
-- [x] bitwise and expression: `$var & 8`;
-- [x] shift expression: `$var << 8`;
-- [x] exponentiation expression: `$var ** 42;`
-- [x] unary expression: `-1; +1; ~1;`
-- [x] prefix (in/de)crease expression: `++$var; --$var;`
-- [x] postfix (in/de)crease expression: `$var++; $var--;`
-- [x] logical not expression: `!$var;`
-- [x] parenthesized expression: `(1 + 2) * 3;`
-- [x] subscript expression: `$a[1];`
-- [x] variable substitution: `echo "{$a}";`
-- [x] if statement: `if (true) { ...} elseif (false) { ... } else { ... }`
-- [x] function definition: `function func1($param1) {...}`
-- [x] return statement: `return 42;`
-- [x] require(_once), include(_once): `require 'lib.php';`
+- short open tag: `<? 1 + 2;`
+- declare and access variable: `$var = "abc"; echo $abc;`
+- declare and access constant: `const PI = 3.141; echo PI;`
+- simple assignment: `$var = 42;`
+- compound assignment: `$var += 42;`
+- cast expression: `(int)$a;(string)$a;`
+- conditional expression: `$var ? $a : "b";`
+- coalesce expression: `$var ?? "b";`
+- equality expression: `$var === 42;`
+- relational expression: `$var >= 42;`
+- additive expression: `$var + 42; $var - 42; "a" . "b";`
+- multiplicative expression: `$var * 42; $var / 42; $var % 42;`
+- logical and expression: `$var && 8`;
+- logical inc or expression: `$var || 8`;
+- bitwise exc or expression: `$var ^ 8;`
+- bitwise inc or expression: `$var | 8;`
+- bitwise and expression: `$var & 8`;
+- shift expression: `$var << 8`;
+- exponentiation expression: `$var ** 42;`
+- unary expression: `-1; +1; ~1;`
+- prefix (in/de)crease expression: `++$var; --$var;`
+- postfix (in/de)crease expression: `$var++; $var--;`
+- logical not expression: `!$var;`
+- parenthesized expression: `(1 + 2) * 3;`
+- subscript expression: `$a[1];`
+- variable substitution: `echo "{$a}";`
+- if statement: `if (true) { ...} elseif (false) { ... } else { ... }`
+- function definition: `function func1($param1) {...}`
+- return statement: `return 42;`
+- require(_once), include(_once): `require 'lib.php';`
 
 ## Data types
-- [x] array
-- [x] bool
-- [x] float
-- [x] int
-- [x] null
-- [x] string
+- array
+- bool
+- float
+- int
+- null
+- string
 
 ## Predefined variables
-- [x] $_GET
-- [x] $_POST
+- $_GET
+- $_POST
 
 ## Predefined constants
-- [x] E_ALL
-- [x] E_COMPILE_ERROR
-- [x] E_COMPILE_WARNING
-- [x] E_CORE_ERROR
-- [x] E_CORE_WARNING
-- [x] E_DEPRECATED
-- [x] E_ERROR
-- [x] E_NOTICE
-- [x] E_PARSE
-- [x] E_RECOVERABLE_ERROR
-- [x] E_STRICT
-- [x] E_USER_DEPRECATED
-- [x] E_USER_ERROR
-- [x] E_USER_NOTICE
-- [x] E_USER_WARNING
-- [x] E_WARNING
-- [x] FALSE
-- [x] M_1_PI
-- [x] M_2_PI
-- [x] M_2_SQRTPI
-- [x] M_E
-- [x] M_EULER
-- [x] M_LN10
-- [x] M_LN2
-- [x] M_LNPI
-- [x] M_LOG10E
-- [x] M_LOG2E
-- [x] M_PI
-- [x] M_PI_2
-- [x] M_PI_4
-- [x] M_SQRT1_2
-- [x] M_SQRT2
-- [x] M_SQRT3
-- [x] M_SQRTPI
-- [x] NULL
-- [x] PHP_EOL
-- [x] PHP_EXTRA_VERSION
-- [x] PHP_MAJOR_VERSION
-- [x] PHP_MINOR_VERSION
-- [x] PHP_OS
-- [x] PHP_OS_FAMILY
-- [x] PHP_RELEASE_VERSION
-- [x] PHP_VERSION
-- [x] PHP_VERSION_ID
-- [x] TRUE
+- E_ALL
+- E_COMPILE_ERROR
+- E_COMPILE_WARNING
+- E_CORE_ERROR
+- E_CORE_WARNING
+- E_DEPRECATED
+- E_ERROR
+- E_NOTICE
+- E_PARSE
+- E_RECOVERABLE_ERROR
+- E_STRICT
+- E_USER_DEPRECATED
+- E_USER_ERROR
+- E_USER_NOTICE
+- E_USER_WARNING
+- E_WARNING
+- FALSE
+- M_1_PI
+- M_2_PI
+- M_2_SQRTPI
+- M_E
+- M_EULER
+- M_LN10
+- M_LN2
+- M_LNPI
+- M_LOG10E
+- M_LOG2E
+- M_PI
+- M_PI_2
+- M_PI_4
+- M_SQRT1_2
+- M_SQRT2
+- M_SQRT3
+- M_SQRTPI
+- NULL
+- PHP_EOL
+- PHP_EXTRA_VERSION
+- PHP_MAJOR_VERSION
+- PHP_MINOR_VERSION
+- PHP_OS
+- PHP_OS_FAMILY
+- PHP_RELEASE_VERSION
+- PHP_VERSION
+- PHP_VERSION_ID
+- TRUE
 
 ## Standard library
-- [x] array_key_exists
-- [x] boolval
-- [x] die
-- [x] empty
-- [x] error_reporting
-- [x] exit
-- [x] floatval
-- [x] getenv
-- [x] gettype
-- [x] ini_get
-- [x] intval
-- [x] is_bool
-- [x] is_float
-- [x] is_int, is_integer
-- [x] is_null
-- [x] is_scalar
-- [x] is_string
-- [x] isset
-- [x] key_exists
-- [x] strlen
-- [x] strval
-- [x] unset
-- [x] var_dump
+- array_key_exists
+- die
+- error_reporting
+- exit
+- getenv
+- ini_get
+- key_exists
+- strlen
+
+### Variable handling functions
+- boolval
+- doubleval
+- empty
+- floatval
+- get_debug_type
+- gettype
+- intval
+- is_array
+- is_bool
+- is_double
+- is_float
+- is_int
+- is_integer
+- is_long
+- is_null
+- is_scalar
+- is_string
+- isset
+- print_r
+- strval
+- unset
+- var_dump
+- var_export
