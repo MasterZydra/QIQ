@@ -45,5 +45,6 @@ const (
 	FunctionDefinitionStmt NodeType = "FunctionDefinitionStatement"
 	IfStmt                 NodeType = "IfStatement"
 	WhileStmt              NodeType = "WhileStatement"
+	DoStmt                 NodeType = "DoStatement"
 	ReturnStmt             NodeType = "ReturnStatement"
 )

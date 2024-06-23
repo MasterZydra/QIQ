@@ -29,6 +29,7 @@
 - variable substitution: `echo "{$a}";`
 - if statement: `if (true) { ... } elseif (false) { ... } else { ... }`
 - while statement: `while (true) { ... }`
+- do statement: `do { ... } while (true);`
 - function definition: `function func1($param1) { ... }`
 - return statement: `return 42;`
 - require(_once), include(_once): `require 'lib.php';`

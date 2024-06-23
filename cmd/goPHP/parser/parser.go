@@ -508,7 +508,45 @@ func (parser *Parser) parseIterationStmt() (ast.IStatement, phpError.Error) {
 		return ast.NewWhileStmt(whilePos, condition, block), nil
 	}
 
-	// TODO do-statement
+	if parser.isToken(lexer.KeywordToken, "do", false) {
+		// Spec: https://phplang.org/spec/11-statements.html#grammar-do-statement
+
+		// do-statement:
+		//    do   statement   while   (   expression   )   ;
+
+		doPos := parser.eat().Position
+
+		// statement
+		block, err := parser.parseStmt()
+		if err != nil {
+			return ast.NewEmptyStmt(), err
+		}
+
+		// condition
+		if !parser.isToken(lexer.KeywordToken, "while", true) {
+			return ast.NewEmptyStmt(), phpError.NewParseError("Expected \"while\". Got %s", parser.at())
+		}
+
+		if !parser.isToken(lexer.OpOrPuncToken, "(", true) {
+			return ast.NewEmptyStmt(), phpError.NewParseError("Expected \"(\". Got %s", parser.at())
+		}
+
+		condition, err := parser.parseExpr()
+		if err != nil {
+			return ast.NewEmptyStmt(), err
+		}
+
+		if !parser.isToken(lexer.OpOrPuncToken, ")", true) {
+			return ast.NewEmptyStmt(), phpError.NewParseError("Expected \")\". Got %s", parser.at())
+		}
+
+		if !parser.isToken(lexer.OpOrPuncToken, ";", true) {
+			return ast.NewEmptyStmt(), phpError.NewParseError("Expected \";\". Got %s", parser.at())
+		}
+
+		return ast.NewDoStmt(doPos, condition, block), nil
+	}
+
 	// TODO for-statement
 	// TODO foreach-statement
 

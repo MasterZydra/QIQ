@@ -166,6 +166,10 @@ func TestConditionals(t *testing.T) {
 	// Alternative syntax
 	testInputOutput(t, `<?php $a = 40; while ($a < 42): echo "1";  $a++; endwhile;`, "11")
 	testInputOutput(t, `<?php $a = 42; while ($a < 42): echo "1";  $a++; endwhile;`, "")
+
+	// Do statment
+	testInputOutput(t, `<?php $a = 40; do { echo "1"; $a++; } while ($a < 42);`, "11")
+	testInputOutput(t, `<?php $a = 42; do { echo "1"; $a++; } while ($a < 42);`, "1")
 }
 
 func TestIntrinsic(t *testing.T) {

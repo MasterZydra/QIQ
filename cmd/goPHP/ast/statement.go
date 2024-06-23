@@ -130,6 +130,10 @@ type IfStatement struct {
 	elseBlock IStatement
 }
 
+func NewDoStmt(pos *position.Position, condition IExpression, block IStatement) *IfStatement {
+	return &IfStatement{stmt: NewStmt(DoStmt, pos), condition: condition, ifBlock: block}
+}
+
 func NewWhileStmt(pos *position.Position, condition IExpression, block IStatement) *IfStatement {
 	return &IfStatement{stmt: NewStmt(WhileStmt, pos), condition: condition, ifBlock: block}
 }
