@@ -30,11 +30,3 @@ func IsVariableExpr(expr IExpression) bool {
 
 	return slices.Contains(variableExpressions, expr.GetKind())
 }
-
-var nodeId int64 = 0
-
-func getNextNodeId() int64 {
-	result := nodeId
-	nodeId += 1
-	return result
-}

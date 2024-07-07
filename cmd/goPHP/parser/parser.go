@@ -17,6 +17,7 @@ type Parser struct {
 	lexer   *lexer.Lexer
 	tokens  []*lexer.Token
 	currPos int
+	id      int64
 }
 
 func NewParser(ini *ini.Ini) *Parser {
@@ -27,6 +28,11 @@ func (parser *Parser) init() {
 	parser.program = ast.NewProgram()
 	parser.lexer = lexer.NewLexer(parser.ini)
 	parser.currPos = 0
+}
+
+func (parser *Parser) nextId() int64 {
+	parser.id++
+	return parser.id
 }
 
 func (parser *Parser) ProduceAST(sourceCode string, filename string) (*ast.Program, phpError.Error) {
@@ -78,7 +84,7 @@ func (parser *Parser) parseStmt() (ast.IStatement, phpError.Error) {
 	//    function-static-declaration
 
 	if parser.isTokenType(lexer.TextToken, false) {
-		return ast.NewExpressionStmt(ast.NewTextExpr(parser.eat().Value)), nil
+		return ast.NewExpressionStmt(parser.nextId(), ast.NewTextExpr(parser.nextId(), parser.eat().Value)), nil
 	}
 
 	// ------------------- MARK: compound-statement -------------------
@@ -105,7 +111,7 @@ func (parser *Parser) parseStmt() (ast.IStatement, phpError.Error) {
 		if !parser.isToken(lexer.OpOrPuncToken, "}", true) {
 			return ast.NewEmptyStmt(), phpError.NewParseError("Expected \"}\", Got: %s", parser.at())
 		}
-		return ast.NewCompoundStmt(statements), nil
+		return ast.NewCompoundStmt(parser.nextId(), statements), nil
 	}
 
 	// TODO named-label-statement
@@ -166,7 +172,7 @@ func (parser *Parser) parseStmt() (ast.IStatement, phpError.Error) {
 			return ast.NewEmptyStmt(), phpError.NewParseError("Invalid echo statement detected")
 		}
 
-		return ast.NewEchoStmt(pos, expressions), nil
+		return ast.NewEchoStmt(parser.nextId(), pos, expressions), nil
 	}
 
 	// ------------------- MARK: unset-statement -------------------
@@ -209,7 +215,7 @@ func (parser *Parser) parseStmt() (ast.IStatement, phpError.Error) {
 		if !parser.isToken(lexer.OpOrPuncToken, ";", true) {
 			return ast.NewEmptyStmt(), phpError.NewParseError("Expected \";\". Got: \"%s\"", parser.at())
 		}
-		return ast.NewExpressionStmt(ast.NewUnsetIntrinsic(pos, args)), nil
+		return ast.NewExpressionStmt(parser.nextId(), ast.NewUnsetIntrinsic(parser.nextId(), pos, args)), nil
 	}
 
 	// ------------------- MARK: const-declaration -------------------
@@ -242,7 +248,7 @@ func (parser *Parser) parseStmt() (ast.IStatement, phpError.Error) {
 				return ast.NewEmptyStmt(), err
 			}
 
-			stmt := ast.NewConstDeclarationStmt(pos, name, value)
+			stmt := ast.NewConstDeclarationStmt(parser.nextId(), pos, name, value)
 			if parser.isToken(lexer.OpOrPuncToken, ",", true) {
 				parser.program.Append(stmt)
 				continue
@@ -282,7 +288,7 @@ func (parser *Parser) parseStmt() (ast.IStatement, phpError.Error) {
 		return ast.NewEmptyExpr(), err
 	} else {
 		if parser.isToken(lexer.OpOrPuncToken, ";", true) {
-			return ast.NewExpressionStmt(expr), nil
+			return ast.NewExpressionStmt(parser.nextId(), expr), nil
 		}
 		return ast.NewEmptyExpr(), phpError.NewParseError("Statement must end with a semicolon. Got: %s", parser.at())
 	}
@@ -357,7 +363,7 @@ func (parser *Parser) parseSelectionStmt() (ast.IStatement, phpError.Error) {
 				}
 				statements = append(statements, statement)
 			}
-			ifBlock = ast.NewCompoundStmt(statements)
+			ifBlock = ast.NewCompoundStmt(parser.nextId(), statements)
 		}
 
 		// elseif
@@ -397,10 +403,10 @@ func (parser *Parser) parseSelectionStmt() (ast.IStatement, phpError.Error) {
 					}
 					statements = append(statements, statement)
 				}
-				elseIfBlock = ast.NewCompoundStmt(statements)
+				elseIfBlock = ast.NewCompoundStmt(parser.nextId(), statements)
 			}
 
-			elseIf = append(elseIf, ast.NewIfStmt(elseIfPos, elseIfCondition, elseIfBlock, nil, nil))
+			elseIf = append(elseIf, ast.NewIfStmt(parser.nextId(), elseIfPos, elseIfCondition, elseIfBlock, nil, nil))
 		}
 
 		// else
@@ -424,7 +430,7 @@ func (parser *Parser) parseSelectionStmt() (ast.IStatement, phpError.Error) {
 					}
 					statements = append(statements, statement)
 				}
-				elseBlock = ast.NewCompoundStmt(statements)
+				elseBlock = ast.NewCompoundStmt(parser.nextId(), statements)
 			}
 		}
 
@@ -435,7 +441,7 @@ func (parser *Parser) parseSelectionStmt() (ast.IStatement, phpError.Error) {
 			return ast.NewEmptyStmt(), phpError.NewParseError("Expected \";\". Got %s", parser.at())
 		}
 
-		return ast.NewIfStmt(ifPos, condition, ifBlock, elseIf, elseBlock), nil
+		return ast.NewIfStmt(parser.nextId(), ifPos, condition, ifBlock, elseIf, elseBlock), nil
 	}
 
 	// TODO switch-statement
@@ -495,7 +501,7 @@ func (parser *Parser) parseIterationStmt() (ast.IStatement, phpError.Error) {
 				}
 				statements = append(statements, statement)
 			}
-			block = ast.NewCompoundStmt(statements)
+			block = ast.NewCompoundStmt(parser.nextId(), statements)
 		}
 
 		if isAltSytax && !parser.isToken(lexer.KeywordToken, "endwhile", true) {
@@ -505,7 +511,7 @@ func (parser *Parser) parseIterationStmt() (ast.IStatement, phpError.Error) {
 			return ast.NewEmptyStmt(), phpError.NewParseError("Expected \";\". Got %s", parser.at())
 		}
 
-		return ast.NewWhileStmt(whilePos, condition, block), nil
+		return ast.NewWhileStmt(parser.nextId(), whilePos, condition, block), nil
 	}
 
 	if parser.isToken(lexer.KeywordToken, "do", false) {
@@ -544,7 +550,7 @@ func (parser *Parser) parseIterationStmt() (ast.IStatement, phpError.Error) {
 			return ast.NewEmptyStmt(), phpError.NewParseError("Expected \";\". Got %s", parser.at())
 		}
 
-		return ast.NewDoStmt(doPos, condition, block), nil
+		return ast.NewDoStmt(parser.nextId(), doPos, condition, block), nil
 	}
 
 	// TODO for-statement
@@ -590,7 +596,7 @@ func (parser *Parser) parseJumpStmt() (ast.IStatement, phpError.Error) {
 			return ast.NewEmptyStmt(), phpError.NewParseError("Expected: \";\". Got: \"%s\"", parser.at())
 		}
 
-		return ast.NewReturnStmt(pos, expr), nil
+		return ast.NewReturnStmt(parser.nextId(), pos, expr), nil
 	}
 
 	// TODO throw-statement
@@ -737,7 +743,7 @@ func (parser *Parser) parseFunctionDefinition() (ast.IStatement, phpError.Error)
 		return ast.NewEmptyStmt(), phpError.NewParseError("Expected compound statement. Got %s", body.GetKind())
 	}
 
-	return ast.NewFunctionDefinitionStmt(pos, functionName, parameters, ast.StmtToCompoundStmt(body), returnTypes), nil
+	return ast.NewFunctionDefinitionStmt(parser.nextId(), pos, functionName, parameters, ast.StmtToCompoundStmt(body), returnTypes), nil
 }
 
 func (parser *Parser) parseExpr() (ast.IExpression, phpError.Error) {
@@ -776,7 +782,7 @@ func (parser *Parser) parseExpr() (ast.IExpression, phpError.Error) {
 			return ast.NewEmptyExpr(), err
 		}
 
-		return ast.NewIncludeExpr(pos, expr), nil
+		return ast.NewIncludeExpr(parser.nextId(), pos, expr), nil
 	}
 
 	// ------------------- MARK: include-once-expression -------------------
@@ -794,7 +800,7 @@ func (parser *Parser) parseExpr() (ast.IExpression, phpError.Error) {
 			return ast.NewEmptyExpr(), err
 		}
 
-		return ast.NewIncludeOnceExpr(pos, expr), nil
+		return ast.NewIncludeOnceExpr(parser.nextId(), pos, expr), nil
 	}
 
 	// ------------------- MARK: require-expression -------------------
@@ -812,7 +818,7 @@ func (parser *Parser) parseExpr() (ast.IExpression, phpError.Error) {
 			return ast.NewEmptyExpr(), err
 		}
 
-		return ast.NewRequireExpr(pos, expr), nil
+		return ast.NewRequireExpr(parser.nextId(), pos, expr), nil
 	}
 
 	// ------------------- MARK: require-once-expression -------------------
@@ -830,7 +836,7 @@ func (parser *Parser) parseExpr() (ast.IExpression, phpError.Error) {
 			return ast.NewEmptyExpr(), err
 		}
 
-		return ast.NewRequireOnceExpr(pos, expr), nil
+		return ast.NewRequireOnceExpr(parser.nextId(), pos, expr), nil
 	}
 
 	// assignment-expression
@@ -875,7 +881,7 @@ func (parser *Parser) parseAssignmentExpr() (ast.IExpression, phpError.Error) {
 		if err != nil {
 			return ast.NewEmptyExpr(), err
 		}
-		expr = ast.NewConditionalExpr(expr, ifExpr, elseExpr)
+		expr = ast.NewConditionalExpr(parser.nextId(), expr, ifExpr, elseExpr)
 	}
 
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-simple-assignment-expression
@@ -890,7 +896,7 @@ func (parser *Parser) parseAssignmentExpr() (ast.IExpression, phpError.Error) {
 		if err != nil {
 			return ast.NewEmptyExpr(), err
 		}
-		return ast.NewSimpleAssignmentExpr(expr, value), nil
+		return ast.NewSimpleAssignmentExpr(parser.nextId(), expr, value), nil
 	}
 
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-compound-assignment-expression
@@ -908,7 +914,7 @@ func (parser *Parser) parseAssignmentExpr() (ast.IExpression, phpError.Error) {
 		if err != nil {
 			return ast.NewEmptyExpr(), nil
 		}
-		return ast.NewCompoundAssignmentExpr(expr, operatorStr, value), nil
+		return ast.NewCompoundAssignmentExpr(parser.nextId(), expr, operatorStr, value), nil
 	}
 
 	return expr, nil
@@ -934,7 +940,7 @@ func (parser *Parser) parseCoalesceExpr() (ast.IExpression, phpError.Error) {
 			return ast.NewEmptyExpr(), err
 		}
 
-		return ast.NewCoalesceExpr(expr, elseExpr), nil
+		return ast.NewCoalesceExpr(parser.nextId(), expr, elseExpr), nil
 	}
 
 	return expr, nil
@@ -957,7 +963,7 @@ func (parser *Parser) parseLogicalIncOrExpr1() (ast.IExpression, phpError.Error)
 		if err != nil {
 			return ast.NewEmptyExpr(), err
 		}
-		lhs = ast.NewBinaryOpExpr(lhs, "||", rhs)
+		lhs = ast.NewBinaryOpExpr(parser.nextId(), lhs, "||", rhs)
 	}
 	return lhs, nil
 }
@@ -979,7 +985,7 @@ func (parser *Parser) parseLogicalAndExpr1() (ast.IExpression, phpError.Error) {
 		if err != nil {
 			return ast.NewEmptyExpr(), err
 		}
-		lhs = ast.NewBinaryOpExpr(lhs, "&&", rhs)
+		lhs = ast.NewBinaryOpExpr(parser.nextId(), lhs, "&&", rhs)
 	}
 	return lhs, nil
 }
@@ -1001,7 +1007,7 @@ func (parser *Parser) parseBitwiseIncOrExpr() (ast.IExpression, phpError.Error) 
 		if err != nil {
 			return ast.NewEmptyExpr(), err
 		}
-		lhs = ast.NewBinaryOpExpr(lhs, "|", rhs)
+		lhs = ast.NewBinaryOpExpr(parser.nextId(), lhs, "|", rhs)
 	}
 	return lhs, nil
 }
@@ -1023,7 +1029,7 @@ func (parser *Parser) parseBitwiseExcOrExpr() (ast.IExpression, phpError.Error) 
 		if err != nil {
 			return ast.NewEmptyExpr(), err
 		}
-		lhs = ast.NewBinaryOpExpr(lhs, "^", rhs)
+		lhs = ast.NewBinaryOpExpr(parser.nextId(), lhs, "^", rhs)
 	}
 	return lhs, nil
 }
@@ -1045,7 +1051,7 @@ func (parser *Parser) parseBitwiseAndExpr() (ast.IExpression, phpError.Error) {
 		if err != nil {
 			return ast.NewEmptyExpr(), err
 		}
-		lhs = ast.NewBinaryOpExpr(lhs, "&", rhs)
+		lhs = ast.NewBinaryOpExpr(parser.nextId(), lhs, "&", rhs)
 	}
 	return lhs, nil
 }
@@ -1072,7 +1078,7 @@ func (parser *Parser) parseEqualityExpr() (ast.IExpression, phpError.Error) {
 		if err != nil {
 			return ast.NewEmptyExpr(), err
 		}
-		lhs = ast.NewEqualityExpr(lhs, operator, rhs)
+		lhs = ast.NewEqualityExpr(parser.nextId(), lhs, operator, rhs)
 	}
 	return lhs, nil
 }
@@ -1099,7 +1105,7 @@ func (parser *Parser) parserRelationalExpr() (ast.IExpression, phpError.Error) {
 		if err != nil {
 			return ast.NewEmptyExpr(), err
 		}
-		lhs = ast.NewRelationalExpr(lhs, operator, rhs)
+		lhs = ast.NewRelationalExpr(parser.nextId(), lhs, operator, rhs)
 	}
 	return lhs, nil
 }
@@ -1123,7 +1129,7 @@ func (parser *Parser) parseShiftExpr() (ast.IExpression, phpError.Error) {
 		if err != nil {
 			return ast.NewEmptyExpr(), err
 		}
-		lhs = ast.NewBinaryOpExpr(lhs, operator, rhs)
+		lhs = ast.NewBinaryOpExpr(parser.nextId(), lhs, operator, rhs)
 	}
 	return lhs, nil
 }
@@ -1148,7 +1154,7 @@ func (parser *Parser) parseAdditiveExpr() (ast.IExpression, phpError.Error) {
 		if err != nil {
 			return ast.NewEmptyExpr(), err
 		}
-		lhs = ast.NewBinaryOpExpr(lhs, operator, rhs)
+		lhs = ast.NewBinaryOpExpr(parser.nextId(), lhs, operator, rhs)
 	}
 
 	return lhs, nil
@@ -1174,7 +1180,7 @@ func (parser *Parser) parseMultiplicativeExpr() (ast.IExpression, phpError.Error
 		if err != nil {
 			return ast.NewEmptyExpr(), err
 		}
-		lhs = ast.NewBinaryOpExpr(lhs, operator, rhs)
+		lhs = ast.NewBinaryOpExpr(parser.nextId(), lhs, operator, rhs)
 	}
 	return lhs, nil
 }
@@ -1198,7 +1204,7 @@ func (parser *Parser) parseLogicalNotExpr() (ast.IExpression, phpError.Error) {
 	}
 
 	if isNotExpression {
-		return ast.NewLogicalNotExpr(pos, expr), nil
+		return ast.NewLogicalNotExpr(parser.nextId(), pos, expr), nil
 	}
 	return expr, nil
 }
@@ -1246,7 +1252,7 @@ func (parser *Parser) parseUnaryExpr() (ast.IExpression, phpError.Error) {
 			return ast.NewEmptyExpr(), err
 		}
 
-		return ast.NewUnaryOpExpr(pos, operator, expr), nil
+		return ast.NewUnaryOpExpr(parser.nextId(), pos, operator, expr), nil
 	}
 
 	// TODO error-control-expression
@@ -1269,7 +1275,7 @@ func (parser *Parser) parseUnaryExpr() (ast.IExpression, phpError.Error) {
 		if err != nil {
 			return ast.NewEmptyExpr(), err
 		}
-		return ast.NewCastExpr(pos, castType, expr), nil
+		return ast.NewCastExpr(parser.nextId(), pos, castType, expr), nil
 	}
 
 	return parser.parseExponentiationExpr()
@@ -1291,7 +1297,7 @@ func (parser *Parser) parseExponentiationExpr() (ast.IExpression, phpError.Error
 		if err != nil {
 			return ast.NewEmptyExpr(), err
 		}
-		return ast.NewBinaryOpExpr(lhs, "**", rhs), nil
+		return ast.NewBinaryOpExpr(parser.nextId(), lhs, "**", rhs), nil
 	}
 	return lhs, nil
 }
@@ -1357,7 +1363,7 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, phpError.Error) {
 	//    variable-name
 
 	if parser.isTokenType(lexer.VariableNameToken, false) {
-		variable = ast.NewSimpleVariableExpr(ast.NewVariableNameExpr(parser.at().Position, parser.eat().Value))
+		variable = ast.NewSimpleVariableExpr(parser.nextId(), ast.NewVariableNameExpr(parser.nextId(), parser.at().Position, parser.eat().Value))
 	}
 
 	// Spec: https://phplang.org/spec/10-expressions.html#simple-variable
@@ -1377,7 +1383,7 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, phpError.Error) {
 
 		if parser.at().Value == "}" {
 			parser.eat()
-			variable = ast.NewSimpleVariableExpr(expr)
+			variable = ast.NewSimpleVariableExpr(parser.nextId(), expr)
 		} else {
 			return ast.NewEmptyExpr(), phpError.NewParseError("End of simple variable expression not detected")
 		}
@@ -1393,7 +1399,7 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, phpError.Error) {
 		if expr, err := parser.parsePrimaryExpr(); err != nil {
 			return ast.NewEmptyExpr(), err
 		} else {
-			variable = ast.NewSimpleVariableExpr(expr)
+			variable = ast.NewSimpleVariableExpr(parser.nextId(), expr)
 		}
 	}
 
@@ -1432,7 +1438,7 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, phpError.Error) {
 			if !parser.isToken(lexer.OpOrPuncToken, "]", true) {
 				return ast.NewEmptyExpr(), phpError.NewParseError("Expected \"]\". Got: %s", parser.at())
 			}
-			variable = ast.NewSubscriptExpr(variable, index)
+			variable = ast.NewSubscriptExpr(parser.nextId(), variable, index)
 		}
 		return variable, nil
 	}
@@ -1484,7 +1490,7 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, phpError.Error) {
 			}
 			return ast.NewEmptyExpr(), phpError.NewParseError("Expected \",\" or \")\". Got: %s", parser.at())
 		}
-		return ast.NewFunctionCallExpr(pos, functionName, args), nil
+		return ast.NewFunctionCallExpr(parser.nextId(), pos, functionName, args), nil
 	}
 
 	// TODO scoped-property-access-expression
@@ -1510,7 +1516,7 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, phpError.Error) {
 		(parser.isTokenType(lexer.KeywordToken, false) && common.IsCorePredefinedConstants(parser.at().Value)) {
 		// TODO constant-access-expression - namespace-name-as-a-prefix
 		// TODO constant-access-expression - check if name is a defined constant here or in interpreter
-		return ast.NewConstantAccessExpr(parser.at().Position, parser.eat().Value), nil
+		return ast.NewConstantAccessExpr(parser.nextId(), parser.at().Position, parser.eat().Value), nil
 	}
 
 	// literal
@@ -1550,7 +1556,7 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, phpError.Error) {
 
 	if ast.IsVariableExpr(variable) && (parser.isToken(lexer.OpOrPuncToken, "++", false) ||
 		parser.isToken(lexer.OpOrPuncToken, "--", false)) {
-		return ast.NewPostfixIncExpr(parser.at().Position, variable, parser.eat().Value), nil
+		return ast.NewPostfixIncExpr(parser.nextId(), parser.at().Position, variable, parser.eat().Value), nil
 	}
 
 	// ------------------- MARK: prefix-increment-expression -------------------
@@ -1575,7 +1581,7 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, phpError.Error) {
 		if !ast.IsVariableExpr(variable) {
 			return ast.NewEmptyExpr(), phpError.NewParseError("Syntax error, unexpected %s", variable)
 		}
-		return ast.NewPrefixIncExpr(pos, variable, operator), nil
+		return ast.NewPrefixIncExpr(parser.nextId(), pos, variable, operator), nil
 	}
 
 	// TODO byref-assignment-expression
@@ -1617,13 +1623,13 @@ func (parser *Parser) parseLiteral() (ast.IExpression, phpError.Error) {
 			return ast.NewEmptyExpr(), phpError.NewParseError("Unsupported integer literal \"%s\"", parser.at().Value)
 		}
 
-		return ast.NewIntegerLiteralExpr(parser.eat().Position, intValue), nil
+		return ast.NewIntegerLiteralExpr(parser.nextId(), parser.eat().Position, intValue), nil
 	}
 
 	// floating-literal
 	if parser.isTokenType(lexer.FloatingLiteralToken, false) {
 		if common.IsFloatingLiteral(parser.at().Value) {
-			return ast.NewFloatingLiteralExpr(parser.at().Position, common.FloatingLiteralToFloat64(parser.eat().Value)), nil
+			return ast.NewFloatingLiteralExpr(parser.nextId(), parser.at().Position, common.FloatingLiteralToFloat64(parser.eat().Value)), nil
 		}
 
 		return ast.NewEmptyExpr(), phpError.NewParseError("Unsupported floating literal \"%s\"", parser.at().Value)
@@ -1634,14 +1640,14 @@ func (parser *Parser) parseLiteral() (ast.IExpression, phpError.Error) {
 		// single-quoted-string-literal
 		if common.IsSingleQuotedStringLiteral(parser.at().Value) {
 			return ast.NewStringLiteralExpr(
-					parser.at().Position, common.SingleQuotedStringLiteralToString(parser.eat().Value), ast.SingleQuotedString),
+					parser.nextId(), parser.at().Position, common.SingleQuotedStringLiteralToString(parser.eat().Value), ast.SingleQuotedString),
 				nil
 		}
 
 		// double-quoted-string-literal
 		if common.IsDoubleQuotedStringLiteral(parser.at().Value) {
 			return ast.NewStringLiteralExpr(
-					parser.at().Position, common.DoubleQuotedStringLiteralToString(parser.eat().Value), ast.DoubleQuotedString),
+					parser.nextId(), parser.at().Position, common.DoubleQuotedStringLiteralToString(parser.eat().Value), ast.DoubleQuotedString),
 				nil
 		}
 
@@ -1696,7 +1702,7 @@ func (parser *Parser) parseArrayCreationExpr() (ast.IExpression, phpError.Error)
 	}
 
 	var index int64 = 0
-	arrayExpr := ast.NewArrayLiteralExpr(pos)
+	arrayExpr := ast.NewArrayLiteralExpr(parser.nextId(), pos)
 	for {
 		if (!isShortSyntax && parser.isToken(lexer.OpOrPuncToken, ")", true)) ||
 			(isShortSyntax && parser.isToken(lexer.OpOrPuncToken, "]", true)) {
@@ -1708,7 +1714,7 @@ func (parser *Parser) parseArrayCreationExpr() (ast.IExpression, phpError.Error)
 		if err != nil {
 			return ast.NewEmptyExpr(), err
 		}
-		arrayExpr.AddElement(ast.NewIntegerLiteralExpr(element.GetPosition(), index), element)
+		arrayExpr.AddElement(ast.NewIntegerLiteralExpr(parser.nextId(), element.GetPosition(), index), element)
 		index++
 
 		if parser.isToken(lexer.OpOrPuncToken, ",", true) ||
@@ -1755,7 +1761,7 @@ func (parser *Parser) parseIntrinsic() (ast.IExpression, phpError.Error) {
 		if !parser.isToken(lexer.OpOrPuncToken, ")", true) {
 			return ast.NewEmptyExpr(), phpError.NewParseError("Expected \")\". Got: \"%s\"", parser.at())
 		}
-		return ast.NewEmptyIntrinsic(pos, expr), nil
+		return ast.NewEmptyIntrinsic(parser.nextId(), pos, expr), nil
 	}
 
 	// TODO eval-intrinsic
@@ -1785,7 +1791,7 @@ func (parser *Parser) parseIntrinsic() (ast.IExpression, phpError.Error) {
 				return ast.NewEmptyExpr(), phpError.NewParseError("Expected \")\". Got %s", parser.at())
 			}
 		}
-		return ast.NewExitIntrinsic(pos, expr), nil
+		return ast.NewExitIntrinsic(parser.nextId(), pos, expr), nil
 	}
 
 	// ------------------- MARK: isset-intrinsic -------------------
@@ -1825,7 +1831,7 @@ func (parser *Parser) parseIntrinsic() (ast.IExpression, phpError.Error) {
 			}
 			return ast.NewEmptyExpr(), phpError.NewParseError("Expected \",\" or \")\". Got: %s", parser.at())
 		}
-		return ast.NewIssetIntrinsic(pos, args), nil
+		return ast.NewIssetIntrinsic(parser.nextId(), pos, args), nil
 	}
 
 	return ast.NewEmptyExpr(), phpError.NewParseError("Unsupported intrinsic: %s", parser.at())

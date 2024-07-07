@@ -15,7 +15,7 @@ func TestVariableExprToVariableName(t *testing.T) {
 
 	// $var
 	interpreter := NewInterpreter(ini.NewDevIni(), &Request{}, "test.php")
-	actual, err := interpreter.varExprToVarName(ast.NewSimpleVariableExpr(ast.NewVariableNameExpr(nil, "$var")), interpreter.env)
+	actual, err := interpreter.varExprToVarName(ast.NewSimpleVariableExpr(0, ast.NewVariableNameExpr(0, nil, "$var")), interpreter.env)
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -29,8 +29,8 @@ func TestVariableExprToVariableName(t *testing.T) {
 	interpreter = NewInterpreter(ini.NewDevIni(), &Request{}, "test.php")
 	interpreter.env.declareVariable("$var", NewStringRuntimeValue("hi"))
 	actual, err = interpreter.varExprToVarName(
-		ast.NewSimpleVariableExpr(
-			ast.NewSimpleVariableExpr(ast.NewVariableNameExpr(nil, "$var"))), interpreter.env)
+		ast.NewSimpleVariableExpr(0,
+			ast.NewSimpleVariableExpr(0, ast.NewVariableNameExpr(0, nil, "$var"))), interpreter.env)
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -45,9 +45,9 @@ func TestVariableExprToVariableName(t *testing.T) {
 	interpreter.env.declareVariable("$var1", NewStringRuntimeValue("hi"))
 	interpreter.env.declareVariable("$var", NewStringRuntimeValue("var1"))
 	actual, err = interpreter.varExprToVarName(
-		ast.NewSimpleVariableExpr(
-			ast.NewSimpleVariableExpr(
-				ast.NewSimpleVariableExpr(ast.NewVariableNameExpr(nil, "$var")))), interpreter.env)
+		ast.NewSimpleVariableExpr(0,
+			ast.NewSimpleVariableExpr(0,
+				ast.NewSimpleVariableExpr(0, ast.NewVariableNameExpr(0, nil, "$var")))), interpreter.env)
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return

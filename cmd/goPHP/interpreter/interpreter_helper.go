@@ -3,7 +3,6 @@ package interpreter
 import (
 	"GoPHP/cmd/goPHP/ast"
 	"GoPHP/cmd/goPHP/common"
-	"GoPHP/cmd/goPHP/parser"
 	"GoPHP/cmd/goPHP/phpError"
 	"math"
 	"os"
@@ -271,7 +270,7 @@ func (interpreter *Interpreter) includeFile(filepathExpr ast.IExpression, env *E
 	if fileErr != nil {
 		return getError()
 	}
-	program, parserErr := parser.NewParser(interpreter.ini).ProduceAST(string(content), filename)
+	program, parserErr := interpreter.parser.ProduceAST(string(content), filename)
 
 	if runtime.GOOS != "windows" {
 		interpreter.includedFiles = append(interpreter.includedFiles, absFilename)
