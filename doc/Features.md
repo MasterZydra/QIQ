@@ -31,6 +31,8 @@
 - while statement: `while (true) { ... }`
 - do statement: `do { ... } while (true);`
 - function definition: `function func1($param1) { ... }`
+- break statement: `break 1;`
+- continue statement: `continue (2);`
 - return statement: `return 42;`
 - require(_once), include(_once): `require 'lib.php';`
 

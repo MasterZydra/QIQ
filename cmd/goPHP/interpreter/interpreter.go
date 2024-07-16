@@ -83,6 +83,10 @@ func (interpreter *Interpreter) processStmt(stmt ast.IStatement, env *Environmen
 		return interpreter.processFunctionDefinitionStmt(ast.StmtToFunctionDefinitionStmt(stmt), env)
 	case ast.ReturnStmt:
 		return interpreter.processReturnStmt(ast.StmtToExprStmt(stmt), env)
+	case ast.ContinueStmt:
+		return interpreter.processContinueStmt(ast.StmtToExprStmt(stmt), env)
+	case ast.BreakStmt:
+		return interpreter.processBreakStmt(ast.StmtToExprStmt(stmt), env)
 	case ast.IfStmt:
 		return interpreter.processIfStmt(ast.StmtToIfStmt(stmt), env)
 	case ast.WhileStmt:
@@ -211,6 +215,38 @@ func (interpreter *Interpreter) processReturnStmt(stmt ast.IExpressionStatement,
 	return runtimeValue, phpError.NewEvent(phpError.ReturnEvent)
 }
 
+func (interpreter *Interpreter) processContinueStmt(stmt ast.IExpressionStatement, env *Environment) (IRuntimeValue, phpError.Error) {
+	if stmt.GetExpression() == nil {
+		return NewVoidRuntimeValue(), phpError.NewEvent(phpError.ReturnEvent)
+	}
+	runtimeValue, err := interpreter.processStmt(stmt.GetExpression(), env)
+	if err != nil {
+		return runtimeValue, err
+	}
+
+	if runtimeValue.GetType() != IntegerValue {
+		return runtimeValue, phpError.NewError("Breakout level must be an integer value. Got %s", runtimeValue.GetType())
+	}
+
+	return runtimeValue, phpError.NewContinueEvent(runtimeValToIntRuntimeVal(runtimeValue).GetValue())
+}
+
+func (interpreter *Interpreter) processBreakStmt(stmt ast.IExpressionStatement, env *Environment) (IRuntimeValue, phpError.Error) {
+	if stmt.GetExpression() == nil {
+		return NewVoidRuntimeValue(), phpError.NewEvent(phpError.ReturnEvent)
+	}
+	runtimeValue, err := interpreter.processStmt(stmt.GetExpression(), env)
+	if err != nil {
+		return runtimeValue, err
+	}
+
+	if runtimeValue.GetType() != IntegerValue {
+		return runtimeValue, phpError.NewError("Breakout level must be an integer value. Got %s", runtimeValue.GetType())
+	}
+
+	return runtimeValue, phpError.NewBreakEvent(runtimeValToIntRuntimeVal(runtimeValue).GetValue())
+}
+
 func (interpreter *Interpreter) processIfStmt(stmt ast.IIfStatement, env *Environment) (IRuntimeValue, phpError.Error) {
 	conditionRuntimeValue, err := interpreter.processStmt(stmt.GetCondition(), env)
 	if err != nil {
@@ -281,6 +317,20 @@ func (interpreter *Interpreter) processWhileStmt(stmt ast.IIfStatement, env *Env
 		if condition {
 			runtimeValue, err := interpreter.processStmt(stmt.GetIfBlock(), env)
 			if err != nil {
+				if err.GetErrorType() == phpError.EventError && err.GetMessage() == "break" {
+					breakoutLevel := err.(*phpError.ContinueEventError).GetBreakoutLevel()
+					if breakoutLevel == 1 {
+						return NewVoidRuntimeValue(), nil
+					}
+					return NewVoidRuntimeValue(), phpError.NewBreakEvent(breakoutLevel - 1)
+				}
+				if err.GetErrorType() == phpError.EventError && err.GetMessage() == "continue" {
+					breakoutLevel := err.(*phpError.ContinueEventError).GetBreakoutLevel()
+					if breakoutLevel == 1 {
+						continue
+					}
+					return NewVoidRuntimeValue(), phpError.NewContinueEvent(breakoutLevel - 1)
+				}
 				return runtimeValue, err
 			}
 		}
@@ -293,6 +343,20 @@ func (interpreter *Interpreter) processDoStmt(stmt ast.IIfStatement, env *Enviro
 	for condition {
 		runtimeValue, err := interpreter.processStmt(stmt.GetIfBlock(), env)
 		if err != nil {
+			if err.GetErrorType() == phpError.EventError && err.GetMessage() == "break" {
+				breakoutLevel := err.(*phpError.ContinueEventError).GetBreakoutLevel()
+				if breakoutLevel == 1 {
+					return NewVoidRuntimeValue(), nil
+				}
+				return NewVoidRuntimeValue(), phpError.NewBreakEvent(breakoutLevel - 1)
+			}
+			if err.GetErrorType() == phpError.EventError && err.GetMessage() == "continue" {
+				breakoutLevel := err.(*phpError.ContinueEventError).GetBreakoutLevel()
+				if breakoutLevel == 1 {
+					continue
+				}
+				return NewVoidRuntimeValue(), phpError.NewContinueEvent(breakoutLevel - 1)
+			}
 			return runtimeValue, err
 		}
 

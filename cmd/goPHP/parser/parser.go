@@ -572,8 +572,84 @@ func (parser *Parser) parseJumpStmt() (ast.IStatement, phpError.Error) {
 	//    throw-statement
 
 	// TODO goto-statement
-	// TODO continue-statement
-	// TODO break-statement
+
+	if parser.isToken(lexer.KeywordToken, "continue", false) {
+		// Spec: https://phplang.org/spec/11-statements.html#grammar-continue-statement
+
+		// continue-statement:
+		//    continue   breakout-level(opt)   ;
+
+		// breakout-level:
+		//   integer-literal
+		//   (   breakout-level   )
+
+		pos := parser.eat().Position
+
+		var expr ast.IExpression = nil
+		var err phpError.Error
+
+		if !parser.isToken(lexer.OpOrPuncToken, ";", false) {
+			isParenthesized := parser.isToken(lexer.OpOrPuncToken, "(", true)
+
+			expr, err = parser.parseExpr()
+			if err != nil {
+				return ast.NewEmptyStmt(), err
+			}
+
+			if isParenthesized && !parser.isToken(lexer.OpOrPuncToken, ")", true) {
+				return ast.NewEmptyExpr(), phpError.NewError("Expected closing parentheses. Got %s", parser.at())
+			}
+		}
+
+		if !parser.isToken(lexer.OpOrPuncToken, ";", true) {
+			return ast.NewEmptyStmt(), phpError.NewParseError("Expected \";\". Got %s", parser.at())
+		}
+
+		if expr == nil {
+			expr = ast.NewIntegerLiteralExpr(parser.nextId(), nil, 1)
+		}
+
+		return ast.NewContinueStmt(parser.nextId(), pos, expr), nil
+	}
+
+	if parser.isToken(lexer.KeywordToken, "break", false) {
+		// Spec: https://phplang.org/spec/11-statements.html#grammar-break-statement
+
+		// break-statement:
+		//    break   breakout-level(opt)   ;
+
+		// breakout-level:
+		//   integer-literal
+		//   (   breakout-level   )
+
+		pos := parser.eat().Position
+
+		var expr ast.IExpression = nil
+		var err phpError.Error
+
+		if !parser.isToken(lexer.OpOrPuncToken, ";", false) {
+			isParenthesized := parser.isToken(lexer.OpOrPuncToken, "(", true)
+
+			expr, err = parser.parseExpr()
+			if err != nil {
+				return ast.NewEmptyStmt(), err
+			}
+
+			if isParenthesized && !parser.isToken(lexer.OpOrPuncToken, ")", true) {
+				return ast.NewEmptyExpr(), phpError.NewError("Expected closing parentheses. Got %s", parser.at())
+			}
+		}
+
+		if !parser.isToken(lexer.OpOrPuncToken, ";", true) {
+			return ast.NewEmptyStmt(), phpError.NewParseError("Expected \";\". Got %s", parser.at())
+		}
+
+		if expr == nil {
+			expr = ast.NewIntegerLiteralExpr(parser.nextId(), nil, 1)
+		}
+
+		return ast.NewBreakStmt(parser.nextId(), pos, expr), nil
+	}
 
 	// ------------------- MARK: return-statement -------------------
 

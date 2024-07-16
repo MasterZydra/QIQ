@@ -43,10 +43,19 @@ const (
 	EventError ErrorType = "Event"
 )
 
+const (
+	ExitEvent     string = "exit"
+	ReturnEvent   string = "return"
+	ContinueEvent string = "continue"
+	BreakEvent    string = "break"
+)
+
 type Error interface {
 	GetErrorType() ErrorType
 	GetMessage() string
 }
+
+// MARK: PhpError
 
 type PhpError struct {
 	errorType ErrorType
@@ -81,7 +90,34 @@ func NewEvent(event string) Error {
 	return &PhpError{errorType: EventError, message: event}
 }
 
-const (
-	ExitEvent   string = "exit"
-	ReturnEvent string = "return"
-)
+// MARK: ContinueEventError
+
+type ContinueEventError struct {
+	errorType     ErrorType
+	message       string
+	breakoutLevel int64
+}
+
+func (err *ContinueEventError) GetErrorType() ErrorType {
+	return err.errorType
+}
+
+func (err *ContinueEventError) GetMessage() string {
+	return err.message
+}
+
+func (err *ContinueEventError) GetBreakoutLevel() int64 {
+	return err.breakoutLevel
+}
+
+func (err *ContinueEventError) String() string {
+	return err.message
+}
+
+func NewBreakEvent(breakoutLevel int64) Error {
+	return &ContinueEventError{errorType: EventError, message: BreakEvent, breakoutLevel: breakoutLevel}
+}
+
+func NewContinueEvent(breakoutLevel int64) Error {
+	return &ContinueEventError{errorType: EventError, message: ContinueEvent, breakoutLevel: breakoutLevel}
+}

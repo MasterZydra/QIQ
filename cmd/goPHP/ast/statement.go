@@ -321,6 +321,14 @@ type ExpressionStatement struct {
 	expr IExpression
 }
 
+func NewBreakStmt(id int64, pos *position.Position, expr IExpression) *ExpressionStatement {
+	return &ExpressionStatement{stmt: NewStmt(id, BreakStmt, pos), expr: expr}
+}
+
+func NewContinueStmt(id int64, pos *position.Position, expr IExpression) *ExpressionStatement {
+	return &ExpressionStatement{stmt: NewStmt(id, ContinueStmt, pos), expr: expr}
+}
+
 func NewReturnStmt(id int64, pos *position.Position, expr IExpression) *ExpressionStatement {
 	return &ExpressionStatement{stmt: NewStmt(id, ReturnStmt, pos), expr: expr}
 }

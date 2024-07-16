@@ -47,4 +47,6 @@ const (
 	WhileStmt              NodeType = "WhileStatement"
 	DoStmt                 NodeType = "DoStatement"
 	ReturnStmt             NodeType = "ReturnStatement"
+	ContinueStmt           NodeType = "ContinueStatement"
+	BreakStmt              NodeType = "BreakStatement"
 )
