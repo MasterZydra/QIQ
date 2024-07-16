@@ -15,7 +15,7 @@ type Environment struct {
 	parent    *Environment
 	variables map[string]IRuntimeValue
 	constants map[string]IRuntimeValue
-	functions map[string]userFunction
+	functions map[string]*ast.FunctionDefinitionStatement
 	// StdLib
 	predefinedVariables map[string]IRuntimeValue
 	predefinedConstants map[string]IRuntimeValue
@@ -27,7 +27,7 @@ func NewEnvironment(parentEnv *Environment, request *Request) *Environment {
 		parent:    parentEnv,
 		variables: map[string]IRuntimeValue{},
 		constants: map[string]IRuntimeValue{},
-		functions: map[string]userFunction{},
+		functions: map[string]*ast.FunctionDefinitionStatement{},
 		// StdLib
 		predefinedVariables: map[string]IRuntimeValue{},
 		predefinedConstants: map[string]IRuntimeValue{},
@@ -50,7 +50,7 @@ func registerPredefinedVariables(environment *Environment, request *Request) {
 	environment.predefinedVariables["$_POST"] = paramToArray(request.PostParams)
 }
 
-func stringMapToArray(stringMap map[string]string) IArrayRuntimeValue {
+func stringMapToArray(stringMap map[string]string) *ArrayRuntimeValue {
 	result := NewArrayRuntimeValue()
 	for key, value := range stringMap {
 		result.SetElement(NewStringRuntimeValue(key), NewStringRuntimeValue(value))
@@ -58,7 +58,7 @@ func stringMapToArray(stringMap map[string]string) IArrayRuntimeValue {
 	return result
 }
 
-func paramToArray(params [][]string) IArrayRuntimeValue {
+func paramToArray(params [][]string) *ArrayRuntimeValue {
 	result := NewArrayRuntimeValue()
 
 	for _, param := range params {
@@ -284,14 +284,7 @@ func (env *Environment) lookupNativeFunction(functionName string) (nativeFunctio
 
 // ------------------- MARK: User functions -------------------
 
-type userFunction struct {
-	FunctionName string
-	Parameters   []ast.FunctionParameter
-	Body         ast.ICompoundStatement
-	ReturnType   []string
-}
-
-func (env *Environment) defineUserFunction(function userFunction) phpError.Error {
+func (env *Environment) defineUserFunction(function *ast.FunctionDefinitionStatement) phpError.Error {
 	_, err := env.lookupNativeFunction(function.FunctionName)
 	if err == nil {
 		return phpError.NewError("Cannot redeclare %s()", function.FunctionName)
@@ -320,17 +313,17 @@ func (env *Environment) resolveUserFunction(functionName string) (*Environment, 
 	return env.parent.resolveUserFunction(functionName)
 }
 
-func (env *Environment) lookupUserFunction(functionName string) (userFunction, phpError.Error) {
+func (env *Environment) lookupUserFunction(functionName string) (*ast.FunctionDefinitionStatement, phpError.Error) {
 	functionName = strings.ToLower(functionName)
 
 	environment, err := env.resolveUserFunction(functionName)
 	if err != nil {
-		return userFunction{}, err
+		return &ast.FunctionDefinitionStatement{}, err
 	}
 
 	value, ok := environment.functions[functionName]
 	if !ok {
-		return userFunction{}, phpError.NewError("Call to undefined function %s()", functionName)
+		return &ast.FunctionDefinitionStatement{}, phpError.NewError("Call to undefined function %s()", functionName)
 	}
 	return value, nil
 }

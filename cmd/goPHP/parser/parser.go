@@ -367,7 +367,7 @@ func (parser *Parser) parseSelectionStmt() (ast.IStatement, phpError.Error) {
 		}
 
 		// elseif
-		elseIf := []ast.IIfStatement{}
+		elseIf := []*ast.IfStatement{}
 		for parser.isToken(lexer.KeywordToken, "elseif", false) {
 			elseIfPos := parser.eat().Position
 			if !parser.isToken(lexer.OpOrPuncToken, "(", true) {
@@ -819,7 +819,7 @@ func (parser *Parser) parseFunctionDefinition() (ast.IStatement, phpError.Error)
 		return ast.NewEmptyStmt(), phpError.NewParseError("Expected compound statement. Got %s", body.GetKind())
 	}
 
-	return ast.NewFunctionDefinitionStmt(parser.nextId(), pos, functionName, parameters, ast.StmtToCompoundStmt(body), returnTypes), nil
+	return ast.NewFunctionDefinitionStmt(parser.nextId(), pos, functionName, parameters, body.(*ast.CompoundStatement), returnTypes), nil
 }
 
 func (parser *Parser) parseExpr() (ast.IExpression, phpError.Error) {

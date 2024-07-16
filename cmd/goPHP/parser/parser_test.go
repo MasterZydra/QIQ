@@ -17,7 +17,7 @@ func testExprs(t *testing.T, php string, expected []ast.IExpression) {
 		return
 	}
 	for index, expect := range expected {
-		actual := ast.StmtToExprStmt(program.GetStatements()[index]).GetExpression()
+		actual := program.GetStatements()[index].(*ast.ExpressionStatement).Expr
 		if expect.String() != actual.String() {
 			t.Errorf("\nExpected: \"%s\"\nGot       \"%s\"", expect, actual)
 			return

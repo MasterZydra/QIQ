@@ -30,11 +30,11 @@ func nativeFn_array_key_exists(args []IRuntimeValue, _ *Interpreter) (IRuntimeVa
 		return NewVoidRuntimeValue(), err
 	}
 
-	boolean, err := lib_array_key_exists(args[0], runtimeValToArrayRuntimeVal(args[1]))
+	boolean, err := lib_array_key_exists(args[0], args[1].(*ArrayRuntimeValue))
 	return NewBooleanRuntimeValue(boolean), err
 }
 
-func lib_array_key_exists(key IRuntimeValue, array IArrayRuntimeValue) (bool, phpError.Error) {
+func lib_array_key_exists(key IRuntimeValue, array *ArrayRuntimeValue) (bool, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.array-key-exists.php
 
 	// TODO lib_array_key_exists - allowedKeyTypes - resource
@@ -51,7 +51,7 @@ func lib_array_key_exists(key IRuntimeValue, array IArrayRuntimeValue) (bool, ph
 // ------------------- MARK: arrayval -------------------
 
 // This is not an official function. But converting different types to array is needed in several places
-func lib_arrayval(runtimeValue IRuntimeValue) (IArrayRuntimeValue, phpError.Error) {
+func lib_arrayval(runtimeValue IRuntimeValue) (*ArrayRuntimeValue, phpError.Error) {
 	// Spec: https://phplang.org/spec/08-conversions.html#converting-to-array-type
 
 	// The result type is array.
@@ -100,7 +100,7 @@ func nativeFn_error_reporting(args []IRuntimeValue, interpreter *Interpreter) (I
 		return NewIntegerRuntimeValue(interpreter.ini.ErrorReporting), nil
 	}
 
-	newValue := runtimeValToIntRuntimeVal(args[0]).GetValue()
+	newValue := args[0].(*IntegerRuntimeValue).Value
 	if newValue == -1 {
 		newValue = phpError.E_ALL
 	}
@@ -135,7 +135,7 @@ func nativeFn_getenv(args []IRuntimeValue, interpreter *Interpreter) (IRuntimeVa
 	if err != nil {
 		return envVars, err
 	}
-	envArray := runtimeValToArrayRuntimeVal(envVars)
+	envArray := envVars.(*ArrayRuntimeValue)
 	value, found := envArray.GetElement(args[0])
 	if !found {
 		return NewBooleanRuntimeValue(false), nil
@@ -153,7 +153,7 @@ func nativeFn_ini_get(args []IRuntimeValue, interpreter *Interpreter) (IRuntimeV
 		return NewVoidRuntimeValue(), err
 	}
 
-	switch runtimeValToStrRuntimeVal(args[0]).GetValue() {
+	switch args[0].(*StringRuntimeValue).Value {
 	case "error_reporting":
 		return NewStringRuntimeValue(fmt.Sprintf("%d", interpreter.ini.ErrorReporting)), nil
 	case "short_open_tag":
@@ -176,5 +176,5 @@ func nativeFn_strlen(args []IRuntimeValue, _ *Interpreter) (IRuntimeValue, phpEr
 		return NewVoidRuntimeValue(), err
 	}
 
-	return NewIntegerRuntimeValue(int64(len(runtimeValToStrRuntimeVal(args[0]).GetValue()))), nil
+	return NewIntegerRuntimeValue(int64(len(args[0].(*StringRuntimeValue).Value))), nil
 }

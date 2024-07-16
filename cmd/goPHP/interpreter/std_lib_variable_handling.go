@@ -52,19 +52,19 @@ func lib_boolval(runtimeValue IRuntimeValue) (bool, phpError.Error) {
 	case ArrayValue:
 		// Spec: https://phplang.org/spec/08-conversions.html#converting-to-boolean-type
 		// If the source is an array with zero elements, the result value is FALSE; otherwise, the result value is TRUE.
-		return len(runtimeValToArrayRuntimeVal(runtimeValue).GetElements()) != 0, nil
+		return len(runtimeValue.(*ArrayRuntimeValue).Elements) != 0, nil
 	case BooleanValue:
-		return runtimeValToBoolRuntimeVal(runtimeValue).GetValue(), nil
+		return runtimeValue.(*BooleanRuntimeValue).Value, nil
 	case IntegerValue:
 		// Spec: https://phplang.org/spec/08-conversions.html#converting-to-boolean-type
 		// If the source type is int or float,
 		// then if the source value tests equal to 0, the result value is FALSE; otherwise, the result value is TRUE.
-		return runtimeValToIntRuntimeVal(runtimeValue).GetValue() != 0, nil
+		return runtimeValue.(*IntegerRuntimeValue).Value != 0, nil
 	case FloatingValue:
 		// Spec: https://phplang.org/spec/08-conversions.html#converting-to-boolean-type
 		// If the source type is int or float,
 		// then if the source value tests equal to 0, the result value is FALSE; otherwise, the result value is TRUE.
-		return math.Abs(runtimeValToFloatRuntimeVal(runtimeValue).GetValue()) != 0, nil
+		return math.Abs(runtimeValue.(*FloatingRuntimeValue).Value) != 0, nil
 	case NullValue:
 		// Spec: https://phplang.org/spec/08-conversions.html#converting-to-boolean-type
 		// If the source value is NULL, the result value is FALSE.
@@ -72,7 +72,7 @@ func lib_boolval(runtimeValue IRuntimeValue) (bool, phpError.Error) {
 	case StringValue:
 		// Spec: https://phplang.org/spec/08-conversions.html#converting-to-boolean-type
 		// If the source is an empty string or the string “0”, the result value is FALSE; otherwise, the result value is TRUE.
-		str := runtimeValToStrRuntimeVal(runtimeValue).GetValue()
+		str := runtimeValue.(*StringRuntimeValue).Value
 		return str != "" && str != "0", nil
 	default:
 		return false, phpError.NewError("boolval: Unsupported runtime value %s", runtimeValue.GetType())
@@ -105,13 +105,13 @@ func lib_floatval(runtimeValue IRuntimeValue) (float64, phpError.Error) {
 
 	switch runtimeValue.GetType() {
 	case FloatingValue:
-		return runtimeValToFloatRuntimeVal(runtimeValue).GetValue(), nil
+		return runtimeValue.(*FloatingRuntimeValue).Value, nil
 	case IntegerValue:
 		// Spec: https://phplang.org/spec/08-conversions.html#converting-to-floating-point-type
 		// If the source type is int,
 		// if the precision can be preserved the result value is the closest approximation to the source value;
 		// otherwise, the result is undefined.
-		return float64(runtimeValToIntRuntimeVal(runtimeValue).GetValue()), nil
+		return float64(runtimeValue.(*IntegerRuntimeValue).Value), nil
 	case StringValue:
 		// Spec: https://phplang.org/spec/08-conversions.html#converting-to-floating-point-type
 		// If the source is a numeric string or leading-numeric string having integer format,
@@ -120,7 +120,7 @@ func lib_floatval(runtimeValue IRuntimeValue) (float64, phpError.Error) {
 		// the result value is the closest approximation to the string’s floating-point value.
 		// The trailing non-numeric characters in leading-numeric strings are ignored.
 		// For any other string, the result value is 0.
-		intStr := runtimeValToStrRuntimeVal(runtimeValue).GetValue()
+		intStr := runtimeValue.(*StringRuntimeValue).Value
 		if common.IsFloatingLiteralWithSign(intStr) {
 			return common.FloatingLiteralToFloat64WithSign(intStr), nil
 		}
@@ -239,14 +239,14 @@ func lib_intval(runtimeValue IRuntimeValue) (int64, phpError.Error) {
 	case ArrayValue:
 		// Spec: https://phplang.org/spec/08-conversions.html#converting-to-integer-type
 		// If the source is an array with zero elements, the result value is 0; otherwise, the result value is 1.
-		if len(runtimeValToArrayRuntimeVal(runtimeValue).GetElements()) == 0 {
+		if len(runtimeValue.(*ArrayRuntimeValue).Elements) == 0 {
 			return 0, nil
 		}
 		return 1, nil
 	case BooleanValue:
 		// Spec: https://phplang.org/spec/08-conversions.html#converting-to-integer-type
 		// If the source type is bool, then if the source value is FALSE, the result value is 0; otherwise, the result value is 1.
-		if runtimeValToBoolRuntimeVal(runtimeValue).GetValue() {
+		if runtimeValue.(*BooleanRuntimeValue).Value {
 			return 1, nil
 		}
 		return 0, nil
@@ -255,9 +255,9 @@ func lib_intval(runtimeValue IRuntimeValue) (int64, phpError.Error) {
 		// If the source type is float, for the values INF, -INF, and NAN, the result value is zero.
 		// For all other values, if the precision can be preserved (that is, the float is within the range of an integer),
 		// the fractional part is rounded towards zero.
-		return int64(runtimeValToFloatRuntimeVal(runtimeValue).GetValue()), nil
+		return int64(runtimeValue.(*FloatingRuntimeValue).Value), nil
 	case IntegerValue:
-		return runtimeValToIntRuntimeVal(runtimeValue).GetValue(), nil
+		return runtimeValue.(*IntegerRuntimeValue).Value, nil
 	case NullValue:
 		// Spec: https://phplang.org/spec/08-conversions.html#converting-to-integer-type
 		// If the source value is NULL, the result value is 0.
@@ -271,7 +271,7 @@ func lib_intval(runtimeValue IRuntimeValue) (int64, phpError.Error) {
 		// the string’s floating-point value is treated as described above for a conversion from float.
 		// The trailing non-numeric characters in leading-numeric strings are ignored.
 		// For any other string, the result value is 0.
-		intStr := runtimeValToStrRuntimeVal(runtimeValue).GetValue()
+		intStr := runtimeValue.(*StringRuntimeValue).Value
 		if common.IsFloatingLiteralWithSign(intStr) {
 			return lib_intval(NewFloatingRuntimeValue(common.FloatingLiteralToFloat64WithSign(intStr)))
 		}
@@ -419,7 +419,7 @@ func nativeFn_print_r(args []IRuntimeValue, interpreter *Interpreter) (IRuntimeV
 		return NewVoidRuntimeValue(), err
 	}
 
-	return lib_print_r(args[0], runtimeValToBoolRuntimeVal(args[1]).GetValue(), interpreter)
+	return lib_print_r(args[0], args[1].(*BooleanRuntimeValue).Value, interpreter)
 }
 
 func lib_print_r(value IRuntimeValue, returnValue bool, interpreter *Interpreter) (IRuntimeValue, phpError.Error) {
@@ -441,8 +441,8 @@ func lib_print_r_var(value IRuntimeValue, depth int) (string, phpError.Error) {
 	var err phpError.Error
 	switch value.GetType() {
 	case ArrayValue:
-		keys := runtimeValToArrayRuntimeVal(value).GetKeys()
-		elements := runtimeValToArrayRuntimeVal(value).GetElements()
+		keys := value.(*ArrayRuntimeValue).Keys
+		elements := value.(*ArrayRuntimeValue).Elements
 		result = fmt.Sprintf("Array\n%s(\n", strings.Repeat(" ", depth-4))
 		for _, key := range keys {
 			keyStr, err := lib_print_r_var(key, depth+4)
@@ -458,7 +458,7 @@ func lib_print_r_var(value IRuntimeValue, depth int) (string, phpError.Error) {
 		}
 		result += fmt.Sprintf("%s)", strings.Repeat(" ", depth-4))
 	case BooleanValue:
-		if runtimeValToBoolRuntimeVal(value).GetValue() {
+		if value.(*BooleanRuntimeValue).Value {
 			result = "1"
 		} else {
 			result = ""
@@ -471,7 +471,7 @@ func lib_print_r_var(value IRuntimeValue, depth int) (string, phpError.Error) {
 	case NullValue:
 		result = ""
 	case StringValue:
-		result = runtimeValToStrRuntimeVal(value).GetValue()
+		result = value.(*StringRuntimeValue).Value
 	default:
 		return "", phpError.NewError("lib_print_r_var: Unsupported runtime value %s", value.GetType())
 	}
@@ -503,7 +503,7 @@ func lib_strval(runtimeValue IRuntimeValue) (string, phpError.Error) {
 		// Spec: https://phplang.org/spec/08-conversions.html#converting-to-string-type
 		// If the source type is bool, then if the source value is FALSE, the result value is the empty string;
 		// otherwise, the result value is “1”.
-		if !runtimeValToBoolRuntimeVal(runtimeValue).GetValue() {
+		if !runtimeValue.(*BooleanRuntimeValue).Value {
 			return "", nil
 		}
 		return "1", nil
@@ -511,18 +511,18 @@ func lib_strval(runtimeValue IRuntimeValue) (string, phpError.Error) {
 		// Spec: https://phplang.org/spec/08-conversions.html#converting-to-string-type
 		// If the source type is int or float, then the result value is a string containing the textual representation
 		// of the source value (as specified by the library function sprintf).
-		return fmt.Sprintf("%g", runtimeValToFloatRuntimeVal(runtimeValue).GetValue()), nil
+		return fmt.Sprintf("%g", runtimeValue.(*FloatingRuntimeValue).Value), nil
 	case IntegerValue:
 		// Spec: https://phplang.org/spec/08-conversions.html#converting-to-string-type
 		// If the source type is int or float, then the result value is a string containing the textual representation
 		// of the source value (as specified by the library function sprintf).
-		return fmt.Sprintf("%d", runtimeValToIntRuntimeVal(runtimeValue).GetValue()), nil
+		return fmt.Sprintf("%d", runtimeValue.(*IntegerRuntimeValue).Value), nil
 	case NullValue:
 		// Spec: https://phplang.org/spec/08-conversions.html#converting-to-string-type
 		// If the source value is NULL, the result value is the empty string.
 		return "", nil
 	case StringValue:
-		return runtimeValToStrRuntimeVal(runtimeValue).GetValue(), nil
+		return runtimeValue.(*StringRuntimeValue).Value, nil
 	default:
 		return "", phpError.NewError("lib_strval: Unsupported runtime value %s", runtimeValue.GetType())
 	}
@@ -553,8 +553,8 @@ func nativeFn_var_dump(args []IRuntimeValue, interpreter *Interpreter) (IRuntime
 	}
 
 	if len(args) == 2 {
-		values := runtimeValToArrayRuntimeVal(args[1])
-		for _, key := range values.GetKeys() {
+		values := args[1].(*ArrayRuntimeValue)
+		for _, key := range values.Keys {
 			argValue, _ := values.GetElement(key)
 			if err := lib_var_dump_var(interpreter, argValue, 2); err != nil {
 				return NewVoidRuntimeValue(), err
@@ -568,16 +568,16 @@ func nativeFn_var_dump(args []IRuntimeValue, interpreter *Interpreter) (IRuntime
 func lib_var_dump_var(interpreter *Interpreter, value IRuntimeValue, depth int) phpError.Error {
 	switch value.GetType() {
 	case ArrayValue:
-		keys := runtimeValToArrayRuntimeVal(value).GetKeys()
-		elements := runtimeValToArrayRuntimeVal(value).GetElements()
+		keys := value.(*ArrayRuntimeValue).Keys
+		elements := value.(*ArrayRuntimeValue).Elements
 		interpreter.println(fmt.Sprintf("array(%d) {", len(keys)))
 		for _, key := range keys {
 			switch key.GetType() {
 			case IntegerValue:
-				keyValue := runtimeValToIntRuntimeVal(key).GetValue()
+				keyValue := key.(*IntegerRuntimeValue).Value
 				interpreter.println(fmt.Sprintf("%s[%d]=>", strings.Repeat(" ", depth), keyValue))
 			case StringValue:
-				keyValue := runtimeValToStrRuntimeVal(key).GetValue()
+				keyValue := key.(*StringRuntimeValue).Value
 				interpreter.println(fmt.Sprintf(`%s["%s"]=>`, strings.Repeat(" ", depth), keyValue))
 			default:
 				return phpError.NewError("lib_var_dump_var: Unsupported array key type %s", key.GetType())
@@ -589,7 +589,7 @@ func lib_var_dump_var(interpreter *Interpreter, value IRuntimeValue, depth int) 
 		}
 		interpreter.println(strings.Repeat(" ", depth-2) + "}")
 	case BooleanValue:
-		if runtimeValToBoolRuntimeVal(value).GetValue() {
+		if value.(*BooleanRuntimeValue).Value {
 			interpreter.println("bool(true)")
 		} else {
 			interpreter.println("bool(false)")
@@ -609,7 +609,7 @@ func lib_var_dump_var(interpreter *Interpreter, value IRuntimeValue, depth int) 
 	case NullValue:
 		interpreter.println("NULL")
 	case StringValue:
-		strVal := runtimeValToStrRuntimeVal(value).GetValue()
+		strVal := value.(*StringRuntimeValue).Value
 		interpreter.println(fmt.Sprintf("string(%d) \"%s\"", len(strVal), strVal))
 	default:
 		return phpError.NewError("lib_var_dump_var: Unsupported runtime value %s", value.GetType())
@@ -630,7 +630,7 @@ func nativeFn_var_export(args []IRuntimeValue, interpreter *Interpreter) (IRunti
 		return NewVoidRuntimeValue(), err
 	}
 
-	return lib_var_export(args[0], runtimeValToBoolRuntimeVal(args[1]).GetValue(), interpreter)
+	return lib_var_export(args[0], args[1].(*BooleanRuntimeValue).Value, interpreter)
 }
 
 func lib_var_export(value IRuntimeValue, returnValue bool, interpreter *Interpreter) (IRuntimeValue, phpError.Error) {
@@ -652,8 +652,8 @@ func lib_var_export_var(value IRuntimeValue, depth int) (string, phpError.Error)
 	var err phpError.Error
 	switch value.GetType() {
 	case ArrayValue:
-		keys := runtimeValToArrayRuntimeVal(value).GetKeys()
-		elements := runtimeValToArrayRuntimeVal(value).GetElements()
+		keys := value.(*ArrayRuntimeValue).Keys
+		elements := value.(*ArrayRuntimeValue).Elements
 		result = fmt.Sprintf("%sarray (\n", strings.Repeat(" ", depth-2))
 		for _, key := range keys {
 			keyStr, err := lib_var_export_var(key, depth+2)
@@ -676,7 +676,7 @@ func lib_var_export_var(value IRuntimeValue, depth int) (string, phpError.Error)
 		}
 		result += fmt.Sprintf("%s)", strings.Repeat(" ", depth-2))
 	case BooleanValue:
-		if runtimeValToBoolRuntimeVal(value).GetValue() {
+		if value.(*BooleanRuntimeValue).Value {
 			result = "true"
 		} else {
 			result = "false"
@@ -689,7 +689,7 @@ func lib_var_export_var(value IRuntimeValue, depth int) (string, phpError.Error)
 	case NullValue:
 		result = "NULL"
 	case StringValue:
-		result = "'" + runtimeValToStrRuntimeVal(value).GetValue() + "'"
+		result = "'" + value.(*StringRuntimeValue).Value + "'"
 	default:
 		return "", phpError.NewError("lib_var_export: Unsupported runtime value %s", value.GetType())
 	}

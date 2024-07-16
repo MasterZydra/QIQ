@@ -12,7 +12,7 @@ const (
 	StringValue   ValueType = "String"
 )
 
-// RuntimeValue
+// MARK: RuntimeValue
 
 type IRuntimeValue interface {
 	GetType() ValueType
@@ -30,39 +30,31 @@ func (runtimeValue *RuntimeValue) GetType() ValueType {
 	return runtimeValue.valueType
 }
 
-// VoidValue
+// MARK: VoidValue
 
 func NewVoidRuntimeValue() *RuntimeValue {
 	return &RuntimeValue{valueType: VoidValue}
 }
 
-// NullValue
+// MARK: NullValue
 
 func NewNullRuntimeValue() *RuntimeValue {
 	return &RuntimeValue{valueType: NullValue}
 }
 
-// ArrayRuntimeValue
-
-type IArrayRuntimeValue interface {
-	IRuntimeValue
-	GetKeys() []IRuntimeValue
-	GetElements() map[IRuntimeValue]IRuntimeValue
-	GetElement(key IRuntimeValue) (IRuntimeValue, bool)
-	SetElement(key IRuntimeValue, value IRuntimeValue)
-}
+// MARK: ArrayRuntimeValue
 
 type ArrayRuntimeValue struct {
-	runtimeValue *RuntimeValue
-	keys         []IRuntimeValue
-	elements     map[IRuntimeValue]IRuntimeValue
+	*RuntimeValue
+	Keys     []IRuntimeValue
+	Elements map[IRuntimeValue]IRuntimeValue
 }
 
 func NewArrayRuntimeValue() *ArrayRuntimeValue {
 	return &ArrayRuntimeValue{
-		runtimeValue: NewRuntimeValue(ArrayValue),
-		keys:         []IRuntimeValue{},
-		elements:     map[IRuntimeValue]IRuntimeValue{},
+		RuntimeValue: NewRuntimeValue(ArrayValue),
+		Keys:         []IRuntimeValue{},
+		Elements:     map[IRuntimeValue]IRuntimeValue{},
 	}
 }
 
@@ -72,28 +64,24 @@ func NewArrayRuntimeValueFromMap(elements map[IRuntimeValue]IRuntimeValue) *Arra
 		keys = append(keys, key)
 	}
 	return &ArrayRuntimeValue{
-		runtimeValue: NewRuntimeValue(ArrayValue),
-		keys:         keys,
-		elements:     elements,
+		RuntimeValue: NewRuntimeValue(ArrayValue),
+		Keys:         keys,
+		Elements:     elements,
 	}
-}
-
-func (runtimeValue *ArrayRuntimeValue) GetType() ValueType {
-	return runtimeValue.runtimeValue.valueType
 }
 
 func (runtimeValue *ArrayRuntimeValue) SetElement(key IRuntimeValue, value IRuntimeValue) {
 	existingKey, exists := runtimeValue.findKey(key)
 	if !exists {
-		runtimeValue.keys = append(runtimeValue.keys, key)
-		runtimeValue.elements[key] = value
+		runtimeValue.Keys = append(runtimeValue.Keys, key)
+		runtimeValue.Elements[key] = value
 	} else {
-		runtimeValue.elements[existingKey] = value
+		runtimeValue.Elements[existingKey] = value
 	}
 }
 
 func (runtimeValue *ArrayRuntimeValue) findKey(key IRuntimeValue) (IRuntimeValue, bool) {
-	for k := range runtimeValue.elements {
+	for k := range runtimeValue.Elements {
 		if k.GetType() != key.GetType() {
 			continue
 		}
@@ -101,19 +89,11 @@ func (runtimeValue *ArrayRuntimeValue) findKey(key IRuntimeValue) (IRuntimeValue
 		if err != nil {
 			return NewVoidRuntimeValue(), false
 		}
-		if runtimeValToBoolRuntimeVal(boolean).GetValue() {
+		if boolean.Value {
 			return k, true
 		}
 	}
 	return NewVoidRuntimeValue(), false
-}
-
-func (runtimeValue *ArrayRuntimeValue) GetKeys() []IRuntimeValue {
-	return runtimeValue.keys
-}
-
-func (runtimeValue *ArrayRuntimeValue) GetElements() map[IRuntimeValue]IRuntimeValue {
-	return runtimeValue.elements
 }
 
 func (runtimeValue *ArrayRuntimeValue) GetElement(key IRuntimeValue) (IRuntimeValue, bool) {
@@ -121,126 +101,49 @@ func (runtimeValue *ArrayRuntimeValue) GetElement(key IRuntimeValue) (IRuntimeVa
 	if !found {
 		return NewVoidRuntimeValue(), false
 	}
-	return runtimeValue.elements[key], true
+	return runtimeValue.Elements[key], true
 }
 
-func runtimeValToArrayRuntimeVal(runtimeValue IRuntimeValue) IArrayRuntimeValue {
-	var i interface{} = runtimeValue
-	return i.(IArrayRuntimeValue)
-}
-
-// BooleanRuntimeValue
-
-type IBooleanRuntimeValue interface {
-	IRuntimeValue
-	GetValue() bool
-}
+// MARK: BooleanRuntimeValue
 
 type BooleanRuntimeValue struct {
-	runtimeValue *RuntimeValue
-	value        bool
+	*RuntimeValue
+	Value bool
 }
 
 func NewBooleanRuntimeValue(value bool) *BooleanRuntimeValue {
-	return &BooleanRuntimeValue{runtimeValue: NewRuntimeValue(BooleanValue), value: value}
+	return &BooleanRuntimeValue{RuntimeValue: NewRuntimeValue(BooleanValue), Value: value}
 }
 
-func (runtimeValue *BooleanRuntimeValue) GetType() ValueType {
-	return runtimeValue.runtimeValue.valueType
-}
-
-func (runtimeValue *BooleanRuntimeValue) GetValue() bool {
-	return runtimeValue.value
-}
-
-func runtimeValToBoolRuntimeVal(runtimeValue IRuntimeValue) IBooleanRuntimeValue {
-	var i interface{} = runtimeValue
-	return i.(IBooleanRuntimeValue)
-}
-
-// IntegerRuntimeValue
-
-type IIntegerRuntimeValue interface {
-	IRuntimeValue
-	GetValue() int64
-}
+// MARK: IntegerRuntimeValue
 
 type IntegerRuntimeValue struct {
-	runtimeValue *RuntimeValue
-	value        int64
+	*RuntimeValue
+	Value int64
 }
 
 func NewIntegerRuntimeValue(value int64) *IntegerRuntimeValue {
-	return &IntegerRuntimeValue{runtimeValue: NewRuntimeValue(IntegerValue), value: value}
+	return &IntegerRuntimeValue{RuntimeValue: NewRuntimeValue(IntegerValue), Value: value}
 }
 
-func (runtimeValue *IntegerRuntimeValue) GetType() ValueType {
-	return runtimeValue.runtimeValue.valueType
-}
-
-func (runtimeValue *IntegerRuntimeValue) GetValue() int64 {
-	return runtimeValue.value
-}
-
-func runtimeValToIntRuntimeVal(runtimeValue IRuntimeValue) IIntegerRuntimeValue {
-	var i interface{} = runtimeValue
-	return i.(IIntegerRuntimeValue)
-}
-
-// FloatingRuntimeValue
-
-type IFloatingRuntimeValue interface {
-	IRuntimeValue
-	GetValue() float64
-}
+// MARK: FloatingRuntimeValue
 
 type FloatingRuntimeValue struct {
-	runtimeValue *RuntimeValue
-	value        float64
+	*RuntimeValue
+	Value float64
 }
 
 func NewFloatingRuntimeValue(value float64) *FloatingRuntimeValue {
-	return &FloatingRuntimeValue{runtimeValue: NewRuntimeValue(FloatingValue), value: value}
+	return &FloatingRuntimeValue{RuntimeValue: NewRuntimeValue(FloatingValue), Value: value}
 }
 
-func (runtimeValue *FloatingRuntimeValue) GetType() ValueType {
-	return runtimeValue.runtimeValue.valueType
-}
-
-func (runtimeValue *FloatingRuntimeValue) GetValue() float64 {
-	return runtimeValue.value
-}
-
-func runtimeValToFloatRuntimeVal(runtimeValue IRuntimeValue) IFloatingRuntimeValue {
-	var i interface{} = runtimeValue
-	return i.(IFloatingRuntimeValue)
-}
-
-// StringRuntimeValue
-
-type IStringRuntimeValue interface {
-	IRuntimeValue
-	GetValue() string
-}
+// MARK: StringRuntimeValue
 
 type StringRuntimeValue struct {
-	runtimeValue *RuntimeValue
-	value        string
+	*RuntimeValue
+	Value string
 }
 
 func NewStringRuntimeValue(value string) *StringRuntimeValue {
-	return &StringRuntimeValue{runtimeValue: NewRuntimeValue(StringValue), value: value}
-}
-
-func (runtimeValue *StringRuntimeValue) GetType() ValueType {
-	return runtimeValue.runtimeValue.valueType
-}
-
-func (runtimeValue *StringRuntimeValue) GetValue() string {
-	return runtimeValue.value
-}
-
-func runtimeValToStrRuntimeVal(runtimeValue IRuntimeValue) IStringRuntimeValue {
-	var i interface{} = runtimeValue
-	return i.(IStringRuntimeValue)
+	return &StringRuntimeValue{RuntimeValue: NewRuntimeValue(StringValue), Value: value}
 }
