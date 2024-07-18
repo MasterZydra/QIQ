@@ -53,6 +53,7 @@ const (
 type Error interface {
 	GetErrorType() ErrorType
 	GetMessage() string
+	Error() string
 }
 
 // MARK: PhpError
@@ -71,6 +72,10 @@ func (err *PhpError) GetMessage() string {
 }
 
 func (err *PhpError) String() string {
+	return err.message
+}
+
+func (err *PhpError) Error() string {
 	return err.message
 }
 
@@ -93,31 +98,18 @@ func NewEvent(event string) Error {
 // MARK: ContinueEventError
 
 type ContinueEventError struct {
-	errorType     ErrorType
-	message       string
+	*PhpError
 	breakoutLevel int64
-}
-
-func (err *ContinueEventError) GetErrorType() ErrorType {
-	return err.errorType
-}
-
-func (err *ContinueEventError) GetMessage() string {
-	return err.message
 }
 
 func (err *ContinueEventError) GetBreakoutLevel() int64 {
 	return err.breakoutLevel
 }
 
-func (err *ContinueEventError) String() string {
-	return err.message
-}
-
 func NewBreakEvent(breakoutLevel int64) Error {
-	return &ContinueEventError{errorType: EventError, message: BreakEvent, breakoutLevel: breakoutLevel}
+	return &ContinueEventError{PhpError: &PhpError{errorType: EventError, message: BreakEvent}, breakoutLevel: breakoutLevel}
 }
 
 func NewContinueEvent(breakoutLevel int64) Error {
-	return &ContinueEventError{errorType: EventError, message: ContinueEvent, breakoutLevel: breakoutLevel}
+	return &ContinueEventError{PhpError: &PhpError{errorType: EventError, message: ContinueEvent}, breakoutLevel: breakoutLevel}
 }

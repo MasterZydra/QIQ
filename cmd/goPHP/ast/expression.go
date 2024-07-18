@@ -2,7 +2,6 @@ package ast
 
 import (
 	"GoPHP/cmd/goPHP/position"
-	"fmt"
 )
 
 // ------------------- MARK: Expression -------------------
@@ -15,6 +14,10 @@ type Expression struct {
 	id   int64
 	kind NodeType
 	pos  *position.Position
+}
+
+func NewEmptyExpr() *Expression {
+	return NewExpr(0, EmptyNode, nil)
 }
 
 func NewExpr(id int64, kind NodeType, pos *position.Position) *Expression {
@@ -33,12 +36,8 @@ func (expr *Expression) GetPosition() *position.Position {
 	return expr.pos
 }
 
-func (expr *Expression) String() string {
-	return fmt.Sprintf("{%s}", expr.GetKind())
-}
-
-func NewEmptyExpr() *Expression {
-	return NewExpr(0, EmptyNode, nil)
+func (stmt *Expression) Process(visitor Visitor, context any) (any, error) {
+	return visitor.ProcessExpr(stmt, context)
 }
 
 // ------------------- MARK: TextExpression -------------------
@@ -52,8 +51,8 @@ func NewTextExpr(id int64, value string) *TextExpression {
 	return &TextExpression{Expression: NewExpr(id, TextNode, nil), Value: value}
 }
 
-func (expr *TextExpression) String() string {
-	return fmt.Sprintf("{%s - value: \"%s\" }", expr.GetKind(), expr.Value)
+func (stmt *TextExpression) Process(visitor Visitor, context any) (any, error) {
+	return visitor.ProcessTextExpr(stmt, context)
 }
 
 // ------------------- MARK: VariableNameExpression -------------------
@@ -67,8 +66,8 @@ func NewVariableNameExpr(id int64, pos *position.Position, variableName string) 
 	return &VariableNameExpression{Expression: NewExpr(id, VariableNameExpr, pos), VariableName: variableName}
 }
 
-func (expr *VariableNameExpression) String() string {
-	return fmt.Sprintf("{%s - variableName: \"%s\" }", expr.GetKind(), expr.VariableName)
+func (stmt *VariableNameExpression) Process(visitor Visitor, context any) (any, error) {
+	return visitor.ProcessVariableNameExpr(stmt, context)
 }
 
 // ------------------- MARK: SimpleVariableExpression -------------------
@@ -82,8 +81,8 @@ func NewSimpleVariableExpr(id int64, variableName IExpression) *SimpleVariableEx
 	return &SimpleVariableExpression{Expression: NewExpr(id, SimpleVariableExpr, variableName.GetPosition()), VariableName: variableName}
 }
 
-func (expr *SimpleVariableExpression) String() string {
-	return fmt.Sprintf("{%s - variableName: \"%s\" }", expr.GetKind(), expr.VariableName)
+func (stmt *SimpleVariableExpression) Process(visitor Visitor, context any) (any, error) {
+	return visitor.ProcessSimpleVariableExpr(stmt, context)
 }
 
 // ------------------- MARK: SubscriptExpression -------------------
@@ -98,8 +97,8 @@ func NewSubscriptExpr(id int64, variable IExpression, index IExpression) *Subscr
 	return &SubscriptExpression{Expression: NewExpr(id, SubscriptExpr, variable.GetPosition()), Variable: variable, Index: index}
 }
 
-func (expr *SubscriptExpression) String() string {
-	return fmt.Sprintf("{%s - variable: %s, index: \"%s\" }", expr.GetKind(), expr.Variable, expr.Index)
+func (stmt *SubscriptExpression) Process(visitor Visitor, context any) (any, error) {
+	return visitor.ProcessSubscriptExpr(stmt, context)
 }
 
 // ------------------- MARK: FunctionCallExpression -------------------
@@ -114,40 +113,72 @@ func NewFunctionCallExpr(id int64, pos *position.Position, functionName string, 
 	return &FunctionCallExpression{Expression: NewExpr(id, FunctionCallExpr, pos), FunctionName: functionName, Arguments: arguments}
 }
 
-func (expr *FunctionCallExpression) String() string {
-	return fmt.Sprintf("{%s - functionName: \"%s\" arguments: %s}", expr.GetKind(), expr.FunctionName, expr.Arguments)
+func (stmt *FunctionCallExpression) Process(visitor Visitor, context any) (any, error) {
+	return visitor.ProcessFunctionCallExpr(stmt, context)
 }
 
 // ------------------- MARK: EmptyIntrinsic -------------------
 
-func NewExitIntrinsic(id int64, pos *position.Position, expression IExpression) *FunctionCallExpression {
-	return &FunctionCallExpression{Expression: NewExpr(id, ExitIntrinsicExpr, pos),
-		FunctionName: "exit", Arguments: []IExpression{expression},
-	}
+type ExitIntrinsicExpression struct {
+	*FunctionCallExpression
+}
+
+func NewExitIntrinsic(id int64, pos *position.Position, expression IExpression) *ExitIntrinsicExpression {
+	return &ExitIntrinsicExpression{FunctionCallExpression: &FunctionCallExpression{
+		Expression: NewExpr(id, ExitIntrinsicExpr, pos), FunctionName: "exit", Arguments: []IExpression{expression},
+	}}
+}
+
+func (stmt *ExitIntrinsicExpression) Process(visitor Visitor, context any) (any, error) {
+	return visitor.ProcessExitIntrinsicExpr(stmt, context)
 }
 
 // ------------------- MARK: EmptyIntrinsic -------------------
 
-func NewEmptyIntrinsic(id int64, pos *position.Position, expression IExpression) *FunctionCallExpression {
-	return &FunctionCallExpression{Expression: NewExpr(id, EmptyIntrinsicExpr, pos),
-		FunctionName: "empty", Arguments: []IExpression{expression},
-	}
+type EmptyIntrinsicExpression struct {
+	*FunctionCallExpression
+}
+
+func NewEmptyIntrinsic(id int64, pos *position.Position, expression IExpression) *EmptyIntrinsicExpression {
+	return &EmptyIntrinsicExpression{&FunctionCallExpression{
+		Expression: NewExpr(id, EmptyIntrinsicExpr, pos), FunctionName: "empty", Arguments: []IExpression{expression},
+	}}
+}
+
+func (stmt *EmptyIntrinsicExpression) Process(visitor Visitor, context any) (any, error) {
+	return visitor.ProcessEmptyIntrinsicExpr(stmt, context)
 }
 
 // ------------------- MARK: IssetIntrinsic -------------------
 
-func NewIssetIntrinsic(id int64, pos *position.Position, arguments []IExpression) *FunctionCallExpression {
-	return &FunctionCallExpression{Expression: NewExpr(id, IssetIntrinsicExpr, pos),
-		FunctionName: "isset", Arguments: arguments,
-	}
+type IssetIntrinsicExpression struct {
+	*FunctionCallExpression
+}
+
+func NewIssetIntrinsic(id int64, pos *position.Position, arguments []IExpression) *IssetIntrinsicExpression {
+	return &IssetIntrinsicExpression{&FunctionCallExpression{
+		Expression: NewExpr(id, IssetIntrinsicExpr, pos), FunctionName: "isset", Arguments: arguments,
+	}}
+}
+
+func (stmt *IssetIntrinsicExpression) Process(visitor Visitor, context any) (any, error) {
+	return visitor.ProcessIssetIntrinsicExpr(stmt, context)
 }
 
 // ------------------- MARK: UnsetIntrinsic -------------------
 
-func NewUnsetIntrinsic(id int64, pos *position.Position, arguments []IExpression) *FunctionCallExpression {
-	return &FunctionCallExpression{Expression: NewExpr(id, UnsetIntrinsicExpr, pos),
-		FunctionName: "unset", Arguments: arguments,
-	}
+type UnsetIntrinsicExpression struct {
+	*FunctionCallExpression
+}
+
+func NewUnsetIntrinsic(id int64, pos *position.Position, arguments []IExpression) *UnsetIntrinsicExpression {
+	return &UnsetIntrinsicExpression{&FunctionCallExpression{
+		Expression: NewExpr(id, UnsetIntrinsicExpr, pos), FunctionName: "unset", Arguments: arguments,
+	}}
+}
+
+func (stmt *UnsetIntrinsicExpression) Process(visitor Visitor, context any) (any, error) {
+	return visitor.ProcessUnsetIntrinsicExpr(stmt, context)
 }
 
 // ------------------- MARK: ConstantAccessExpression -------------------
@@ -161,8 +192,8 @@ func NewConstantAccessExpr(id int64, pos *position.Position, constantName string
 	return &ConstantAccessExpression{Expression: NewExpr(id, ConstantAccessExpr, pos), ConstantName: constantName}
 }
 
-func (expr *ConstantAccessExpression) String() string {
-	return fmt.Sprintf("{%s - constantName: %s}", expr.GetKind(), expr.ConstantName)
+func (stmt *ConstantAccessExpression) Process(visitor Visitor, context any) (any, error) {
+	return visitor.ProcessConstantAccessExpr(stmt, context)
 }
 
 // ------------------- MARK: ArrayLiteralExpression -------------------
@@ -186,8 +217,8 @@ func (expr *ArrayLiteralExpression) AddElement(key IExpression, value IExpressio
 	expr.Elements[key] = value
 }
 
-func (expr *ArrayLiteralExpression) String() string {
-	return fmt.Sprintf("{%s - elements: %s }", expr.GetKind(), expr.Elements)
+func (stmt *ArrayLiteralExpression) Process(visitor Visitor, context any) (any, error) {
+	return visitor.ProcessArrayLiteralExpr(stmt, context)
 }
 
 // ------------------- MARK: BooleanLiteralExpression -------------------
@@ -210,8 +241,8 @@ func NewIntegerLiteralExpr(id int64, pos *position.Position, value int64) *Integ
 	return &IntegerLiteralExpression{Expression: NewExpr(id, IntegerLiteralExpr, pos), Value: value}
 }
 
-func (expr *IntegerLiteralExpression) String() string {
-	return fmt.Sprintf("{%s - value: %d }", expr.GetKind(), expr.Value)
+func (stmt *IntegerLiteralExpression) Process(visitor Visitor, context any) (any, error) {
+	return visitor.ProcessIntegerLiteralExpr(stmt, context)
 }
 
 // ------------------- MARK: FloatingLiteralExpression -------------------
@@ -225,8 +256,8 @@ func NewFloatingLiteralExpr(id int64, pos *position.Position, value float64) *Fl
 	return &FloatingLiteralExpression{Expression: NewExpr(id, FloatingLiteralExpr, pos), Value: value}
 }
 
-func (expr *FloatingLiteralExpression) String() string {
-	return fmt.Sprintf("{%s - value: %f }", expr.GetKind(), expr.Value)
+func (stmt *FloatingLiteralExpression) Process(visitor Visitor, context any) (any, error) {
+	return visitor.ProcessFloatingLiteralExpr(stmt, context)
 }
 
 // ------------------- MARK: StringLiteralExpression -------------------
@@ -248,8 +279,8 @@ func NewStringLiteralExpr(id int64, pos *position.Position, value string, string
 	return &StringLiteralExpression{Expression: NewExpr(id, StringLiteralExpr, pos), Value: value, StringType: stringType}
 }
 
-func (expr *StringLiteralExpression) String() string {
-	return fmt.Sprintf("{%s - type: \"%s\" value: \"%s\" }", expr.GetKind(), expr.StringType, expr.Value)
+func (stmt *StringLiteralExpression) Process(visitor Visitor, context any) (any, error) {
+	return visitor.ProcessStringLiteralExpr(stmt, context)
 }
 
 // ------------------- MARK: NullLiteralExpression -------------------
@@ -270,8 +301,8 @@ func NewSimpleAssignmentExpr(id int64, variable IExpression, value IExpression) 
 	return &SimpleAssignmentExpression{Expression: NewExpr(id, SimpleAssignmentExpr, variable.GetPosition()), Variable: variable, Value: value}
 }
 
-func (expr *SimpleAssignmentExpression) String() string {
-	return fmt.Sprintf("{%s - variable: %s, value: %s }", expr.GetKind(), expr.Variable, expr.Value)
+func (stmt *SimpleAssignmentExpression) Process(visitor Visitor, context any) (any, error) {
+	return visitor.ProcessSimpleAssignmentExpr(stmt, context)
 }
 
 // ------------------- MARK: CompoundAssignmentExpression -------------------
@@ -289,11 +320,8 @@ func NewCompoundAssignmentExpr(id int64, variable IExpression, operator string, 
 	}
 }
 
-func (expr *CompoundAssignmentExpression) String() string {
-	return fmt.Sprintf(
-		"{%s - variable: %s, operator: \"%s\", value: %s }",
-		expr.GetKind(), expr.Variable, expr.Operator, expr.Value,
-	)
+func (stmt *CompoundAssignmentExpression) Process(visitor Visitor, context any) (any, error) {
+	return visitor.ProcessCompoundAssignmentExpr(stmt, context)
 }
 
 // ------------------- MARK: ConditionalExpression -------------------
@@ -309,8 +337,8 @@ func NewConditionalExpr(id int64, cond IExpression, ifExpr IExpression, elseExpr
 	return &ConditionalExpression{Expression: NewExpr(id, ConditionalExpr, cond.GetPosition()), Cond: cond, IfExpr: ifExpr, ElseExpr: elseExpr}
 }
 
-func (expr *ConditionalExpression) String() string {
-	return fmt.Sprintf("{%s - condition: %s, ifExpr: %s, elseExpr: %s }", expr.GetKind(), expr.Cond, expr.IfExpr, expr.ElseExpr)
+func (stmt *ConditionalExpression) Process(visitor Visitor, context any) (any, error) {
+	return visitor.ProcessConditionalExpr(stmt, context)
 }
 
 // ------------------- MARK: CoalesceExpression -------------------
@@ -325,8 +353,8 @@ func NewCoalesceExpr(id int64, cond IExpression, elseExpr IExpression) *Coalesce
 	return &CoalesceExpression{Expression: NewExpr(id, CoalesceExpr, cond.GetPosition()), Cond: cond, ElseExpr: elseExpr}
 }
 
-func (expr *CoalesceExpression) String() string {
-	return fmt.Sprintf("{%s - condition: %s, elseExpr: %s }", expr.GetKind(), expr.Cond, expr.ElseExpr)
+func (stmt *CoalesceExpression) Process(visitor Visitor, context any) (any, error) {
+	return visitor.ProcessCoalesceExpr(stmt, context)
 }
 
 // ------------------- MARK: BinaryOpExpression -------------------
@@ -338,20 +366,40 @@ type BinaryOpExpression struct {
 	Rhs      IExpression
 }
 
-func NewRelationalExpr(id int64, lhs IExpression, operator string, rhs IExpression) *BinaryOpExpression {
-	return &BinaryOpExpression{Expression: NewExpr(id, RelationalExpr, lhs.GetPosition()), Lhs: lhs, Operator: operator, Rhs: rhs}
-}
-
-func NewEqualityExpr(id int64, lhs IExpression, operator string, rhs IExpression) *BinaryOpExpression {
-	return &BinaryOpExpression{Expression: NewExpr(id, EqualityExpr, lhs.GetPosition()), Lhs: lhs, Operator: operator, Rhs: rhs}
-}
-
 func NewBinaryOpExpr(id int64, lhs IExpression, operator string, rhs IExpression) *BinaryOpExpression {
 	return &BinaryOpExpression{Expression: NewExpr(id, BinaryOpExpr, lhs.GetPosition()), Lhs: lhs, Operator: operator, Rhs: rhs}
 }
 
-func (expr *BinaryOpExpression) String() string {
-	return fmt.Sprintf("{%s - lhs: %s, operator: \"%s\" rhs: %s }", expr.GetKind(), expr.Lhs, expr.Operator, expr.Rhs)
+func (stmt *BinaryOpExpression) Process(visitor Visitor, context any) (any, error) {
+	return visitor.ProcessBinaryOpExpr(stmt, context)
+}
+
+// ------------------- MARK: RelationalExpression -------------------
+
+type RelationalExpression struct {
+	*BinaryOpExpression
+}
+
+func NewRelationalExpr(id int64, lhs IExpression, operator string, rhs IExpression) *RelationalExpression {
+	return &RelationalExpression{&BinaryOpExpression{Expression: NewExpr(id, RelationalExpr, lhs.GetPosition()), Lhs: lhs, Operator: operator, Rhs: rhs}}
+}
+
+func (stmt *RelationalExpression) Process(visitor Visitor, context any) (any, error) {
+	return visitor.ProcessRelationalExpr(stmt, context)
+}
+
+// ------------------- MARK: EqualityExpression -------------------
+
+type EqualityExpression struct {
+	*BinaryOpExpression
+}
+
+func NewEqualityExpr(id int64, lhs IExpression, operator string, rhs IExpression) *EqualityExpression {
+	return &EqualityExpression{&BinaryOpExpression{Expression: NewExpr(id, EqualityExpr, lhs.GetPosition()), Lhs: lhs, Operator: operator, Rhs: rhs}}
+}
+
+func (stmt *EqualityExpression) Process(visitor Visitor, context any) (any, error) {
+	return visitor.ProcessEqualityExpr(stmt, context)
 }
 
 // ------------------- MARK: UnaryOpExpression -------------------
@@ -362,53 +410,123 @@ type UnaryOpExpression struct {
 	Expr     IExpression
 }
 
-func NewPrefixIncExpr(id int64, pos *position.Position, expression IExpression, operator string) *UnaryOpExpression {
-	return &UnaryOpExpression{Expression: NewExpr(id, PrefixIncExpr, pos), Operator: operator, Expr: expression}
-}
-
-func NewPostfixIncExpr(id int64, pos *position.Position, expression IExpression, operator string) *UnaryOpExpression {
-	return &UnaryOpExpression{Expression: NewExpr(id, PostfixIncExpr, pos), Operator: operator, Expr: expression}
-}
-
-func NewLogicalNotExpr(id int64, pos *position.Position, expression IExpression) *UnaryOpExpression {
-	return &UnaryOpExpression{Expression: NewExpr(id, LogicalNotExpr, pos), Operator: "!", Expr: expression}
-}
-
-func NewCastExpr(id int64, pos *position.Position, castType string, expression IExpression) *UnaryOpExpression {
-	return &UnaryOpExpression{Expression: NewExpr(id, CastExpr, pos), Operator: castType, Expr: expression}
-}
-
 func NewUnaryOpExpr(id int64, pos *position.Position, operator string, expression IExpression) *UnaryOpExpression {
 	return &UnaryOpExpression{Expression: NewExpr(id, UnaryOpExpr, pos), Operator: operator, Expr: expression}
 }
 
-func (expr *UnaryOpExpression) String() string {
-	return fmt.Sprintf("{%s - operator: \"%s\" expression: %s }", expr.GetKind(), expr.Operator, expr.Expr)
+func (stmt *UnaryOpExpression) Process(visitor Visitor, context any) (any, error) {
+	return visitor.ProcessUnaryExpr(stmt, context)
 }
 
-// ------------------- MARK: ExprExpression -------------------
+// ------------------- MARK: PrefixIncExpression -------------------
 
-type ExprExpression struct {
+type PrefixIncExpression struct {
+	*UnaryOpExpression
+}
+
+func NewPrefixIncExpr(id int64, pos *position.Position, expression IExpression, operator string) *PrefixIncExpression {
+	return &PrefixIncExpression{&UnaryOpExpression{Expression: NewExpr(id, PrefixIncExpr, pos), Operator: operator, Expr: expression}}
+}
+
+func (stmt *PrefixIncExpression) Process(visitor Visitor, context any) (any, error) {
+	return visitor.ProcessPrefixIncExpr(stmt, context)
+}
+
+// ------------------- MARK: PostfixIncExpression -------------------
+
+type PostfixIncExpression struct {
+	*UnaryOpExpression
+}
+
+func NewPostfixIncExpr(id int64, pos *position.Position, expression IExpression, operator string) *PostfixIncExpression {
+	return &PostfixIncExpression{&UnaryOpExpression{Expression: NewExpr(id, PostfixIncExpr, pos), Operator: operator, Expr: expression}}
+}
+
+func (stmt *PostfixIncExpression) Process(visitor Visitor, context any) (any, error) {
+	return visitor.ProcessPostfixIncExpr(stmt, context)
+}
+
+// ------------------- MARK: LogicalNotExpression -------------------
+
+type LogicalNotExpression struct {
+	*UnaryOpExpression
+}
+
+func NewLogicalNotExpr(id int64, pos *position.Position, expression IExpression) *LogicalNotExpression {
+	return &LogicalNotExpression{&UnaryOpExpression{Expression: NewExpr(id, LogicalNotExpr, pos), Operator: "!", Expr: expression}}
+}
+
+func (stmt *LogicalNotExpression) Process(visitor Visitor, context any) (any, error) {
+	return visitor.ProcessLogicalNotExpr(stmt, context)
+}
+
+// ------------------- MARK: CastExpression -------------------
+
+type CastExpression struct {
+	*UnaryOpExpression
+}
+
+func NewCastExpr(id int64, pos *position.Position, castType string, expression IExpression) *CastExpression {
+	return &CastExpression{&UnaryOpExpression{Expression: NewExpr(id, CastExpr, pos), Operator: castType, Expr: expression}}
+}
+
+func (stmt *CastExpression) Process(visitor Visitor, context any) (any, error) {
+	return visitor.ProcessCastExpr(stmt, context)
+}
+
+// ------------------- MARK: IncludeExpression -------------------
+
+type IncludeExpression struct {
 	*Expression
 	Expr IExpression
 }
 
-func NewIncludeExpr(id int64, pos *position.Position, expression IExpression) *ExprExpression {
-	return &ExprExpression{Expression: NewExpr(id, IncludeExpr, pos), Expr: expression}
+func NewIncludeExpr(id int64, pos *position.Position, expression IExpression) *IncludeExpression {
+	return &IncludeExpression{Expression: NewExpr(id, IncludeExpr, pos), Expr: expression}
 }
 
-func NewIncludeOnceExpr(id int64, pos *position.Position, expression IExpression) *ExprExpression {
-	return &ExprExpression{Expression: NewExpr(id, IncludeOnceExpr, pos), Expr: expression}
+func (stmt *IncludeExpression) Process(visitor Visitor, context any) (any, error) {
+	return visitor.ProcessIncludeExpr(stmt, context)
 }
 
-func NewRequireExpr(id int64, pos *position.Position, expression IExpression) *ExprExpression {
-	return &ExprExpression{Expression: NewExpr(id, RequireExpr, pos), Expr: expression}
+// ------------------- MARK: IncludeOnceExpression -------------------
+
+type IncludeOnceExpression struct {
+	*IncludeExpression
 }
 
-func NewRequireOnceExpr(id int64, pos *position.Position, expression IExpression) *ExprExpression {
-	return &ExprExpression{Expression: NewExpr(id, RequireOnceExpr, pos), Expr: expression}
+func NewIncludeOnceExpr(id int64, pos *position.Position, expression IExpression) *IncludeOnceExpression {
+	return &IncludeOnceExpression{&IncludeExpression{Expression: NewExpr(id, IncludeOnceExpr, pos), Expr: expression}}
 }
 
-func (expr *ExprExpression) String() string {
-	return fmt.Sprintf("{%s - expression: %s }", expr.GetKind(), expr.Expr)
+func (stmt *IncludeOnceExpression) Process(visitor Visitor, context any) (any, error) {
+	return visitor.ProcessIncludeOnceExpr(stmt, context)
+}
+
+// ------------------- MARK: RequireExpression -------------------
+
+type RequireExpression struct {
+	*IncludeExpression
+}
+
+func NewRequireExpr(id int64, pos *position.Position, expression IExpression) *RequireExpression {
+	return &RequireExpression{&IncludeExpression{Expression: NewExpr(id, RequireExpr, pos), Expr: expression}}
+}
+
+func (stmt *RequireExpression) Process(visitor Visitor, context any) (any, error) {
+	return visitor.ProcessRequireExpr(stmt, context)
+}
+
+// ------------------- MARK: RequireOnceExpression -------------------
+
+type RequireOnceExpression struct {
+	*IncludeExpression
+}
+
+func NewRequireOnceExpr(id int64, pos *position.Position, expression IExpression) *RequireOnceExpression {
+	return &RequireOnceExpression{&IncludeExpression{Expression: NewExpr(id, RequireOnceExpr, pos), Expr: expression}}
+}
+
+func (stmt *RequireOnceExpression) Process(visitor Visitor, context any) (any, error) {
+	return visitor.ProcessRequireOnceExpr(stmt, context)
 }

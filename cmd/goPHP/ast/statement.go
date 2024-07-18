@@ -2,7 +2,6 @@ package ast
 
 import (
 	"GoPHP/cmd/goPHP/position"
-	"fmt"
 )
 
 // ------------------- MARK: Statement -------------------
@@ -11,13 +10,17 @@ type IStatement interface {
 	GetId() int64
 	GetKind() NodeType
 	GetPosition() *position.Position
-	String() string
+	Process(visitor Visitor, context any) (any, error)
 }
 
 type Statement struct {
 	id   int64
 	kind NodeType
 	pos  *position.Position
+}
+
+func NewEmptyStmt() *Statement {
+	return &Statement{kind: EmptyNode}
 }
 
 func NewStmt(id int64, kind NodeType, pos *position.Position) *Statement {
@@ -36,12 +39,8 @@ func (stmt *Statement) GetPosition() *position.Position {
 	return stmt.pos
 }
 
-func (stmt *Statement) String() string {
-	return fmt.Sprintf("{%s}", stmt.GetKind())
-}
-
-func NewEmptyStmt() *Statement {
-	return &Statement{kind: EmptyNode}
+func (stmt *Statement) Process(visitor Visitor, context any) (any, error) {
+	return visitor.ProcessStmt(stmt, context)
 }
 
 // ------------------- MARK: FunctionDefinitionStatement -------------------
@@ -65,10 +64,8 @@ func NewFunctionDefinitionStmt(id int64, pos *position.Position, functionName st
 	}
 }
 
-func (stmt *FunctionDefinitionStatement) String() string {
-	return fmt.Sprintf("{%s - name: %s, params: %s, body: %s, returnType: %s}",
-		stmt.GetKind(), stmt.FunctionName, stmt.Params, stmt.Body, stmt.ReturnType,
-	)
+func (stmt *FunctionDefinitionStatement) Process(visitor Visitor, context any) (any, error) {
+	return visitor.ProcessFunctionDefinitionStmt(stmt, context)
 }
 
 // ------------------- MARK: IfStatement -------------------
@@ -81,21 +78,40 @@ type IfStatement struct {
 	ElseBlock IStatement
 }
 
-func NewDoStmt(id int64, pos *position.Position, condition IExpression, block IStatement) *IfStatement {
-	return &IfStatement{Statement: NewStmt(id, DoStmt, pos), Condition: condition, IfBlock: block}
-}
-
-func NewWhileStmt(id int64, pos *position.Position, condition IExpression, block IStatement) *IfStatement {
-	return &IfStatement{Statement: NewStmt(id, WhileStmt, pos), Condition: condition, IfBlock: block}
-}
-
 func NewIfStmt(id int64, pos *position.Position, condition IExpression, ifBlock IStatement, elseIf []*IfStatement, elseBlock IStatement) *IfStatement {
 	return &IfStatement{Statement: NewStmt(id, IfStmt, pos), Condition: condition, IfBlock: ifBlock, ElseIf: elseIf, ElseBlock: elseBlock}
 }
 
-func (stmt *IfStatement) String() string {
-	return fmt.Sprintf("{%s - condition: %s, ifBlock: %s, elseIf: %s, else: %s}",
-		stmt.GetKind(), stmt.Condition, stmt.IfBlock, stmt.ElseIf, stmt.ElseBlock)
+func (stmt *IfStatement) Process(visitor Visitor, context any) (any, error) {
+	return visitor.ProcessIfStmt(stmt, context)
+}
+
+// ------------------- MARK: WhileStatement -------------------
+
+type WhileStatement struct {
+	*IfStatement
+}
+
+func NewWhileStmt(id int64, pos *position.Position, condition IExpression, block IStatement) *WhileStatement {
+	return &WhileStatement{&IfStatement{Statement: NewStmt(id, WhileStmt, pos), Condition: condition, IfBlock: block}}
+}
+
+func (stmt *WhileStatement) Process(visitor Visitor, context any) (any, error) {
+	return visitor.ProcessWhileStmt(stmt, context)
+}
+
+// ------------------- MARK: DoStatement -------------------
+
+type DoStatement struct {
+	*IfStatement
+}
+
+func NewDoStmt(id int64, pos *position.Position, condition IExpression, block IStatement) *DoStatement {
+	return &DoStatement{&IfStatement{Statement: NewStmt(id, DoStmt, pos), Condition: condition, IfBlock: block}}
+}
+
+func (stmt *DoStatement) Process(visitor Visitor, context any) (any, error) {
+	return visitor.ProcessDoStmt(stmt, context)
 }
 
 // ------------------- MARK: CompoundStatement -------------------
@@ -109,8 +125,8 @@ func NewCompoundStmt(id int64, statements []IStatement) *CompoundStatement {
 	return &CompoundStatement{Statement: NewStmt(id, CompoundStmt, nil), Statements: statements}
 }
 
-func (stmt *CompoundStatement) String() string {
-	return fmt.Sprintf("{%s - %s}", stmt.GetKind(), stmt.Statements)
+func (stmt *CompoundStatement) Process(visitor Visitor, context any) (any, error) {
+	return visitor.ProcessCompoundStmt(stmt, context)
 }
 
 // ------------------- MARK: EchoStatement -------------------
@@ -124,8 +140,8 @@ func NewEchoStmt(id int64, pos *position.Position, expressions []IExpression) *E
 	return &EchoStatement{Statement: NewStmt(id, EchoStmt, pos), Expressions: expressions}
 }
 
-func (stmt *EchoStatement) String() string {
-	return fmt.Sprintf("{%s - %s}", stmt.GetKind(), stmt.Expressions)
+func (stmt *EchoStatement) Process(visitor Visitor, context any) (any, error) {
+	return visitor.ProcessEchoStmt(stmt, context)
 }
 
 // ------------------- MARK: ConstDeclarationStatement -------------------
@@ -140,8 +156,8 @@ func NewConstDeclarationStmt(id int64, pos *position.Position, name string, valu
 	return &ConstDeclarationStatement{Statement: NewStmt(id, ConstDeclarationStmt, pos), Name: name, Value: value}
 }
 
-func (stmt *ConstDeclarationStatement) String() string {
-	return fmt.Sprintf("{%s - name: \"%s\" value: %s}", stmt.GetKind(), stmt.Name, stmt.Value)
+func (stmt *ConstDeclarationStatement) Process(visitor Visitor, context any) (any, error) {
+	return visitor.ProcessConstDeclarationStmt(stmt, context)
 }
 
 // ------------------- MARK: ExpressionStatement -------------------
@@ -151,22 +167,52 @@ type ExpressionStatement struct {
 	Expr IExpression
 }
 
-func NewBreakStmt(id int64, pos *position.Position, expr IExpression) *ExpressionStatement {
-	return &ExpressionStatement{Statement: NewStmt(id, BreakStmt, pos), Expr: expr}
-}
-
-func NewContinueStmt(id int64, pos *position.Position, expr IExpression) *ExpressionStatement {
-	return &ExpressionStatement{Statement: NewStmt(id, ContinueStmt, pos), Expr: expr}
-}
-
-func NewReturnStmt(id int64, pos *position.Position, expr IExpression) *ExpressionStatement {
-	return &ExpressionStatement{Statement: NewStmt(id, ReturnStmt, pos), Expr: expr}
-}
-
 func NewExpressionStmt(id int64, expr IExpression) *ExpressionStatement {
 	return &ExpressionStatement{Statement: NewStmt(id, ExpressionStmt, expr.GetPosition()), Expr: expr}
 }
 
-func (stmt *ExpressionStatement) String() string {
-	return fmt.Sprintf("{%s - %s}", stmt.GetKind(), stmt.Expr)
+func (stmt *ExpressionStatement) Process(visitor Visitor, context any) (any, error) {
+	return visitor.ProcessExpressionStmt(stmt, context)
+}
+
+// ------------------- MARK: BreakStatement -------------------
+
+type BreakStatement struct {
+	*ExpressionStatement
+}
+
+func NewBreakStmt(id int64, pos *position.Position, expr IExpression) *BreakStatement {
+	return &BreakStatement{&ExpressionStatement{Statement: NewStmt(id, BreakStmt, pos), Expr: expr}}
+}
+
+func (stmt *BreakStatement) Process(visitor Visitor, context any) (any, error) {
+	return visitor.ProcessBreakStmt(stmt, context)
+}
+
+// ------------------- MARK: ContinueStatement -------------------
+
+type ContinueStatement struct {
+	*ExpressionStatement
+}
+
+func NewContinueStmt(id int64, pos *position.Position, expr IExpression) *ContinueStatement {
+	return &ContinueStatement{&ExpressionStatement{Statement: NewStmt(id, ContinueStmt, pos), Expr: expr}}
+}
+
+func (stmt *ContinueStatement) Process(visitor Visitor, context any) (any, error) {
+	return visitor.ProcessContinueStmt(stmt, context)
+}
+
+// ------------------- MARK: ReturnStatement -------------------
+
+type ReturnStatement struct {
+	*ExpressionStatement
+}
+
+func NewReturnStmt(id int64, pos *position.Position, expr IExpression) *ReturnStatement {
+	return &ReturnStatement{&ExpressionStatement{Statement: NewStmt(id, ReturnStmt, pos), Expr: expr}}
+}
+
+func (stmt *ReturnStatement) Process(visitor Visitor, context any) (any, error) {
+	return visitor.ProcessReturnStmt(stmt, context)
 }

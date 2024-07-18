@@ -169,7 +169,7 @@ func (interpreter *Interpreter) scanForFunctionDefinition(statements []ast.IStat
 			continue
 		}
 
-		_, err := interpreter.processFunctionDefinitionStmt(stmt.(*ast.FunctionDefinitionStatement), env)
+		_, err := interpreter.processStmt(stmt, env)
 		if err != nil {
 			return err
 		}
