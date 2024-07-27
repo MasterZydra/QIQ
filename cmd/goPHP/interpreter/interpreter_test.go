@@ -60,6 +60,13 @@ func TestVariableExprToVariableName(t *testing.T) {
 
 // ------------------- MARK: input output tests -------------------
 
+func testForError(t *testing.T, php string, expected phpError.Error) {
+	_, err := NewInterpreter(ini.NewDevIni(), &Request{}, "/home/admin/test.php").Process(php)
+	if err.GetErrorType() != expected.GetErrorType() || err.GetMessage() != expected.GetMessage() {
+		t.Errorf("\nCode: \"%s\"\nExpected: %s\nGot:      %s", php, expected, err)
+	}
+}
+
 func testInputOutput(t *testing.T, php string, output string) *Interpreter {
 	// Always use "\n" for tests so that they also pass on Windows
 	PHP_EOL = "\n"
@@ -100,26 +107,18 @@ func TestConstants(t *testing.T) {
 }
 
 func TestFileIncludes(t *testing.T) {
-	doTest := func(t *testing.T, php string, expected phpError.Error) {
-		_, err := NewInterpreter(ini.NewDevIni(), &Request{}, "/home/admin/test.php").Process(php)
-		if err.GetErrorType() != expected.GetErrorType() || err.GetMessage() != expected.GetMessage() {
-			t.Errorf("\nCode: \"%s\"\nExpected: %s\nGot:      %s", php, expected, err)
-		}
-	}
-
-	doTest(t, `<?php require "include.php"; ?>`,
+	testForError(t, `<?php require "include.php"; ?>`,
 		phpError.NewError("Uncaught Error: Failed opening required 'include.php' (include_path='/home/admin') in /home/admin/test.php:1:15"),
 	)
-	doTest(t, `<?php require_once "include.php"; ?>`,
+	testForError(t, `<?php require_once "include.php"; ?>`,
 		phpError.NewError("Uncaught Error: Failed opening required 'include.php' (include_path='/home/admin') in /home/admin/test.php:1:20"),
 	)
-	doTest(t, `<?php include "include.php"; ?>`,
+	testForError(t, `<?php include "include.php"; ?>`,
 		phpError.NewWarning("include(): Failed opening 'include.php' for inclusion (include_path='/home/admin') in /home/admin/test.php:1:15"),
 	)
-	doTest(t, `<?php include_once "include.php"; ?>`,
+	testForError(t, `<?php include_once "include.php"; ?>`,
 		phpError.NewWarning("include(): Failed opening 'include.php' for inclusion (include_path='/home/admin') in /home/admin/test.php:1:20"),
 	)
-
 }
 
 func TestVariable(t *testing.T) {
@@ -139,6 +138,11 @@ func TestVariable(t *testing.T) {
 
 	// Compound assignment
 	testInputOutput(t, `<?php $a = 42; echo $a; $a += 2; echo $a; $a += $a; echo $a;`, "424488")
+
+	// Parenthesized LHS
+	testForError(t, `<?php ($a) = 42;`,
+		phpError.NewParseError(`Statement must end with a semicolon. Got: "=" at /home/admin/test.php:1:12`),
+	)
 }
 
 func TestConditionals(t *testing.T) {

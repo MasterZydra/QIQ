@@ -23,6 +23,11 @@ func (interpreter *Interpreter) ProcessVariableNameExpr(expr *ast.VariableNameEx
 	panic("ProcessVariableNameExpr should never be called")
 }
 
+// ProcessParenthesizedExpr implements Visitor.
+func (interpreter *Interpreter) ProcessParenthesizedExpr(stmt *ast.ParenthesizedExpression, env any) (any, error) {
+	return interpreter.processStmt(stmt.Expr, env)
+}
+
 // ProcessArrayLiteralExpr implements Visitor.
 func (interpreter *Interpreter) ProcessArrayLiteralExpr(expr *ast.ArrayLiteralExpression, env any) (any, error) {
 	return interpreter.exprToRuntimeValue(expr, env.(*Environment))

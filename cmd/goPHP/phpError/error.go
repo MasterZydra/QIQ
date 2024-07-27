@@ -68,15 +68,24 @@ func (err *PhpError) GetErrorType() ErrorType {
 }
 
 func (err *PhpError) GetMessage() string {
-	return err.message
+	return err.String()
 }
 
 func (err *PhpError) String() string {
-	return err.message
+	switch err.errorType {
+	case WarningPhpError:
+		return "Warning: " + err.message
+	case ErrorPhpError:
+		return "Fatal error: " + err.message
+	case ParsePhpError:
+		return "Parse error: " + err.message
+	default:
+		return err.message
+	}
 }
 
 func (err *PhpError) Error() string {
-	return err.message
+	return err.String()
 }
 
 func NewParseError(format string, a ...any) Error {

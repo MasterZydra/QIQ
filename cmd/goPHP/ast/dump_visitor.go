@@ -219,6 +219,11 @@ func (visitor DumpVisitor) ProcessLogicalNotExpr(stmt *LogicalNotExpression, _ a
 	return fmt.Sprintf("{%s - operator: \"%s\" expression: %s }", stmt.GetKind(), stmt.Operator, ToString(stmt.Expr)), nil
 }
 
+// ProcessParenthesizedExpr implements Visitor.
+func (visitor DumpVisitor) ProcessParenthesizedExpr(stmt *ParenthesizedExpression, _ any) (any, error) {
+	return fmt.Sprintf("{%s - expr: %s}", stmt.GetKind(), ToString(stmt.Expr)), nil
+}
+
 // ProcessPostfixIncExpr implements Visitor.
 func (visitor DumpVisitor) ProcessPostfixIncExpr(stmt *PostfixIncExpression, _ any) (any, error) {
 	return fmt.Sprintf("{%s - operator: \"%s\" expression: %s }", stmt.GetKind(), stmt.Operator, ToString(stmt.Expr)), nil

@@ -165,7 +165,9 @@ func TestCastExpression(t *testing.T) {
 }
 
 func TestParenthesizedExpression(t *testing.T) {
-	testExpr(t, `<?php (1+2);`, ast.NewBinaryOpExpr(0, ast.NewIntegerLiteralExpr(0, nil, 1), "+", ast.NewIntegerLiteralExpr(0, nil, 2)))
+	testExpr(t, `<?php (1+2);`,
+		ast.NewParenthesizedExpression(0, nil, ast.NewBinaryOpExpr(0, ast.NewIntegerLiteralExpr(0, nil, 1), "+", ast.NewIntegerLiteralExpr(0, nil, 2))),
+	)
 }
 
 func TestConstDeclaration(t *testing.T) {

@@ -34,6 +34,7 @@ type Visitor interface {
 	ProcessIntegerLiteralExpr(stmt *IntegerLiteralExpression, context any) (any, error)
 	ProcessIssetIntrinsicExpr(stmt *IssetIntrinsicExpression, context any) (any, error)
 	ProcessLogicalNotExpr(stmt *LogicalNotExpression, context any) (any, error)
+	ProcessParenthesizedExpr(stmt *ParenthesizedExpression, context any) (any, error)
 	ProcessPostfixIncExpr(stmt *PostfixIncExpression, context any) (any, error)
 	ProcessPrefixIncExpr(stmt *PrefixIncExpression, context any) (any, error)
 	ProcessRelationalExpr(stmt *RelationalExpression, context any) (any, error)

@@ -40,6 +40,21 @@ func (stmt *Expression) Process(visitor Visitor, context any) (any, error) {
 	return visitor.ProcessExpr(stmt, context)
 }
 
+// ------------------- MARK: ParenthesizedExpression -------------------
+
+type ParenthesizedExpression struct {
+	*Expression
+	Expr IExpression
+}
+
+func NewParenthesizedExpression(id int64, pos *position.Position, expr IExpression) *ParenthesizedExpression {
+	return &ParenthesizedExpression{Expression: NewExpr(id, ParenthesizedExpr, pos), Expr: expr}
+}
+
+func (stmt *ParenthesizedExpression) Process(visitor Visitor, context any) (any, error) {
+	return visitor.ProcessParenthesizedExpr(stmt, context)
+}
+
 // ------------------- MARK: TextExpression -------------------
 
 type TextExpression struct {

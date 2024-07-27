@@ -84,25 +84,12 @@ func (interpreter *Interpreter) varExprToVarName(expr ast.IExpression, env *Envi
 }
 
 func (interpreter *Interpreter) ErrorToString(err phpError.Error) string {
-	if err.GetErrorType() == phpError.WarningPhpError {
-		if interpreter.ini.ErrorReporting&phpError.E_WARNING != 0 {
-			return "Warning: " + err.GetMessage()
-		}
+	if (err.GetErrorType() == phpError.WarningPhpError && interpreter.ini.ErrorReporting&phpError.E_WARNING == 0) ||
+		(err.GetErrorType() == phpError.ErrorPhpError && interpreter.ini.ErrorReporting&phpError.E_ERROR == 0) ||
+		(err.GetErrorType() == phpError.ParsePhpError && interpreter.ini.ErrorReporting&phpError.E_PARSE == 0) {
 		return ""
 	}
-	if err.GetErrorType() == phpError.ErrorPhpError {
-		if interpreter.ini.ErrorReporting&phpError.E_ERROR != 0 {
-			return "Fatal error: " + err.GetMessage()
-		}
-		return ""
-	}
-	if err.GetErrorType() == phpError.ParsePhpError {
-		if interpreter.ini.ErrorReporting&phpError.E_PARSE != 0 {
-			return "Parse error: " + err.GetMessage()
-		}
-		return ""
-	}
-	return "Unsupported error type \"" + string(err.GetErrorType()) + "\": " + err.GetMessage()
+	return err.GetMessage()
 }
 
 func (interpreter *Interpreter) printError(err phpError.Error) {

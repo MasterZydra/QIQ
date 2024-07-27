@@ -290,7 +290,8 @@ func (parser *Parser) parseStmt() (ast.IStatement, phpError.Error) {
 		if parser.isToken(lexer.OpOrPuncToken, ";", true) {
 			return ast.NewExpressionStmt(parser.nextId(), expr), nil
 		}
-		return ast.NewEmptyExpr(), phpError.NewParseError("Statement must end with a semicolon. Got: %s", parser.at())
+		return ast.NewEmptyExpr(),
+			phpError.NewParseError(`Statement must end with a semicolon. Got: "%s" at %s`, parser.at().Value, parser.at().Position.ToPosString())
 	}
 }
 
@@ -1665,13 +1666,14 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, phpError.Error) {
 
 	// ------------------- MARK: (   expression   ) -------------------
 
-	if parser.isToken(lexer.OpOrPuncToken, "(", true) {
+	if parser.isToken(lexer.OpOrPuncToken, "(", false) {
+		pos := parser.eat().Position
 		expr, err := parser.parseExpr()
 		if err != nil {
 			return ast.NewEmptyExpr(), err
 		}
 		if parser.isToken(lexer.OpOrPuncToken, ")", true) {
-			return expr, nil
+			return ast.NewParenthesizedExpression(parser.nextId(), pos, expr), nil
 		} else {
 			return ast.NewEmptyExpr(), phpError.NewParseError("Expected \")\". Got: %s", parser.at())
 		}
