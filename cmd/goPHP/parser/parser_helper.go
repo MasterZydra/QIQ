@@ -3,6 +3,7 @@ package parser
 import (
 	"GoPHP/cmd/goPHP/lexer"
 	"GoPHP/cmd/goPHP/phpError"
+	"GoPHP/cmd/goPHP/position"
 )
 
 func (parser *Parser) isEof() bool {
@@ -11,7 +12,9 @@ func (parser *Parser) isEof() bool {
 
 func (parser *Parser) at() *lexer.Token {
 	if parser.isEof() {
-		return lexer.NewToken(lexer.EndOfFileToken, "", nil)
+		lastPos := parser.tokens[parser.currPos-1].Position
+		eofPos := position.NewPosition(lastPos.Filename, lastPos.Line, lastPos.Column+1)
+		return lexer.NewToken(lexer.EndOfFileToken, "EOF", eofPos)
 	}
 
 	return parser.tokens[parser.currPos]
