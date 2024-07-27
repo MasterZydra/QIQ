@@ -77,7 +77,7 @@ func testInputOutput(t *testing.T, php string, output string) *Interpreter {
 		return interpreter
 	}
 	if actual != output {
-		t.Errorf("\nCode: \"%s\"\nExpected: \"%s\",\nGot \"%s\"", php, output, actual)
+		t.Errorf("\nCode: \"%s\"\nExpected: \"%s\",\nGot:      \"%s\"", php, output, actual)
 	}
 	return interpreter
 }

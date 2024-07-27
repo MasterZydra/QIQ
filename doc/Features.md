@@ -105,6 +105,14 @@
 - key_exists
 - strlen
 
+### Math
+- abs
+- acos
+- acosh
+- asin
+- asinh
+- pi
+
 ### Variable handling functions
 - boolval
 - doubleval

@@ -7,6 +7,7 @@ import (
 )
 
 func registerNativeFunctions(environment *Environment) {
+	registerNativeMathFunctions(environment)
 	registerNativeVariableHandlingFunctions(environment)
 
 	environment.nativeFunctions["array_key_exits"] = nativeFn_array_key_exists
