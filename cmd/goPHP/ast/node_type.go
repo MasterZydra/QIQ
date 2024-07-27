@@ -43,6 +43,7 @@ const (
 	ConstDeclarationStmt   NodeType = "ConstDeclarationStatement"
 	EchoStmt               NodeType = "EchoStatement"
 	ExpressionStmt         NodeType = "ExpressionStatement"
+	ForStmt                NodeType = "ForStatement"
 	FunctionDefinitionStmt NodeType = "FunctionDefinitionStatement"
 	IfStmt                 NodeType = "IfStatement"
 	WhileStmt              NodeType = "WhileStatement"

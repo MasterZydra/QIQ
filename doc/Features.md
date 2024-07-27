@@ -28,6 +28,7 @@
 - subscript expression: `$a[1];`
 - variable substitution: `echo "{$a}";`
 - if statement: `if (true) { ... } elseif (false) { ... } else { ... }`
+- for statement: `for (...; ...; ...) { ... }`
 - while statement: `while (true) { ... }`
 - do statement: `do { ... } while (true);`
 - function definition: `function func1($param1) { ... }`

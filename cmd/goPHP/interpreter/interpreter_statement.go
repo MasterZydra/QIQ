@@ -112,6 +112,102 @@ func (interpreter *Interpreter) ProcessBreakStmt(stmt *ast.BreakStatement, env a
 	return runtimeValue, phpError.NewBreakEvent(runtimeValue.(*IntegerRuntimeValue).Value)
 }
 
+// ProcessForStmt implements Visitor.
+func (interpreter *Interpreter) ProcessForStmt(stmt *ast.ForStatement, env any) (any, error) {
+	// Spec: https://phplang.org/spec/11-statements.html#grammar-for-statement
+	// If for-initializer is omitted, no action is taken at the start of the loop processing.
+	if stmt.Initializer != nil {
+		// Spec: https://phplang.org/spec/11-statements.html#grammar-for-statement
+		// The group of expressions in for-initializer is evaluated once, left-to-right, for their side effects.
+		for _, statement := range stmt.Initializer.Statements {
+			_, err := interpreter.processStmt(statement, env)
+			if err != nil {
+				return NewVoidRuntimeValue(), err
+			}
+		}
+	}
+
+	for {
+		// Spec: https://phplang.org/spec/11-statements.html#grammar-for-statement
+		// If for-control is omitted, this is treated as if for-control was an expression with the value TRUE.
+		condition := true
+
+		// Spec: https://phplang.org/spec/11-statements.html#grammar-for-statement
+		// Then the group of expressions in for-control is evaluated left-to-right (with all but the right-most one for their side
+		// effects only), with the right-most expression’s value being converted to type bool.
+		if stmt.Control != nil {
+			var conditionRuntimeValue IRuntimeValue
+			var err phpError.Error
+			for _, statement := range stmt.Control.Statements {
+				conditionRuntimeValue, err = interpreter.processStmt(statement, env)
+				if err != nil {
+					return NewVoidRuntimeValue(), err
+				}
+			}
+			condition, err = lib_boolval(conditionRuntimeValue)
+			if err != nil {
+				return NewVoidRuntimeValue(), err
+			}
+		}
+
+		executeEndOfLoop := func() phpError.Error {
+			// Spec: https://phplang.org/spec/11-statements.html#grammar-for-statement
+			// If for-end-of-loop is omitted, no action is taken at the end of each iteration.
+			if stmt.EndOfLoop != nil {
+				for _, statement := range stmt.EndOfLoop.Statements {
+					_, err := interpreter.processStmt(statement, env)
+					if err != nil {
+						return err
+					}
+				}
+			}
+			return nil
+		}
+
+		// Spec: https://phplang.org/spec/11-statements.html#grammar-for-statement
+		// If the result is TRUE, statement is executed, ...
+		// left-to-right, for their side effects only.
+		if condition {
+			_, err := interpreter.processStmt(stmt.Block, env)
+			if err != nil {
+				if err.GetErrorType() == phpError.EventError && err.GetMessage() == "break" {
+					breakoutLevel := err.(*phpError.ContinueEventError).GetBreakoutLevel()
+					if breakoutLevel == 1 {
+						break
+					}
+					return NewVoidRuntimeValue(), phpError.NewBreakEvent(breakoutLevel - 1)
+				}
+				if err.GetErrorType() == phpError.EventError && err.GetMessage() == "continue" {
+					breakoutLevel := err.(*phpError.ContinueEventError).GetBreakoutLevel()
+					if breakoutLevel == 1 {
+						// Execute end-of-loop logic
+						if err := executeEndOfLoop(); err != nil {
+							return NewVoidRuntimeValue(), err
+						}
+						continue
+					}
+					return NewVoidRuntimeValue(), phpError.NewContinueEvent(breakoutLevel - 1)
+				}
+				return NewVoidRuntimeValue(), err
+			}
+		}
+
+		// Spec: https://phplang.org/spec/11-statements.html#grammar-for-statement
+		// ... and the group of expressions in for-end-of-loop is evaluated left-to-right, for their side effects only.
+		if err := executeEndOfLoop(); err != nil {
+			return NewVoidRuntimeValue(), err
+		}
+
+		// Spec: https://phplang.org/spec/11-statements.html#grammar-for-statement
+		// Once the right-most expression in for-control is FALSE, control transfers to the point immediately following the end of the for statement.
+		if !condition {
+			break
+		}
+	}
+
+	return NewVoidRuntimeValue(), nil
+}
+
 // ProcessIfStmt implements Visitor.
 func (interpreter *Interpreter) ProcessIfStmt(stmt *ast.IfStatement, env any) (any, error) {
 	conditionRuntimeValue, err := interpreter.processStmt(stmt.Condition, env)

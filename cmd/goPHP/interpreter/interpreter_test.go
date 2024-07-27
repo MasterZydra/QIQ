@@ -155,7 +155,7 @@ func TestConditionals(t *testing.T) {
 	)
 	testInputOutput(t, `<?php echo $a ?? "a";`, "a")
 
-	// If statment
+	// If statement
 	testInputOutput(t, `<?php $a = 42; if ($a === 42) { echo "42"; } elseif ($a === 41) { echo "41"; } else { echo "??"; }`, "42")
 	testInputOutput(t, `<?php $a = 41; if ($a === 42) { echo "42"; } elseif ($a === 41) { echo "41"; } else { echo "??"; }`, "41")
 	testInputOutput(t, `<?php $a = 40; if ($a === 42) { echo "42"; } elseif ($a === 41) { echo "41"; } else { echo "??"; }`, "??")
@@ -164,7 +164,7 @@ func TestConditionals(t *testing.T) {
 	testInputOutput(t, `<?php $a = 41; if ($a === 42): echo "42"; elseif ($a === 41): echo "41"; else: echo "??"; endif;`, "41")
 	testInputOutput(t, `<?php $a = 40; if ($a === 42): echo "42"; elseif ($a === 41): echo "41"; else: echo "??"; endif;`, "??")
 
-	// While statment
+	// While statement
 	testInputOutput(t, `<?php $a = 40; while ($a < 42) { echo "1"; $a++; }`, "11")
 	testInputOutput(t, `<?php $a = 42; while ($a < 42) { echo "1"; $a++; }`, "")
 	testInputOutput(t, `<?php $a = 0; while (true) { echo "1"; $a++; if ($a == 5) { break; }}`, "11111")
@@ -178,6 +178,40 @@ func TestConditionals(t *testing.T) {
 	testInputOutput(t, `<?php $a = 42; do { echo "1"; $a++; } while ($a < 42);`, "1")
 	testInputOutput(t, `<?php $a = 0; do { echo "1"; $a++; if ($a == 5) { break; }} while (true);`, "11111")
 	testInputOutput(t, `<?php $a = 0; do { echo "1"; while (true) { echo "2"; break 2; }} while (true);`, "12")
+
+	// For statement
+	testInputOutput(t,
+		`<?php for ($i = 1; $i <= 10; ++$i) {
+			echo $i." ".($i * $i)."\n"; // output a table of squares
+		}`,
+		"1 1\n2 4\n3 9\n4 16\n5 25\n6 36\n7 49\n8 64\n9 81\n10 100\n",
+	)
+	// Omit 1st and 3rd expressions
+	testInputOutput(t,
+		`<?php $i = 1;
+		for (; $i <= 10;):
+			echo $i." ".($i * $i)."\n"; // output a table of squares
+			++$i;
+		endfor;`,
+		"1 1\n2 4\n3 9\n4 16\n5 25\n6 36\n7 49\n8 64\n9 81\n10 100\n",
+	)
+	// Omit all 3 expressions
+	testInputOutput(t,
+		`<?php $i = 1;
+		for (;;) {
+			if ($i > 10) break;
+			echo $i." ".($i * $i)."\n"; // output a table of squares
+			++$i;
+		}`,
+		"1 1\n2 4\n3 9\n4 16\n5 25\n6 36\n7 49\n8 64\n9 81\n10 100\n",
+	)
+	// Use groups of expressions
+	testInputOutput(t,
+		`<?php for ($a = 100, $i = 1; ++$i, $i <= 10; ++$i, $a -= 10) {
+			echo $i." ".$a."\n";
+		}`,
+		"2 100\n4 90\n6 80\n8 70\n10 60\n",
+	)
 }
 
 func TestIntrinsic(t *testing.T) {

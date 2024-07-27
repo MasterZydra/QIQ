@@ -554,7 +554,118 @@ func (parser *Parser) parseIterationStmt() (ast.IStatement, phpError.Error) {
 		return ast.NewDoStmt(parser.nextId(), doPos, condition, block), nil
 	}
 
-	// TODO for-statement
+	if parser.isToken(lexer.KeywordToken, "for", false) {
+		// Spec: https://phplang.org/spec/11-statements.html#grammar-for-statement
+
+		// for-statement:
+		//    for   (   for-initializer(opt)   ;   for-control(opt)   ;   for-end-of-loop(opt)   )   statement
+		//    for   (   for-initializer(opt)   ;   for-control(opt)   ;   for-end-of-loop(opt)   )   :   statement-list   endfor   ;
+
+		// for-initializer:
+		//    for-expression-group
+
+		// for-control:
+		//    for-expression-group
+
+		// for-end-of-loop:
+		//    for-expression-group
+
+		// for-expression-group:
+		//    expression
+		//    for-expression-group   ,   expression
+
+		pos := parser.eat().Position
+
+		if !parser.isToken(lexer.OpOrPuncToken, "(", true) {
+			return ast.NewEmptyStmt(), phpError.NewParseError("Expected \"(\". Got %s", parser.at())
+		}
+
+		var err phpError.Error = nil
+		parseExprGroup := func() (*ast.CompoundStatement, phpError.Error) {
+			stmts := []ast.IStatement{}
+			for {
+				expr, err := parser.parseExpr()
+				if err != nil {
+					return nil, err
+				}
+				stmts = append(stmts, expr)
+
+				if !parser.isToken(lexer.OpOrPuncToken, ",", true) {
+					break
+				}
+			}
+			return ast.NewCompoundStmt(parser.nextId(), stmts), nil
+		}
+
+		// for-initializer
+		var forInitializer *ast.CompoundStatement = nil
+		if !parser.isToken(lexer.OpOrPuncToken, ";", false) {
+			forInitializer, err = parseExprGroup()
+			if err != nil {
+				return ast.NewEmptyExpr(), err
+			}
+		}
+
+		if !parser.isToken(lexer.OpOrPuncToken, ";", true) {
+			return ast.NewEmptyStmt(), phpError.NewParseError("Expected \";\". Got %s", parser.at())
+		}
+
+		// for-control
+		var forControl *ast.CompoundStatement = nil
+		if !parser.isToken(lexer.OpOrPuncToken, ";", false) {
+			forControl, err = parseExprGroup()
+			if err != nil {
+				return ast.NewEmptyExpr(), err
+			}
+		}
+
+		if !parser.isToken(lexer.OpOrPuncToken, ";", true) {
+			return ast.NewEmptyStmt(), phpError.NewParseError("Expected \";\". Got %s", parser.at())
+		}
+
+		// for-end-of-loop
+		var forEndOfLoop *ast.CompoundStatement = nil
+		if !parser.isToken(lexer.OpOrPuncToken, ")", false) {
+			forEndOfLoop, err = parseExprGroup()
+			if err != nil {
+				return ast.NewEmptyExpr(), err
+			}
+		}
+
+		if !parser.isToken(lexer.OpOrPuncToken, ")", true) {
+			return ast.NewEmptyStmt(), phpError.NewParseError("Expected \")\". Got %s", parser.at())
+		}
+
+		isAltSytax := parser.isToken(lexer.OpOrPuncToken, ":", true)
+
+		var block ast.IStatement
+		if !isAltSytax {
+			block, err = parser.parseStmt()
+			if err != nil {
+				return ast.NewEmptyStmt(), err
+			}
+		} else {
+			statements := []ast.IStatement{}
+			for !parser.isToken(lexer.KeywordToken, "endfor", false) {
+				statement, err := parser.parseStmt()
+				if err != nil {
+					return ast.NewEmptyStmt(), err
+				}
+				statements = append(statements, statement)
+			}
+			block = ast.NewCompoundStmt(parser.nextId(), statements)
+		}
+
+		if isAltSytax && !parser.isToken(lexer.KeywordToken, "endfor", true) {
+			return ast.NewEmptyStmt(), phpError.NewParseError("Expected \"endfor\". Got %s", parser.at())
+		}
+		if isAltSytax && !parser.isToken(lexer.OpOrPuncToken, ";", true) {
+			return ast.NewEmptyStmt(), phpError.NewParseError("Expected \";\". Got %s", parser.at())
+		}
+
+		return ast.NewForStmt(parser.nextId(), pos, forInitializer, forControl, forEndOfLoop, block), nil
+	}
+
 	// TODO foreach-statement
 
 	return ast.NewEmptyStmt(), phpError.NewParseError("Unsupported iteration statement %s", parser.at())

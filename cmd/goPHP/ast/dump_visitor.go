@@ -163,10 +163,18 @@ func (visitor DumpVisitor) ProcessFloatingLiteralExpr(stmt *FloatingLiteralExpre
 	return fmt.Sprintf("{%s - value: %f }", stmt.GetKind(), stmt.Value), nil
 }
 
+// ProcessForStmt implements Visitor.
+func (visitor DumpVisitor) ProcessForStmt(stmt *ForStatement, context any) (any, error) {
+	return fmt.Sprintf(
+		"{%s - initializer: %s, control: %s, endOfLoop: %s, block: %s}",
+		stmt.GetKind(), ToString(stmt.Initializer), ToString(stmt.Control), ToString(stmt.EndOfLoop), ToString(stmt.Block),
+	), nil
+}
+
 // ProcessFunctionCallExpr implements Visitor.
 func (visitor DumpVisitor) ProcessFunctionCallExpr(stmt *FunctionCallExpression, _ any) (any, error) {
 	return fmt.Sprintf(
-		"{%s - functionName: \"%s\" arguments: %s}",
+		"{%s - functionName: \"%s\", arguments: %s}",
 		stmt.GetKind(), stmt.FunctionName, dumpExpressions(stmt.Arguments),
 	), nil
 }

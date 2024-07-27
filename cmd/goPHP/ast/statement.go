@@ -68,6 +68,24 @@ func (stmt *FunctionDefinitionStatement) Process(visitor Visitor, context any) (
 	return visitor.ProcessFunctionDefinitionStmt(stmt, context)
 }
 
+// ------------------- MARK: ForStatement -------------------
+
+type ForStatement struct {
+	*Statement
+	Initializer *CompoundStatement
+	Control     *CompoundStatement
+	EndOfLoop   *CompoundStatement
+	Block       IStatement
+}
+
+func NewForStmt(id int64, pos *position.Position, initializer *CompoundStatement, control *CompoundStatement, endOfLoop *CompoundStatement, block IStatement) *ForStatement {
+	return &ForStatement{Statement: NewStmt(id, IfStmt, pos), Initializer: initializer, Control: control, EndOfLoop: endOfLoop, Block: block}
+}
+
+func (stmt *ForStatement) Process(visitor Visitor, context any) (any, error) {
+	return visitor.ProcessForStmt(stmt, context)
+}
+
 // ------------------- MARK: IfStatement -------------------
 
 type IfStatement struct {
