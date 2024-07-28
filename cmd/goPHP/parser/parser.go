@@ -1151,7 +1151,7 @@ func (parser *Parser) parseLogicalIncOrExpr1() (ast.IExpression, phpError.Error)
 		if err != nil {
 			return ast.NewEmptyExpr(), err
 		}
-		lhs = ast.NewBinaryOpExpr(parser.nextId(), lhs, "||", rhs)
+		lhs = ast.NewLogicalExpr(parser.nextId(), lhs, "||", rhs)
 	}
 	return lhs, nil
 }
@@ -1173,7 +1173,7 @@ func (parser *Parser) parseLogicalAndExpr1() (ast.IExpression, phpError.Error) {
 		if err != nil {
 			return ast.NewEmptyExpr(), err
 		}
-		lhs = ast.NewBinaryOpExpr(parser.nextId(), lhs, "&&", rhs)
+		lhs = ast.NewLogicalExpr(parser.nextId(), lhs, "&&", rhs)
 	}
 	return lhs, nil
 }

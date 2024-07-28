@@ -389,6 +389,15 @@ func TestOperators(t *testing.T) {
 	testInputOutput(t, `<?php echo 4 || 1 ? "t" : "f";`, "t")
 	testInputOutput(t, `<?php echo false || false ? "t" : "f";`, "f")
 	testInputOutput(t, `<?php echo 4 || true ? "t" : "f";`, "t")
+	// Test "short-circuiting"
+	testInputOutput(t,
+		`<?php function fun() { echo "fn_call "; return false; }
+		echo ("true" || fun()) === true ? "true": "false"; echo "\n";
+		echo (false || fun()) === true ? "true": "false"; echo "\n";
+		echo (false && fun()) === true ? "true": "false"; echo "\n";
+		echo ("true" && fun()) === true ? "true": "false"; echo "\n";`,
+		"true\nfn_call false\nfalse\nfn_call false\n",
+	)
 
 	// Unary expression
 	// Boolean

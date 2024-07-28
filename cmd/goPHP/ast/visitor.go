@@ -34,6 +34,7 @@ type Visitor interface {
 	ProcessIncludeOnceExpr(stmt *IncludeOnceExpression, context any) (any, error)
 	ProcessIntegerLiteralExpr(stmt *IntegerLiteralExpression, context any) (any, error)
 	ProcessIssetIntrinsicExpr(stmt *IssetIntrinsicExpression, context any) (any, error)
+	ProcessLogicalExpr(stmt *LogicalExpression, context any) (any, error)
 	ProcessLogicalNotExpr(stmt *LogicalNotExpression, context any) (any, error)
 	ProcessParenthesizedExpr(stmt *ParenthesizedExpression, context any) (any, error)
 	ProcessPostfixIncExpr(stmt *PostfixIncExpression, context any) (any, error)

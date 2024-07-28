@@ -166,7 +166,6 @@ func (interpreter *Interpreter) ProcessForStmt(stmt *ast.ForStatement, env any) 
 
 		// Spec: https://phplang.org/spec/11-statements.html#grammar-for-statement
 		// If the result is TRUE, statement is executed, ...
-		// left-to-right, for their side effects only.
 		if condition {
 			_, err := interpreter.processStmt(stmt.Block, env)
 			if err != nil {

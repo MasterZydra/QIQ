@@ -222,6 +222,14 @@ func (visitor DumpVisitor) ProcessIssetIntrinsicExpr(stmt *IssetIntrinsicExpress
 	), nil
 }
 
+// ProcessLogicalExpr implements Visitor.
+func (visitor DumpVisitor) ProcessLogicalExpr(stmt *LogicalExpression, _ any) (any, error) {
+	return fmt.Sprintf(
+		"{%s - lhs: %s, operator: \"%s\" rhs: %s }",
+		stmt.GetKind(), ToString(stmt.Lhs), stmt.Operator, ToString(stmt.Rhs),
+	), nil
+}
+
 // ProcessLogicalNotExpr implements Visitor.
 func (visitor DumpVisitor) ProcessLogicalNotExpr(stmt *LogicalNotExpression, _ any) (any, error) {
 	return fmt.Sprintf("{%s - operator: \"%s\" expression: %s }", stmt.GetKind(), stmt.Operator, ToString(stmt.Expr)), nil

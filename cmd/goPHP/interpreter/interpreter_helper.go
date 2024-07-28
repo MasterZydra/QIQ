@@ -609,8 +609,6 @@ func calculate(operand1 IRuntimeValue, operator string, operand2 IRuntimeValue) 
 	resultType := VoidValue
 	if slices.Contains([]string{"."}, operator) {
 		resultType = StringValue
-	} else if slices.Contains([]string{"&&", "||"}, operator) {
-		resultType = BooleanValue
 	} else if slices.Contains([]string{"&", "|", "^", "<<", ">>"}, operator) {
 		resultType = IntegerValue
 	} else {
@@ -639,8 +637,6 @@ func calculate(operand1 IRuntimeValue, operator string, operand2 IRuntimeValue) 
 	//   true && 3
 
 	switch resultType {
-	case BooleanValue:
-		return calculateBoolean(operand1.(*BooleanRuntimeValue), operator, operand2.(*BooleanRuntimeValue))
 	case IntegerValue:
 		return calculateInteger(operand1.(*IntegerRuntimeValue), operator, operand2.(*IntegerRuntimeValue))
 	case FloatingValue:
@@ -649,17 +645,6 @@ func calculate(operand1 IRuntimeValue, operator string, operand2 IRuntimeValue) 
 		return calculateString(operand1.(*StringRuntimeValue), operator, operand2.(*StringRuntimeValue))
 	default:
 		return NewVoidRuntimeValue(), phpError.NewError("calculate: Type \"%s\" not implemented", resultType)
-	}
-}
-
-func calculateBoolean(operand1 *BooleanRuntimeValue, operator string, operand2 *BooleanRuntimeValue) (*BooleanRuntimeValue, phpError.Error) {
-	switch operator {
-	case "&&":
-		return NewBooleanRuntimeValue(operand1.Value && operand2.Value), nil
-	case "||":
-		return NewBooleanRuntimeValue(operand1.Value || operand2.Value), nil
-	default:
-		return NewBooleanRuntimeValue(false), phpError.NewError("calculateBoolean: Operator \"%s\" not implemented", operator)
 	}
 }
 

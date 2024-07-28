@@ -613,6 +613,46 @@ func (interpreter *Interpreter) ProcessCastExpr(expr *ast.CastExpression, env an
 	}
 }
 
+// ProcessLogicalExpr implements Visitor.
+func (interpreter *Interpreter) ProcessLogicalExpr(expr *ast.LogicalExpression, env any) (any, error) {
+	// Evaluate LHS first
+	lhs, err := interpreter.processStmt(expr.Lhs, env)
+	if err != nil {
+		return lhs, err
+	}
+	// Convert LHS to boolean value
+	left, err := lib_boolval(lhs)
+	if err != nil {
+		return NewVoidRuntimeValue(), err
+	}
+
+	// Check if condition is already short circuited
+	if expr.Operator == "||" {
+		// if LHS of "or" is true, the result is already true
+		if left {
+			return NewBooleanRuntimeValue(true), nil
+		}
+	} else {
+		// if LHS of "and" is false, the result is already false
+		if !left {
+			return NewBooleanRuntimeValue(false), nil
+		}
+	}
+
+	// Evaluate RHS after checking if condition is already short circuited
+	rhs, err := interpreter.processStmt(expr.Rhs, env)
+	if err != nil {
+		return rhs, err
+	}
+	// Convert RHS to boolean value
+	right, err := lib_boolval(rhs)
+	if err != nil {
+		return NewVoidRuntimeValue(), err
+	}
+	return NewBooleanRuntimeValue(right), nil
+
+}
+
 // ProcessLogicalNotExpr implements Visitor.
 func (interpreter *Interpreter) ProcessLogicalNotExpr(expr *ast.LogicalNotExpression, env any) (any, error) {
 	runtimeValue, err := interpreter.processStmt(expr.Expr, env)

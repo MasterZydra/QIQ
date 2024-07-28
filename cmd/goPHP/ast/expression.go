@@ -389,6 +389,20 @@ func (stmt *BinaryOpExpression) Process(visitor Visitor, context any) (any, erro
 	return visitor.ProcessBinaryOpExpr(stmt, context)
 }
 
+// ------------------- MARK: LogicalExpression -------------------
+
+type LogicalExpression struct {
+	*BinaryOpExpression
+}
+
+func NewLogicalExpr(id int64, lhs IExpression, operator string, rhs IExpression) *LogicalExpression {
+	return &LogicalExpression{&BinaryOpExpression{Expression: NewExpr(id, BinaryOpExpr, lhs.GetPosition()), Lhs: lhs, Operator: operator, Rhs: rhs}}
+}
+
+func (stmt *LogicalExpression) Process(visitor Visitor, context any) (any, error) {
+	return visitor.ProcessLogicalExpr(stmt, context)
+}
+
 // ------------------- MARK: RelationalExpression -------------------
 
 type RelationalExpression struct {
