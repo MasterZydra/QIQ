@@ -264,37 +264,38 @@ func (interpreter *Interpreter) ProcessIfStmt(stmt *ast.IfStatement, env any) (a
 
 // ProcessWhileStmt implements Visitor.
 func (interpreter *Interpreter) ProcessWhileStmt(stmt *ast.WhileStatement, env any) (any, error) {
-	var condition bool = true
-	for condition {
+	for {
 		conditionRuntimeValue, err := interpreter.processStmt(stmt.Condition, env)
 		if err != nil {
 			return conditionRuntimeValue, err
 		}
 
-		condition, err = lib_boolval(conditionRuntimeValue)
+		condition, err := lib_boolval(conditionRuntimeValue)
 		if err != nil {
 			return NewVoidRuntimeValue(), err
 		}
 
-		if condition {
-			runtimeValue, err := interpreter.processStmt(stmt.Block, env)
-			if err != nil {
-				if err.GetErrorType() == phpError.EventError && err.GetMessage() == "break" {
-					breakoutLevel := err.(*phpError.ContinueEventError).GetBreakoutLevel()
-					if breakoutLevel == 1 {
-						return NewVoidRuntimeValue(), nil
-					}
-					return NewVoidRuntimeValue(), phpError.NewBreakEvent(breakoutLevel - 1)
+		if !condition {
+			break
+		}
+
+		runtimeValue, err := interpreter.processStmt(stmt.Block, env)
+		if err != nil {
+			if err.GetErrorType() == phpError.EventError && err.GetMessage() == "break" {
+				breakoutLevel := err.(*phpError.ContinueEventError).GetBreakoutLevel()
+				if breakoutLevel == 1 {
+					return NewVoidRuntimeValue(), nil
 				}
-				if err.GetErrorType() == phpError.EventError && err.GetMessage() == "continue" {
-					breakoutLevel := err.(*phpError.ContinueEventError).GetBreakoutLevel()
-					if breakoutLevel == 1 {
-						continue
-					}
-					return NewVoidRuntimeValue(), phpError.NewContinueEvent(breakoutLevel - 1)
-				}
-				return runtimeValue, err
+				return NewVoidRuntimeValue(), phpError.NewBreakEvent(breakoutLevel - 1)
 			}
+			if err.GetErrorType() == phpError.EventError && err.GetMessage() == "continue" {
+				breakoutLevel := err.(*phpError.ContinueEventError).GetBreakoutLevel()
+				if breakoutLevel == 1 {
+					continue
+				}
+				return NewVoidRuntimeValue(), phpError.NewContinueEvent(breakoutLevel - 1)
+			}
+			return runtimeValue, err
 		}
 	}
 	return NewVoidRuntimeValue(), nil
