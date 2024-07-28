@@ -86,6 +86,22 @@ func (stmt *ForStatement) Process(visitor Visitor, context any) (any, error) {
 	return visitor.ProcessForStmt(stmt, context)
 }
 
+// ------------------- MARK: WhileStatement -------------------
+
+type WhileStatement struct {
+	*Statement
+	Condition IExpression
+	Block     IStatement
+}
+
+func NewWhileStmt(id int64, pos *position.Position, condition IExpression, block IStatement) *WhileStatement {
+	return &WhileStatement{Statement: NewStmt(id, WhileStmt, pos), Condition: condition, Block: block}
+}
+
+func (stmt *WhileStatement) Process(visitor Visitor, context any) (any, error) {
+	return visitor.ProcessWhileStmt(stmt, context)
+}
+
 // ------------------- MARK: IfStatement -------------------
 
 type IfStatement struct {
@@ -102,20 +118,6 @@ func NewIfStmt(id int64, pos *position.Position, condition IExpression, ifBlock 
 
 func (stmt *IfStatement) Process(visitor Visitor, context any) (any, error) {
 	return visitor.ProcessIfStmt(stmt, context)
-}
-
-// ------------------- MARK: WhileStatement -------------------
-
-type WhileStatement struct {
-	*IfStatement
-}
-
-func NewWhileStmt(id int64, pos *position.Position, condition IExpression, block IStatement) *WhileStatement {
-	return &WhileStatement{&IfStatement{Statement: NewStmt(id, WhileStmt, pos), Condition: condition, IfBlock: block}}
-}
-
-func (stmt *WhileStatement) Process(visitor Visitor, context any) (any, error) {
-	return visitor.ProcessWhileStmt(stmt, context)
 }
 
 // ------------------- MARK: DoStatement -------------------
