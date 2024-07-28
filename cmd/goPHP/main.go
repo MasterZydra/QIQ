@@ -162,6 +162,11 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	if !strings.HasSuffix(absFilePath, ".php") {
+		http.ServeFile(w, r, absFilePath)
+		return
+	}
+
 	content, err := os.ReadFile(absFilePath)
 	if err != nil {
 		fmt.Println("Error:", err)
@@ -178,10 +183,6 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 // ------------------- MARK: core logic -------------------
 
 func processContent(content string, filename string) (output string, exitCode int) {
-	if !strings.HasSuffix(filename, ".php") {
-		return content, exitCode
-	}
-
 	var initIni *ini.Ini
 	if isDevMode {
 		initIni = ini.NewDevIni()
