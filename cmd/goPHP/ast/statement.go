@@ -102,6 +102,20 @@ func (stmt *WhileStatement) Process(visitor Visitor, context any) (any, error) {
 	return visitor.ProcessWhileStmt(stmt, context)
 }
 
+// ------------------- MARK: DoStatement -------------------
+
+type DoStatement struct {
+	*WhileStatement
+}
+
+func NewDoStmt(id int64, pos *position.Position, condition IExpression, block IStatement) *DoStatement {
+	return &DoStatement{&WhileStatement{Statement: NewStmt(id, DoStmt, pos), Condition: condition, Block: block}}
+}
+
+func (stmt *DoStatement) Process(visitor Visitor, context any) (any, error) {
+	return visitor.ProcessDoStmt(stmt, context)
+}
+
 // ------------------- MARK: IfStatement -------------------
 
 type IfStatement struct {
@@ -118,20 +132,6 @@ func NewIfStmt(id int64, pos *position.Position, condition IExpression, ifBlock 
 
 func (stmt *IfStatement) Process(visitor Visitor, context any) (any, error) {
 	return visitor.ProcessIfStmt(stmt, context)
-}
-
-// ------------------- MARK: DoStatement -------------------
-
-type DoStatement struct {
-	*IfStatement
-}
-
-func NewDoStmt(id int64, pos *position.Position, condition IExpression, block IStatement) *DoStatement {
-	return &DoStatement{&IfStatement{Statement: NewStmt(id, DoStmt, pos), Condition: condition, IfBlock: block}}
-}
-
-func (stmt *DoStatement) Process(visitor Visitor, context any) (any, error) {
-	return visitor.ProcessDoStmt(stmt, context)
 }
 
 // ------------------- MARK: CompoundStatement -------------------

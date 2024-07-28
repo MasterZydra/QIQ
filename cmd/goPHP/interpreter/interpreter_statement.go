@@ -305,7 +305,7 @@ func (interpreter *Interpreter) ProcessWhileStmt(stmt *ast.WhileStatement, env a
 func (interpreter *Interpreter) ProcessDoStmt(stmt *ast.DoStatement, env any) (any, error) {
 	var condition bool = true
 	for condition {
-		runtimeValue, err := interpreter.processStmt(stmt.IfBlock, env)
+		runtimeValue, err := interpreter.processStmt(stmt.Block, env)
 		if err != nil {
 			if err.GetErrorType() == phpError.EventError && err.GetMessage() == "break" {
 				breakoutLevel := err.(*phpError.ContinueEventError).GetBreakoutLevel()

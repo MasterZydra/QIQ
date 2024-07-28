@@ -108,14 +108,9 @@ func (visitor DumpVisitor) ProcessContinueStmt(stmt *ContinueStatement, _ any) (
 
 // ProcessDoStmt implements Visitor.
 func (visitor DumpVisitor) ProcessDoStmt(stmt *DoStatement, _ any) (any, error) {
-	elseIf := "{"
-	for _, elseIfStmt := range stmt.ElseIf {
-		elseIf += ToString(elseIfStmt) + ", "
-	}
-	elseIf += "}"
 	return fmt.Sprintf(
-		"{%s - condition: %s, ifBlock: %s, elseIf: %s, else: %s}",
-		stmt.GetKind(), ToString(stmt.Condition), ToString(stmt.IfBlock), elseIf, ToString(stmt.ElseBlock),
+		"{%s - condition: %s, block: %s}",
+		stmt.GetKind(), ToString(stmt.Condition), ToString(stmt.Block),
 	), nil
 }
 
