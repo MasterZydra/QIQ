@@ -218,7 +218,7 @@ func (interpreter *Interpreter) includeFile(filepathExpr ast.IExpression, env *E
 
 	absFilename := filename
 	if !common.IsAbsPath(filename) {
-		absFilename = common.GetAbsPathForWorkingDir(common.ExtractPath(filename), filename)
+		absFilename = common.GetAbsPathForWorkingDir(common.ExtractPath(filepathExpr.GetPosition().Filename), filename)
 	}
 
 	var functionName string
