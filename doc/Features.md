@@ -106,6 +106,14 @@
 - key_exists
 - strlen
 
+### Date / Time
+- checkdate
+- getdate
+- localtime
+- microtime
+- mktime
+- time
+
 ### Math
 - abs
 - acos

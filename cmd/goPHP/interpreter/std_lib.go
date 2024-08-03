@@ -7,6 +7,7 @@ import (
 )
 
 func registerNativeFunctions(environment *Environment) {
+	registerNativeDateTimeFunctions(environment)
 	registerNativeMathFunctions(environment)
 	registerNativeVariableHandlingFunctions(environment)
 

@@ -1,5 +1,7 @@
 package interpreter
 
+import "strconv"
+
 type ValueType string
 
 const (
@@ -135,6 +137,10 @@ type FloatingRuntimeValue struct {
 
 func NewFloatingRuntimeValue(value float64) *FloatingRuntimeValue {
 	return &FloatingRuntimeValue{RuntimeValue: NewRuntimeValue(FloatingValue), Value: value}
+}
+
+func (value *FloatingRuntimeValue) ToPhpString() string {
+	return strconv.FormatFloat(value.Value, 'f', -1, 64)
 }
 
 // MARK: StringRuntimeValue

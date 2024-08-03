@@ -511,7 +511,7 @@ func lib_strval(runtimeValue IRuntimeValue) (string, phpError.Error) {
 		// Spec: https://phplang.org/spec/08-conversions.html#converting-to-string-type
 		// If the source type is int or float, then the result value is a string containing the textual representation
 		// of the source value (as specified by the library function sprintf).
-		return fmt.Sprintf("%g", runtimeValue.(*FloatingRuntimeValue).Value), nil
+		return runtimeValue.(*FloatingRuntimeValue).ToPhpString(), nil
 	case IntegerValue:
 		// Spec: https://phplang.org/spec/08-conversions.html#converting-to-string-type
 		// If the source type is int or float, then the result value is a string containing the textual representation
