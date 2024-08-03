@@ -7,8 +7,15 @@ import (
 
 func TestTooManyParams(t *testing.T) {
 	validator := NewFuncParamValidator("testFn")
-	_, err := validator.validate([]IRuntimeValue{NewIntegerRuntimeValue(42), NewIntegerRuntimeValue(43)})
-	expectedErr := phpError.NewError("Uncaught ArgumentCountError: testFn() expects exactly 0 argument, 2 given")
+	_, err := validator.validate([]IRuntimeValue{NewIntegerRuntimeValue(42)})
+	expectedErr := phpError.NewError("Uncaught ArgumentCountError: testFn() expects exactly 0 argument, 1 given")
+	if err.GetMessage() != expectedErr.GetMessage() {
+		t.Errorf("\nExpected: \"%s\"\nGot: \"%s\"", expectedErr, err)
+	}
+
+	validator = NewFuncParamValidator("testFn")
+	_, err = validator.validate([]IRuntimeValue{NewIntegerRuntimeValue(42), NewIntegerRuntimeValue(43)})
+	expectedErr = phpError.NewError("Uncaught ArgumentCountError: testFn() expects exactly 0 argument, 2 given")
 	if err.GetMessage() != expectedErr.GetMessage() {
 		t.Errorf("\nExpected: \"%s\"\nGot: \"%s\"", expectedErr, err)
 	}

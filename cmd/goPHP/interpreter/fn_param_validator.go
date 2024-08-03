@@ -124,7 +124,7 @@ func (validator *funcParamValidator) validate(args []IRuntimeValue) ([]IRuntimeV
 	}
 
 	// Too many arguments given
-	if len(args) > lastArgIndex+1 {
+	if (!allArgsValidated && len(args) > len(validator.params)) || (allArgsValidated && len(args) > lastArgIndex+1) {
 		if len(validator.params) > 0 && validator.params[len(validator.params)-1].defaultValue != nil {
 			// Optional arguments at the end
 			return args, phpError.NewError(
