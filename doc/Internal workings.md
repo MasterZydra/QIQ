@@ -1,5 +1,17 @@
 # Internal workings
 
+## Tracking of token and AST node position
+In order to throw error messages with detailed positions where the error occurred, it is necessary to store the position with each token so that it can be passed up to the AST.
+For this, each `Token` has a pointer to a `Position` struct.
+This is the simple part.
+
+The complexity arises when the lexer is a look-ahead lexer, which is the case here.  
+For example, the lexer function `isWhiteSpace` has the parameter whether the lexer should just check the next characters for a white space or whether it should increment the position counter.  
+Another case where look-ahead is needed is when processing floats. The lexer detects that the next token starts with a number and reads the next characters until the next whitespace occurs and it can be pushed as a float token. Otherwise, e.g. if the string read is not a valid float, the lexer jumps back and tries to process it as an integer.
+
+For this "jump back" logic, the lexer can push and pop a `PositionSnapshot` of the current position information into/from an array.
+The cases that might end with a "jump back" then push a snapshot. If a jump back is required, the latest snapshot is popped and applied, otherwise the snapshot is popped and discarded.
+
 ## Pass by value
 The interpreter uses the structs that implement `IRuntimeValue` as pointers.
 The interpreter creates new instances for each new runtime value of type `Boolean`, `Integer`, `Floating` or `String`.
