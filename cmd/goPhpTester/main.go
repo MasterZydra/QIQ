@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 )
 
@@ -91,6 +92,11 @@ func doTest(path string, info os.FileInfo, err error) error {
 		// return err
 		failed++
 		return nil
+	}
+
+	if runtime.GOOS == "windows" {
+		testFile.Expect = strings.ReplaceAll(testFile.Expect, "\r\n", "\n")
+		result = strings.ReplaceAll(result, "\r\n", "\n")
 	}
 
 	var equal bool
