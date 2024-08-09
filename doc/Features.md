@@ -13,12 +13,12 @@
 - relational expression: `$var >= 42;`
 - additive expression: `$var + 42; $var - 42; "a" . "b";`
 - multiplicative expression: `$var * 42; $var / 42; $var % 42;`
-- logical and expression: `$var && 8`;
-- logical inc or expression: `$var || 8`;
+- logical and expression: `$var && 8;`
+- logical inc or expression: `$var || 8;`
 - bitwise exc or expression: `$var ^ 8;`
 - bitwise inc or expression: `$var | 8;`
-- bitwise and expression: `$var & 8`;
-- shift expression: `$var << 8`;
+- bitwise and expression: `$var & 8;`
+- shift expression: `$var << 8;`
 - exponentiation expression: `$var ** 42;`
 - unary expression: `-1; +1; ~1;`
 - prefix (in/de)crease expression: `++$var; --$var;`
