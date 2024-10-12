@@ -128,6 +128,8 @@ func registerPredefinedConstants(environment *Environment) {
 	environment.predefinedConstants["PHP_RELEASE_VERSION"] = NewIntegerRuntimeValue(config.ReleaseVersion)
 	environment.predefinedConstants["PHP_EXTRA_VERSION"] = NewStringRuntimeValue(config.ExtraVersion)
 	environment.predefinedConstants["PHP_VERSION_ID"] = NewIntegerRuntimeValue(config.VersionId)
+
+	// Spec: https://www.php.net/manual/en/math.constants.php
 	environment.predefinedConstants["M_1_PI"] = NewFloatingRuntimeValue(1 / math.Pi)
 	environment.predefinedConstants["M_2_PI"] = NewFloatingRuntimeValue(2 / math.Pi)
 	environment.predefinedConstants["M_2_SQRTPI"] = NewFloatingRuntimeValue(2 / math.SqrtPi)
@@ -145,6 +147,10 @@ func registerPredefinedConstants(environment *Environment) {
 	environment.predefinedConstants["M_SQRT2"] = NewFloatingRuntimeValue(math.Sqrt2)
 	environment.predefinedConstants["M_SQRT3"] = NewFloatingRuntimeValue(math.Sqrt(3))
 	environment.predefinedConstants["M_SQRTPI"] = NewFloatingRuntimeValue(math.SqrtPi)
+	environment.predefinedConstants["PHP_ROUND_HALF_UP"] = NewIntegerRuntimeValue(1)
+	environment.predefinedConstants["PHP_ROUND_HALF_DOWN"] = NewIntegerRuntimeValue(2)
+	environment.predefinedConstants["PHP_ROUND_HALF_EVEN"] = NewIntegerRuntimeValue(3)
+	environment.predefinedConstants["PHP_ROUND_HALF_ODD"] = NewIntegerRuntimeValue(4)
 
 	// Spec: https://www.php.net/manual/en/errorfunc.constants.php
 	environment.predefinedConstants["E_ERROR"] = NewIntegerRuntimeValue(phpError.E_ERROR)
