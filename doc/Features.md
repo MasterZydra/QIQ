@@ -112,6 +112,7 @@
 
 ### Date / Time
 - checkdate
+- date
 - getdate
 - localtime
 - microtime
