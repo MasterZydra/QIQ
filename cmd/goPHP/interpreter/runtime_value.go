@@ -34,14 +34,18 @@ func (runtimeValue *RuntimeValue) GetType() ValueType {
 
 // MARK: VoidValue
 
+var voidRuntimeValue = &RuntimeValue{valueType: VoidValue}
+
 func NewVoidRuntimeValue() *RuntimeValue {
-	return &RuntimeValue{valueType: VoidValue}
+	return voidRuntimeValue
 }
 
 // MARK: NullValue
 
+var nullRuntimeValue = &RuntimeValue{valueType: NullValue}
+
 func NewNullRuntimeValue() *RuntimeValue {
-	return &RuntimeValue{valueType: NullValue}
+	return nullRuntimeValue
 }
 
 // MARK: ArrayRuntimeValue
@@ -113,8 +117,14 @@ type BooleanRuntimeValue struct {
 	Value bool
 }
 
+var trueRuntimeValue = &BooleanRuntimeValue{RuntimeValue: NewRuntimeValue(BooleanValue), Value: true}
+var falseRuntimeValue = &BooleanRuntimeValue{RuntimeValue: NewRuntimeValue(BooleanValue), Value: false}
+
 func NewBooleanRuntimeValue(value bool) *BooleanRuntimeValue {
-	return &BooleanRuntimeValue{RuntimeValue: NewRuntimeValue(BooleanValue), Value: value}
+	if value {
+		return trueRuntimeValue
+	}
+	return falseRuntimeValue
 }
 
 // MARK: IntegerRuntimeValue
