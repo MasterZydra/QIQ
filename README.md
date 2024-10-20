@@ -59,6 +59,7 @@ In order to test the GoPHP implementation against this cases the binary `goPhpTe
 
 ## Used resources
 For some part of this project, the following resources were used as a guide, inspiration, or concept:
-- YouTube playlist [Build a Custom Scripting Language In Typescript](https://www.youtube.com/playlist?list=PL_2VhOvlMk4UHGqYCLWc6GO8FaPl8fQTh) by [tylerlaceby](https://www.youtube.com/@tylerlaceby)
 - [PHP Language Specification](https://phplang.org/)
+- YouTube playlist [Build a Custom Scripting Language In Typescript](https://www.youtube.com/playlist?list=PL_2VhOvlMk4UHGqYCLWc6GO8FaPl8fQTh) by [tylerlaceby](https://www.youtube.com/@tylerlaceby)
 - Book [Crafting Interpreters](https://craftinginterpreters.com/) by Robert Nystorm
+- Book [Writing An Interpreter In Go](https://interpreterbook.com/) by Thorsten Ball
