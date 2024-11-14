@@ -192,3 +192,7 @@ func TrimTrailingLineBreaks(str string) string {
 	}
 	return str
 }
+
+func ReplaceUnderscores(str string) string {
+	return strings.ReplaceAll(str, "_", "")
+}

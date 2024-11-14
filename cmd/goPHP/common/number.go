@@ -15,7 +15,7 @@ func IsDigit(char string) bool {
 	// digit:: one of
 	//    0   1   2   3   4   5   6   7   8   9
 
-	match, _ := regexp.MatchString("^[0-9]$", char)
+	match, _ := regexp.MatchString(`^\d$`, char)
 	return match
 }
 
@@ -32,12 +32,12 @@ func IsDecimalLiteral(str string) bool {
 	// digit:: one of
 	//    0   1   2   3   4   5   6   7   8   9
 
-	match, _ := regexp.MatchString("^[1-9][0-9]*$", str)
+	match, _ := regexp.MatchString(`^[1-9]\d*(_\d+)*$`, str)
 	return match
 }
 
 func DecimalLiteralToInt64(str string) int64 {
-	integer, _ := strconv.ParseInt(str, 10, 64)
+	integer, _ := strconv.ParseInt(ReplaceUnderscores(str), 10, 64)
 	return integer
 }
 
@@ -51,12 +51,12 @@ func IsOctalLiteral(str string) bool {
 	// octal-digit:: one of
 	//    0   1   2   3   4   5   6   7
 
-	match, _ := regexp.MatchString("^[0-7]+$", str)
+	match, _ := regexp.MatchString("^[0-7]+(_[0-7]+)*$", str)
 	return match
 }
 
 func OctalLiteralToInt64(str string) int64 {
-	integer, _ := strconv.ParseInt(str, 8, 64)
+	integer, _ := strconv.ParseInt(ReplaceUnderscores(str), 8, 64)
 	return integer
 }
 
@@ -68,7 +68,7 @@ func IsHexadecimalDigit(char string) bool {
 	//    a   b   c   d   e   f
 	//    A   B   C   D   E   F
 
-	match, _ := regexp.MatchString("^[0-9a-fA-F]$", char)
+	match, _ := regexp.MatchString(`^[\da-fA-F]$`, char)
 	return match
 }
 
@@ -87,12 +87,12 @@ func IsHexadecimalLiteral(str string) bool {
 	//    a   b   c   d   e   f
 	//    A   B   C   D   E   F
 
-	match, _ := regexp.MatchString("^0[xX][0-9a-fA-F]+$", str)
+	match, _ := regexp.MatchString(`^0[xX][\da-fA-F]+(_[\da-fA-F]+)*$`, str)
 	return match
 }
 
 func HexadecimalLiteralToInt64(str string) int64 {
-	integer, _ := strconv.ParseInt(str[2:], 16, 64)
+	integer, _ := strconv.ParseInt(ReplaceUnderscores(str[2:]), 16, 64)
 	return integer
 }
 
@@ -109,12 +109,12 @@ func IsBinaryLiteral(str string) bool {
 	// binary-digit:: one of
 	//    0   1
 
-	match, _ := regexp.MatchString("^0[bB][01]+$", str)
+	match, _ := regexp.MatchString("^0[bB][01]+(_[01]+)*$", str)
 	return match
 }
 
 func BinaryLiteralToInt64(str string) int64 {
-	integer, _ := strconv.ParseInt(str[2:], 2, 64)
+	integer, _ := strconv.ParseInt(ReplaceUnderscores(str[2:]), 2, 64)
 	return integer
 }
 
@@ -194,13 +194,13 @@ func IsFloatingLiteral(str string) bool {
 	//    digit-sequence   digit
 
 	// fractional-literal   exponent-part(opt)
-	match, _ := regexp.MatchString(`^([0-9]*\.[0-9]+|[0-9]+\.)([eE][+-]?[0-9]+)?$`, str)
+	match, _ := regexp.MatchString(`^(\d*(_\d+)*\.\d+(_\d+)*|\d+(_\d+)*\.)([eE][+-]?\d+(_\d+)*)?$`, str)
 	if match {
 		return true
 	}
 
 	// digit-sequence   exponent-part
-	match, _ = regexp.MatchString("^[0-9]+[eE][+-]?[0-9]+$", str)
+	match, _ = regexp.MatchString(`^\d+(_\d+)*[eE][+-]?\d+(_\d+)*$`, str)
 	return match
 }
 

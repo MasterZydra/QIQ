@@ -4,7 +4,6 @@ import (
 	"GoPHP/cmd/goPHP/common"
 	"GoPHP/cmd/goPHP/ini"
 	"fmt"
-	"regexp"
 	"slices"
 	"strings"
 )
@@ -417,7 +416,7 @@ func (lexer *Lexer) getIntegerLiteral(eat bool) string {
 		lexer.eatN(2)
 
 		for !lexer.isEof() {
-			if lexer.at() != "0" && lexer.at() != "1" {
+			if lexer.at() != "0" && lexer.at() != "1" && lexer.at() != "_" {
 				break
 			}
 			intStr += lexer.eat()
@@ -448,7 +447,7 @@ func (lexer *Lexer) getIntegerLiteral(eat bool) string {
 		lexer.eatN(2)
 
 		for !lexer.isEof() {
-			if !common.IsHexadecimalDigit(lexer.at()) {
+			if !common.IsHexadecimalDigit(lexer.at()) && lexer.at() != "_" {
 				break
 			}
 			intStr += lexer.eat()
@@ -465,7 +464,7 @@ func (lexer *Lexer) getIntegerLiteral(eat bool) string {
 
 	// All other integer cases
 	for !lexer.isEof() {
-		if !common.IsDigit(lexer.at()) {
+		if !common.IsDigit(lexer.at()) && lexer.at() != "_" {
 			break
 		}
 		intStr += lexer.eat()
@@ -517,7 +516,7 @@ func (lexer *Lexer) getFloatingPointLiteral(eat bool) string {
 
 	for !lexer.isEof() {
 		if state == "beforeDot" {
-			if common.IsDigit(lexer.at()) {
+			if common.IsDigit(lexer.at()) || lexer.at() == "_" {
 				floatStr += lexer.eat()
 				continue
 			}
@@ -536,7 +535,7 @@ func (lexer *Lexer) getFloatingPointLiteral(eat bool) string {
 			break
 		}
 		if state == "afterDot" {
-			if common.IsDigit(lexer.at()) {
+			if common.IsDigit(lexer.at()) || lexer.at() == "_" {
 				floatStr += lexer.eat()
 				continue
 			}
@@ -558,7 +557,7 @@ func (lexer *Lexer) getFloatingPointLiteral(eat bool) string {
 			break
 		}
 		if state == "exponentDigit" {
-			if common.IsDigit(lexer.at()) {
+			if common.IsDigit(lexer.at()) || lexer.at() == "_" {
 				floatStr += lexer.eat()
 				continue
 			}
@@ -568,15 +567,7 @@ func (lexer *Lexer) getFloatingPointLiteral(eat bool) string {
 
 	lexer.popSnapShot(!eat)
 
-	// fractional-literal   exponent-part(opt)
-	match, _ := regexp.MatchString(`^([0-9]*\.[0-9]+|[0-9]+\.)([e,E][+,-]?[0-9]+)?$`, floatStr)
-	if match {
-		return floatStr
-	}
-
-	// digit-sequence   exponent-part
-	match, _ = regexp.MatchString("^[0-9]+[e,E][+,-]?[0-9]+$", floatStr)
-	if match {
+	if common.IsFloatingLiteral(floatStr) {
 		return floatStr
 	}
 

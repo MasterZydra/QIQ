@@ -40,8 +40,8 @@
 ## Data types
 - array
 - bool
-- float
-- int
+- float (including numeric literal separator)
+- int  (including numeric literal separator)
 - null
 - string
 
