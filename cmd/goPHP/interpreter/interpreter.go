@@ -66,11 +66,36 @@ func (interpreter *Interpreter) processProgram(program *ast.Program, env *Enviro
 	return runtimeValue, nil
 }
 
-func (interpreter *Interpreter) processStmt(stmt ast.IStatement, env any) (IRuntimeValue, phpError.Error) {
+func (interpreter *Interpreter) processStmt(stmt ast.IStatement, env any) (value IRuntimeValue, phpErr phpError.Error) {
+	defer func() {
+		if r := recover(); r != nil {
+			value = r.(ValueOrError).Value
+			phpErr = r.(ValueOrError).Error.(phpError.Error)
+		}
+	}()
 	runtimeValue, err := stmt.Process(interpreter, env)
-	var phpErr phpError.Error = nil
 	if err != nil {
 		phpErr = err.(phpError.Error)
 	}
 	return runtimeValue.(IRuntimeValue), phpErr
+}
+
+type ValueOrError struct {
+	Value IRuntimeValue
+	Error error
+}
+
+func must(value IRuntimeValue, err error) IRuntimeValue {
+	if err != nil {
+		panic(ValueOrError{Value: value, Error: err})
+	}
+	return value
+}
+
+// Return VoidRuntimeValue if error is not nil
+func mustOrVoid[V any](value V, err error) V {
+	if err != nil {
+		panic(ValueOrError{Value: NewVoidRuntimeValue(), Error: err})
+	}
+	return value
 }

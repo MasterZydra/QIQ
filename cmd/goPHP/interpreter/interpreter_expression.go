@@ -60,16 +60,8 @@ func (interpreter *Interpreter) ProcessSimpleAssignmentExpr(expr *ast.SimpleAssi
 			phpError.NewError("processSimpleAssignmentExpr: Invalid variable: %s", expr.Variable)
 	}
 
-	value, err := interpreter.processStmt(expr.Value, env)
-	if err != nil {
-		return value, err
-	}
-
-	variableName, err := interpreter.varExprToVarName(expr.Variable, env.(*Environment))
-	if err != nil {
-		return NewVoidRuntimeValue(), err
-	}
-
+	value := must(interpreter.processStmt(expr.Value, env))
+	variableName := mustOrVoid(interpreter.varExprToVarName(expr.Variable, env.(*Environment)))
 	currentValue, _ := env.(*Environment).lookupVariable(variableName)
 
 	if currentValue.GetType() == ArrayValue {
@@ -94,10 +86,7 @@ func (interpreter *Interpreter) ProcessSimpleAssignmentExpr(expr *ast.SimpleAssi
 			}
 			array.SetElement(nextIndex, value)
 		} else {
-			keyValue, err := interpreter.processStmt(key, env)
-			if err != nil {
-				return keyValue, err
-			}
+			keyValue := must(interpreter.processStmt(key, env))
 			array.SetElement(keyValue, value)
 		}
 
@@ -111,10 +100,7 @@ func (interpreter *Interpreter) ProcessSimpleAssignmentExpr(expr *ast.SimpleAssi
 func (interpreter *Interpreter) ProcessSubscriptExpr(expr *ast.SubscriptExpression, env any) (any, error) {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-subscript-expression
 
-	variable, err := interpreter.lookupVariable(expr.Variable, env.(*Environment), false)
-	if err != nil {
-		return variable, err
-	}
+	variable := must(interpreter.lookupVariable(expr.Variable, env.(*Environment), false))
 
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-subscript-expression
 	// dereferencable-expression designates an array
@@ -123,17 +109,9 @@ func (interpreter *Interpreter) ProcessSubscriptExpr(expr *ast.SubscriptExpressi
 		// Spec: https://phplang.org/spec/10-expressions.html#grammar-subscript-expression
 		// If expression is omitted, a new element is inserted. Its key has type int and is one more than the highest, previously assigned int key for this array. If this is the first element with an int key, key 0 is used. If the largest previously assigned int key is the largest integer value that can be represented, the new element is not added. The result is the added new element, or NULL if the element was not added.
 
-		key, err := interpreter.processStmt(expr.Index, env)
-		if err != nil {
-			return key, err
-		}
-
+		key := must(interpreter.processStmt(expr.Index, env))
 		array := variable.(*ArrayRuntimeValue)
-
-		exists, err := lib_array_key_exists(key, array)
-		if err != nil {
-			return NewVoidRuntimeValue(), err
-		}
+		exists := mustOrVoid(lib_array_key_exists(key, array))
 
 		// Spec: https://phplang.org/spec/10-expressions.html#grammar-subscript-expression
 		// If expression is present, if the designated element exists,
@@ -230,20 +208,14 @@ func (interpreter *Interpreter) ProcessFunctionCallExpr(expr *ast.FunctionCallEx
 	if err == nil {
 		functionArguments := make([]IRuntimeValue, len(expr.Arguments))
 		for index, arg := range expr.Arguments {
-			runtimeValue, err := interpreter.processStmt(arg, env)
-			if err != nil {
-				return runtimeValue, err
-			}
+			runtimeValue := must(interpreter.processStmt(arg, env))
 			functionArguments[index] = deepCopy(runtimeValue)
 		}
 		return nativeFunction(functionArguments, interpreter)
 	}
 
 	// Lookup user function
-	userFunction, err := env.(*Environment).lookupUserFunction(expr.FunctionName)
-	if err != nil {
-		return NewVoidRuntimeValue(), err
-	}
+	userFunction := mustOrVoid(env.(*Environment).lookupUserFunction(expr.FunctionName))
 
 	functionEnv := NewEnvironment(env.(*Environment), nil)
 
@@ -254,10 +226,8 @@ func (interpreter *Interpreter) ProcessFunctionCallExpr(expr *ast.FunctionCallEx
 		)
 	}
 	for index, param := range userFunction.Params {
-		runtimeValue, err := interpreter.processStmt(expr.Arguments[index], env)
-		if err != nil {
-			return runtimeValue, err
-		}
+		runtimeValue := must(interpreter.processStmt(expr.Arguments[index], env))
+
 		// Check if the parameter types match
 		err = checkParameterTypes(runtimeValue, param.Type)
 		if err != nil && err.GetMessage() == "Types do not match" {
@@ -320,16 +290,10 @@ func (interpreter *Interpreter) ProcessEmptyIntrinsicExpr(expr *ast.EmptyIntrins
 			return NewBooleanRuntimeValue(true), nil
 		}
 	} else {
-		runtimeValue, err = interpreter.processStmt(expr.Arguments[0], env)
-		if err != nil {
-			return runtimeValue, err
-		}
+		runtimeValue = must(interpreter.processStmt(expr.Arguments[0], env))
 	}
 
-	boolean, err := lib_boolval(runtimeValue)
-	if err != nil {
-		return NewVoidRuntimeValue(), err
-	}
+	boolean := mustOrVoid(lib_boolval(runtimeValue))
 	return NewBooleanRuntimeValue(!boolean), nil
 }
 
@@ -352,10 +316,7 @@ func (interpreter *Interpreter) ProcessExitIntrinsicExpr(expr *ast.ExitIntrinsic
 
 	expression := expr.Arguments[0]
 	if expression != nil {
-		exprValue, err := interpreter.processStmt(expression, env)
-		if err != nil {
-			return exprValue, err
-		}
+		exprValue := must(interpreter.processStmt(expression, env))
 		if exprValue.GetType() == StringValue {
 			interpreter.print(exprValue.(*StringRuntimeValue).Value)
 		}
@@ -402,10 +363,7 @@ func (interpreter *Interpreter) ProcessUnsetIntrinsicExpr(expr *ast.UnsetIntrins
 	// An attempt to unset a non-existent variable (such as a non-existent element in an array) is ignored.
 
 	for _, arg := range expr.Arguments {
-		variableName, err := interpreter.varExprToVarName(arg, env.(*Environment))
-		if err != nil {
-			return NewVoidRuntimeValue(), err
-		}
+		variableName := mustOrVoid(interpreter.varExprToVarName(arg, env.(*Environment)))
 		env.(*Environment).unsetVariable(variableName)
 	}
 	return NewVoidRuntimeValue(), nil
@@ -428,25 +386,11 @@ func (interpreter *Interpreter) ProcessCompoundAssignmentExpr(expr *ast.Compound
 			phpError.NewError("processCompoundAssignmentExpr: Invalid variable: %s", expr.Variable)
 	}
 
-	operand1, err := interpreter.processStmt(expr.Variable, env)
-	if err != nil {
-		return operand1, err
-	}
+	operand1 := must(interpreter.processStmt(expr.Variable, env))
+	operand2 := must(interpreter.processStmt(expr.Value, env))
+	newValue := must(calculate(operand1, expr.Operator, operand2))
 
-	operand2, err := interpreter.processStmt(expr.Value, env)
-	if err != nil {
-		return operand2, err
-	}
-
-	newValue, err := calculate(operand1, expr.Operator, operand2)
-	if err != nil {
-		return newValue, err
-	}
-
-	variableName, err := interpreter.varExprToVarName(expr.Variable, env.(*Environment))
-	if err != nil {
-		return NewVoidRuntimeValue(), err
-	}
+	variableName := mustOrVoid(interpreter.varExprToVarName(expr.Variable, env.(*Environment)))
 
 	return env.(*Environment).declareVariable(variableName, newValue)
 }
@@ -520,52 +464,28 @@ func (interpreter *Interpreter) ProcessCoalesceExpr(expr *ast.CoalesceExpression
 
 // ProcessRelationalExpr implements Visitor.
 func (interpreter *Interpreter) ProcessRelationalExpr(expr *ast.RelationalExpression, env any) (any, error) {
-	lhs, err := interpreter.processStmt(expr.Lhs, env)
-	if err != nil {
-		return lhs, err
-	}
-
-	rhs, err := interpreter.processStmt(expr.Rhs, env)
-	if err != nil {
-		return rhs, err
-	}
+	lhs := must(interpreter.processStmt(expr.Lhs, env))
+	rhs := must(interpreter.processStmt(expr.Rhs, env))
 	return compareRelation(lhs, expr.Operator, rhs)
 }
 
 // ProcessEqualityExpr implements Visitor.
 func (interpreter *Interpreter) ProcessEqualityExpr(expr *ast.EqualityExpression, env any) (any, error) {
-	lhs, err := interpreter.processStmt(expr.Lhs, env)
-	if err != nil {
-		return lhs, err
-	}
-
-	rhs, err := interpreter.processStmt(expr.Rhs, env)
-	if err != nil {
-		return rhs, err
-	}
+	lhs := must(interpreter.processStmt(expr.Lhs, env))
+	rhs := must(interpreter.processStmt(expr.Rhs, env))
 	return compare(lhs, expr.Operator, rhs)
 }
 
 // ProcessBinaryOpExpr implements Visitor.
 func (interpreter *Interpreter) ProcessBinaryOpExpr(expr *ast.BinaryOpExpression, env any) (any, error) {
-	lhs, err := interpreter.processStmt(expr.Lhs, env)
-	if err != nil {
-		return lhs, err
-	}
-
-	rhs, err := interpreter.processStmt(expr.Rhs, env)
-	if err != nil {
-		return rhs, err
-	}
+	lhs := must(interpreter.processStmt(expr.Lhs, env))
+	rhs := must(interpreter.processStmt(expr.Rhs, env))
 	return calculate(lhs, expr.Operator, rhs)
 }
 
 // ProcessUnaryExpr implements Visitor.
 func (interpreter *Interpreter) ProcessUnaryExpr(expr *ast.UnaryOpExpression, env any) (any, error) {
-	operand, err := interpreter.processStmt(expr.Expr, env)
-	if err != nil {
-		return operand, err
-	}
+	operand := must(interpreter.processStmt(expr.Expr, env))
 	return calculateUnary(expr.Operator, operand)
 }
 
@@ -581,10 +501,7 @@ func (interpreter *Interpreter) ProcessCastExpr(expr *ast.CastExpression, env an
 	// TODO processCastExpr - object
 	// A cast-type of "object" results in a conversion to type "object".
 
-	value, err := interpreter.processStmt(expr.Expr, env)
-	if err != nil {
-		return value, err
-	}
+	value := must(interpreter.processStmt(expr.Expr, env))
 
 	switch expr.Operator {
 	case "array":
@@ -616,15 +533,9 @@ func (interpreter *Interpreter) ProcessCastExpr(expr *ast.CastExpression, env an
 // ProcessLogicalExpr implements Visitor.
 func (interpreter *Interpreter) ProcessLogicalExpr(expr *ast.LogicalExpression, env any) (any, error) {
 	// Evaluate LHS first
-	lhs, err := interpreter.processStmt(expr.Lhs, env)
-	if err != nil {
-		return lhs, err
-	}
+	lhs := must(interpreter.processStmt(expr.Lhs, env))
 	// Convert LHS to boolean value
-	left, err := lib_boolval(lhs)
-	if err != nil {
-		return NewVoidRuntimeValue(), err
-	}
+	left := mustOrVoid(lib_boolval(lhs))
 
 	// Check if condition is already short circuited
 	if expr.Operator == "||" {
@@ -640,29 +551,17 @@ func (interpreter *Interpreter) ProcessLogicalExpr(expr *ast.LogicalExpression, 
 	}
 
 	// Evaluate RHS after checking if condition is already short circuited
-	rhs, err := interpreter.processStmt(expr.Rhs, env)
-	if err != nil {
-		return rhs, err
-	}
+	rhs := must(interpreter.processStmt(expr.Rhs, env))
 	// Convert RHS to boolean value
-	right, err := lib_boolval(rhs)
-	if err != nil {
-		return NewVoidRuntimeValue(), err
-	}
-	return NewBooleanRuntimeValue(right), nil
+	right := mustOrVoid(lib_boolval(rhs))
 
+	return NewBooleanRuntimeValue(right), nil
 }
 
 // ProcessLogicalNotExpr implements Visitor.
 func (interpreter *Interpreter) ProcessLogicalNotExpr(expr *ast.LogicalNotExpression, env any) (any, error) {
-	runtimeValue, err := interpreter.processStmt(expr.Expr, env)
-	if err != nil {
-		return runtimeValue, err
-	}
-	boolValue, err := lib_boolval(runtimeValue)
-	if err != nil {
-		return NewVoidRuntimeValue(), err
-	}
+	runtimeValue := must(interpreter.processStmt(expr.Expr, env))
+	boolValue := mustOrVoid(lib_boolval(runtimeValue))
 	return NewBooleanRuntimeValue(!boolValue), nil
 }
 
@@ -672,20 +571,10 @@ func (interpreter *Interpreter) ProcessPostfixIncExpr(expr *ast.PostfixIncExpres
 	// These operators behave like their prefix counterparts except that the value of a postfix ++ or – expression is the value
 	// before any increment or decrement takes place.
 
-	previous, err := interpreter.processStmt(expr.Expr, env)
-	if err != nil {
-		return previous, err
-	}
+	previous := must(interpreter.processStmt(expr.Expr, env))
+	newValue := must(calculateIncDec(expr.Operator, previous))
 
-	newValue, err := calculateIncDec(expr.Operator, previous)
-	if err != nil {
-		return newValue, err
-	}
-
-	variableName, err := interpreter.varExprToVarName(expr.Expr, env.(*Environment))
-	if err != nil {
-		return NewVoidRuntimeValue(), err
-	}
+	variableName := mustOrVoid(interpreter.varExprToVarName(expr.Expr, env.(*Environment)))
 	env.(*Environment).declareVariable(variableName, newValue)
 
 	return previous, nil
@@ -693,20 +582,10 @@ func (interpreter *Interpreter) ProcessPostfixIncExpr(expr *ast.PostfixIncExpres
 
 // ProcessPrefixIncExpr implements Visitor.
 func (interpreter *Interpreter) ProcessPrefixIncExpr(expr *ast.PrefixIncExpression, env any) (any, error) {
-	previous, err := interpreter.processStmt(expr.Expr, env)
-	if err != nil {
-		return previous, err
-	}
+	previous := must(interpreter.processStmt(expr.Expr, env))
+	newValue := must(calculateIncDec(expr.Operator, previous))
 
-	newValue, err := calculateIncDec(expr.Operator, previous)
-	if err != nil {
-		return newValue, err
-	}
-
-	variableName, err := interpreter.varExprToVarName(expr.Expr, env.(*Environment))
-	if err != nil {
-		return NewVoidRuntimeValue(), err
-	}
+	variableName := mustOrVoid(interpreter.varExprToVarName(expr.Expr, env.(*Environment)))
 	env.(*Environment).declareVariable(variableName, newValue)
 
 	return newValue, nil

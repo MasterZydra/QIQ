@@ -12,20 +12,14 @@ func (interpreter *Interpreter) ProcessStmt(stmt *ast.Statement, _ any) (any, er
 
 // ProcessConstDeclarationStmt implements Visitor.
 func (interpreter *Interpreter) ProcessConstDeclarationStmt(stmt *ast.ConstDeclarationStatement, env any) (any, error) {
-	value, err := interpreter.processStmt(stmt.Value, env)
-	if err != nil {
-		return value, err
-	}
+	value := must(interpreter.processStmt(stmt.Value, env))
 	return env.(*Environment).declareConstant(stmt.Name, value)
 }
 
 // ProcessCompoundStmt implements Visitor.
 func (interpreter *Interpreter) ProcessCompoundStmt(stmt *ast.CompoundStatement, env any) (any, error) {
 	for _, statement := range stmt.Statements {
-		runtimeValue, err := interpreter.processStmt(statement, env)
-		if err != nil {
-			return runtimeValue, err
-		}
+		must(interpreter.processStmt(statement, env))
 	}
 	return NewVoidRuntimeValue(), nil
 }
@@ -33,16 +27,10 @@ func (interpreter *Interpreter) ProcessCompoundStmt(stmt *ast.CompoundStatement,
 // ProcessEchoStmt implements Visitor.
 func (interpreter *Interpreter) ProcessEchoStmt(stmt *ast.EchoStatement, env any) (any, error) {
 	for _, expr := range stmt.Expressions {
-		if runtimeValue, err := interpreter.processStmt(expr, env); err != nil {
-			return runtimeValue, err
-		} else {
-			var str string
-			str, err = lib_strval(runtimeValue)
-			if err != nil {
-				return NewVoidRuntimeValue(), err
-			}
-			interpreter.print(str)
-		}
+		runtimeValue := must(interpreter.processStmt(expr, env))
+
+		str := mustOrVoid(lib_strval(runtimeValue))
+		interpreter.print(str)
 	}
 	return NewVoidRuntimeValue(), nil
 }
@@ -59,9 +47,7 @@ func (interpreter *Interpreter) ProcessFunctionDefinitionStmt(stmt *ast.Function
 		return NewVoidRuntimeValue(), nil
 	}
 
-	if err := env.(*Environment).defineUserFunction(stmt); err != nil {
-		return NewVoidRuntimeValue(), err
-	}
+	mustOrVoid(0, env.(*Environment).defineUserFunction(stmt))
 
 	return interpreter.writeCache(stmt, NewVoidRuntimeValue()), nil
 }
@@ -71,10 +57,7 @@ func (interpreter *Interpreter) ProcessReturnStmt(stmt *ast.ReturnStatement, env
 	if stmt.Expr == nil {
 		return NewVoidRuntimeValue(), phpError.NewEvent(phpError.ReturnEvent)
 	}
-	runtimeValue, err := interpreter.processStmt(stmt.Expr, env)
-	if err != nil {
-		return runtimeValue, err
-	}
+	runtimeValue := must(interpreter.processStmt(stmt.Expr, env))
 	return runtimeValue, phpError.NewEvent(phpError.ReturnEvent)
 }
 
@@ -83,10 +66,7 @@ func (interpreter *Interpreter) ProcessContinueStmt(stmt *ast.ContinueStatement,
 	if stmt.Expr == nil {
 		return NewVoidRuntimeValue(), phpError.NewEvent(phpError.ReturnEvent)
 	}
-	runtimeValue, err := interpreter.processStmt(stmt.Expr, env)
-	if err != nil {
-		return runtimeValue, err
-	}
+	runtimeValue := must(interpreter.processStmt(stmt.Expr, env))
 
 	if runtimeValue.GetType() != IntegerValue {
 		return runtimeValue, phpError.NewError("Breakout level must be an integer value. Got %s", runtimeValue.GetType())
@@ -100,10 +80,7 @@ func (interpreter *Interpreter) ProcessBreakStmt(stmt *ast.BreakStatement, env a
 	if stmt.Expr == nil {
 		return NewVoidRuntimeValue(), phpError.NewEvent(phpError.ReturnEvent)
 	}
-	runtimeValue, err := interpreter.processStmt(stmt.Expr, env)
-	if err != nil {
-		return runtimeValue, err
-	}
+	runtimeValue := must(interpreter.processStmt(stmt.Expr, env))
 
 	if runtimeValue.GetType() != IntegerValue {
 		return runtimeValue, phpError.NewError("Breakout level must be an integer value. Got %s", runtimeValue.GetType())
@@ -120,10 +97,7 @@ func (interpreter *Interpreter) ProcessForStmt(stmt *ast.ForStatement, env any) 
 		// Spec: https://phplang.org/spec/11-statements.html#grammar-for-statement
 		// The group of expressions in for-initializer is evaluated once, left-to-right, for their side effects.
 		for _, statement := range stmt.Initializer.Statements {
-			_, err := interpreter.processStmt(statement, env)
-			if err != nil {
-				return NewVoidRuntimeValue(), err
-			}
+			mustOrVoid(interpreter.processStmt(statement, env))
 		}
 	}
 
@@ -137,17 +111,10 @@ func (interpreter *Interpreter) ProcessForStmt(stmt *ast.ForStatement, env any) 
 		// effects only), with the right-most expression’s value being converted to type bool.
 		if stmt.Control != nil {
 			var conditionRuntimeValue IRuntimeValue
-			var err phpError.Error
 			for _, statement := range stmt.Control.Statements {
-				conditionRuntimeValue, err = interpreter.processStmt(statement, env)
-				if err != nil {
-					return NewVoidRuntimeValue(), err
-				}
+				conditionRuntimeValue = mustOrVoid(interpreter.processStmt(statement, env))
 			}
-			condition, err = lib_boolval(conditionRuntimeValue)
-			if err != nil {
-				return NewVoidRuntimeValue(), err
-			}
+			condition = mustOrVoid(lib_boolval(conditionRuntimeValue))
 		}
 
 		executeEndOfLoop := func() phpError.Error {
@@ -180,9 +147,7 @@ func (interpreter *Interpreter) ProcessForStmt(stmt *ast.ForStatement, env any) 
 					breakoutLevel := err.(*phpError.ContinueEventError).GetBreakoutLevel()
 					if breakoutLevel == 1 {
 						// Execute end-of-loop logic
-						if err := executeEndOfLoop(); err != nil {
-							return NewVoidRuntimeValue(), err
-						}
+						mustOrVoid(0, executeEndOfLoop())
 						continue
 					}
 					return NewVoidRuntimeValue(), phpError.NewContinueEvent(breakoutLevel - 1)
@@ -193,9 +158,7 @@ func (interpreter *Interpreter) ProcessForStmt(stmt *ast.ForStatement, env any) 
 
 		// Spec: https://phplang.org/spec/11-statements.html#grammar-for-statement
 		// ... and the group of expressions in for-end-of-loop is evaluated left-to-right, for their side effects only.
-		if err := executeEndOfLoop(); err != nil {
-			return NewVoidRuntimeValue(), err
-		}
+		mustOrVoid(0, executeEndOfLoop())
 
 		// Spec: https://phplang.org/spec/11-statements.html#grammar-for-statement
 		// Once the right-most expression in for-control is FALSE, control transfers to the point immediately following the end of the for statement.
@@ -209,53 +172,28 @@ func (interpreter *Interpreter) ProcessForStmt(stmt *ast.ForStatement, env any) 
 
 // ProcessIfStmt implements Visitor.
 func (interpreter *Interpreter) ProcessIfStmt(stmt *ast.IfStatement, env any) (any, error) {
-	conditionRuntimeValue, err := interpreter.processStmt(stmt.Condition, env)
-	if err != nil {
-		return conditionRuntimeValue, err
-	}
-
-	condition, err := lib_boolval(conditionRuntimeValue)
-	if err != nil {
-		return NewVoidRuntimeValue(), err
-	}
-
+	conditionRuntimeValue := must(interpreter.processStmt(stmt.Condition, env))
+	condition := mustOrVoid(lib_boolval(conditionRuntimeValue))
 	if condition {
-		runtimeValue, err := interpreter.processStmt(stmt.IfBlock, env)
-		if err != nil {
-			return runtimeValue, err
-		}
+		must(interpreter.processStmt(stmt.IfBlock, env))
 		return NewVoidRuntimeValue(), nil
 	}
 
 	if len(stmt.ElseIf) > 0 {
 		for _, elseIf := range stmt.ElseIf {
-			conditionRuntimeValue, err := interpreter.processStmt(elseIf.Condition, env)
-			if err != nil {
-				return conditionRuntimeValue, err
-			}
-
-			condition, err := lib_boolval(conditionRuntimeValue)
-			if err != nil {
-				return NewVoidRuntimeValue(), err
-			}
-
+			conditionRuntimeValue := must(interpreter.processStmt(elseIf.Condition, env))
+			condition := mustOrVoid(lib_boolval(conditionRuntimeValue))
 			if !condition {
 				continue
 			}
 
-			runtimeValue, err := interpreter.processStmt(elseIf.IfBlock, env)
-			if err != nil {
-				return runtimeValue, err
-			}
+			must(interpreter.processStmt(elseIf.IfBlock, env))
 			return NewVoidRuntimeValue(), nil
 		}
 	}
 
 	if stmt.ElseBlock != nil {
-		runtimeValue, err := interpreter.processStmt(stmt.ElseBlock, env)
-		if err != nil {
-			return runtimeValue, err
-		}
+		must(interpreter.processStmt(stmt.ElseBlock, env))
 		return NewVoidRuntimeValue(), nil
 	}
 
@@ -265,16 +203,8 @@ func (interpreter *Interpreter) ProcessIfStmt(stmt *ast.IfStatement, env any) (a
 // ProcessWhileStmt implements Visitor.
 func (interpreter *Interpreter) ProcessWhileStmt(stmt *ast.WhileStatement, env any) (any, error) {
 	for {
-		conditionRuntimeValue, err := interpreter.processStmt(stmt.Condition, env)
-		if err != nil {
-			return conditionRuntimeValue, err
-		}
-
-		condition, err := lib_boolval(conditionRuntimeValue)
-		if err != nil {
-			return NewVoidRuntimeValue(), err
-		}
-
+		conditionRuntimeValue := must(interpreter.processStmt(stmt.Condition, env))
+		condition := mustOrVoid(lib_boolval(conditionRuntimeValue))
 		if !condition {
 			break
 		}
@@ -324,15 +254,8 @@ func (interpreter *Interpreter) ProcessDoStmt(stmt *ast.DoStatement, env any) (a
 			return runtimeValue, err
 		}
 
-		conditionRuntimeValue, err := interpreter.processStmt(stmt.Condition, env)
-		if err != nil {
-			return conditionRuntimeValue, err
-		}
-
-		condition, err = lib_boolval(conditionRuntimeValue)
-		if err != nil {
-			return NewVoidRuntimeValue(), err
-		}
+		conditionRuntimeValue := must(interpreter.processStmt(stmt.Condition, env))
+		condition = mustOrVoid(lib_boolval(conditionRuntimeValue))
 		if !condition {
 			break
 		}
