@@ -212,27 +212,36 @@ func TestOperatorExpression(t *testing.T) {
 
 	// Logical inc or
 	testExpr(t, `<?php "234" || 12;`,
-		ast.NewBinaryOpExpr(0, ast.NewStringLiteralExpr(0, nil, "234", ast.DoubleQuotedString), "||", ast.NewIntegerLiteralExpr(0, nil, 12)),
+		ast.NewLogicalExpr(0, ast.NewStringLiteralExpr(0, nil, "234", ast.DoubleQuotedString), "||", ast.NewIntegerLiteralExpr(0, nil, 12)),
+	)
+	// Logical inc or 2
+	testExpr(t, `<?php "234" or 12;`,
+		ast.NewLogicalExpr(0, ast.NewStringLiteralExpr(0, nil, "234", ast.DoubleQuotedString), "||", ast.NewIntegerLiteralExpr(0, nil, 12)),
+	)
+
+	// Logical exc or
+	testExpr(t, `<?php "234" xor 12;`,
+		ast.NewLogicalExpr(0, ast.NewStringLiteralExpr(0, nil, "234", ast.DoubleQuotedString), "xor", ast.NewIntegerLiteralExpr(0, nil, 12)),
 	)
 
 	// Logical and
 	testExpr(t, `<?php "234" && 12;`,
-		ast.NewBinaryOpExpr(0, ast.NewStringLiteralExpr(0, nil, "234", ast.DoubleQuotedString), "&&", ast.NewIntegerLiteralExpr(0, nil, 12)),
+		ast.NewLogicalExpr(0, ast.NewStringLiteralExpr(0, nil, "234", ast.DoubleQuotedString), "&&", ast.NewIntegerLiteralExpr(0, nil, 12)),
 	)
 
 	// Bitwise inc or
 	testExpr(t, `<?php "234" | 12;`,
-		ast.NewBinaryOpExpr(0, ast.NewStringLiteralExpr(0, nil, "234", ast.DoubleQuotedString), "|", ast.NewIntegerLiteralExpr(0, nil, 12)),
+		ast.NewLogicalExpr(0, ast.NewStringLiteralExpr(0, nil, "234", ast.DoubleQuotedString), "|", ast.NewIntegerLiteralExpr(0, nil, 12)),
 	)
 
 	// Bitwise exc or
 	testExpr(t, `<?php "234" ^ 12;`,
-		ast.NewBinaryOpExpr(0, ast.NewStringLiteralExpr(0, nil, "234", ast.DoubleQuotedString), "^", ast.NewIntegerLiteralExpr(0, nil, 12)),
+		ast.NewLogicalExpr(0, ast.NewStringLiteralExpr(0, nil, "234", ast.DoubleQuotedString), "^", ast.NewIntegerLiteralExpr(0, nil, 12)),
 	)
 
 	// Bitwise and
 	testExpr(t, `<?php "234" & 12;`,
-		ast.NewBinaryOpExpr(0, ast.NewStringLiteralExpr(0, nil, "234", ast.DoubleQuotedString), "&", ast.NewIntegerLiteralExpr(0, nil, 12)),
+		ast.NewLogicalExpr(0, ast.NewStringLiteralExpr(0, nil, "234", ast.DoubleQuotedString), "&", ast.NewIntegerLiteralExpr(0, nil, 12)),
 	)
 }
 

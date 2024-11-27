@@ -543,7 +543,7 @@ func (interpreter *Interpreter) ProcessLogicalExpr(expr *ast.LogicalExpression, 
 		if left {
 			return NewBooleanRuntimeValue(true), nil
 		}
-	} else {
+	} else if expr.Operator == "&&" {
 		// if LHS of "and" is false, the result is already false
 		if !left {
 			return NewBooleanRuntimeValue(false), nil
@@ -554,6 +554,10 @@ func (interpreter *Interpreter) ProcessLogicalExpr(expr *ast.LogicalExpression, 
 	rhs := must(interpreter.processStmt(expr.Rhs, env))
 	// Convert RHS to boolean value
 	right := mustOrVoid(lib_boolval(rhs))
+
+	if expr.Operator == "xor" {
+		return NewBooleanRuntimeValue(left != right), nil
+	}
 
 	return NewBooleanRuntimeValue(right), nil
 }

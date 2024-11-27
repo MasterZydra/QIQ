@@ -445,6 +445,14 @@ func TestOperators(t *testing.T) {
 		"true\nfn_call false\nfalse\nfn_call false\n",
 	)
 
+	// Logical "xor, "and" and "or" 2
+	testInputOutput(t, `<?= (true xor true) ? "t": "f";`, "f")
+	testInputOutput(t, `<?= (true xor false) ? "t": "f";`, "t")
+	testInputOutput(t, `<?= (false xor false) ? "t": "f";`, "f")
+	testInputOutput(t, `<?php if (4 or 1) { echo "t"; } else { echo "f"; }`, "t")
+	testInputOutput(t, `<?= "234" or 12 ? "3": "2";`, "1")
+	testInputOutput(t, `<?= ("234" or 12) ? "3": "2";`, "3")
+
 	// Unary expression
 	// Boolean
 	testInputOutput(t, `<?php var_dump(+true);`, "int(1)\n")

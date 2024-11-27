@@ -943,17 +943,6 @@ func (parser *Parser) parseExpr() (ast.IExpression, phpError.Error) {
 	//    include-once-expression
 	//    require-expression
 	//    require-once-expression
-	// Spec-Fix: So that by following assignment-expression the primary-expression is reachable
-	//    assignment-expression
-
-	// logical-inc-OR-expression-2
-	// Spec: https://phplang.org/spec/10-expressions.html#grammar-logical-inc-OR-expression-2
-
-	// logical-inc-OR-expression-2:
-	//    logical-exc-OR-expression
-	//    logical-inc-OR-expression-2   or   logical-exc-OR-expression
-
-	// TODO logical-inc-OR-expression-2:
 
 	// ------------------- MARK: include-expression -------------------
 
@@ -1026,6 +1015,67 @@ func (parser *Parser) parseExpr() (ast.IExpression, phpError.Error) {
 
 		return ast.NewRequireOnceExpr(parser.nextId(), pos, expr), nil
 	}
+
+	return parser.parseLogicalIncOrExpr2()
+}
+
+func (parser *Parser) parseLogicalIncOrExpr2() (ast.IExpression, phpError.Error) {
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-logical-inc-OR-expression-2
+
+	// logical-inc-OR-expression-2:
+	//    logical-exc-OR-expression
+	//    logical-inc-OR-expression-2   or   logical-exc-OR-expression
+
+	lhs, err := parser.parseLogicalExcOrExpr()
+	if err != nil {
+		return ast.NewEmptyExpr(), err
+	}
+
+	for parser.isToken(lexer.KeywordToken, "or", true) {
+		rhs, err := parser.parseLogicalIncOrExpr2()
+		if err != nil {
+			return ast.NewEmptyExpr(), err
+		}
+		lhs = ast.NewLogicalExpr(parser.nextId(), lhs, "||", rhs)
+	}
+	return lhs, nil
+}
+
+func (parser *Parser) parseLogicalExcOrExpr() (ast.IExpression, phpError.Error) {
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-logical-exc-OR-expression
+
+	// logical-exc-OR-expression:
+	//    logical-AND-expression-2
+	//    logical-exc-OR-expression   xor   logical-AND-expression-2
+
+	lhs, err := parser.parseLogicalAndExpr2()
+	if err != nil {
+		return ast.NewEmptyExpr(), err
+	}
+
+	for parser.isToken(lexer.KeywordToken, "xor", true) {
+		rhs, err := parser.parseLogicalExcOrExpr()
+		if err != nil {
+			return ast.NewEmptyExpr(), err
+		}
+		lhs = ast.NewLogicalExpr(parser.nextId(), lhs, "xor", rhs)
+	}
+	return lhs, nil
+}
+
+func (parser *Parser) parseLogicalAndExpr2() (ast.IExpression, phpError.Error) {
+	// Spec: https://phplang.org/spec/10-expressions.html?#grammar-logical-AND-expression-2
+
+	// logical-AND-expression-2:
+	//    print-expression
+	//    logical-AND-expression-2   and   yield-expression
+
+	// TODO print-expression
+
+	// TODO logical-AND-expression-2   and   yield-expression
+
+	// Spec-Fix: So that by following assignment-expression the primary-expression is reachable
+	//    assignment-expression
 
 	// assignment-expression
 	return parser.parseAssignmentExpr()

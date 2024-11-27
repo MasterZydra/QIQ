@@ -14,7 +14,9 @@
 - additive expression: `$var + 42; $var - 42; "a" . "b";`
 - multiplicative expression: `$var * 42; $var / 42; $var % 42;`
 - logical and expression: `$var && 8;`
+- logical exc or expression: `$var xor 8;`
 - logical inc or expression: `$var || 8;`
+- logical inc or expression 2: `$var or 8;`
 - bitwise exc or expression: `$var ^ 8;`
 - bitwise inc or expression: `$var | 8;`
 - bitwise and expression: `$var & 8;`
