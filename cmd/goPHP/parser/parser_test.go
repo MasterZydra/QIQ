@@ -228,6 +228,10 @@ func TestOperatorExpression(t *testing.T) {
 	testExpr(t, `<?php "234" && 12;`,
 		ast.NewLogicalExpr(0, ast.NewStringLiteralExpr(0, nil, "234", ast.DoubleQuotedString), "&&", ast.NewIntegerLiteralExpr(0, nil, 12)),
 	)
+	// Logical and 2
+	testExpr(t, `<?php "234" and 12;`,
+		ast.NewLogicalExpr(0, ast.NewStringLiteralExpr(0, nil, "234", ast.DoubleQuotedString), "&&", ast.NewIntegerLiteralExpr(0, nil, 12)),
+	)
 
 	// Bitwise inc or
 	testExpr(t, `<?php "234" | 12;`,

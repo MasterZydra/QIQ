@@ -1070,15 +1070,26 @@ func (parser *Parser) parseLogicalAndExpr2() (ast.IExpression, phpError.Error) {
 	//    print-expression
 	//    logical-AND-expression-2   and   yield-expression
 
-	// TODO print-expression
-
-	// TODO logical-AND-expression-2   and   yield-expression
-
 	// Spec-Fix: So that by following assignment-expression the primary-expression is reachable
 	//    assignment-expression
 
-	// assignment-expression
-	return parser.parseAssignmentExpr()
+	lhs, err := parser.parseAssignmentExpr()
+	if err != nil {
+		return ast.NewEmptyExpr(), err
+	}
+
+	for parser.isToken(lexer.KeywordToken, "and", true) {
+		rhs, err := parser.parseLogicalAndExpr2()
+		if err != nil {
+			return ast.NewEmptyExpr(), err
+		}
+		lhs = ast.NewLogicalExpr(parser.nextId(), lhs, "&&", rhs)
+	}
+	return lhs, nil
+
+	// TODO print-expression
+
+	// TODO yield-expression
 }
 
 func (parser *Parser) parseAssignmentExpr() (ast.IExpression, phpError.Error) {
