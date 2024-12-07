@@ -126,6 +126,9 @@ func TestEchoStatement(t *testing.T) {
 		ast.NewIntegerLiteralExpr(0, nil, 12), ast.NewStringLiteralExpr(0, nil, "abc", ast.DoubleQuotedString),
 		ast.NewSimpleVariableExpr(0, ast.NewVariableNameExpr(0, nil, "$var")),
 	}))
+
+	// Print
+	testExpr(t, `<?php print "abc";`, ast.NewPrintExpr(0, nil, ast.NewStringLiteralExpr(0, nil, "abc", ast.DoubleQuotedString)))
 }
 
 func TestConditional(t *testing.T) {
@@ -166,7 +169,7 @@ func TestCastExpression(t *testing.T) {
 
 func TestParenthesizedExpression(t *testing.T) {
 	testExpr(t, `<?php (1+2);`,
-		ast.NewParenthesizedExpression(0, nil, ast.NewBinaryOpExpr(0, ast.NewIntegerLiteralExpr(0, nil, 1), "+", ast.NewIntegerLiteralExpr(0, nil, 2))),
+		ast.NewParenthesizedExpr(0, nil, ast.NewBinaryOpExpr(0, ast.NewIntegerLiteralExpr(0, nil, 1), "+", ast.NewIntegerLiteralExpr(0, nil, 2))),
 	)
 }
 

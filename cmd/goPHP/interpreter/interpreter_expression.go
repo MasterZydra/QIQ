@@ -595,6 +595,21 @@ func (interpreter *Interpreter) ProcessPrefixIncExpr(expr *ast.PrefixIncExpressi
 	return newValue, nil
 }
 
+// ProcessPrintExpr implements Visitor.
+func (interpreter *Interpreter) ProcessPrintExpr(expr *ast.PrintExpression, env any) (any, error) {
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-print-expression
+	// After converting print-expression’s value into a string, if necessary, print writes the resulting string to STDOUT.
+	// Unlike echo, print can be used in any context allowing an expression. It always returns the value 1.
+
+	runtimeValue := must(interpreter.processStmt(expr.Expr, env))
+
+	str, err := lib_strval(runtimeValue)
+	if err == nil {
+		interpreter.print(str)
+	}
+	return NewIntegerRuntimeValue(1), err
+}
+
 // ProcessRequireExpr implements Visitor.
 func (interpreter *Interpreter) ProcessRequireExpr(expr *ast.RequireExpression, env any) (any, error) {
 	return interpreter.includeFile(expr.Expr, env.(*Environment), false, false)

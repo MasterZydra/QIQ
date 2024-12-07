@@ -27,6 +27,7 @@ const (
 	ParenthesizedExpr      NodeType = "ParenthesizedExpression"
 	PostfixIncExpr         NodeType = "PostfixIncExpression"
 	PrefixIncExpr          NodeType = "PrefixIncExpression"
+	PrintExpr              NodeType = "PrintExpression"
 	RelationalExpr         NodeType = "RelationalExpression"
 	RequireExpr            NodeType = "RequireExpression"
 	RequireOnceExpr        NodeType = "RequireOnceExpression"

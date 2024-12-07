@@ -95,6 +95,16 @@ func TestOutput(t *testing.T) {
 
 	// Simple variable substitution
 	testInputOutput(t, `<?php $a = 42; echo "a{$a}b";`, "a42b")
+
+	// Print
+	// From https://www.php.net/manual/en/function.print.php
+	testInputOutput(t, `<?php print "hello";print "world";print "\n";`, "helloworld\n")
+	testInputOutput(t, `<?php print 6*7;`, "42")
+	testInputOutput(t, `<?php $foo = "example"; print "foo is {$foo}";`, "foo is example")
+	testInputOutput(t, `<?php if ((print "hello") === 1) { echo " y"; } else { echo " n"; }`, "hello y")
+	testInputOutput(t, `<?php ( 1 === 1 ) ? print 'true' : print 'false';`, "true")
+	testInputOutput(t, `<?php print("hello");`, "hello")
+	testInputOutput(t, `<?php print(1 + 2) * 3;`, "9")
 }
 
 func TestConstants(t *testing.T) {

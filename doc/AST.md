@@ -28,8 +28,13 @@ classDiagram
   Expression <|-- IncludeOnceExpression
   Expression <|-- RequireExpression
   Expression <|-- RequireOnceExpression
+
+  LogicalIncOrExpression2 <|-- LogicalExcOrExpression
+  LogicalExcOrExpression <|-- LogicalAndExpression2
+  LogicalAndExpression2 <|-- PrintExpression
+  LogicalAndExpression2 <|-- YieldExpression
   %% Spec-Fix so that AssignmentExpression is reachable
-  Expression <|-- AssignmentExpression
+  PrintExpression <|-- AssignmentExpression
 
   AssignmentExpression <|-- ConditionalExpression
   AssignmentExpression <|-- SimpleAssignmentExpression

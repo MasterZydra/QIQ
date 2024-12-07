@@ -1070,12 +1070,31 @@ func (parser *Parser) parseLogicalAndExpr2() (ast.IExpression, phpError.Error) {
 	//    print-expression
 	//    logical-AND-expression-2   and   yield-expression
 
+	// print-expression
+
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-print-expression
+
+	// print-expression:
+	//    yield-expression
+	//    print   print-expression
 	// Spec-Fix: So that by following assignment-expression the primary-expression is reachable
 	//    assignment-expression
 
-	lhs, err := parser.parseAssignmentExpr()
+	var lhs ast.IExpression
+	var err phpError.Error
+	if parser.isToken(lexer.KeywordToken, "print", false) {
+		pos := parser.eat().Position
+
+		lhs, err = parser.parseLogicalAndExpr2()
 	if err != nil {
 		return ast.NewEmptyExpr(), err
+		}
+		lhs = ast.NewPrintExpr(parser.nextId(), pos, lhs)
+	} else {
+		lhs, err = parser.parseAssignmentExpr()
+		if err != nil {
+			return ast.NewEmptyExpr(), err
+		}
 	}
 
 	for parser.isToken(lexer.KeywordToken, "and", true) {
@@ -1086,8 +1105,6 @@ func (parser *Parser) parseLogicalAndExpr2() (ast.IExpression, phpError.Error) {
 		lhs = ast.NewLogicalExpr(parser.nextId(), lhs, "&&", rhs)
 	}
 	return lhs, nil
-
-	// TODO print-expression
 
 	// TODO yield-expression
 }
@@ -1845,7 +1862,7 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, phpError.Error) {
 			return ast.NewEmptyExpr(), err
 		}
 		if parser.isToken(lexer.OpOrPuncToken, ")", true) {
-			return ast.NewParenthesizedExpression(parser.nextId(), pos, expr), nil
+			return ast.NewParenthesizedExpr(parser.nextId(), pos, expr), nil
 		} else {
 			return ast.NewEmptyExpr(), phpError.NewParseError("Expected \")\". Got: %s", parser.at())
 		}

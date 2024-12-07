@@ -1,7 +1,10 @@
 # Supported syntax and features
 
 ## Expressions and statements
+- echo statement: `echo "abc", 123, true;`
+- print statement: `print "abc";`
 - short open tag: `<? 1 + 2;`
+- short echo statement: `<?= "123";`
 - declare and access variable: `$var = "abc"; echo $abc;`
 - declare and access constant: `const PI = 3.141; echo PI;`
 - simple assignment: `$var = 42;`

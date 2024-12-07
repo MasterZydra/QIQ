@@ -57,7 +57,7 @@ func (visitor DumpVisitor) ProcessBreakStmt(stmt *BreakStatement, _ any) (any, e
 // ProcessCastExpr implements Visitor.
 func (visitor DumpVisitor) ProcessCastExpr(stmt *CastExpression, _ any) (any, error) {
 	return fmt.Sprintf(
-		"{%s - operator: \"%s\" expression: %s }",
+		"{%s - operator: \"%s\" expr: %s }",
 		stmt.GetKind(), stmt.Operator, ToString(stmt.Expr),
 	), nil
 }
@@ -196,12 +196,12 @@ func (visitor DumpVisitor) ProcessIfStmt(stmt *IfStatement, _ any) (any, error) 
 
 // ProcessIncludeExpr implements Visitor.
 func (visitor DumpVisitor) ProcessIncludeExpr(stmt *IncludeExpression, _ any) (any, error) {
-	return fmt.Sprintf("{%s - expression: %s }", stmt.GetKind(), ToString(stmt.Expr)), nil
+	return fmt.Sprintf("{%s - expr: %s }", stmt.GetKind(), ToString(stmt.Expr)), nil
 }
 
 // ProcessIncludeOnceExpr implements Visitor.
 func (visitor DumpVisitor) ProcessIncludeOnceExpr(stmt *IncludeOnceExpression, _ any) (any, error) {
-	return fmt.Sprintf("{%s - expression: %s }", stmt.GetKind(), ToString(stmt.Expr)), nil
+	return fmt.Sprintf("{%s - expr: %s }", stmt.GetKind(), ToString(stmt.Expr)), nil
 }
 
 // ProcessIntegerLiteralExpr implements Visitor.
@@ -227,7 +227,7 @@ func (visitor DumpVisitor) ProcessLogicalExpr(stmt *LogicalExpression, _ any) (a
 
 // ProcessLogicalNotExpr implements Visitor.
 func (visitor DumpVisitor) ProcessLogicalNotExpr(stmt *LogicalNotExpression, _ any) (any, error) {
-	return fmt.Sprintf("{%s - operator: \"%s\" expression: %s }", stmt.GetKind(), stmt.Operator, ToString(stmt.Expr)), nil
+	return fmt.Sprintf("{%s - operator: \"%s\" expr: %s }", stmt.GetKind(), stmt.Operator, ToString(stmt.Expr)), nil
 }
 
 // ProcessParenthesizedExpr implements Visitor.
@@ -237,12 +237,17 @@ func (visitor DumpVisitor) ProcessParenthesizedExpr(stmt *ParenthesizedExpressio
 
 // ProcessPostfixIncExpr implements Visitor.
 func (visitor DumpVisitor) ProcessPostfixIncExpr(stmt *PostfixIncExpression, _ any) (any, error) {
-	return fmt.Sprintf("{%s - operator: \"%s\" expression: %s }", stmt.GetKind(), stmt.Operator, ToString(stmt.Expr)), nil
+	return fmt.Sprintf("{%s - operator: \"%s\" expr: %s }", stmt.GetKind(), stmt.Operator, ToString(stmt.Expr)), nil
 }
 
 // ProcessPrefixIncExpr implements Visitor.
 func (visitor DumpVisitor) ProcessPrefixIncExpr(stmt *PrefixIncExpression, _ any) (any, error) {
-	return fmt.Sprintf("{%s - operator: \"%s\" expression: %s }", stmt.GetKind(), stmt.Operator, ToString(stmt.Expr)), nil
+	return fmt.Sprintf("{%s - operator: \"%s\" expr: %s }", stmt.GetKind(), stmt.Operator, ToString(stmt.Expr)), nil
+}
+
+// ProcessPrintExpr implements Visitor.
+func (visitor DumpVisitor) ProcessPrintExpr(stmt *PrintExpression, context any) (any, error) {
+	return fmt.Sprintf("{%s - expr: %s }", stmt.GetKind(), ToString(stmt.Expr)), nil
 }
 
 // ProcessRelationalExpr implements Visitor.
@@ -255,12 +260,12 @@ func (visitor DumpVisitor) ProcessRelationalExpr(stmt *RelationalExpression, _ a
 
 // ProcessRequireExpr implements Visitor.
 func (visitor DumpVisitor) ProcessRequireExpr(stmt *RequireExpression, _ any) (any, error) {
-	return fmt.Sprintf("{%s - expression: %s }", stmt.GetKind(), ToString(stmt.Expr)), nil
+	return fmt.Sprintf("{%s - expr: %s }", stmt.GetKind(), ToString(stmt.Expr)), nil
 }
 
 // ProcessRequireOnceExpr implements Visitor.
 func (visitor DumpVisitor) ProcessRequireOnceExpr(stmt *RequireOnceExpression, _ any) (any, error) {
-	return fmt.Sprintf("{%s - expression: %s }", stmt.GetKind(), ToString(stmt.Expr)), nil
+	return fmt.Sprintf("{%s - expr: %s }", stmt.GetKind(), ToString(stmt.Expr)), nil
 }
 
 // ProcessReturnStmt implements Visitor.
@@ -307,7 +312,7 @@ func (visitor DumpVisitor) ProcessTextExpr(stmt *TextExpression, _ any) (any, er
 // ProcessUnaryExpr implements Visitor.
 func (visitor DumpVisitor) ProcessUnaryExpr(stmt *UnaryOpExpression, _ any) (any, error) {
 	return fmt.Sprintf(
-		"{%s - operator: \"%s\" expression: %s }",
+		"{%s - operator: \"%s\" expr: %s }",
 		stmt.GetKind(), stmt.Operator, ToString(stmt.Expr),
 	), nil
 }

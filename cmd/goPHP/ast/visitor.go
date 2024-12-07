@@ -39,6 +39,7 @@ type Visitor interface {
 	ProcessParenthesizedExpr(stmt *ParenthesizedExpression, context any) (any, error)
 	ProcessPostfixIncExpr(stmt *PostfixIncExpression, context any) (any, error)
 	ProcessPrefixIncExpr(stmt *PrefixIncExpression, context any) (any, error)
+	ProcessPrintExpr(stmt *PrintExpression, context any) (any, error)
 	ProcessRelationalExpr(stmt *RelationalExpression, context any) (any, error)
 	ProcessRequireExpr(stmt *RequireExpression, context any) (any, error)
 	ProcessRequireOnceExpr(stmt *RequireOnceExpression, context any) (any, error)

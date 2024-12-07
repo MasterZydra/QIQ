@@ -47,12 +47,26 @@ type ParenthesizedExpression struct {
 	Expr IExpression
 }
 
-func NewParenthesizedExpression(id int64, pos *position.Position, expr IExpression) *ParenthesizedExpression {
+func NewParenthesizedExpr(id int64, pos *position.Position, expr IExpression) *ParenthesizedExpression {
 	return &ParenthesizedExpression{Expression: NewExpr(id, ParenthesizedExpr, pos), Expr: expr}
 }
 
 func (stmt *ParenthesizedExpression) Process(visitor Visitor, context any) (any, error) {
 	return visitor.ProcessParenthesizedExpr(stmt, context)
+}
+
+// ------------------- MARK: PrintExpression -------------------
+
+type PrintExpression struct {
+	*ParenthesizedExpression
+}
+
+func NewPrintExpr(id int64, pos *position.Position, expr IExpression) *PrintExpression {
+	return &PrintExpression{&ParenthesizedExpression{Expression: NewExpr(id, PrintExpr, pos), Expr: expr}}
+}
+
+func (stmt *PrintExpression) Process(visitor Visitor, context any) (any, error) {
+	return visitor.ProcessPrintExpr(stmt, context)
 }
 
 // ------------------- MARK: TextExpression -------------------
