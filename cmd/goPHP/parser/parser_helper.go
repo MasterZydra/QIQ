@@ -76,3 +76,17 @@ func (parser *Parser) expect(tokenType lexer.TokenType, value string, eat bool) 
 	}
 	return phpError.NewParseError("Unexpected token %s. Expected: %s", parser.at(), lexer.NewToken(tokenType, value, nil))
 }
+
+func (parser *Parser) isTextExpression(eat bool) bool {
+	isTextExpression := (parser.isToken(lexer.OpOrPuncToken, ";", false) &&
+		parser.next(0).TokenType == lexer.EndTagToken &&
+		parser.next(1).TokenType == lexer.TextToken) || (parser.isTokenType(lexer.EndTagToken, false) &&
+		parser.next(0).TokenType == lexer.TextToken)
+
+	if isTextExpression && eat {
+		parser.isToken(lexer.OpOrPuncToken, ";", true)
+		parser.eat()
+	}
+
+	return isTextExpression
+}

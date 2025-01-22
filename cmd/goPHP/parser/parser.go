@@ -83,6 +83,23 @@ func (parser *Parser) parseStmt() (ast.IStatement, phpError.Error) {
 	//    global-declaration
 	//    function-static-declaration
 
+	// Resolve text expressions
+	if parser.isTextExpression(true) {
+		statements := []ast.IStatement{}
+		textExpr := ast.NewExpressionStmt(parser.nextId(), ast.NewTextExpr(parser.nextId(), parser.eat().Value))
+		parser.isTokenType(lexer.StartTagToken, true)
+
+		statements = append(statements, textExpr)
+
+		stmt, err := parser.parseStmt()
+		for err == nil || parser.isTextExpression(false) {
+			statements = append(statements, stmt)
+			stmt, err = parser.parseStmt()
+		}
+
+		return ast.NewCompoundStmt(parser.nextId(), statements), nil
+	}
+
 	if parser.isTokenType(lexer.TextToken, false) {
 		return ast.NewExpressionStmt(parser.nextId(), ast.NewTextExpr(parser.nextId(), parser.eat().Value)), nil
 	}
@@ -1086,8 +1103,8 @@ func (parser *Parser) parseLogicalAndExpr2() (ast.IExpression, phpError.Error) {
 		pos := parser.eat().Position
 
 		lhs, err = parser.parseLogicalAndExpr2()
-	if err != nil {
-		return ast.NewEmptyExpr(), err
+		if err != nil {
+			return ast.NewEmptyExpr(), err
 		}
 		lhs = ast.NewPrintExpr(parser.nextId(), pos, lhs)
 	} else {
@@ -1867,6 +1884,15 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, phpError.Error) {
 			return ast.NewEmptyExpr(), phpError.NewParseError("Expected \")\". Got: %s", parser.at())
 		}
 	}
+
+	// if parser.isToken(lexer.OpOrPuncToken, ";", false) &&
+	// 	slices.Contains([]lexer.TokenType{lexer.StartTagToken, lexer.EndTagToken}, parser.next(0).TokenType) {
+	// 	parser.eatN(2)
+	// }
+
+	// if parser.isTokenType(lexer.TextToken, false) {
+	// 	return ast.NewExpressionStmt(parser.nextId(), ast.NewTextExpr(parser.nextId(), parser.eat().Value)), nil
+	// }
 
 	return ast.NewEmptyExpr(), phpError.NewParseError("Unsupported expression type: %s", parser.at())
 }

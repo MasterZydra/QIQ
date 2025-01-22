@@ -177,6 +177,8 @@ func TestConditionals(t *testing.T) {
 	testInputOutput(t, `<?php $a = 42; if ($a === 42): echo "42"; elseif ($a === 41): echo "41"; else: echo "??"; endif;`, "42")
 	testInputOutput(t, `<?php $a = 41; if ($a === 42): echo "42"; elseif ($a === 41): echo "41"; else: echo "??"; endif;`, "41")
 	testInputOutput(t, `<?php $a = 40; if ($a === 42): echo "42"; elseif ($a === 41): echo "41"; else: echo "??"; endif;`, "??")
+	// If statement mixed with text expressions
+	testInputOutput(t, `<?php if (true): ?>a<?= 'b' ?>c<?php endif ?>`, "abc")
 
 	// While statement
 	testInputOutput(t, `<?php $a = 40; while ($a < 42) { echo "1"; $a++; }`, "11")
@@ -186,6 +188,8 @@ func TestConditionals(t *testing.T) {
 	// Alternative syntax
 	testInputOutput(t, `<?php $a = 40; while ($a < 42): echo "1";  $a++; endwhile;`, "11")
 	testInputOutput(t, `<?php $a = 42; while ($a < 42): echo "1";  $a++; endwhile;`, "")
+	// While statement mixed with text expressions
+	testInputOutput(t, `<?php $a = 0; while ($a < 10) { ?>.<?= $a ?>.<?php $a++; } ?>`, ".0..1..2..3..4..5..6..7..8..9.")
 
 	// Do statement
 	testInputOutput(t, `<?php $a = 40; do { echo "1"; $a++; } while ($a < 42);`, "11")
