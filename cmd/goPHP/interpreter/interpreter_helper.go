@@ -307,13 +307,16 @@ func (interpreter *Interpreter) exprToRuntimeValue(expr ast.IExpression, env *En
 	case ast.StringLiteralExpr:
 		str := expr.(*ast.StringLiteralExpression).Value
 		// variable substitution
-		// Test - tests/lang/017.phpt
-		// TODO move to area where it is called before printing it
 		if expr.(*ast.StringLiteralExpression).StringType == ast.DoubleQuotedString {
-			r, _ := regexp.Compile(`{\$[A-Za-z_][A-Za-z0-9_]*['A-Za-z0-9\[\]]*}`)
+			r, _ := regexp.Compile(`({\$[A-Za-z_][A-Za-z0-9_]*['A-Za-z0-9\[\]]*[^}]*})|(\$[A-Za-z_][A-Za-z0-9_]*['A-Za-z0-9\[\]]*)`)
 			matches := r.FindAllString(str, -1)
 			for _, match := range matches {
-				exprStr := "<?= " + match[1:len(match)-1] + ";"
+				varExpr := match
+				if match[0] == '{' {
+					// Remove curly braces
+					varExpr = match[1 : len(match)-1]
+				}
+				exprStr := "<?= " + varExpr + ";"
 				result, err := NewInterpreter(interpreter.ini, interpreter.request, "").process(exprStr, env)
 				if err != nil {
 					return NewVoidRuntimeValue(), err

@@ -95,6 +95,10 @@ func TestOutput(t *testing.T) {
 
 	// Simple variable substitution
 	testInputOutput(t, `<?php $a = 42; echo "a{$a}b";`, "a42b")
+	testInputOutput(t, `<?php $a = 42; $b = 'abc'; echo "a{$a}b{$b}";`, "a42babc")
+	testInputOutput(t, `<?php $a = 42; echo "$a";`, "42")
+	testInputOutput(t, `<?php $a = 42; $b = 'abc'; echo "$a $b";`, "42 abc")
+	testInputOutput(t, `<?php echo "$a";`, "Warning: Undefined variable $a\n")
 
 	// Print
 	// From https://www.php.net/manual/en/function.print.php
