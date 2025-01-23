@@ -70,7 +70,7 @@ func testForError(t *testing.T, php string, expected phpError.Error) {
 func testInputOutput(t *testing.T, php string, output string) *Interpreter {
 	// Always use "\n" for tests so that they also pass on Windows
 	PHP_EOL = "\n"
-	interpreter := NewInterpreter(ini.NewDevIni(), &Request{}, "test.php")
+	interpreter := NewInterpreter(ini.NewDevIni(), &Request{}, "/home/admin/test.php")
 	actual, err := interpreter.Process(php)
 	if err != nil {
 		t.Errorf("\nCode: \"%s\"\nUnexpected error: \"%s\"", php, err)
@@ -115,6 +115,12 @@ func TestConstants(t *testing.T) {
 	// Predefined constants
 	testInputOutput(t, `<?php echo E_USER_NOTICE;`, fmt.Sprintf("%d", phpError.E_USER_NOTICE))
 	testInputOutput(t, `<?php echo E_ALL;`, fmt.Sprintf("%d", phpError.E_ALL))
+
+	// Magic constants
+	testInputOutput(t, "<?php var_dump(__DIR__);", "string(11) \"/home/admin\"\n")
+	testInputOutput(t, "<?php var_dump(__FUNCTION__); function fn() { var_dump(__FUNCTION__); } fn();", "string(0) \"\"\nstring(2) \"fn\"\n")
+	testInputOutput(t, "<?php var_dump(__FILE__);", "string(20) \"/home/admin/test.php\"\n")
+	testInputOutput(t, "<?php var_dump(__LINE__);\nvar_dump(__LINE__);", "int(1)\nint(2)\n")
 
 	// Userdefined constants
 	testInputOutput(t, `<?php const TRUTH = 42; const PI = "3.141";echo TRUTH, PI;`, "423.141")

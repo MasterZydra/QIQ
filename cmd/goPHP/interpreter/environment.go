@@ -20,6 +20,8 @@ type Environment struct {
 	predefinedVariables map[string]IRuntimeValue
 	predefinedConstants map[string]IRuntimeValue
 	nativeFunctions     map[string]nativeFunction
+	// Context
+	CurrentFunction *ast.FunctionDefinitionStatement
 }
 
 func NewEnvironment(parentEnv *Environment, request *Request) *Environment {

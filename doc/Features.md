@@ -106,6 +106,12 @@
 - PHP_VERSION_ID
 - TRUE
 
+## Magic constants
+- \_\_DIR\_\_
+- \_\_FILE\_\_
+- \_\_FUNCTION\_\_
+- \_\_LINE\_\_
+
 ## Standard library
 - array_key_exists
 - die

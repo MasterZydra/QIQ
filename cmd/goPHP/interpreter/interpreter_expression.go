@@ -218,6 +218,7 @@ func (interpreter *Interpreter) ProcessFunctionCallExpr(expr *ast.FunctionCallEx
 	userFunction := mustOrVoid(env.(*Environment).lookupUserFunction(expr.FunctionName))
 
 	functionEnv := NewEnvironment(env.(*Environment), nil)
+	functionEnv.CurrentFunction = userFunction
 
 	if len(userFunction.Params) != len(expr.Arguments) {
 		return NewVoidRuntimeValue(), phpError.NewError(
@@ -371,10 +372,43 @@ func (interpreter *Interpreter) ProcessUnsetIntrinsicExpr(expr *ast.UnsetIntrins
 
 // ProcessConstantAccessExpr implements Visitor.
 func (interpreter *Interpreter) ProcessConstantAccessExpr(expr *ast.ConstantAccessExpression, env any) (any, error) {
-	// Context-dependent constants
+	// Magic constants
+
+	// Spec: https://www.php.net/manual/en/language.constants.magic.php
+	// The directory of the file. If used inside an include, the directory of the included file is returned.
+	// This is equivalent to dirname(__FILE__). This directory name does not have a trailing slash unless it is the root directory.
 	if expr.ConstantName == "__DIR__" {
+		// TODO Use lib function dirname
 		return NewStringRuntimeValue(common.ExtractPath(expr.GetPosition().Filename)), nil
 	}
+
+	// Spec: https://www.php.net/manual/en/language.constants.magic.php
+	// The full path and filename of the file with symlinks resolved.
+	// If used inside an include, the name of the included file is returned.
+	if expr.ConstantName == "__FILE__" {
+		return NewStringRuntimeValue(expr.GetPosition().Filename), nil
+	}
+
+	// Spec: https://www.php.net/manual/en/language.constants.magic.php
+	// The function name, or {closure} for anonymous functions.
+	if expr.ConstantName == "__FUNCTION__" {
+		if env.(*Environment).CurrentFunction != nil {
+			return NewStringRuntimeValue(env.(*Environment).CurrentFunction.FunctionName), nil
+		}
+		return NewStringRuntimeValue(""), nil
+	}
+
+	// Spec: https://www.php.net/manual/en/language.constants.magic.php
+	// The current line number of the file.
+	if expr.ConstantName == "__LINE__" {
+		return NewIntegerRuntimeValue(int64(expr.GetPosition().Line)), nil
+	}
+
+	// TODO __CLASS__ 	The class name. The class name includes the namespace it was declared in (e.g. Foo\Bar). When used inside a trait method, __CLASS__ is the name of the class the trait is used in.
+	// TODO __TRAIT__ 	The trait name. The trait name includes the namespace it was declared in (e.g. Foo\Bar).
+	// TODO __METHOD__ 	The class method name.
+	// TODO __PROPERTY__ 	Only valid inside a property hook. It is equal to the name of the property.
+	// TODO __NAMESPACE__ 	The name of the current namespace.
 
 	return env.(*Environment).lookupConstant(expr.ConstantName)
 }
