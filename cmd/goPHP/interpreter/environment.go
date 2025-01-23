@@ -117,6 +117,9 @@ func registerPredefinedConstants(environment *Environment) {
 	environment.predefinedConstants["FALSE"] = NewBooleanRuntimeValue(false)
 	environment.predefinedConstants["TRUE"] = NewBooleanRuntimeValue(true)
 	environment.predefinedConstants["NULL"] = NewNullRuntimeValue()
+	environment.predefinedConstants["PHP_INT_MAX"] = NewIntegerRuntimeValue(math.MaxInt64)
+	environment.predefinedConstants["PHP_INT_MIN"] = NewIntegerRuntimeValue(math.MinInt64)
+	environment.predefinedConstants["PHP_INT_SIZE"] = NewIntegerRuntimeValue(64 / 8)
 	environment.predefinedConstants["PHP_OS"] = NewStringRuntimeValue(getPhpOs())
 	environment.predefinedConstants["PHP_OS_FAMILY"] = NewStringRuntimeValue(getPhpOsFamily())
 	if getPhpOs() == "Windows" {
