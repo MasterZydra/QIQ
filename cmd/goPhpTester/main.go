@@ -14,6 +14,7 @@ import (
 
 var succeeded int = 0
 var failed int = 0
+var skipped int = 0
 
 func main() {
 	args := os.Args[1:]
@@ -25,6 +26,7 @@ func main() {
 
 	failed = 0
 	succeeded = 0
+	skipped = 0
 
 	for _, arg := range args {
 		if err := process(arg); err != nil {
@@ -33,7 +35,7 @@ func main() {
 		}
 	}
 
-	fmt.Printf("\n%d Tests succeeded. %d Tests failed\n", succeeded, failed)
+	fmt.Printf("\n%d Tests succeeded.\n%d Tests failed.\n%d Tests skipped.\n", succeeded, failed, skipped)
 }
 
 func process(path string) error {
@@ -99,6 +101,16 @@ func doTest(path string, info os.FileInfo, err error) error {
 		result = strings.ReplaceAll(result, "\r\n", "\n")
 	}
 
+	if strings.HasPrefix(result, "skip for") || strings.HasPrefix(result, "skip Run") ||
+		strings.HasPrefix(result, "skip only") || strings.HasPrefix(result, "skip this") {
+		fmt.Println("SKIP ", path)
+		reason := result[5:]
+		reason = strings.ToUpper(string(reason[0])) + reason[1:]
+		fmt.Println("     ", reason)
+		skipped++
+		return nil
+	}
+
 	var equal bool
 	switch testFile.ExpectType {
 	case "--EXPECT--":
@@ -121,7 +133,6 @@ func doTest(path string, info os.FileInfo, err error) error {
 		fmt.Println(result)
 		fmt.Println("----------------------------------------")
 		fmt.Println("")
-		// return fmt.Errorf("Test \"%s\" failed", path)
 		failed++
 		return nil
 	}
