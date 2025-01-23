@@ -38,6 +38,9 @@ func (reader *Reader) GetTestFile() (*TestFile, error) {
 		if reader.at() == "--TEST--" {
 			reader.eat()
 			reader.testFile.Title = reader.eat()
+			for !reader.isEof() && !reader.isSection(reader.at()) {
+				reader.testFile.Title += reader.eat()
+			}
 			reader.sections = append(reader.sections, "--TEST--")
 			continue
 		}
