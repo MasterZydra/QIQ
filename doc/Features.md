@@ -133,6 +133,10 @@
 - asinh
 - pi
 
+### Misc
+- constant
+- defined
+
 ### Variable handling functions
 - boolval
 - doubleval

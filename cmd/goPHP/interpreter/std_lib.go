@@ -9,6 +9,7 @@ import (
 func registerNativeFunctions(environment *Environment) {
 	registerNativeDateTimeFunctions(environment)
 	registerNativeMathFunctions(environment)
+	registerNativeMiscFunctions(environment)
 	registerNativeVariableHandlingFunctions(environment)
 
 	environment.nativeFunctions["array_key_exits"] = nativeFn_array_key_exists
