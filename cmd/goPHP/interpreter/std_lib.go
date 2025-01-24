@@ -10,6 +10,7 @@ func registerNativeFunctions(environment *Environment) {
 	registerNativeDateTimeFunctions(environment)
 	registerNativeMathFunctions(environment)
 	registerNativeMiscFunctions(environment)
+	registerNativeStringsFunctions(environment)
 	registerNativeVariableHandlingFunctions(environment)
 
 	environment.nativeFunctions["array_key_exits"] = nativeFn_array_key_exists
@@ -17,7 +18,6 @@ func registerNativeFunctions(environment *Environment) {
 	environment.nativeFunctions["getenv"] = nativeFn_getenv
 	environment.nativeFunctions["ini_get"] = nativeFn_ini_get
 	environment.nativeFunctions["key_exits"] = nativeFn_array_key_exists
-	environment.nativeFunctions["strlen"] = nativeFn_strlen
 }
 
 type nativeFunction func([]IRuntimeValue, *Interpreter) (IRuntimeValue, phpError.Error)
@@ -167,17 +167,4 @@ func nativeFn_ini_get(args []IRuntimeValue, interpreter *Interpreter) (IRuntimeV
 	default:
 		return NewBooleanRuntimeValue(false), nil
 	}
-}
-
-// ------------------- MARK: strlen -------------------
-
-func nativeFn_strlen(args []IRuntimeValue, _ *Interpreter) (IRuntimeValue, phpError.Error) {
-	// Spec: https://www.php.net/manual/en/function.strlen
-
-	args, err := NewFuncParamValidator("strlen").addParam("$string", []string{"string"}, nil).validate(args)
-	if err != nil {
-		return NewVoidRuntimeValue(), err
-	}
-
-	return NewIntegerRuntimeValue(int64(len(args[0].(*StringRuntimeValue).Value))), nil
 }

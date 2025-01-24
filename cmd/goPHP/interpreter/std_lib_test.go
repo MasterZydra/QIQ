@@ -29,9 +29,3 @@ func TestLibErrorReporting(t *testing.T) {
 	// Report all PHP errors
 	testInputOutput(t, `<?php error_reporting(-1); echo error_reporting();`, "32767")
 }
-
-func TestLibStrlen(t *testing.T) {
-	testInputOutput(t, `<?php var_dump(strlen("abcdef"));`, "int(6)\n")
-	testInputOutput(t, `<?php var_dump(strlen(" ab cd "));`, "int(7)\n")
-	testInputOutput(t, `<?php var_dump(strlen(" äb ćd "));`, "int(9)\n")
-}

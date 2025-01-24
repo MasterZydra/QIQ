@@ -123,7 +123,6 @@
 - getenv
 - ini_get
 - key_exists
-- strlen
 
 ### Date / Time
 - checkdate
@@ -145,6 +144,20 @@
 ### Misc
 - constant
 - defined
+
+### Strings
+- bin2hex
+- chr
+- lcfirst
+- quotemeta
+- str_contains
+- str_ends_with
+- str_repeat
+- str_starts_with
+- strlen
+- strtolower
+- strtoupper
+- ucfirst
 
 ### Variable handling functions
 - boolval
