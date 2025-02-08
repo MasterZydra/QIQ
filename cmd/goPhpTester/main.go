@@ -19,18 +19,21 @@ var skipped int = 0
 
 var verbosity1 bool
 var verbosity2 bool
+var onlyFailed bool
 
 func main() {
-	verbosity1Flag := flag.Bool("v", false, "Verbosity level 1: Show all tests")
-	verbosity2Flag := flag.Bool("vv", false, "Verbosity level 2: Show all tests and failure reason")
+	verbosity1Flag := flag.Bool("v1", false, "Verbosity level 1: Show all tests")
+	verbosity2Flag := flag.Bool("v2", false, "Verbosity level 2: Show all tests and failure reason")
+	onlyFailedFlag := flag.Bool("only-failed", false, "Show only failed tests")
 	flag.Parse()
 	verbosity1 = *verbosity1Flag
 	verbosity2 = *verbosity2Flag
+	onlyFailed = *onlyFailedFlag
 
 	args := os.Args[1:]
 
 	if len(args) == 0 {
-		fmt.Println("Usage: goPhpTester [-v[v]] [list of folders or files]")
+		fmt.Println("Usage: goPhpTester [-v(1|2)] [-only-failed] [list of folders or files]")
 		os.Exit(1)
 	}
 
@@ -42,7 +45,7 @@ func main() {
 		println("Running test...")
 	}
 	for _, arg := range args {
-		if arg == "-v" || arg == "-vv" {
+		if arg == "-v1" || arg == "-v2" || arg == "-only-failed" {
 			continue
 		}
 
@@ -133,10 +136,10 @@ func doTest(path string, info os.FileInfo, err error) error {
 
 	if strings.HasPrefix(result, "skip for") || strings.HasPrefix(result, "skip Run") ||
 		strings.HasPrefix(result, "skip only") || strings.HasPrefix(result, "skip this") {
-		if verbosity1 || verbosity2 {
+		if !onlyFailed && (verbosity1 || verbosity2) {
 			fmt.Println("SKIP ", path)
 		}
-		if verbosity2 {
+		if !onlyFailed && (verbosity2) {
 			reason := result[5:]
 			reason = strings.ToUpper(string(reason[0])) + reason[1:]
 			fmt.Println("     ", reason)
@@ -156,7 +159,7 @@ func doTest(path string, info os.FileInfo, err error) error {
 	}
 
 	if equal {
-		if verbosity1 || verbosity2 {
+		if !onlyFailed && (verbosity1 || verbosity2) {
 			fmt.Println("OK   ", path)
 		}
 		succeeded++
