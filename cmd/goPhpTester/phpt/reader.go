@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"slices"
+	"strconv"
 	"strings"
 )
 
@@ -30,7 +31,7 @@ func NewReader(filename string) (*Reader, error) {
 	for scanner.Scan() {
 		lines = append(lines, scanner.Text())
 	}
-	return &Reader{filename: filename, sections: []string{}, lines: lines, currentLine: 0, testFile: NewTestFile()}, nil
+	return &Reader{filename: filename, sections: []string{}, lines: lines, currentLine: 0, testFile: NewTestFile(filename)}, nil
 }
 
 func (reader *Reader) GetTestFile() (*TestFile, error) {
@@ -104,6 +105,19 @@ func (reader *Reader) GetTestFile() (*TestFile, error) {
 				ini = append(ini, reader.eat())
 			}
 			reader.testFile.Ini = ini
+			continue
+		}
+
+		if reader.at() == "--ARGS--" {
+			reader.eat()
+			argsStr := reader.eat()
+			parts := strings.Split(argsStr, " ")
+			args := [][]string{{strconv.Itoa(0), reader.filename}}
+			for i := 0; i < len(parts); i++ {
+				args = append(args, []string{strconv.Itoa(i + 1), parts[i]})
+			}
+			// TODO parse --arg value --arg=value -avalue -a=value -a value
+			reader.testFile.Args = args
 			continue
 		}
 

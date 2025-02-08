@@ -1,9 +1,11 @@
 package phpt
 
 type TestFile struct {
+	Filename   string
 	Title      string
 	GetParams  [][]string
 	PostParams [][]string
+	Args       [][]string
 	Env        map[string]string
 	Ini        []string
 	File       string
@@ -11,6 +13,6 @@ type TestFile struct {
 	ExpectType string
 }
 
-func NewTestFile() *TestFile {
-	return &TestFile{}
+func NewTestFile(filename string) *TestFile {
+	return &TestFile{Filename: filename}
 }

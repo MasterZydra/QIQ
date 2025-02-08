@@ -109,10 +109,11 @@ func doTest(path string, info os.FileInfo, err error) error {
 
 	request := interpreter.NewRequest()
 	request.Env = testFile.Env
+	request.Args = testFile.Args
 	request.GetParams = testFile.GetParams
 	request.PostParams = testFile.PostParams
 
-	result, phpError := interpreter.NewInterpreter(ini.NewIniFromArray(testFile.Ini), request, "").Process(testFile.File)
+	result, phpError := interpreter.NewInterpreter(ini.NewIniFromArray(testFile.Ini), request, testFile.Filename).Process(testFile.File)
 	if phpError != nil {
 		if verbosity1 || verbosity2 {
 			fmt.Println("FAIL ", path)
