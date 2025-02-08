@@ -8,11 +8,11 @@ import (
 )
 
 var allowedDirectives = []string{
-	"error_reporting", "short_open_tag",
+	"error_reporting", "register_argc_argv", "short_open_tag",
 }
 
 var boolDirectives = []string{
-	"short_open_tag",
+	"register_argc_argv", "short_open_tag",
 }
 
 var intDirectives = []string{
@@ -26,8 +26,9 @@ type Ini struct {
 func NewDefaultIni() *Ini {
 	return &Ini{
 		directives: map[string]string{
-			"error_reporting": "0",
-			"short_open_tag":  "",
+			"error_reporting":    "0",
+			"register_argc_argv": "",
+			"short_open_tag":     "",
 		},
 	}
 }
@@ -49,24 +50,29 @@ func NewIniFromArray(ini []string) *Ini {
 	return defaultIni
 }
 
-func (ini *Ini) Set(directive string, value string) {
+func (ini *Ini) Set(directive string, value string) error {
 	if !slices.Contains(allowedDirectives, directive) {
-		return
+		return fmt.Errorf("Directive not found")
 	}
 
 	if slices.Contains(boolDirectives, directive) {
 		if value == "1" || strings.ToLower(value) == "on" {
 			ini.directives[directive] = "1"
+			return nil
 		}
 		ini.directives[directive] = ""
+		return nil
 	}
 
 	if slices.Contains(intDirectives, directive) {
 		if !common.IsIntegerLiteralWithSign(value) {
-			return
+			return nil
 		}
 		ini.directives[directive] = value
+		return nil
 	}
+
+	return fmt.Errorf("Ini.Set: Unsupported directive type")
 }
 
 func (ini *Ini) Get(directive string) (string, error) {

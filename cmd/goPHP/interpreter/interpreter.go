@@ -20,11 +20,19 @@ type Interpreter struct {
 }
 
 func NewInterpreter(ini *ini.Ini, request *Request, filename string) *Interpreter {
-	return &Interpreter{
+	interpreter := &Interpreter{
 		filename: filename, includedFiles: []string{}, ini: ini, request: request, parser: parser.NewParser(ini),
 		env: NewEnvironment(nil, request), cache: map[int64]IRuntimeValue{},
 		exitCode: 0,
 	}
+
+	if ini.GetBool("register_argc_argv") {
+		server := interpreter.env.predefinedVariables["$_SERVER"].(*ArrayRuntimeValue)
+		server.SetElement(NewStringRuntimeValue("argv"), interpreter.env.predefinedVariables["$_GET"])
+		server.SetElement(NewStringRuntimeValue("argc"), NewIntegerRuntimeValue(int64(len(interpreter.env.predefinedVariables["$_GET"].(*ArrayRuntimeValue).Keys))))
+	}
+
+	return interpreter
 }
 
 func (interpreter *Interpreter) GetExitCode() int {

@@ -47,7 +47,7 @@ func NewEnvironment(parentEnv *Environment, request *Request) *Environment {
 
 func registerPredefinedVariables(environment *Environment, request *Request) {
 	environment.predefinedVariables["$_ENV"] = stringMapToArray(request.Env)
-	environment.predefinedVariables["$_SERVER"] = environment.predefinedVariables["$_ENV"]
+	environment.predefinedVariables["$_SERVER"] = NewArrayRuntimeValue()
 	environment.predefinedVariables["$_GET"] = paramToArray(request.GetParams)
 	environment.predefinedVariables["$_POST"] = paramToArray(request.PostParams)
 }
