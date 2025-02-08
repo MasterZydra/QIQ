@@ -3,6 +3,7 @@ package phpt
 import (
 	"fmt"
 	"net/url"
+	"strconv"
 	"strings"
 )
 
@@ -39,6 +40,14 @@ func parseQuery(query string) ([][]string, error) {
 			continue
 		}
 		if key == "" {
+			continue
+		}
+		// Get parameters without key e.g. ab+cd+ef
+		if !strings.Contains(key, "=") && strings.Contains(key, "+") {
+			parts := strings.Split(key, "+")
+			for i := 0; i < len(parts); i++ {
+				result = append(result, []string{strconv.Itoa(i), parts[i]})
+			}
 			continue
 		}
 		key, value, _ := strings.Cut(key, "=")

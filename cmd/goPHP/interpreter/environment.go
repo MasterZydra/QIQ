@@ -2,6 +2,7 @@ package interpreter
 
 import (
 	"GoPHP/cmd/goPHP/ast"
+	"GoPHP/cmd/goPHP/common"
 	"GoPHP/cmd/goPHP/config"
 	"GoPHP/cmd/goPHP/ini"
 	"GoPHP/cmd/goPHP/phpError"
@@ -69,7 +70,14 @@ func paramToArray(params [][]string) *ArrayRuntimeValue {
 
 		// No array
 		if !strings.Contains(key, "]") {
-			result.SetElement(NewStringRuntimeValue(key), NewStringRuntimeValue(value))
+			var keyValue IRuntimeValue
+			if common.IsIntegerLiteral(key) {
+				intValue, _ := common.IntegerLiteralToInt64(key)
+				keyValue = NewIntegerRuntimeValue(intValue)
+			} else {
+				keyValue = NewStringRuntimeValue(key)
+			}
+			result.SetElement(keyValue, NewStringRuntimeValue(value))
 			continue
 		}
 
