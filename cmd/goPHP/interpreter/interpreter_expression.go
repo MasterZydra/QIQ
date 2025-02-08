@@ -466,14 +466,14 @@ func (interpreter *Interpreter) ProcessCoalesceExpr(expr *ast.CoalesceExpression
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-coalesce-expression
 
 	// Store current error reporting
-	errorReporting := interpreter.ini.ErrorReporting
+	errorReporting, _ := interpreter.ini.Get("error_reporting")
 	// Suppress all errors
-	interpreter.ini.ErrorReporting = 0
+	interpreter.ini.Set("error_reporting", "0")
 
 	cond, err := interpreter.processStmt(expr.Cond, env)
 
 	// Restore previous error reporting
-	interpreter.ini.ErrorReporting = errorReporting
+	interpreter.ini.Set("error_reporting", errorReporting)
 
 	if err != nil {
 		return cond, err

@@ -2,57 +2,96 @@ package ini
 
 import (
 	"GoPHP/cmd/goPHP/common"
-	"GoPHP/cmd/goPHP/phpError"
+	"fmt"
+	"slices"
 	"strings"
 )
 
+var allowedDirectives = []string{
+	"error_reporting", "short_open_tag",
+}
+
+var boolDirectives = []string{
+	"short_open_tag",
+}
+
+var intDirectives = []string{
+	"error_reporting",
+}
+
 type Ini struct {
-	ErrorReporting int64
-	ShortOpenTag   bool
-}
-
-func NewDevIni() *Ini {
-	defaultIni := NewDefaultIni()
-	defaultIni.ErrorReporting = phpError.E_ALL
-	return defaultIni
-}
-
-func NewIniFromArray(ini []string) *Ini {
-	settings := map[string]string{}
-	for _, setting := range ini {
-		parts := strings.Split(setting, "=")
-		settings[parts[0]] = parts[1]
-	}
-
-	defaultIni := NewDefaultIni()
-
-	if value, found := settings["error_reporting"]; found {
-		defaultIni.ErrorReporting = iniIntStrToInt(value)
-	}
-	if value, found := settings["short_open_tag"]; found {
-		defaultIni.ShortOpenTag = iniBoolStrToBool(value)
-	}
-
-	return defaultIni
+	directives map[string]string
 }
 
 func NewDefaultIni() *Ini {
 	return &Ini{
-		ErrorReporting: 0,
-		ShortOpenTag:   false,
+		directives: map[string]string{
+			"error_reporting": "0",
+			"short_open_tag":  "",
+		},
 	}
 }
 
-func iniBoolStrToBool(str string) bool {
-	if str == "1" || strings.ToLower(str) == "on" {
-		return true
-	}
-	return false
+func NewDevIni() *Ini {
+	defaultIni := NewDefaultIni()
+	defaultIni.Set("error_reporting", "32767")
+	return defaultIni
 }
 
-func iniIntStrToInt(str string) int64 {
-	if common.IsIntegerLiteralWithSign(str) {
-		intVal, _ := common.IntegerLiteralToInt64WithSign(str)
+func NewIniFromArray(ini []string) *Ini {
+	defaultIni := NewDefaultIni()
+
+	for _, setting := range ini {
+		parts := strings.Split(setting, "=")
+		defaultIni.Set(parts[0], parts[1])
+	}
+
+	return defaultIni
+}
+
+func (ini *Ini) Set(directive string, value string) {
+	if !slices.Contains(allowedDirectives, directive) {
+		return
+	}
+
+	if slices.Contains(boolDirectives, directive) {
+		if value == "1" || strings.ToLower(value) == "on" {
+			ini.directives[directive] = "1"
+		}
+		ini.directives[directive] = ""
+	}
+
+	if slices.Contains(intDirectives, directive) {
+		if !common.IsIntegerLiteralWithSign(value) {
+			return
+		}
+		ini.directives[directive] = value
+	}
+}
+
+func (ini *Ini) Get(directive string) (string, error) {
+	if !slices.Contains(allowedDirectives, directive) {
+		return "", fmt.Errorf("Directive not found")
+	}
+
+	return ini.directives[directive], nil
+}
+
+func (ini *Ini) GetBool(directive string) bool {
+	value, err := ini.Get(directive)
+	if err != nil {
+		return false
+	}
+	return value == "1"
+}
+
+func (ini *Ini) GetInt(directive string) int64 {
+	value, err := ini.Get(directive)
+	if err != nil {
+		return -1
+	}
+	if common.IsIntegerLiteralWithSign(value) {
+		intVal, _ := common.IntegerLiteralToInt64WithSign(value)
 		return intVal
 	}
 	return -1

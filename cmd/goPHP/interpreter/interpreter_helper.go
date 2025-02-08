@@ -84,9 +84,9 @@ func (interpreter *Interpreter) varExprToVarName(expr ast.IExpression, env *Envi
 }
 
 func (interpreter *Interpreter) ErrorToString(err phpError.Error) string {
-	if (err.GetErrorType() == phpError.WarningPhpError && interpreter.ini.ErrorReporting&phpError.E_WARNING == 0) ||
-		(err.GetErrorType() == phpError.ErrorPhpError && interpreter.ini.ErrorReporting&phpError.E_ERROR == 0) ||
-		(err.GetErrorType() == phpError.ParsePhpError && interpreter.ini.ErrorReporting&phpError.E_PARSE == 0) {
+	if (err.GetErrorType() == phpError.WarningPhpError && interpreter.ini.GetInt("error_reporting")&phpError.E_WARNING == 0) ||
+		(err.GetErrorType() == phpError.ErrorPhpError && interpreter.ini.GetInt("error_reporting")&phpError.E_ERROR == 0) ||
+		(err.GetErrorType() == phpError.ParsePhpError && interpreter.ini.GetInt("error_reporting")&phpError.E_PARSE == 0) {
 		return ""
 	}
 	return err.GetMessage()

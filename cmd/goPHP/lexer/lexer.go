@@ -71,7 +71,7 @@ func (lexer *Lexer) tokenizeScript() error {
 	for !lexer.isEof() {
 		// Push optional text token if a start-tag is detected
 		if lexer.nextN(3) == "<?=" || strings.ToLower(lexer.nextN(5)) == "<?php" ||
-			(lexer.ini.ShortOpenTag && lexer.nextN(2) == "<?") {
+			(lexer.ini.GetBool("short_open_tag") && lexer.nextN(2) == "<?") {
 			pushTextToken()
 		}
 
@@ -97,7 +97,7 @@ func (lexer *Lexer) tokenizeScript() error {
 			continue
 		}
 
-		if lexer.ini.ShortOpenTag && lexer.nextN(2) == "<?" {
+		if lexer.ini.GetBool("short_open_tag") && lexer.nextN(2) == "<?" {
 			lexer.eatN(2)
 			lexer.pushToken(StartTagToken, "")
 			if err := lexer.tokenizeInputFile(); err != nil {

@@ -2,8 +2,8 @@ package interpreter
 
 import (
 	"GoPHP/cmd/goPHP/phpError"
-	"fmt"
 	"slices"
+	"strconv"
 )
 
 func registerNativeFunctions(environment *Environment) {
@@ -100,7 +100,7 @@ func nativeFn_error_reporting(args []IRuntimeValue, interpreter *Interpreter) (I
 	}
 
 	if args[0].GetType() == NullValue {
-		return NewIntegerRuntimeValue(interpreter.ini.ErrorReporting), nil
+		return NewIntegerRuntimeValue(interpreter.ini.GetInt("error_reporting")), nil
 	}
 
 	newValue := args[0].(*IntegerRuntimeValue).Value
@@ -108,8 +108,8 @@ func nativeFn_error_reporting(args []IRuntimeValue, interpreter *Interpreter) (I
 		newValue = phpError.E_ALL
 	}
 
-	previous := interpreter.ini.ErrorReporting
-	interpreter.ini.ErrorReporting = newValue
+	previous := interpreter.ini.GetInt("error_reporting")
+	interpreter.ini.Set("error_reporting", strconv.FormatInt(newValue, 10))
 
 	return NewIntegerRuntimeValue(previous), nil
 }
@@ -156,15 +156,9 @@ func nativeFn_ini_get(args []IRuntimeValue, interpreter *Interpreter) (IRuntimeV
 		return NewVoidRuntimeValue(), err
 	}
 
-	switch args[0].(*StringRuntimeValue).Value {
-	case "error_reporting":
-		return NewStringRuntimeValue(fmt.Sprintf("%d", interpreter.ini.ErrorReporting)), nil
-	case "short_open_tag":
-		if interpreter.ini.ShortOpenTag {
-			return NewStringRuntimeValue("1"), nil
-		}
-		return NewStringRuntimeValue("0"), nil
-	default:
+	value, iniErr := interpreter.ini.Get(args[0].(*StringRuntimeValue).Value)
+	if iniErr != nil {
 		return NewBooleanRuntimeValue(false), nil
 	}
+	return NewStringRuntimeValue(value), nil
 }
