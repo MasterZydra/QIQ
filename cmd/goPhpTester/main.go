@@ -5,6 +5,7 @@ import (
 	"GoPHP/cmd/goPHP/ini"
 	"GoPHP/cmd/goPHP/interpreter"
 	"GoPHP/cmd/goPhpTester/phpt"
+	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -16,11 +17,20 @@ var succeeded int = 0
 var failed int = 0
 var skipped int = 0
 
+var verbosity1 bool
+var verbosity2 bool
+
 func main() {
+	verbosity1Flag := flag.Bool("v", false, "Verbosity level 1: Show all tests")
+	verbosity2Flag := flag.Bool("vv", false, "Verbosity level 2: Show all tests and failure reason")
+	flag.Parse()
+	verbosity1 = *verbosity1Flag
+	verbosity2 = *verbosity2Flag
+
 	args := os.Args[1:]
 
 	if len(args) == 0 {
-		fmt.Println("Usage: goPhpTester [list of folders or files]")
+		fmt.Println("Usage: goPhpTester [-v[v]] [list of folders or files]")
 		os.Exit(1)
 	}
 
@@ -28,7 +38,14 @@ func main() {
 	succeeded = 0
 	skipped = 0
 
+	if !verbosity1 && !verbosity2 {
+		println("Running test...")
+	}
 	for _, arg := range args {
+		if arg == "-v" || arg == "-vv" {
+			continue
+		}
+
 		if err := process(arg); err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -67,16 +84,24 @@ func doTest(path string, info os.FileInfo, err error) error {
 
 	reader, err := phpt.NewReader(path)
 	if err != nil {
-		fmt.Println("FAIL ", path)
-		fmt.Println("     ", err)
+		if verbosity1 || verbosity2 {
+			fmt.Println("FAIL ", path)
+		}
+		if verbosity2 {
+			fmt.Println("     ", err)
+		}
 		// return err
 		failed++
 		return nil
 	}
 	testFile, err := reader.GetTestFile()
 	if err != nil {
-		fmt.Println("FAIL ", path)
-		fmt.Println("     ", err)
+		if verbosity1 || verbosity2 {
+			fmt.Println("FAIL ", path)
+		}
+		if verbosity2 {
+			fmt.Println("     ", err)
+		}
 		// return err
 		failed++
 		return nil
@@ -89,8 +114,12 @@ func doTest(path string, info os.FileInfo, err error) error {
 
 	result, phpError := interpreter.NewInterpreter(ini.NewIniFromArray(testFile.Ini), request, "").Process(testFile.File)
 	if phpError != nil {
-		fmt.Println("FAIL ", path)
-		fmt.Println("     ", phpError)
+		if verbosity1 || verbosity2 {
+			fmt.Println("FAIL ", path)
+		}
+		if verbosity2 {
+			fmt.Println("     ", phpError)
+		}
 		// return err
 		failed++
 		return nil
@@ -103,10 +132,14 @@ func doTest(path string, info os.FileInfo, err error) error {
 
 	if strings.HasPrefix(result, "skip for") || strings.HasPrefix(result, "skip Run") ||
 		strings.HasPrefix(result, "skip only") || strings.HasPrefix(result, "skip this") {
-		fmt.Println("SKIP ", path)
-		reason := result[5:]
-		reason = strings.ToUpper(string(reason[0])) + reason[1:]
-		fmt.Println("     ", reason)
+		if verbosity1 || verbosity2 {
+			fmt.Println("SKIP ", path)
+		}
+		if verbosity2 {
+			reason := result[5:]
+			reason = strings.ToUpper(string(reason[0])) + reason[1:]
+			fmt.Println("     ", reason)
+		}
 		skipped++
 		return nil
 	}
@@ -122,17 +155,22 @@ func doTest(path string, info os.FileInfo, err error) error {
 	}
 
 	if equal {
-		fmt.Println("OK   ", path)
+		if verbosity1 || verbosity2 {
+			fmt.Println("OK   ", path)
+		}
 		succeeded++
 		return nil
 	} else {
-		fmt.Println("FAIL ", path)
-		fmt.Println("--------------- Expected ---------------")
-		fmt.Println(testFile.Expect)
-		fmt.Println("---------------   Got    ---------------")
-		fmt.Println(result)
-		fmt.Println("----------------------------------------")
-		fmt.Println("")
+		if verbosity1 || verbosity2 {
+			fmt.Println("FAIL ", path)
+		}
+		if verbosity2 {
+			fmt.Println("--------------- Expected ---------------")
+			fmt.Println(testFile.Expect)
+			fmt.Println("---------------   Got    ---------------")
+			fmt.Println(result)
+			fmt.Println("----------------------------------------")
+		}
 		failed++
 		return nil
 	}

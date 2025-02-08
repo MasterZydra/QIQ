@@ -51,11 +51,11 @@ There are a lot of test cases in the source repository for PHP under the folder 
 In order to test the GoPHP implementation against this cases the binary `goPhpTester` can be used.
 
 **Usage:**  
-`./goPhpTester <list of directory or phpt-file>`
+`./goPhpTester [-v[v]] <list of directory or phpt-file>`
 
 **Examples:**  
 `./goPhpTester php-src/tests`  
-`./goPhpTester php-src/tests/basic/001.phpt`
+`./goPhpTester -vv php-src/tests/basic/001.phpt`
 
 ## Used resources
 For some part of this project, the following resources were used as a guide, inspiration, or concept:
