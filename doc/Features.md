@@ -1,5 +1,11 @@
 # Supported syntax and features
 
+## Ini directives
+- error_reporting
+- register_argc_argv
+- short_open_tag
+- variables_order
+
 ## Expressions and statements
 - echo statement: `echo "abc", 123, true;`
 - print statement: `print "abc";`
@@ -52,8 +58,10 @@
 - string
 
 ## Predefined variables
+- $_ENV
 - $_GET
 - $_POST
+- $_SERVER
 
 ## Predefined constants
 - E_ALL
