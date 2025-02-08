@@ -22,14 +22,19 @@ type Interpreter struct {
 func NewInterpreter(ini *ini.Ini, request *Request, filename string) *Interpreter {
 	interpreter := &Interpreter{
 		filename: filename, includedFiles: []string{}, ini: ini, request: request, parser: parser.NewParser(ini),
-		env: NewEnvironment(nil, request), cache: map[int64]IRuntimeValue{},
+		env: NewEnvironment(nil, request, ini), cache: map[int64]IRuntimeValue{},
 		exitCode: 0,
 	}
 
-	if ini.GetBool("register_argc_argv") {
+	_, serverVarDefined := interpreter.env.predefinedVariables["$_SERVER"]
+	if serverVarDefined && ini.GetBool("register_argc_argv") {
 		server := interpreter.env.predefinedVariables["$_SERVER"].(*ArrayRuntimeValue)
-		server.SetElement(NewStringRuntimeValue("argv"), interpreter.env.predefinedVariables["$_GET"])
-		server.SetElement(NewStringRuntimeValue("argc"), NewIntegerRuntimeValue(int64(len(interpreter.env.predefinedVariables["$_GET"].(*ArrayRuntimeValue).Keys))))
+		_, argvAlreadyDefined := server.findKey(NewStringRuntimeValue("argv"))
+		_, argcAlreadyDefined := server.findKey(NewStringRuntimeValue("argc"))
+		if !argcAlreadyDefined && !argvAlreadyDefined {
+			server.SetElement(NewStringRuntimeValue("argv"), interpreter.env.predefinedVariables["$_GET"])
+			server.SetElement(NewStringRuntimeValue("argc"), NewIntegerRuntimeValue(int64(len(interpreter.env.predefinedVariables["$_GET"].(*ArrayRuntimeValue).Keys))))
+		}
 	}
 
 	return interpreter

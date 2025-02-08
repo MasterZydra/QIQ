@@ -9,6 +9,7 @@ import (
 
 var allowedDirectives = []string{
 	"error_reporting", "register_argc_argv", "short_open_tag",
+	"variables_order",
 }
 
 var boolDirectives = []string{
@@ -29,6 +30,7 @@ func NewDefaultIni() *Ini {
 			"error_reporting":    "0",
 			"register_argc_argv": "",
 			"short_open_tag":     "",
+			"variables_order":    "EGPCS",
 		},
 	}
 }
@@ -72,7 +74,8 @@ func (ini *Ini) Set(directive string, value string) error {
 		return nil
 	}
 
-	return fmt.Errorf("Ini.Set: Unsupported directive type")
+	ini.directives[directive] = value
+	return nil
 }
 
 func (ini *Ini) Get(directive string) (string, error) {
@@ -101,4 +104,12 @@ func (ini *Ini) GetInt(directive string) int64 {
 		return intVal
 	}
 	return -1
+}
+
+func (ini *Ini) GetStr(directive string) string {
+	value, err := ini.Get(directive)
+	if err != nil {
+		return ""
+	}
+	return value
 }

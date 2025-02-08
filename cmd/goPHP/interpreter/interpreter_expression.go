@@ -217,7 +217,7 @@ func (interpreter *Interpreter) ProcessFunctionCallExpr(expr *ast.FunctionCallEx
 	// Lookup user function
 	userFunction := mustOrVoid(env.(*Environment).lookupUserFunction(expr.FunctionName))
 
-	functionEnv := NewEnvironment(env.(*Environment), nil)
+	functionEnv := NewEnvironment(env.(*Environment), nil, interpreter.ini)
 	functionEnv.CurrentFunction = userFunction
 
 	if len(userFunction.Params) != len(expr.Arguments) {
