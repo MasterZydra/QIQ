@@ -26,8 +26,7 @@ func NewInterpreter(ini *ini.Ini, request *Request, filename string) *Interprete
 		exitCode: 0,
 	}
 
-	_, serverVarDefined := interpreter.env.predefinedVariables["$_SERVER"]
-	if serverVarDefined && ini.GetBool("register_argc_argv") {
+	if ini.GetBool("register_argc_argv") {
 		server := interpreter.env.predefinedVariables["$_SERVER"].(*ArrayRuntimeValue)
 		_, argvAlreadyDefined := server.findKey(NewStringRuntimeValue("argv"))
 		_, argcAlreadyDefined := server.findKey(NewStringRuntimeValue("argc"))

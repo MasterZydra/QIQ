@@ -13,48 +13,81 @@ import (
 
 func registerPredefinedVariables(environment *Environment, request *Request, ini *ini.Ini) {
 	if ini == nil {
-		registerPredefinedVariableEnv(environment, request)
-		registerPredefinedVariableGet(environment, request)
-		registerPredefinedVariablePost(environment, request)
+		registerPredefinedVariableEnv(environment, request, true)
+		registerPredefinedVariableGet(environment, request, true)
+		registerPredefinedVariablePost(environment, request, true)
 		// TODO Cookie
-		registerPredefinedVariableServer(environment, request)
+		registerPredefinedVariableServer(environment, request, true)
 		return
 	}
 
-	for _, variable := range ini.GetStr("variables_order") {
+	variables_order := ini.GetStr("variables_order")
+	for _, variable := range variables_order {
 		switch string(variable) {
 		case "E":
-			registerPredefinedVariableEnv(environment, request)
+			registerPredefinedVariableEnv(environment, request, true)
 		case "G":
-			registerPredefinedVariableGet(environment, request)
+			registerPredefinedVariableGet(environment, request, true)
 		case "P":
-			registerPredefinedVariablePost(environment, request)
-		// case "C":
+			registerPredefinedVariablePost(environment, request, true)
 		// TODO Cookie
+		// case "C":
+		// 	registerPredefinedVariableCookie(environment, request, true)
 		case "S":
-			registerPredefinedVariableServer(environment, request)
+			registerPredefinedVariableServer(environment, request, true)
 		}
+	}
+
+	if !strings.Contains(variables_order, "E") {
+		registerPredefinedVariableEnv(environment, request, false)
+	}
+	if !strings.Contains(variables_order, "G") {
+		registerPredefinedVariableGet(environment, request, false)
+	}
+	if !strings.Contains(variables_order, "P") {
+		registerPredefinedVariablePost(environment, request, false)
+	}
+	// TODO Cookie
+	// if !strings.Contains(variables_order, "C") {
+	// 	registerPredefinedVariableCookie(environment, request, false)
+	// }
+	if !strings.Contains(variables_order, "S") {
+		registerPredefinedVariableServer(environment, request, false)
 	}
 }
 
-func registerPredefinedVariableEnv(environment *Environment, request *Request) {
-	environment.predefinedVariables["$_ENV"] = stringMapToArray(request.Env)
+func registerPredefinedVariableEnv(environment *Environment, request *Request, init bool) {
+	if init {
+		environment.predefinedVariables["$_ENV"] = stringMapToArray(request.Env)
+	} else {
+		environment.predefinedVariables["$_ENV"] = NewArrayRuntimeValue()
+	}
 }
 
-func registerPredefinedVariableGet(environment *Environment, request *Request) {
-	environment.predefinedVariables["$_GET"] = paramToArray(request.GetParams)
+func registerPredefinedVariableGet(environment *Environment, request *Request, init bool) {
+	if init {
+		environment.predefinedVariables["$_GET"] = paramToArray(request.GetParams)
+	} else {
+		environment.predefinedVariables["$_GET"] = NewArrayRuntimeValue()
+	}
 }
 
-func registerPredefinedVariablePost(environment *Environment, request *Request) {
-	environment.predefinedVariables["$_POST"] = paramToArray(request.PostParams)
+func registerPredefinedVariablePost(environment *Environment, request *Request, init bool) {
+	if init {
+		environment.predefinedVariables["$_POST"] = paramToArray(request.PostParams)
+	} else {
+		environment.predefinedVariables["$_POST"] = NewArrayRuntimeValue()
+	}
 }
 
-func registerPredefinedVariableServer(environment *Environment, request *Request) {
+func registerPredefinedVariableServer(environment *Environment, request *Request, init bool) {
 	environment.predefinedVariables["$_SERVER"] = NewArrayRuntimeValue()
-	if len(request.Args) > 0 {
-		server := environment.predefinedVariables["$_SERVER"].(*ArrayRuntimeValue)
-		server.SetElement(NewStringRuntimeValue("argc"), NewIntegerRuntimeValue(int64(len(request.Args))))
-		server.SetElement(NewStringRuntimeValue("argv"), paramToArray(request.Args))
+	if init {
+		if len(request.Args) > 0 {
+			server := environment.predefinedVariables["$_SERVER"].(*ArrayRuntimeValue)
+			server.SetElement(NewStringRuntimeValue("argc"), NewIntegerRuntimeValue(int64(len(request.Args))))
+			server.SetElement(NewStringRuntimeValue("argv"), paramToArray(request.Args))
+		}
 	}
 }
 
