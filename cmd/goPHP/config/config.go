@@ -2,9 +2,20 @@ package config
 
 import (
 	"fmt"
+	"runtime"
 	"strconv"
 )
 
+// GoPHP version
+const GoPhpVersion string = "0.1.0"
+
+var SoftwareVersion string = softwareVersion()
+
+func softwareVersion() string {
+	return fmt.Sprintf("GoPHP/%s (%s)", GoPhpVersion, runtime.GOOS)
+}
+
+// PHP version
 const MajorVersion int64 = 8
 const MinorVersion int64 = 3
 const ReleaseVersion int64 = 0

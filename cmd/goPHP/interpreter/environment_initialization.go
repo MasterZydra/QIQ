@@ -66,7 +66,11 @@ func registerPredefinedVariableEnv(environment *Environment, request *Request, i
 
 func registerPredefinedVariableGet(environment *Environment, request *Request, init bool) {
 	if init {
-		environment.predefinedVariables["$_GET"] = paramToArray(request.GetParams)
+		array, err := parseQuery(request.QueryString)
+		if err != nil {
+			println(err)
+		}
+		environment.predefinedVariables["$_GET"] = array
 	} else {
 		environment.predefinedVariables["$_GET"] = NewArrayRuntimeValue()
 	}
@@ -83,11 +87,25 @@ func registerPredefinedVariablePost(environment *Environment, request *Request, 
 func registerPredefinedVariableServer(environment *Environment, request *Request, init bool) {
 	environment.predefinedVariables["$_SERVER"] = NewArrayRuntimeValue()
 	if init {
+		server := environment.predefinedVariables["$_SERVER"].(*ArrayRuntimeValue)
 		if len(request.Args) > 0 {
-			server := environment.predefinedVariables["$_SERVER"].(*ArrayRuntimeValue)
 			server.SetElement(NewStringRuntimeValue("argc"), NewIntegerRuntimeValue(int64(len(request.Args))))
 			server.SetElement(NewStringRuntimeValue("argv"), paramToArray(request.Args))
 		}
+		server.SetElement(NewStringRuntimeValue("DOCUMENT_ROOT"), NewStringRuntimeValue(request.DocumentRoot))
+		server.SetElement(NewStringRuntimeValue("QUERY_STRING"), NewStringRuntimeValue(request.QueryString))
+		server.SetElement(NewStringRuntimeValue("REMOTE_ADDR"), NewStringRuntimeValue(request.RemoteAddr))
+		server.SetElement(NewStringRuntimeValue("REMOTE_PORT"), NewStringRuntimeValue(request.RemotePort))
+		server.SetElement(NewStringRuntimeValue("REQUEST_METHOD"), NewStringRuntimeValue(request.Method))
+		server.SetElement(NewStringRuntimeValue("REQUEST_TIME_FLOAT"), NewFloatingRuntimeValue(float64(request.RequestTime.UnixMicro())/math.Pow(10, 6)))
+		server.SetElement(NewStringRuntimeValue("REQUEST_TIME"), NewIntegerRuntimeValue(request.RequestTime.Unix()))
+		server.SetElement(NewStringRuntimeValue("REQUEST_URI"), NewStringRuntimeValue(request.RequestURI))
+		server.SetElement(NewStringRuntimeValue("SCRIPT_FILENAME"), NewStringRuntimeValue(request.ScriptFilename))
+		server.SetElement(NewStringRuntimeValue("SCRIPT_NAME"), NewStringRuntimeValue(strings.Replace(request.ScriptFilename, request.DocumentRoot, "", 1)))
+		server.SetElement(NewStringRuntimeValue("SERVER_ADDR"), NewStringRuntimeValue(request.ServerAddr))
+		server.SetElement(NewStringRuntimeValue("SERVER_PORT"), NewStringRuntimeValue(request.ServerPort))
+		server.SetElement(NewStringRuntimeValue("SERVER_PROTOCOL"), NewStringRuntimeValue(request.Protocol))
+		server.SetElement(NewStringRuntimeValue("SERVER_SOFTWARE"), NewStringRuntimeValue(config.SoftwareVersion))
 	}
 }
 

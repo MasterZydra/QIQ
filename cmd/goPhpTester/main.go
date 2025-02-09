@@ -113,7 +113,7 @@ func doTest(path string, info os.FileInfo, err error) error {
 	request := interpreter.NewRequest()
 	request.Env = testFile.Env
 	request.Args = testFile.Args
-	request.GetParams = testFile.GetParams
+	request.QueryString = testFile.Get
 	request.PostParams = testFile.PostParams
 
 	result, phpError := interpreter.NewInterpreter(ini.NewIniFromArray(testFile.Ini), request, testFile.Filename).Process(testFile.File)

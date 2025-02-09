@@ -67,7 +67,7 @@ func processStdin() {
 		fmt.Println("Error:", err)
 	}
 
-	output, exitCode := processContent(string(content), "main.php")
+	output, exitCode := processContent(nil, string(content), "main.php")
 	fmt.Print(output)
 	os.Exit(exitCode)
 }
@@ -81,7 +81,7 @@ func processFile(filename string) {
 		os.Exit(1)
 	}
 
-	output, exitCode := processContent(string(content), filename)
+	output, exitCode := processContent(nil, string(content), filename)
 	fmt.Print(output)
 	if exitCode == 500 {
 		exitCode = 1
@@ -173,7 +173,9 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	output, exitCode := processContent(string(content), absFilePath)
+	// TODO content-type returned from interpreter?
+	w.Header().Set("Content-Type", "text/html")
+	output, exitCode := processContent(r, string(content), absFilePath)
 	if exitCode == 500 {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
@@ -182,7 +184,7 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 
 // ------------------- MARK: core logic -------------------
 
-func processContent(content string, filename string) (output string, exitCode int) {
+func processContent(r *http.Request, content string, filename string) (output string, exitCode int) {
 	var initIni *ini.Ini
 	if isDevMode {
 		initIni = ini.NewDevIni()
@@ -190,7 +192,8 @@ func processContent(content string, filename string) (output string, exitCode in
 		initIni = ini.NewDefaultIni()
 	}
 
-	interpreter := interpreter.NewInterpreter(initIni, &interpreter.Request{}, filename)
+	request := interpreter.NewRequestFromGoRequest(r, documentRoot, serverAddr, filename)
+	interpreter := interpreter.NewInterpreter(initIni, request, filename)
 	result, err := interpreter.Process(content)
 	if err != nil {
 		result += interpreter.ErrorToString(err)

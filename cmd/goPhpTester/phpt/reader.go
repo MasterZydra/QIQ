@@ -84,15 +84,7 @@ func (reader *Reader) GetTestFile() (*TestFile, error) {
 
 		if reader.at() == "--GET--" {
 			reader.eat()
-			params := ""
-			for !reader.isEof() && !reader.isSection(reader.at()) {
-				params += reader.eat()
-			}
-			paramsMap, err := parseQuery(params)
-			if err != nil {
-				return nil, fmt.Errorf("--GET--\n%s", err)
-			}
-			reader.testFile.GetParams = paramsMap
+			reader.testFile.Get = reader.eat()
 			reader.sections = append(reader.sections, "--GET--")
 			continue
 		}
@@ -104,6 +96,7 @@ func (reader *Reader) GetTestFile() (*TestFile, error) {
 				ini = append(ini, reader.eat())
 			}
 			reader.testFile.Ini = ini
+			reader.sections = append(reader.sections, "--INI--")
 			continue
 		}
 
@@ -117,6 +110,7 @@ func (reader *Reader) GetTestFile() (*TestFile, error) {
 			}
 			// TODO parse --arg value --arg=value -avalue -a=value -a value
 			reader.testFile.Args = args
+			reader.sections = append(reader.sections, "--ARGS--")
 			continue
 		}
 

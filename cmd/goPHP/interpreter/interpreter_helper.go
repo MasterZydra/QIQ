@@ -1369,7 +1369,6 @@ func compare(lhs IRuntimeValue, operator string, rhs IRuntimeValue) (*BooleanRun
 							break
 						}
 					}
-					result = true
 				}
 			case BooleanValue:
 				result = lhs.(*BooleanRuntimeValue).Value == rhs.(*BooleanRuntimeValue).Value

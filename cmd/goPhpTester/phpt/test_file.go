@@ -3,7 +3,7 @@ package phpt
 type TestFile struct {
 	Filename   string
 	Title      string
-	GetParams  [][]string
+	Get        string
 	PostParams [][]string
 	Args       [][]string
 	Env        map[string]string
