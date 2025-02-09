@@ -2,6 +2,8 @@ package interpreter
 
 import (
 	"GoPHP/cmd/goPHP/common"
+	"GoPHP/cmd/goPHP/ini"
+	"fmt"
 	"net/url"
 	"strings"
 )
@@ -17,6 +19,8 @@ func parseQuery(query string) (*ArrayRuntimeValue, error) {
 		}
 
 		// Get parameters without key e.g. ab+cd+ef
+		// TODO this is only correct if it is in "phpt mode". "Normal" GET will parse it differently
+		// ab+cd+ef => array(1) { ["ab_cd_ef"]=> string(0) "" }
 		if !strings.Contains(key, "=") && strings.Contains(key, "+") {
 			parts := strings.Split(key, "+")
 			for i := 0; i < len(parts); i++ {
@@ -35,55 +39,73 @@ func parseQuery(query string) (*ArrayRuntimeValue, error) {
 		if err != nil {
 			return result, err
 		}
-		// if strings.Contains(key, "[") {
-		// 	if parseQueryKey(key, value, result) != nil {
-		// 		return result, err
-		// 	}
-		// } else {
-		var keyValue IRuntimeValue
-		if common.IsIntegerLiteral(key) {
-			intValue, _ := common.IntegerLiteralToInt64(key)
-			keyValue = NewIntegerRuntimeValue(intValue)
+		if strings.Contains(key, "[") {
+			result, err = parseQueryKey(key, value, result)
+			if err != nil {
+				return result, err
+			}
 		} else {
-			keyValue = NewStringRuntimeValue(key)
+			var keyValue IRuntimeValue
+			if common.IsIntegerLiteral(key) {
+				intValue, _ := common.IntegerLiteralToInt64(key)
+				keyValue = NewIntegerRuntimeValue(intValue)
+			} else {
+				keyValue = NewStringRuntimeValue(key)
+			}
+			result.SetElement(keyValue, NewStringRuntimeValue(value))
 		}
-		result.SetElement(keyValue, NewStringRuntimeValue(value))
-		// }
 	}
 
 	return result, nil
 }
 
-// func parseQueryKey(key string, value string, result *ArrayRuntimeValue) error {
-// 	// Idea:
-// 	// Convert key and value into valid PHP and exec with interpreter
+func parseQueryKey(key string, value string, result *ArrayRuntimeValue) (*ArrayRuntimeValue, error) {
+	// The parsing of a complex key with arrays is solved by using the interpreter itself:
+	// The key and value is transformed into valid PHP code and executed.
+	// Example:
+	//   Input: 123[][12][de]=abc
+	//   Key:   123[][12][de]
+	//   Value: abc
+	//   PHP:   $array[123][][12]["de"] = "abc";
 
-// 	// Input: 123[]=abc
-// 	// Key: 123[]
-// 	// Value: abc
-// 	// PHP: $array[123][] = "abc";
+	firstKey, key, _ := strings.Cut(key, "[")
 
-// 	// Input: a23[]=abc
-// 	// Key: a23[]
-// 	// Value: abc
-// 	// PHP: $array["a23"][] = "abc";
+	phpArrayKeys := []string{firstKey}
 
-// 	// firstKey, key, _ := strings.Cut(key, "[")
-// 	// key = "[" + key
+	for key != "" {
+		if strings.HasPrefix(key, "]") {
+			phpArrayKeys = append(phpArrayKeys, "")
+			key = strings.TrimPrefix(key, "]")
+			key = strings.TrimPrefix(key, "[")
+			continue
+		}
 
-// 	// phpArrayKeys := []string{}
+		var nextKey string
+		nextKey, key, _ = strings.Cut(key, "]")
+		phpArrayKeys = append(phpArrayKeys, nextKey)
 
-// 	// if common.IsDecimalLiteral(firstKey) {
-// 	// 	firstKeyInt, _ := common.IntegerLiteralToInt64(firstKey)
-// 	// 	phpArrayKeys = append(phpArrayKeys, fmt.Sprintf("[%d]", firstKeyInt))
-// 	// } else {
-// 	// 	phpArrayKeys = append(phpArrayKeys, "["+firstKey+"]")
-// 	// }
+		if key == "" {
+			break
+		}
+		key = strings.TrimPrefix(key, "[")
+	}
 
-// 	// for key != "" {
-// 	// 	nextKey, key, _ := strings.Cut(key, "[")
-// 	// 	key = "[" + key
-// 	// }
+	php := "<?php $array"
+	for _, phpArrayKey := range phpArrayKeys {
+		if phpArrayKey == "" {
+			php += "[]"
+		} else if common.IsDecimalLiteral(phpArrayKey) {
+			phpArrayKeyInt, _ := common.IntegerLiteralToInt64(phpArrayKey)
+			php += fmt.Sprintf("[%d]", phpArrayKeyInt)
+		} else {
+			php += "['" + phpArrayKey + "']"
+		}
+	}
+	php += " = '" + value + "';"
 
-// 	return nil
-// }
+	interpreter := NewInterpreter(ini.NewDefaultIni(), &Request{}, "")
+	interpreter.env.declareVariable("$array", result)
+	_, err := interpreter.Process(php)
+
+	return interpreter.env.variables["$array"].(*ArrayRuntimeValue), err
+}

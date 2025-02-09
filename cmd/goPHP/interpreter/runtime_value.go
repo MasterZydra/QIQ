@@ -100,6 +100,10 @@ func (runtimeValue *ArrayRuntimeValue) SetElement(key IRuntimeValue, value IRunt
 }
 
 func (runtimeValue *ArrayRuntimeValue) findKey(key IRuntimeValue) (IRuntimeValue, bool) {
+	if key == nil {
+		return NewVoidRuntimeValue(), false
+	}
+
 	for k := range runtimeValue.Elements {
 		if k.GetType() != key.GetType() {
 			continue

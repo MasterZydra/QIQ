@@ -372,7 +372,9 @@ func TestArray(t *testing.T) {
 	testInputOutput(t, `<?php $a = [0, 1, 2]; echo $a[3] === null ? "y" : "n";`, "y")
 	testInputOutput(t, `<?php $a = [0, 1]; echo $a[2] = 2; echo $a[2];`, "22")
 	testInputOutput(t, `<?php $a = []; $a[] = 1; echo $a[0];`, "1")
-	// TODO add test with nested: $b["a"]["b"]["c"]=1;
+	testInputOutput(t, `<?php $a = []; $a[][] = "42"; echo $a[0][0];`, "42")
+	testInputOutput(t, `<?php $a = []; $a[][123] = "42"; echo $a[0][123];`, "42")
+	testInputOutput(t, `<?php $a = []; $a["a"]["b"]["c"]=1; echo $a["a"]["b"]["c"];`, "1")
 
 	// Determination of the next key
 	testInputOutput(t,

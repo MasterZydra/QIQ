@@ -69,14 +69,38 @@ func (interpreter *Interpreter) ProcessSimpleAssignmentExpr(expr *ast.SimpleAssi
 			return NewVoidRuntimeValue(), phpError.NewError("processSimpleAssignmentExpr: Unsupported variable type %s", expr.Variable.GetKind())
 		}
 
-		var key ast.IExpression = expr.Variable.(*ast.SubscriptExpression).Index
-
-		array := currentValue.(*ArrayRuntimeValue)
-		var keyValue IRuntimeValue = nil
-		if key != nil {
-			keyValue = must(interpreter.processStmt(key, env))
+		keys := []ast.IExpression{expr.Variable.(*ast.SubscriptExpression).Index}
+		subarray := expr.Variable.(*ast.SubscriptExpression).Variable
+		for subarray.GetKind() == ast.SubscriptExpr {
+			keys = append(keys, subarray.(*ast.SubscriptExpression).Index)
+			subarray = subarray.(*ast.SubscriptExpression).Variable
 		}
-		array.SetElement(keyValue, value)
+
+		for i := len(keys) - 1; i >= 0; i-- {
+			if currentValue.GetType() != ArrayValue {
+				return value, phpError.NewError("processSimpleAssignmentExpr: Unexpected currentValue type %s", currentValue.GetType())
+			}
+
+			array := currentValue.(*ArrayRuntimeValue)
+			var keyValue IRuntimeValue = nil
+			if keys[i] != nil {
+				keyValue = must(interpreter.processStmt(keys[i], env))
+			}
+
+			if i == 0 {
+				array.SetElement(keyValue, value)
+				continue
+			}
+
+			_, found := array.findKey(keyValue)
+			if found {
+				currentValue, _ = array.GetElement(keyValue)
+			} else {
+				newArray := NewArrayRuntimeValue()
+				array.SetElement(keyValue, newArray)
+				currentValue = newArray
+			}
+		}
 
 		return value, nil
 	}

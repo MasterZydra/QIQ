@@ -68,7 +68,7 @@ func registerPredefinedVariableGet(environment *Environment, request *Request, i
 	if init {
 		array, err := parseQuery(request.QueryString)
 		if err != nil {
-			println(err)
+			println(err.Error())
 		}
 		environment.predefinedVariables["$_GET"] = array
 	} else {
