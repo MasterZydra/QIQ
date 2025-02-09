@@ -47,6 +47,15 @@ func TestParseQuery(t *testing.T) {
 			}),
 		}),
 	)
+	// Simple Query with array that overwrites old value
+	runTest(t,
+		"a[]=1&a[0]=5",
+		NewArrayRuntimeValueFromMap(map[IRuntimeValue]IRuntimeValue{
+			NewStringRuntimeValue("a"): NewArrayRuntimeValueFromMap(map[IRuntimeValue]IRuntimeValue{
+				NewIntegerRuntimeValue(0): NewStringRuntimeValue("5"),
+			}),
+		}),
+	)
 	// Complex Query with array
 	runTest(t,
 		"a[][]=1&a[][]=3&b[a][b][c]=1&b[a][b][d]=1",

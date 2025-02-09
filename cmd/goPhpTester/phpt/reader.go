@@ -69,15 +69,11 @@ func (reader *Reader) GetTestFile() (*TestFile, error) {
 
 		if reader.at() == "--POST--" {
 			reader.eat()
-			params := ""
+			postData := ""
 			for !reader.isEof() && !reader.isSection(reader.at()) {
-				params += reader.eat()
+				postData += reader.eat()
 			}
-			paramsMap, err := parseQuery(params)
-			if err != nil {
-				return nil, fmt.Errorf("--POST--\n%s", err)
-			}
-			reader.testFile.PostParams = paramsMap
+			reader.testFile.Post = postData
 			reader.sections = append(reader.sections, "--POST--")
 			continue
 		}

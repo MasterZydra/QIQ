@@ -4,7 +4,7 @@ type TestFile struct {
 	Filename   string
 	Title      string
 	Get        string
-	PostParams [][]string
+	Post       string
 	Args       [][]string
 	Env        map[string]string
 	Ini        []string

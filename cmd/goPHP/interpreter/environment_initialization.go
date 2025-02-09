@@ -78,7 +78,11 @@ func registerPredefinedVariableGet(environment *Environment, request *Request, i
 
 func registerPredefinedVariablePost(environment *Environment, request *Request, init bool) {
 	if init {
-		environment.predefinedVariables["$_POST"] = paramToArray(request.PostParams)
+		array, err := parseQuery(request.Post)
+		if err != nil {
+			println(err.Error())
+		}
+		environment.predefinedVariables["$_POST"] = array
 	} else {
 		environment.predefinedVariables["$_POST"] = NewArrayRuntimeValue()
 	}

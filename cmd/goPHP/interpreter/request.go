@@ -20,14 +20,13 @@ type Request struct {
 	ServerPort     string
 	Env            map[string]string
 	Args           [][]string
-	PostParams     [][]string
+	Post           string
 }
 
 func NewRequest() *Request {
 	return &Request{
 		RequestTime: time.Now(),
 		Args:        [][]string{},
-		PostParams:  [][]string{},
 	}
 }
 

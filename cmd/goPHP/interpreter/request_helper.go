@@ -94,7 +94,7 @@ func parseQueryKey(key string, value string, result *ArrayRuntimeValue) (*ArrayR
 	for _, phpArrayKey := range phpArrayKeys {
 		if phpArrayKey == "" {
 			php += "[]"
-		} else if common.IsDecimalLiteral(phpArrayKey) {
+		} else if common.IsIntegerLiteral(phpArrayKey) {
 			phpArrayKeyInt, _ := common.IntegerLiteralToInt64(phpArrayKey)
 			php += fmt.Sprintf("[%d]", phpArrayKeyInt)
 		} else {

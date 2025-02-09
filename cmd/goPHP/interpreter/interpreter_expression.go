@@ -117,29 +117,51 @@ func (interpreter *Interpreter) ProcessSubscriptExpr(expr *ast.SubscriptExpressi
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-subscript-expression
 	// dereferencable-expression designates an array
 	if variable.GetType() == ArrayValue {
-		// TODO processSubscriptExpr - no key
-		// Spec: https://phplang.org/spec/10-expressions.html#grammar-subscript-expression
-		// If expression is omitted, a new element is inserted. Its key has type int and is one more than the highest, previously assigned int key for this array. If this is the first element with an int key, key 0 is used. If the largest previously assigned int key is the largest integer value that can be represented, the new element is not added. The result is the added new element, or NULL if the element was not added.
-
-		key := must(interpreter.processStmt(expr.Index, env))
 		array := variable.(*ArrayRuntimeValue)
-		exists := mustOrVoid(lib_array_key_exists(key, array))
 
-		// Spec: https://phplang.org/spec/10-expressions.html#grammar-subscript-expression
-		// If expression is present, if the designated element exists,
-		// the type and value of the result is the type and value of that element;
-		// otherwise, the result is NULL.
-		if exists {
-			element, _ := array.GetElement(key)
-			return element, nil
-		} else {
-			return NewNullRuntimeValue(), nil
+		keys := []ast.IExpression{expr.Index}
+		subarray := expr.Variable
+		for subarray.GetKind() == ast.SubscriptExpr {
+			keys = append(keys, subarray.(*ast.SubscriptExpression).Index)
+			subarray = subarray.(*ast.SubscriptExpression).Variable
 		}
 
-		// TODO processSubscriptExpr
-		// If the usage context is as the left-hand side of a simple-assignment-expression, the value of the new element is the value of the right-hand side of that simple-assignment-expression.
-		// If the usage context is as the left-hand side of a compound-assignment-expression: the expression e1 op= e2 is evaluated as e1 = NULL op (e2).
-		// If the usage context is as the operand of a postfix- or prefix-increment or decrement operator, the value of the new element is considered to be NULL.
+		for i := len(keys) - 1; i >= 0; i-- {
+			// TODO processSubscriptExpr - no key
+			// Spec: https://phplang.org/spec/10-expressions.html#grammar-subscript-expression
+			// If expression is omitted, a new element is inserted. Its key has type int and is one more than the highest, previously assigned int key for this array. If this is the first element with an int key, key 0 is used. If the largest previously assigned int key is the largest integer value that can be represented, the new element is not added. The result is the added new element, or NULL if the element was not added.
+
+			keyValue := must(interpreter.processStmt(keys[i], env))
+			_, exists := array.findKey(keyValue)
+
+			if i == 0 {
+				// Spec: https://phplang.org/spec/10-expressions.html#grammar-subscript-expression
+				// If expression is present, if the designated element exists,
+				// the type and value of the result is the type and value of that element;
+				// otherwise, the result is NULL.
+				if exists {
+					element, _ := array.GetElement(keyValue)
+					return element, nil
+				} else {
+					return NewNullRuntimeValue(), nil
+				}
+			}
+
+			if exists {
+				element, _ := array.GetElement(keyValue)
+				if element.GetType() != ArrayValue {
+					return NewNullRuntimeValue(), phpError.NewError("ProcessSubscriptExpr: Expected type Array. Got: %s", element.GetType())
+				}
+				array = element.(*ArrayRuntimeValue)
+				continue
+			}
+			return NewNullRuntimeValue(), phpError.NewError("ProcessSubscriptExpr: Array does not contain key: %s", keyValue.GetType())
+
+			// TODO processSubscriptExpr
+			// If the usage context is as the left-hand side of a simple-assignment-expression, the value of the new element is the value of the right-hand side of that simple-assignment-expression.
+			// If the usage context is as the left-hand side of a compound-assignment-expression: the expression e1 op= e2 is evaluated as e1 = NULL op (e2).
+			// If the usage context is as the operand of a postfix- or prefix-increment or decrement operator, the value of the new element is considered to be NULL.
+		}
 	}
 
 	return NewVoidRuntimeValue(), phpError.NewError("Unsupported subscript expression: %s", ast.ToString(expr))
