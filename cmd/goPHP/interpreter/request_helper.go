@@ -69,31 +69,34 @@ func parseQueryKey(key string, value string, result *ArrayRuntimeValue) (*ArrayR
 	//   PHP:   $array[123][][12]["de"] = "abc";
 
 	firstKey, key, _ := strings.Cut(key, "[")
+	key = "[" + key
 
 	phpArrayKeys := []string{firstKey}
 
 	for key != "" {
-		if strings.HasPrefix(key, "]]") {
+		if strings.HasPrefix(key, "[]]") {
 			phpArrayKeys = append(phpArrayKeys, "")
-			key = strings.TrimPrefix(key, "]]")
+			key = strings.TrimPrefix(key, "[]]")
 			continue
 		}
 
-		if strings.HasPrefix(key, "]") {
+		if strings.HasPrefix(key, "[]") {
 			phpArrayKeys = append(phpArrayKeys, "")
-			key = strings.TrimPrefix(key, "]")
-			key = strings.TrimPrefix(key, "[")
+			key = strings.TrimPrefix(key, "[]")
 			continue
 		}
 
+		key = strings.TrimPrefix(key, "[")
 		var nextKey string
 		nextKey, key, _ = strings.Cut(key, "]")
 		phpArrayKeys = append(phpArrayKeys, nextKey)
+		for strings.HasPrefix(key, "]") {
+			key = strings.TrimPrefix(key, "]")
+		}
 
 		if key == "" {
 			break
 		}
-		key = strings.TrimPrefix(key, "[")
 	}
 
 	php := "<?php $array"
