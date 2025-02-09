@@ -77,6 +77,19 @@ func NewArrayRuntimeValueFromMap(elements map[IRuntimeValue]IRuntimeValue) *Arra
 }
 
 func (runtimeValue *ArrayRuntimeValue) SetElement(key IRuntimeValue, value IRuntimeValue) {
+	if key == nil {
+		var lastInt int64 = -1
+		for i := len(runtimeValue.Keys) - 1; i >= 0; i-- {
+			if runtimeValue.Keys[i].GetType() != IntegerValue {
+				continue
+			}
+
+			lastInt = runtimeValue.Keys[i].(*IntegerRuntimeValue).Value
+			break
+		}
+		key = NewIntegerRuntimeValue(lastInt + 1)
+	}
+
 	existingKey, exists := runtimeValue.findKey(key)
 	if !exists {
 		runtimeValue.Keys = append(runtimeValue.Keys, key)

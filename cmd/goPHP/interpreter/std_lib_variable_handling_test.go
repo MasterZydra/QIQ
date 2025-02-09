@@ -19,7 +19,7 @@ func TestLibBoolval(t *testing.T) {
 	// array to boolean
 	doTest(NewArrayRuntimeValue(), false)
 	array := NewArrayRuntimeValue()
-	array.SetElement(NewIntegerRuntimeValue(0), NewIntegerRuntimeValue(42))
+	array.SetElement(nil, NewIntegerRuntimeValue(42))
 	doTest(array, true)
 
 	// boolean to boolean
@@ -144,7 +144,7 @@ func TestLibIntval(t *testing.T) {
 	// array to integer
 	doTest(NewArrayRuntimeValue(), 0)
 	array := NewArrayRuntimeValue()
-	array.SetElement(NewIntegerRuntimeValue(0), NewIntegerRuntimeValue(42))
+	array.SetElement(nil, NewIntegerRuntimeValue(42))
 	doTest(array, 1)
 
 	// boolean to integer

@@ -103,17 +103,27 @@ func paramToArray(params [][]string) *ArrayRuntimeValue {
 	result := NewArrayRuntimeValue()
 
 	for _, param := range params {
-		key := param[0]
-		value := param[1]
+		hasKey := false
+		var key string
+		var value string
+		if len(param) == 2 {
+			key = param[0]
+			value = param[1]
+			hasKey = true
+		} else if len(param) == 1 {
+			value = param[0]
+		}
 
 		// No array
 		if !strings.Contains(key, "]") {
 			var keyValue IRuntimeValue
-			if common.IsIntegerLiteral(key) {
-				intValue, _ := common.IntegerLiteralToInt64(key)
-				keyValue = NewIntegerRuntimeValue(intValue)
-			} else {
-				keyValue = NewStringRuntimeValue(key)
+			if hasKey {
+				if common.IsIntegerLiteral(key) {
+					intValue, _ := common.IntegerLiteralToInt64(key)
+					keyValue = NewIntegerRuntimeValue(intValue)
+				} else {
+					keyValue = NewStringRuntimeValue(key)
+				}
 			}
 			result.SetElement(keyValue, NewStringRuntimeValue(value))
 			continue

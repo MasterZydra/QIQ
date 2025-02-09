@@ -371,7 +371,22 @@ func TestArray(t *testing.T) {
 	testInputOutput(t, `<?php $a = [0, 1, 2]; echo $a[0] === null ? "y" : "n";`, "n")
 	testInputOutput(t, `<?php $a = [0, 1, 2]; echo $a[3] === null ? "y" : "n";`, "y")
 	testInputOutput(t, `<?php $a = [0, 1]; echo $a[2] = 2; echo $a[2];`, "22")
+	testInputOutput(t, `<?php $a = []; $a[] = 1; echo $a[0];`, "1")
 	// TODO add test with nested: $b["a"]["b"]["c"]=1;
+
+	// Determination of the next key
+	testInputOutput(t,
+		`<?php $a = []; $a['abc'] = 'def'; $a[] = 'ghi'; var_dump($a);`,
+		"array(2) {\n  [\"abc\"]=>\n  string(3) \"def\"\n  [0]=>\n  string(3) \"ghi\"\n}\n",
+	)
+	testInputOutput(t,
+		`<?php $a = []; $a[100] = 'def'; $a[] = 'ghi'; var_dump($a);`,
+		"array(2) {\n  [100]=>\n  string(3) \"def\"\n  [101]=>\n  string(3) \"ghi\"\n}\n",
+	)
+	testInputOutput(t,
+		`<?php $a = []; $a[100] = 'def'; $a['abc'] = 'def'; $a[] = 'ghi'; var_dump($a);`,
+		"array(3) {\n  [100]=>\n  string(3) \"def\"\n  [\"abc\"]=>\n  string(3) \"def\"\n  [101]=>\n  string(3) \"ghi\"\n}\n",
+	)
 
 	// Pass by value not reference
 	testInputOutput(t,

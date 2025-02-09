@@ -72,23 +72,11 @@ func (interpreter *Interpreter) ProcessSimpleAssignmentExpr(expr *ast.SimpleAssi
 		var key ast.IExpression = expr.Variable.(*ast.SubscriptExpression).Index
 
 		array := currentValue.(*ArrayRuntimeValue)
-		if key == nil {
-			var lastIndex IRuntimeValue = NewIntegerRuntimeValue(0)
-			if len(array.Keys) > 0 {
-				lastIndex = array.Keys[len(array.Keys)-1]
-			}
-			if lastIndex.GetType() != IntegerValue {
-				return NewVoidRuntimeValue(), phpError.NewError("processSimpleAssignmentExpr: Unsupported array key %s", lastIndex.GetType())
-			}
-			var nextIndex = lastIndex
-			if len(array.Keys) > 0 {
-				nextIndex = NewIntegerRuntimeValue(lastIndex.(*IntegerRuntimeValue).Value + 1)
-			}
-			array.SetElement(nextIndex, value)
-		} else {
-			keyValue := must(interpreter.processStmt(key, env))
-			array.SetElement(keyValue, value)
+		var keyValue IRuntimeValue = nil
+		if key != nil {
+			keyValue = must(interpreter.processStmt(key, env))
 		}
+		array.SetElement(keyValue, value)
 
 		return value, nil
 	}

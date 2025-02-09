@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 	"slices"
-	"strconv"
 	"strings"
 )
 
@@ -112,9 +111,9 @@ func (reader *Reader) GetTestFile() (*TestFile, error) {
 			reader.eat()
 			argsStr := reader.eat()
 			parts := strings.Split(argsStr, " ")
-			args := [][]string{{strconv.Itoa(0), reader.filename}}
+			args := [][]string{{reader.filename}}
 			for i := 0; i < len(parts); i++ {
-				args = append(args, []string{strconv.Itoa(i + 1), parts[i]})
+				args = append(args, []string{parts[i]})
 			}
 			// TODO parse --arg value --arg=value -avalue -a=value -a value
 			reader.testFile.Args = args

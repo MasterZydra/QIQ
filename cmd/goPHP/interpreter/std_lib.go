@@ -71,7 +71,7 @@ func lib_arrayval(runtimeValue IRuntimeValue) (*ArrayRuntimeValue, phpError.Erro
 		// If the source type is scalar or resource and it is non-NULL,
 		// the result value is an array of one element under the key 0 whose value is that of the source.
 		array := NewArrayRuntimeValue()
-		array.SetElement(NewIntegerRuntimeValue(0), runtimeValue)
+		array.SetElement(nil, runtimeValue)
 		return array, nil
 	}
 

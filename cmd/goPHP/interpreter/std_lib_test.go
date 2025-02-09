@@ -4,7 +4,7 @@ import "testing"
 
 func TestArrayKeyExists(t *testing.T) {
 	array := NewArrayRuntimeValue()
-	array.SetElement(NewIntegerRuntimeValue(0), NewIntegerRuntimeValue(42))
+	array.SetElement(nil, NewIntegerRuntimeValue(42))
 	if actual, _ := lib_array_key_exists(NewIntegerRuntimeValue(0), array); !actual {
 		t.Errorf("Expected: \"%t\", Got \"%t\"", true, actual)
 	}

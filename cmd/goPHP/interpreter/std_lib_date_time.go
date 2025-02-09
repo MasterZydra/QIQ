@@ -226,7 +226,7 @@ func nativeFn_getdate(args []IRuntimeValue, _ *Interpreter) (IRuntimeValue, phpE
 	array.SetElement(NewStringRuntimeValue("yday"), NewIntegerRuntimeValue(int64(timestamp.UTC().YearDay()-1)))
 	array.SetElement(NewStringRuntimeValue("weekday"), NewStringRuntimeValue(timestamp.UTC().Weekday().String()))
 	array.SetElement(NewStringRuntimeValue("month"), NewStringRuntimeValue(timestamp.UTC().Month().String()))
-	array.SetElement(NewIntegerRuntimeValue(0), NewIntegerRuntimeValue(timestamp.UTC().Unix()))
+	array.SetElement(nil, NewIntegerRuntimeValue(timestamp.UTC().Unix()))
 
 	return array, nil
 }
@@ -270,15 +270,15 @@ func nativeFn_localtime(args []IRuntimeValue, _ *Interpreter) (IRuntimeValue, ph
 		array.SetElement(NewStringRuntimeValue("tm_isdst"), NewIntegerRuntimeValue(isDst))
 	} else {
 		//Numerically index array
-		array.SetElement(NewIntegerRuntimeValue(0), NewIntegerRuntimeValue(int64(timestamp.Local().Second())))
-		array.SetElement(NewIntegerRuntimeValue(1), NewIntegerRuntimeValue(int64(timestamp.Local().Minute())))
-		array.SetElement(NewIntegerRuntimeValue(2), NewIntegerRuntimeValue(int64(timestamp.Local().Hour())))
-		array.SetElement(NewIntegerRuntimeValue(3), NewIntegerRuntimeValue(int64(timestamp.Local().Day())))
-		array.SetElement(NewIntegerRuntimeValue(4), NewIntegerRuntimeValue(int64(timestamp.Local().Month())))
-		array.SetElement(NewIntegerRuntimeValue(5), NewIntegerRuntimeValue(year))
-		array.SetElement(NewIntegerRuntimeValue(6), NewIntegerRuntimeValue(int64(timestamp.Local().Weekday())))
-		array.SetElement(NewIntegerRuntimeValue(7), NewIntegerRuntimeValue(int64(timestamp.Local().YearDay()-1)))
-		array.SetElement(NewIntegerRuntimeValue(8), NewIntegerRuntimeValue(isDst))
+		array.SetElement(nil, NewIntegerRuntimeValue(int64(timestamp.Local().Second())))
+		array.SetElement(nil, NewIntegerRuntimeValue(int64(timestamp.Local().Minute())))
+		array.SetElement(nil, NewIntegerRuntimeValue(int64(timestamp.Local().Hour())))
+		array.SetElement(nil, NewIntegerRuntimeValue(int64(timestamp.Local().Day())))
+		array.SetElement(nil, NewIntegerRuntimeValue(int64(timestamp.Local().Month())))
+		array.SetElement(nil, NewIntegerRuntimeValue(year))
+		array.SetElement(nil, NewIntegerRuntimeValue(int64(timestamp.Local().Weekday())))
+		array.SetElement(nil, NewIntegerRuntimeValue(int64(timestamp.Local().YearDay()-1)))
+		array.SetElement(nil, NewIntegerRuntimeValue(isDst))
 	}
 
 	return array, nil
