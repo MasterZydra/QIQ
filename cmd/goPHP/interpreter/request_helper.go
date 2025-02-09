@@ -73,6 +73,12 @@ func parseQueryKey(key string, value string, result *ArrayRuntimeValue) (*ArrayR
 	phpArrayKeys := []string{firstKey}
 
 	for key != "" {
+		if strings.HasPrefix(key, "]]") {
+			phpArrayKeys = append(phpArrayKeys, "")
+			key = strings.TrimPrefix(key, "]]")
+			continue
+		}
+
 		if strings.HasPrefix(key, "]") {
 			phpArrayKeys = append(phpArrayKeys, "")
 			key = strings.TrimPrefix(key, "]")
