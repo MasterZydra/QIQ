@@ -1,6 +1,8 @@
 # Binaries
 /goPHP
+/goPHP.exe
 /goPhpTester
+/goPhpTester.exe
 
 # PHP files
 *.php

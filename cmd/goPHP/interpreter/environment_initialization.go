@@ -192,6 +192,7 @@ func paramToArray(params [][]string) *ArrayRuntimeValue {
 func registerPredefinedConstants(environment *Environment) {
 	// Spec: https://phplang.org/spec/06-constants.html#core-predefined-constants
 	// Spec: https://www.php.net/manual/en/reserved.constants.php
+	environment.predefinedConstants["DIRECTORY_SEPARATOR"] = NewStringRuntimeValue(getPhpDirectorySeparator())
 	environment.predefinedConstants["FALSE"] = NewBooleanRuntimeValue(false)
 	environment.predefinedConstants["TRUE"] = NewBooleanRuntimeValue(true)
 	environment.predefinedConstants["NULL"] = NewNullRuntimeValue()
@@ -200,11 +201,7 @@ func registerPredefinedConstants(environment *Environment) {
 	environment.predefinedConstants["PHP_INT_SIZE"] = NewIntegerRuntimeValue(64 / 8)
 	environment.predefinedConstants["PHP_OS"] = NewStringRuntimeValue(getPhpOs())
 	environment.predefinedConstants["PHP_OS_FAMILY"] = NewStringRuntimeValue(getPhpOsFamily())
-	if getPhpOs() == "Windows" {
-		environment.predefinedConstants["PHP_EOL"] = NewStringRuntimeValue("\r\n")
-	} else {
-		environment.predefinedConstants["PHP_EOL"] = NewStringRuntimeValue("\n")
-	}
+	environment.predefinedConstants["PHP_EOL"] = NewStringRuntimeValue(getPhpEol())
 	environment.predefinedConstants["PHP_VERSION"] = NewStringRuntimeValue(config.Version)
 	environment.predefinedConstants["PHP_MAJOR_VERSION"] = NewIntegerRuntimeValue(config.MajorVersion)
 	environment.predefinedConstants["PHP_MINOR_VERSION"] = NewIntegerRuntimeValue(config.MinorVersion)

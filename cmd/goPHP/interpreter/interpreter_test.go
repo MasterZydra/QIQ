@@ -8,6 +8,25 @@ import (
 	"testing"
 )
 
+var TEST_FILE_NAME string = getTestFileName()
+var TEST_FILE_PATH string = getTestFilePath()
+
+func getTestFileName() string {
+    if getPhpOs() == "Windows" {
+		return `C:\Users\admin\test.php`
+	} else {
+		return "/home/admin/test.php"
+	}
+}
+
+func getTestFilePath() string {
+    if getPhpOs() == "Windows" {
+		return `C:\Users\admin`
+	} else {
+		return "/home/admin"
+	}
+}
+
 // ------------------- MARK: function tests -------------------
 
 func TestVariableExprToVariableName(t *testing.T) {
@@ -61,7 +80,7 @@ func TestVariableExprToVariableName(t *testing.T) {
 // ------------------- MARK: input output tests -------------------
 
 func testForError(t *testing.T, php string, expected phpError.Error) {
-	_, err := NewInterpreter(ini.NewDevIni(), &Request{}, "/home/admin/test.php").Process(php)
+	_, err := NewInterpreter(ini.NewDevIni(), &Request{}, TEST_FILE_NAME).Process(php)
 	if err.GetErrorType() != expected.GetErrorType() || err.GetMessage() != expected.GetMessage() {
 		t.Errorf("\nCode: \"%s\"\nExpected: %s\nGot:      %s", php, expected, err)
 	}
@@ -70,7 +89,7 @@ func testForError(t *testing.T, php string, expected phpError.Error) {
 func testInputOutput(t *testing.T, php string, output string) *Interpreter {
 	// Always use "\n" for tests so that they also pass on Windows
 	PHP_EOL = "\n"
-	interpreter := NewInterpreter(ini.NewDevIni(), &Request{}, "/home/admin/test.php")
+	interpreter := NewInterpreter(ini.NewDevIni(), &Request{}, TEST_FILE_NAME)
 	actual, err := interpreter.Process(php)
 	if err != nil {
 		t.Errorf("\nCode: \"%s\"\nUnexpected error: \"%s\"", php, err)
@@ -117,9 +136,9 @@ func TestConstants(t *testing.T) {
 	testInputOutput(t, `<?php echo E_ALL;`, fmt.Sprintf("%d", phpError.E_ALL))
 
 	// Magic constants
-	testInputOutput(t, "<?php var_dump(__DIR__);", "string(11) \"/home/admin\"\n")
+	testInputOutput(t, "<?php var_dump(__DIR__);", fmt.Sprintf("string(%d) \"%s\"\n", len(TEST_FILE_PATH), TEST_FILE_PATH))
 	testInputOutput(t, "<?php var_dump(__FUNCTION__); function fn() { var_dump(__FUNCTION__); } fn();", "string(0) \"\"\nstring(2) \"fn\"\n")
-	testInputOutput(t, "<?php var_dump(__FILE__);", "string(20) \"/home/admin/test.php\"\n")
+	testInputOutput(t, "<?php var_dump(__FILE__);", fmt.Sprintf("string(%d) \"%s\"\n", len(TEST_FILE_NAME), TEST_FILE_NAME))
 	testInputOutput(t, "<?php var_dump(__LINE__);\nvar_dump(__LINE__);", "int(1)\nint(2)\n")
 
 	// Userdefined constants
@@ -128,16 +147,16 @@ func TestConstants(t *testing.T) {
 
 func TestFileIncludes(t *testing.T) {
 	testForError(t, `<?php require "include.php"; ?>`,
-		phpError.NewError("Uncaught Error: Failed opening required 'include.php' (include_path='/home/admin') in /home/admin/test.php:1:15"),
+		phpError.NewError("Uncaught Error: Failed opening required 'include.php' (include_path='" + TEST_FILE_PATH + "') in " + TEST_FILE_NAME + ":1:15"),
 	)
 	testForError(t, `<?php require_once "include.php"; ?>`,
-		phpError.NewError("Uncaught Error: Failed opening required 'include.php' (include_path='/home/admin') in /home/admin/test.php:1:20"),
+		phpError.NewError("Uncaught Error: Failed opening required 'include.php' (include_path='" + TEST_FILE_PATH + "') in " + TEST_FILE_NAME + ":1:20"),
 	)
 	testForError(t, `<?php include "include.php"; ?>`,
-		phpError.NewWarning("include(): Failed opening 'include.php' for inclusion (include_path='/home/admin') in /home/admin/test.php:1:15"),
+		phpError.NewWarning("include(): Failed opening 'include.php' for inclusion (include_path='" + TEST_FILE_PATH + "') in " + TEST_FILE_NAME + ":1:15"),
 	)
 	testForError(t, `<?php include_once "include.php"; ?>`,
-		phpError.NewWarning("include(): Failed opening 'include.php' for inclusion (include_path='/home/admin') in /home/admin/test.php:1:20"),
+		phpError.NewWarning("include(): Failed opening 'include.php' for inclusion (include_path='" + TEST_FILE_PATH + "') in " + TEST_FILE_NAME + ":1:20"),
 	)
 }
 
@@ -161,7 +180,7 @@ func TestVariable(t *testing.T) {
 
 	// Parenthesized LHS
 	testForError(t, `<?php ($a) = 42;`,
-		phpError.NewParseError(`Statement must end with a semicolon. Got: "=" at /home/admin/test.php:1:12`),
+		phpError.NewParseError(`Statement must end with a semicolon. Got: "=" at ` + TEST_FILE_NAME + `:1:12`),
 	)
 }
 
@@ -458,7 +477,7 @@ func TestNumbers(t *testing.T) {
 	testForError(t, `<?php var_dump(1_.0);`, phpError.NewParseError("Unsupported number format detected"))
 	testForError(t, `<?php var_dump(1._0);`, phpError.NewError("Undefined constant \"_0\""))
 	testForError(t, `<?php var_dump(1_e2);`, phpError.NewParseError("Unsupported number format detected"))
-	testForError(t, `<?php var_dump(1e_2);`, phpError.NewParseError("Expected \",\" or \")\". Got: &{Token - type: Name, value: \"e_2\", position: {Position - file: \"/home/admin/test.php\", ln: 1, col: 17}}"))
+	testForError(t, `<?php var_dump(1e_2);`, phpError.NewParseError("Expected \",\" or \")\". Got: &{Token - type: Name, value: \"e_2\", position: {Position - file: \"" + TEST_FILE_NAME + "\", ln: 1, col: 17}}"))
 }
 
 func TestOperators(t *testing.T) {

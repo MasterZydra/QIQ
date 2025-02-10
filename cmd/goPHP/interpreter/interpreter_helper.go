@@ -16,13 +16,27 @@ func (interpreter *Interpreter) print(str string) {
 	interpreter.result += str
 }
 
-var PHP_EOL string = ""
+var PHP_EOL string = getPhpEol()
+
+func getPhpEol() string {
+	if getPhpOs() == "Windows" {
+		return "\r\n"
+	} else {
+		return "\n"
+	}
+}
+
+var DIR_SEP = getPhpDirectorySeparator()
+
+func getPhpDirectorySeparator() string {
+	if getPhpOs() == "Windows" {
+		return `\`
+	} else {
+		return "/"
+	}
+}
 
 func (interpreter *Interpreter) println(str string) {
-	if PHP_EOL == "" {
-		str, _ := interpreter.env.lookupConstant("PHP_EOL")
-		PHP_EOL = str.(*StringRuntimeValue).Value
-	}
 	interpreter.print(str + PHP_EOL)
 }
 

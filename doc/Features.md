@@ -64,6 +64,7 @@
 - $_SERVER
 
 ## Predefined constants
+- DIRECTORY_SEPARATOR
 - E_ALL
 - E_COMPILE_ERROR
 - E_COMPILE_WARNING
