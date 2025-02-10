@@ -47,6 +47,15 @@ func TestParseQuery(t *testing.T) {
 			}),
 		}),
 	)
+	// Query with too many closing "]"
+	runTest(t,
+		"123[]]]]]]]]]=SEGV",
+		NewArrayRuntimeValueFromMap(map[IRuntimeValue]IRuntimeValue{
+			NewIntegerRuntimeValue(123): NewArrayRuntimeValueFromMap(map[IRuntimeValue]IRuntimeValue{
+				NewIntegerRuntimeValue(0): NewStringRuntimeValue("SEGV"),
+			}),
+		}),
+	)
 	// Simple Query with array that overwrites old value
 	runTest(t,
 		"a[]=1&a[0]=5",
