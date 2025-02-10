@@ -12,7 +12,7 @@ var TEST_FILE_NAME string = getTestFileName()
 var TEST_FILE_PATH string = getTestFilePath()
 
 func getTestFileName() string {
-    if getPhpOs() == "Windows" {
+	if getPhpOs() == "Windows" {
 		return `C:\Users\admin\test.php`
 	} else {
 		return "/home/admin/test.php"
@@ -20,7 +20,7 @@ func getTestFileName() string {
 }
 
 func getTestFilePath() string {
-    if getPhpOs() == "Windows" {
+	if getPhpOs() == "Windows" {
 		return `C:\Users\admin`
 	} else {
 		return "/home/admin"
@@ -147,16 +147,16 @@ func TestConstants(t *testing.T) {
 
 func TestFileIncludes(t *testing.T) {
 	testForError(t, `<?php require "include.php"; ?>`,
-		phpError.NewError("Uncaught Error: Failed opening required 'include.php' (include_path='" + TEST_FILE_PATH + "') in " + TEST_FILE_NAME + ":1:15"),
+		phpError.NewError("Uncaught Error: Failed opening required 'include.php' (include_path='%s') in %s:1:15", TEST_FILE_PATH, TEST_FILE_NAME),
 	)
 	testForError(t, `<?php require_once "include.php"; ?>`,
-		phpError.NewError("Uncaught Error: Failed opening required 'include.php' (include_path='" + TEST_FILE_PATH + "') in " + TEST_FILE_NAME + ":1:20"),
+		phpError.NewError("Uncaught Error: Failed opening required 'include.php' (include_path='%s') in %s:1:20", TEST_FILE_PATH, TEST_FILE_NAME),
 	)
 	testForError(t, `<?php include "include.php"; ?>`,
-		phpError.NewWarning("include(): Failed opening 'include.php' for inclusion (include_path='" + TEST_FILE_PATH + "') in " + TEST_FILE_NAME + ":1:15"),
+		phpError.NewWarning("include(): Failed opening 'include.php' for inclusion (include_path='%s') in %s:1:15", TEST_FILE_PATH, TEST_FILE_NAME),
 	)
 	testForError(t, `<?php include_once "include.php"; ?>`,
-		phpError.NewWarning("include(): Failed opening 'include.php' for inclusion (include_path='" + TEST_FILE_PATH + "') in " + TEST_FILE_NAME + ":1:20"),
+		phpError.NewWarning("include(): Failed opening 'include.php' for inclusion (include_path='%s') in %s:1:20", TEST_FILE_PATH, TEST_FILE_NAME),
 	)
 }
 
@@ -180,7 +180,7 @@ func TestVariable(t *testing.T) {
 
 	// Parenthesized LHS
 	testForError(t, `<?php ($a) = 42;`,
-		phpError.NewParseError(`Statement must end with a semicolon. Got: "=" at ` + TEST_FILE_NAME + `:1:12`),
+		phpError.NewParseError(`Statement must end with a semicolon. Got: "=" at %s:1:12`, TEST_FILE_NAME),
 	)
 }
 
@@ -386,6 +386,24 @@ func TestUserFunctions(t *testing.T) {
 	)
 }
 
+func TestString(t *testing.T) {
+	// Read string index
+	testInputOutput(t, `<?php $s = 'abc'; var_dump($s[0]);`, "string(1) \"a\"\n")
+	testForError(t, `<?php $s = 'abc'; var_dump($s[""]);`, phpError.NewError("Cannot access offset of type string on string in %s:1:31", TEST_FILE_NAME))
+	testForError(t, `<?php $s = 'abc'; var_dump($s[]);`, phpError.NewError("Cannot use [] for reading in %s:1:28", TEST_FILE_NAME))
+	testForError(t, `<?php $s = 'abc'; var_dump($s[3]);`, phpError.NewError("Uninitialized string offset 3 in %s:1:31", TEST_FILE_NAME))
+
+	// Write string index
+	testInputOutput(t, `<?php $s = '123'; $s[0] = '*'; var_dump($s);`, "string(3) \"*23\"\n")
+	testInputOutput(t, `<?php $s = '123'; $s[0] = '**'; var_dump($s);`, "string(3) \"*23\"\n")
+	testInputOutput(t, `<?php $s = '123'; $s[3] = '**'; var_dump($s);`, "string(4) \"123*\"\n")
+	testInputOutput(t, `<?php $s = '123'; $s[5] = '*'; var_dump($s);`, "string(6) \"123  *\"\n")
+	testInputOutput(t, `<?php $s = '12345'; $s[1] = $s[1] = $s[3]; var_dump($s);`, "string(5) \"14345\"\n")
+	testInputOutput(t, `<?php $s = '12345'; $s[1] = $s[3] = '*'; var_dump($s);`, "string(5) \"1*3*5\"\n")
+	testForError(t, `<?php $s = '123'; $s[] = '*';`, phpError.NewError("[] operator not supported for strings in %s:1:19", TEST_FILE_NAME))
+	testForError(t, `<?php $s = '123'; $s["abc"] = '*';`, phpError.NewError("Cannot access offset of type string on string in %s:1:22", TEST_FILE_NAME))
+}
+
 func TestArray(t *testing.T) {
 	testInputOutput(t, `<?php $a = [0, 1, 2]; echo $a[0] === null ? "y" : "n";`, "n")
 	testInputOutput(t, `<?php $a = [0, 1, 2]; echo $a[3] === null ? "y" : "n";`, "y")
@@ -477,7 +495,7 @@ func TestNumbers(t *testing.T) {
 	testForError(t, `<?php var_dump(1_.0);`, phpError.NewParseError("Unsupported number format detected"))
 	testForError(t, `<?php var_dump(1._0);`, phpError.NewError("Undefined constant \"_0\""))
 	testForError(t, `<?php var_dump(1_e2);`, phpError.NewParseError("Unsupported number format detected"))
-	testForError(t, `<?php var_dump(1e_2);`, phpError.NewParseError("Expected \",\" or \")\". Got: &{Token - type: Name, value: \"e_2\", position: {Position - file: \"" + TEST_FILE_NAME + "\", ln: 1, col: 17}}"))
+	testForError(t, `<?php var_dump(1e_2);`, phpError.NewParseError("Expected \",\" or \")\". Got: &{Token - type: Name, value: \"e_2\", position: {Position - file: \"%s\", ln: 1, col: 17}}", TEST_FILE_NAME))
 }
 
 func TestOperators(t *testing.T) {

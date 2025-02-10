@@ -64,6 +64,37 @@ func (interpreter *Interpreter) ProcessSimpleAssignmentExpr(expr *ast.SimpleAssi
 	variableName := mustOrVoid(interpreter.varExprToVarName(expr.Variable, env.(*Environment)))
 	currentValue, _ := env.(*Environment).lookupVariable(variableName)
 
+	if currentValue.GetType() == StringValue && expr.Variable.GetKind() == ast.SubscriptExpr {
+		if expr.Variable.(*ast.SubscriptExpression).Index == nil {
+			return NewVoidRuntimeValue(), phpError.NewError("[] operator not supported for strings in %s", expr.Variable.GetPosition().ToPosString())
+		}
+		if expr.Variable.(*ast.SubscriptExpression).Index.GetKind() != ast.IntegerLiteralExpr {
+			indexType, err := literalExprTypeToRuntimeValue(expr.Variable.(*ast.SubscriptExpression).Index)
+			if err != nil {
+				return NewVoidRuntimeValue(), err
+			}
+			return NewVoidRuntimeValue(), phpError.NewError("Cannot access offset of type %s on string in %s", indexType, expr.Variable.(*ast.SubscriptExpression).Index.GetPosition().ToPosString())
+		}
+
+		key := expr.Variable.(*ast.SubscriptExpression).Index.(*ast.IntegerLiteralExpression).Value
+		str := currentValue.(*StringRuntimeValue).Value
+
+		valueStr, err := lib_strval(value)
+		if err != nil {
+			return NewVoidRuntimeValue(), err
+		}
+		if valueStr == "" {
+			return NewVoidRuntimeValue(),
+				phpError.NewError("Cannot assign an empty string to a string offset in %s", expr.Value.GetPosition().ToPosString())
+		}
+
+		str = common.ExtendWithSpaces(str, int(key+1))
+		str = common.ReplaceAtPos(str, valueStr, int(key))
+
+		_, err = env.(*Environment).declareVariable(variableName, NewStringRuntimeValue(str))
+		return value, err
+	}
+
 	if currentValue.GetType() == ArrayValue {
 		if expr.Variable.GetKind() != ast.SubscriptExpr {
 			return NewVoidRuntimeValue(), phpError.NewError("processSimpleAssignmentExpr: Unsupported variable type %s", expr.Variable.GetKind())
@@ -113,6 +144,33 @@ func (interpreter *Interpreter) ProcessSubscriptExpr(expr *ast.SubscriptExpressi
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-subscript-expression
 
 	variable := must(interpreter.lookupVariable(expr.Variable, env.(*Environment), false))
+
+	if variable.GetType() == StringValue {
+		if expr.Index == nil {
+			return NewVoidRuntimeValue(), phpError.NewError("Cannot use [] for reading in %s", expr.Variable.GetPosition().ToPosString())
+		}
+		if expr.Index.GetKind() != ast.IntegerLiteralExpr {
+			indexType, err := literalExprTypeToRuntimeValue(expr.Index)
+			if err != nil {
+				return NewVoidRuntimeValue(), err
+			}
+			return NewVoidRuntimeValue(), phpError.NewError("Cannot access offset of type %s on string in %s", indexType, expr.Index.GetPosition().ToPosString())
+		}
+
+		key := expr.Index.(*ast.IntegerLiteralExpression).Value
+		str := variable.(*StringRuntimeValue).Value
+
+		if len(str) <= int(key) {
+			return NewVoidRuntimeValue(), phpError.NewError("Uninitialized string offset %d in %s", key, expr.Index.GetPosition().ToPosString())
+		}
+
+		return NewStringRuntimeValue(str[key : key+1]), nil
+		// str = common.ExtendWithSpaces(str, int(key+1))
+		// str = common.ReplaceAtPos(str, valueStr, int(key))
+
+		// _, err = env.(*Environment).declareVariable(variableName, NewStringRuntimeValue(str))
+		// return value, err
+	}
 
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-subscript-expression
 	// dereferencable-expression designates an array

@@ -196,3 +196,22 @@ func TrimTrailingLineBreaks(str string) string {
 func ReplaceUnderscores(str string) string {
 	return strings.ReplaceAll(str, "_", "")
 }
+
+func ReplaceAtPos(str string, new string, pos int) string {
+	out := []rune(str)
+	out[pos] = []rune(new)[0]
+	return string(out)
+}
+
+func ExtendWithSpaces(str string, length int) string {
+	input := []rune(str)
+	if len(input) > length {
+		return str
+	}
+
+	padding := make([]rune, length-len(input))
+	for i := range padding {
+		padding[i] = ' '
+	}
+	return string(append(input, padding...))
+}

@@ -178,6 +178,20 @@ func (interpreter *Interpreter) scanForFunctionDefinition(statements []ast.IStat
 	return nil
 }
 
+var literalExprTypeRuntimeValue = map[ast.NodeType]string{
+	ast.ArrayLiteralExpr:   "array",
+	ast.IntegerLiteralExpr: "int",
+	ast.StringLiteralExpr:  "string",
+}
+
+func literalExprTypeToRuntimeValue(expr ast.IExpression) (string, phpError.Error) {
+	typeStr, found := literalExprTypeRuntimeValue[expr.GetKind()]
+	if !found {
+		return "", phpError.NewError("literalExprTypeToRuntimeValue: No mapping for type %s", expr.GetKind())
+	}
+	return typeStr, nil
+}
+
 var paramTypeRuntimeValue = map[ValueType]string{
 	ArrayValue:    "array",
 	BooleanValue:  "bool",
