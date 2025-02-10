@@ -30,6 +30,7 @@ func TestParseQuery(t *testing.T) {
 			NewIntegerRuntimeValue(2): NewStringRuntimeValue("ef"),
 		}),
 	)
+
 	// Query with only key-value-pairs
 	runTest(t,
 		"b=Hello+Again+World&c=Hi+Mom",
@@ -38,6 +39,35 @@ func TestParseQuery(t *testing.T) {
 			NewStringRuntimeValue("c"): NewStringRuntimeValue("Hi Mom"),
 		}),
 	)
+
+	// Query with special characters
+	runTest(t,
+		"a+-_!.%22%C2%A7$/()%=a",
+		NewArrayRuntimeValueFromMap(map[IRuntimeValue]IRuntimeValue{
+			NewStringRuntimeValue(`a_-_!_"§$/()%`): NewStringRuntimeValue("a"),
+		}),
+	)
+	runTest(t,
+		"a[+-_!%22%C2%A7$/()%=a",
+		NewArrayRuntimeValueFromMap(map[IRuntimeValue]IRuntimeValue{
+			NewStringRuntimeValue(`a__-_!"§$/()%`): NewStringRuntimeValue("a"),
+		}),
+	)
+	runTest(t,
+		"a]+-_!%22%C2%A7$/()%=a",
+		NewArrayRuntimeValueFromMap(map[IRuntimeValue]IRuntimeValue{
+			NewStringRuntimeValue(`a]_-_!"§$/()%`): NewStringRuntimeValue("a"),
+		}),
+	)
+	runTest(t,
+		"a[+-_!]%22%C2%A7$/()%=a",
+		NewArrayRuntimeValueFromMap(map[IRuntimeValue]IRuntimeValue{
+			NewStringRuntimeValue("a"): NewArrayRuntimeValueFromMap(map[IRuntimeValue]IRuntimeValue{
+				NewStringRuntimeValue(" -_!"): NewStringRuntimeValue("a"),
+			}),
+		}),
+	)
+
 	// Simple Query with array
 	runTest(t,
 		"123[]=SEGV",
