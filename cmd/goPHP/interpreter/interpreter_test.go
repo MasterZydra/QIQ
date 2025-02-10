@@ -413,6 +413,9 @@ func TestArray(t *testing.T) {
 	testInputOutput(t, `<?php $a = []; $a[][123] = "42"; echo $a[0][123];`, "42")
 	testInputOutput(t, `<?php $a = []; $a["a"]["b"]["c"]=1; echo $a["a"]["b"]["c"];`, "1")
 
+	// Implicit declaration
+	testInputOutput(t, `<?php $a["b"] = "c"; var_dump($a);`, "array(1) {\n  [\"b\"]=>\n  string(1) \"c\"\n}\n")
+
 	// Determination of the next key
 	testInputOutput(t,
 		`<?php $a = []; $a['abc'] = 'def'; $a[] = 'ghi'; var_dump($a);`,

@@ -95,6 +95,11 @@ func (interpreter *Interpreter) ProcessSimpleAssignmentExpr(expr *ast.SimpleAssi
 		return value, err
 	}
 
+	if currentValue.GetType() == NullValue && expr.Variable.GetKind() == ast.SubscriptExpr {
+		env.(*Environment).declareVariable(variableName, NewArrayRuntimeValue())
+		currentValue, _ = env.(*Environment).lookupVariable(variableName)
+	}
+
 	if currentValue.GetType() == ArrayValue {
 		if expr.Variable.GetKind() != ast.SubscriptExpr {
 			return NewVoidRuntimeValue(), phpError.NewError("processSimpleAssignmentExpr: Unsupported variable type %s", expr.Variable.GetKind())
