@@ -61,6 +61,7 @@
 - $_ENV
 - $_GET
 - $_POST
+- $_REQUEST
 - $_SERVER
 
 ## Predefined constants

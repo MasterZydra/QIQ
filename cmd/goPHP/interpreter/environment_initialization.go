@@ -54,6 +54,21 @@ func registerPredefinedVariables(environment *Environment, request *Request, ini
 	if !strings.Contains(variables_order, "S") {
 		registerPredefinedVariableServer(environment, request, false)
 	}
+
+	requestVar := NewArrayRuntimeValue()
+	mergeArrays(requestVar, environment.predefinedVariables["$_GET"].(*ArrayRuntimeValue))
+	mergeArrays(requestVar, environment.predefinedVariables["$_POST"].(*ArrayRuntimeValue))
+	// TODO Cookie
+	// mergeArrays(requestVar, environment.predefinedVariables["$_COOKIE"].(*ArrayRuntimeValue))
+	environment.predefinedVariables["$_REQUEST"] = requestVar
+}
+
+// TODO Replace with std lib func array_merge
+func mergeArrays(a, b *ArrayRuntimeValue) {
+	for _, key := range b.Keys {
+		value, _ := b.GetElement(key)
+		a.SetElement(key, deepCopy(value))
+	}
 }
 
 func registerPredefinedVariableEnv(environment *Environment, request *Request, init bool) {
