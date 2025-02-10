@@ -3,6 +3,7 @@ package lexer
 import (
 	"GoPHP/cmd/goPHP/common"
 	"GoPHP/cmd/goPHP/ini"
+	"GoPHP/cmd/goPHP/stats"
 	"fmt"
 	"slices"
 	"strings"
@@ -43,6 +44,9 @@ func (lexer *Lexer) init(input string, filename string) {
 }
 
 func (lexer *Lexer) Tokenize(sourceCode string, filename string) ([]*Token, error) {
+	stat := stats.Start()
+	defer stats.StopAndPrint(stat, "Lexer")
+
 	lexer.init(common.TrimTrailingLineBreak(sourceCode), filename)
 
 	err := lexer.tokenizeScript()

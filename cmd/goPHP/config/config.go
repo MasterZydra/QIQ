@@ -29,3 +29,6 @@ func versionId() int64 {
 	versionId, _ := strconv.ParseInt(fmt.Sprintf("%d%02d%02d", MajorVersion, MinorVersion, ReleaseVersion), 10, 64)
 	return versionId
 }
+
+// Runtime mode
+var ShowStats bool = false

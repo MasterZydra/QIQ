@@ -5,6 +5,7 @@ import (
 	"GoPHP/cmd/goPHP/ini"
 	"GoPHP/cmd/goPHP/parser"
 	"GoPHP/cmd/goPHP/phpError"
+	"GoPHP/cmd/goPHP/stats"
 )
 
 type Interpreter struct {
@@ -49,11 +50,14 @@ func (interpreter *Interpreter) Process(sourceCode string) (string, phpError.Err
 
 func (interpreter *Interpreter) process(sourceCode string, env *Environment) (string, phpError.Error) {
 	interpreter.result = ""
+
 	program, parserErr := interpreter.parser.ProduceAST(sourceCode, interpreter.filename)
 	if parserErr != nil {
 		return interpreter.result, parserErr
 	}
 
+	stat := stats.Start()
+	defer stats.StopAndPrint(stat, "Interpreter")
 	_, err := interpreter.processProgram(program, env)
 
 	return interpreter.result, err

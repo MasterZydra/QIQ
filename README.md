@@ -18,6 +18,7 @@ The goals of the project are:
 Usage of ./goPHP:
   -h            Show help
   -dev          Run in developer mode.
+  -stats        Show statistics.
   -S string     Run with built-in web server. <addr>:<port>
   -t string     Specify document root <docroot> for built-in web server.
   -f string     Parse and execute <file>.

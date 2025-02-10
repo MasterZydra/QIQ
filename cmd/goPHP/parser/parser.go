@@ -7,6 +7,7 @@ import (
 	"GoPHP/cmd/goPHP/lexer"
 	"GoPHP/cmd/goPHP/phpError"
 	"GoPHP/cmd/goPHP/position"
+	"GoPHP/cmd/goPHP/stats"
 	"slices"
 	"strings"
 )
@@ -43,6 +44,9 @@ func (parser *Parser) ProduceAST(sourceCode string, filename string) (*ast.Progr
 	if lexerErr != nil {
 		return parser.program, phpError.NewParseError(lexerErr.Error())
 	}
+
+	stat := stats.Start()
+	defer stats.StopAndPrint(stat, "Parser")
 
 	for !parser.isEof() {
 		if parser.isTokenType(lexer.StartTagToken, true) || parser.isTokenType(lexer.EndTagToken, true) ||

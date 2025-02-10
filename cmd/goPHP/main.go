@@ -5,6 +5,7 @@ import (
 	"GoPHP/cmd/goPHP/config"
 	"GoPHP/cmd/goPHP/ini"
 	"GoPHP/cmd/goPHP/interpreter"
+	"GoPHP/cmd/goPHP/stats"
 	"bufio"
 	"flag"
 	"fmt"
@@ -22,6 +23,7 @@ var isDevMode bool
 func main() {
 	file := flag.String("f", "", "Parse and execute <file>.")
 	isDev := flag.Bool("dev", false, "Run in developer mode.")
+	showStats := flag.Bool("stats", false, "Show statistics.")
 	// Web server
 	addr := flag.String("S", "", "Run with built-in web server. <addr>:<port>")
 	docRoot := flag.String("t", "", "Specify document root <docroot> for built-in web server.")
@@ -29,6 +31,7 @@ func main() {
 	flag.Parse()
 
 	isDevMode = *isDev
+	config.ShowStats = *showStats
 
 	// Serve with built-in web server
 	if *addr != "" {
@@ -115,6 +118,7 @@ func webServer() {
 	)
 	fmt.Println("Document root is " + documentRoot)
 	fmt.Println("Press Ctrl-C to quit")
+	fmt.Println("")
 
 	http.HandleFunc("/", requestHandler)
 	if err := http.ListenAndServe(serverAddr, nil); err != nil {
@@ -138,9 +142,7 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 	absFilePath := path.Join(documentRoot, r.URL.Path)
 	_, err := os.Stat(absFilePath)
 	if err != nil {
-		if isDevMode {
-			fmt.Println("404", absFilePath)
-		}
+		fmt.Println("404", absFilePath)
 		w.WriteHeader(http.StatusNotFound)
 		fmt.Fprintln(w, getNotFoundText(r.URL.Path))
 		return
@@ -153,9 +155,7 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 		} else if index = path.Join(absFilePath, "index.php"); common.PathExists(index) && !common.IsDir(index) {
 			absFilePath = index
 		} else {
-			if isDevMode {
-				fmt.Println("404", absFilePath)
-			}
+			fmt.Println("404", absFilePath)
 			w.WriteHeader(http.StatusNotFound)
 			fmt.Fprintln(w, getNotFoundText(r.URL.Path))
 			return
@@ -178,6 +178,9 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 	output, exitCode := processContent(r, string(content), absFilePath)
 	if exitCode == 500 {
 		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Printf("%d %s\n", 500, absFilePath)
+	} else {
+		fmt.Printf("%d %s\n", 200, absFilePath)
 	}
 	fmt.Fprint(w, output)
 }
@@ -185,6 +188,9 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 // ------------------- MARK: core logic -------------------
 
 func processContent(r *http.Request, content string, filename string) (output string, exitCode int) {
+	stat := stats.Start()
+	defer stats.StopAndPrint(stat, "Total")
+
 	var initIni *ini.Ini
 	if isDevMode {
 		initIni = ini.NewDevIni()
