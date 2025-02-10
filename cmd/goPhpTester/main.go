@@ -130,17 +130,19 @@ func doTest(path string, info os.FileInfo, err error) error {
 	}
 
 	if runtime.GOOS == "windows" {
-		testFile.Expect = strings.ReplaceAll(testFile.Expect, "\r\n", "\n")
-		result = strings.ReplaceAll(result, "\r\n", "\n")
+		testFile.Expect = strings.ReplaceAll(testFile.Expect, "\r", "")
+		result = strings.ReplaceAll(result, "\r", "")
 	}
 
 	if strings.HasPrefix(result, "skip for") || strings.HasPrefix(result, "skip Run") ||
-		strings.HasPrefix(result, "skip only") || strings.HasPrefix(result, "skip this") {
+		strings.HasPrefix(result, "skip only") || strings.HasPrefix(result, "skip this") ||
+		strings.HasPrefix(result, "skip.. ") {
 		if !onlyFailed && (verbosity1 || verbosity2) {
 			fmt.Println("SKIP ", path)
 		}
 		if !onlyFailed && (verbosity2) {
-			reason := result[5:]
+			reason := strings.TrimPrefix(result, "skip ")
+			reason = strings.TrimPrefix(reason, "skip.. ")
 			reason = strings.ToUpper(string(reason[0])) + reason[1:]
 			fmt.Println("     ", reason)
 		}
