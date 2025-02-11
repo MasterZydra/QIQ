@@ -37,6 +37,11 @@ func (reader *Reader) GetTestFile() (*TestFile, error) {
 	for !reader.isEof() {
 		if reader.at() == "--TEST--" {
 			reader.eat()
+			// According to spec the title is a single line
+			// Spec: https://qa.php.net/phpt_details.php#test_section
+
+			// But the official PHP test runner can also handle multi line titles
+			// See: https://github.com/php/php-src/issues/17761
 			reader.testFile.Title = reader.eat()
 			for !reader.isEof() && !reader.isSection(reader.at()) {
 				reader.testFile.Title += reader.eat()
