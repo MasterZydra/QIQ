@@ -89,6 +89,8 @@ func (interpreter *Interpreter) processStmt(stmt ast.IStatement, env any) (value
 			phpErr = r.(ValueOrError).Error.(phpError.Error)
 		}
 	}()
+
+	ast.PrintInterpreterCallstack(stmt)
 	runtimeValue, err := stmt.Process(interpreter, env)
 	if err != nil {
 		phpErr = err.(phpError.Error)

@@ -23,7 +23,9 @@ var isDevMode bool
 func main() {
 	file := flag.String("f", "", "Parse and execute <file>.")
 	isDev := flag.Bool("dev", false, "Run in developer mode.")
+	// Developer tools
 	showStats := flag.Bool("stats", false, "Show statistics.")
+	debugMode := flag.Bool("debug", false, "Enable debug mode.")
 	// Web server
 	addr := flag.String("S", "", "Run with built-in web server. <addr>:<port>")
 	docRoot := flag.String("t", "", "Specify document root <docroot> for built-in web server.")
@@ -32,6 +34,9 @@ func main() {
 
 	isDevMode = *isDev
 	config.ShowStats = *showStats
+	if *debugMode {
+		config.ShowInterpreterCallStack = true
+	}
 
 	// Serve with built-in web server
 	if *addr != "" {

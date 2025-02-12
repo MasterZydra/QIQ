@@ -692,7 +692,7 @@ func calculateFloating(operand1 *FloatingRuntimeValue, operator string, operand2
 	case "**":
 		return NewFloatingRuntimeValue(math.Pow(operand1.Value, operand2.Value)), nil
 	default:
-		return NewFloatingRuntimeValue(0), phpError.NewError("calculateInteger: Operator \"%s\" not implemented", operator)
+		return NewFloatingRuntimeValue(0), phpError.NewError("calculateFloating: Operator \"%s\" not implemented", operator)
 	}
 }
 

@@ -33,6 +33,9 @@ func (expr *Expression) GetKind() NodeType {
 }
 
 func (expr *Expression) GetPosition() *position.Position {
+	if expr.pos == nil {
+		return &position.Position{}
+	}
 	return expr.pos
 }
 

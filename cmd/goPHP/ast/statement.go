@@ -36,6 +36,9 @@ func (stmt *Statement) GetKind() NodeType {
 }
 
 func (stmt *Statement) GetPosition() *position.Position {
+	if stmt.pos == nil {
+		return &position.Position{}
+	}
 	return stmt.pos
 }
 
