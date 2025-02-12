@@ -60,7 +60,6 @@ func (interpreter *Interpreter) ProcessSimpleAssignmentExpr(expr *ast.SimpleAssi
 			phpError.NewError("processSimpleAssignmentExpr: Invalid variable: %s", expr.Variable)
 	}
 
-	value := must(interpreter.processStmt(expr.Value, env))
 	variableName := mustOrVoid(interpreter.varExprToVarName(expr.Variable, env.(*Environment)))
 	currentValue, _ := env.(*Environment).lookupVariable(variableName)
 
@@ -77,6 +76,9 @@ func (interpreter *Interpreter) ProcessSimpleAssignmentExpr(expr *ast.SimpleAssi
 		}
 
 		key := expr.Variable.(*ast.SubscriptExpression).Index.(*ast.IntegerLiteralExpression).Value
+		value := must(interpreter.processStmt(expr.Value, env))
+
+		currentValue, _ = env.(*Environment).lookupVariable(variableName)
 		str := currentValue.(*StringRuntimeValue).Value
 
 		valueStr, err := lib_strval(value)
@@ -112,9 +114,10 @@ func (interpreter *Interpreter) ProcessSimpleAssignmentExpr(expr *ast.SimpleAssi
 			subarray = subarray.(*ast.SubscriptExpression).Variable
 		}
 
+		var value IRuntimeValue
 		for i := len(keys) - 1; i >= 0; i-- {
 			if currentValue.GetType() != ArrayValue {
-				return value, phpError.NewError("processSimpleAssignmentExpr: Unexpected currentValue type %s", currentValue.GetType())
+				return NewVoidRuntimeValue(), phpError.NewError("processSimpleAssignmentExpr: Unexpected currentValue type %s", currentValue.GetType())
 			}
 
 			array := currentValue.(*ArrayRuntimeValue)
@@ -124,8 +127,9 @@ func (interpreter *Interpreter) ProcessSimpleAssignmentExpr(expr *ast.SimpleAssi
 			}
 
 			if i == 0 {
+				value = must(interpreter.processStmt(expr.Value, env))
 				array.SetElement(keyValue, value)
-				continue
+				break
 			}
 
 			_, found := array.findKey(keyValue)
@@ -141,6 +145,7 @@ func (interpreter *Interpreter) ProcessSimpleAssignmentExpr(expr *ast.SimpleAssi
 		return value, nil
 	}
 
+	value := must(interpreter.processStmt(expr.Value, env))
 	return env.(*Environment).declareVariable(variableName, value)
 }
 
