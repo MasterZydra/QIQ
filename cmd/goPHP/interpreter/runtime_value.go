@@ -1,6 +1,9 @@
 package interpreter
 
-import "strconv"
+import (
+	"fmt"
+	"strconv"
+)
 
 type ValueType string
 
@@ -179,4 +182,35 @@ type StringRuntimeValue struct {
 
 func NewStringRuntimeValue(value string) *StringRuntimeValue {
 	return &StringRuntimeValue{RuntimeValue: NewRuntimeValue(StringValue), Value: value}
+}
+
+// MARK: Dump
+
+func DumpRuntimeValue(value IRuntimeValue) {
+	switch value.GetType() {
+	case ArrayValue:
+		fmt.Printf("{ArrayValue: ")
+		arrayValue := value.(*ArrayRuntimeValue)
+		for _, key := range arrayValue.Keys {
+			fmt.Print("Key: ")
+			DumpRuntimeValue(key)
+			fmt.Print("Value: ")
+			DumpRuntimeValue(arrayValue.Elements[key])
+
+		}
+		fmt.Printf("}\n")
+	case BooleanValue:
+		valueStr := "true"
+		if value.(*BooleanRuntimeValue).Value {
+			valueStr = "false"
+		}
+		fmt.Printf("{BooleanValue: %s}\n", valueStr)
+	case IntegerValue:
+		fmt.Printf("{IntegerValue: %d}\n", value.(*IntegerRuntimeValue).Value)
+	case FloatingValue:
+		fmt.Printf("{FloatingValue: %f}\n", value.(*FloatingRuntimeValue).Value)
+	case StringValue:
+	default:
+		fmt.Printf("Unsupported RuntimeValue type %s\n", value.GetType())
+	}
 }
