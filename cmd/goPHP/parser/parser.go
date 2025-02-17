@@ -1672,7 +1672,7 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, phpError.Error) {
 			parser.eat()
 			variable = ast.NewSimpleVariableExpr(parser.nextId(), expr)
 		} else {
-			return ast.NewEmptyExpr(), phpError.NewParseError("End of simple variable expression not detected")
+			return ast.NewEmptyExpr(), phpError.NewParseError("End of simple variable expression not detected at %s", parser.at().Position.ToPosString())
 		}
 	}
 
