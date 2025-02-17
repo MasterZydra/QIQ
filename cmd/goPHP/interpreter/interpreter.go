@@ -58,6 +58,11 @@ func (interpreter *Interpreter) process(sourceCode string, env *Environment) (st
 
 	stat := stats.Start()
 	defer stats.StopAndPrint(stat, "Interpreter")
+
+	parser.PrintParserCallstack("", nil)
+	parser.PrintParserCallstack("Interpreter callstack", nil)
+	parser.PrintParserCallstack("---------------------", nil)
+
 	_, err := interpreter.processProgram(program, env)
 
 	return interpreter.result, err

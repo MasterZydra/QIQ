@@ -35,6 +35,7 @@ func main() {
 	isDevMode = *isDev
 	config.ShowStats = *showStats
 	if *debugMode {
+		config.ShowParserCallStack = true
 		config.ShowInterpreterCallStack = true
 	}
 

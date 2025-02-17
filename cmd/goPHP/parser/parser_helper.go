@@ -1,10 +1,22 @@
 package parser
 
 import (
+	"GoPHP/cmd/goPHP/config"
 	"GoPHP/cmd/goPHP/lexer"
 	"GoPHP/cmd/goPHP/phpError"
 	"GoPHP/cmd/goPHP/position"
+	"fmt"
 )
+
+func PrintParserCallstack(function string, parser *Parser) {
+	if config.ShowParserCallStack {
+		if parser != nil {
+			fmt.Printf("%s (%s)\n", function, parser.at().Position.ToPosString())
+		} else {
+			println(function)
+		}
+	}
+}
 
 func (parser *Parser) isEof() bool {
 	return parser.currPos > len(parser.tokens)-1
