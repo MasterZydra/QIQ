@@ -128,7 +128,7 @@ func (interpreter *Interpreter) ProcessSimpleAssignmentExpr(expr *ast.SimpleAssi
 
 			if i == 0 {
 				value = must(interpreter.processStmt(expr.Value, env))
-				array.SetElement(keyValue, value)
+				array.SetElement(keyValue, deepCopy(value))
 				break
 			}
 

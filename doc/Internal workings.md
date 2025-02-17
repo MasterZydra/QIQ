@@ -22,5 +22,6 @@ To solve this problem, a `deepCopy` function is used.
 It creates a deep copy for a given array runtime value.
 
 There are two places in the interpreter logic where a deepCopy must be created:
-- variable assignments: `variable = deepCopy(value)`
+- array assignments: `array.SetElement(keyValue, deepCopy(value))`
 - function calls: `argument = deepCopy(argument)`
+- variable assignments: `variable = deepCopy(value)`
