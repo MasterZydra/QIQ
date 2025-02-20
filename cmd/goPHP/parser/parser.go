@@ -1743,8 +1743,9 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, phpError.Error) {
 	}
 
 	if ast.IsVariableExpr(variable) &&
-		!parser.isToken(lexer.OpOrPuncToken, "[", false) && !parser.isToken(lexer.OpOrPuncToken, "{", false) &&
-		!parser.isToken(lexer.OpOrPuncToken, "++", false) && !parser.isToken(lexer.OpOrPuncToken, "--", false) {
+		!parser.isToken(lexer.OpOrPuncToken, "(", false) && !parser.isToken(lexer.OpOrPuncToken, "[", false) &&
+		!parser.isToken(lexer.OpOrPuncToken, "{", false) && !parser.isToken(lexer.OpOrPuncToken, "++", false) &&
+		!parser.isToken(lexer.OpOrPuncToken, "--", false) {
 		return variable, nil
 	}
 
@@ -1807,11 +1808,21 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, phpError.Error) {
 	// variadic-unpacking:
 	//    ...   expression
 
-	if parser.isTokenType(lexer.NameToken, false) &&
-		parser.next(0).TokenType == lexer.OpOrPuncToken && parser.next(0).Value == "(" {
+	if (parser.isTokenType(lexer.NameToken, false) && parser.next(0).TokenType == lexer.OpOrPuncToken && parser.next(0).Value == "(") ||
+		(ast.IsVariableExpr(variable) && parser.isToken(lexer.OpOrPuncToken, "(", false)) {
 		PrintParserCallstack("function-call-expression", parser)
-		pos := parser.at().Position
-		functionName := ast.NewStringLiteralExpr(parser.nextId(), pos, parser.eat().Value, ast.SingleQuotedString)
+
+		var pos *position.Position
+		var functionName ast.IExpression
+
+		if parser.isTokenType(lexer.NameToken, false) && parser.next(0).TokenType == lexer.OpOrPuncToken && parser.next(0).Value == "(" {
+			pos = parser.at().Position
+			functionName = ast.NewStringLiteralExpr(parser.nextId(), pos, parser.eat().Value, ast.SingleQuotedString)
+		} else {
+			pos = variable.GetPosition()
+			functionName = variable
+		}
+
 		args := []ast.IExpression{}
 		// Eat opening parentheses
 		parser.eat()

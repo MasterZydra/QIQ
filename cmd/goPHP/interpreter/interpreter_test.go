@@ -388,6 +388,18 @@ func TestUserFunctions(t *testing.T) {
 		`,
 		"33",
 	)
+
+	// Dynamic function names
+	testInputOutput(t,
+		`<?php
+			$a = "func";
+			$a("abc");
+			function func(string $str): void {
+				echo "func called: $str";
+			}
+		`,
+		"func called: abc",
+	)
 }
 
 func TestString(t *testing.T) {
