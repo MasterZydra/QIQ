@@ -41,6 +41,11 @@ func (visitor DumpVisitor) ProcessArrayLiteralExpr(stmt *ArrayLiteralExpression,
 	return fmt.Sprintf("{%s - elements: %s }", stmt.GetKind(), elements), nil
 }
 
+// ProcessArrayNextKeyExpr implements Visitor.
+func (visitor DumpVisitor) ProcessArrayNextKeyExpr(stmt *ArrayNextKeyExpression, _ any) (any, error) {
+	return fmt.Sprintf("{%s}", stmt.GetKind()), nil
+}
+
 // ProcessBinaryOpExpr implements Visitor.
 func (visitor DumpVisitor) ProcessBinaryOpExpr(stmt *BinaryOpExpression, _ any) (any, error) {
 	return fmt.Sprintf(

@@ -8,6 +8,7 @@ const (
 	TextNode    NodeType = "Text"
 	// Expressions
 	ArrayLiteralExpr       NodeType = "ArrayLiteralExpression"
+	ArrayNextKeyExpr       NodeType = "ArrayNextKeyExpression"
 	BinaryOpExpr           NodeType = "BinaryOpExpression"
 	CastExpr               NodeType = "CastExpression"
 	CoalesceExpr           NodeType = "CoalesceExpression"

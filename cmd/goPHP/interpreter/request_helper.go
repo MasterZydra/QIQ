@@ -25,7 +25,9 @@ func parseQuery(query string) (*ArrayRuntimeValue, error) {
 		if !strings.Contains(key, "=") && strings.Contains(key, "+") {
 			parts := strings.Split(key, "+")
 			for i := 0; i < len(parts); i++ {
-				result.SetElement(nil, NewStringRuntimeValue(parts[i]))
+				if err := result.SetElement(nil, NewStringRuntimeValue(parts[i])); err != nil {
+					return result, err
+				}
 			}
 			continue
 		}

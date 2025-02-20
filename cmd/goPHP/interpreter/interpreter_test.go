@@ -459,6 +459,46 @@ func TestArray(t *testing.T) {
 		`<?php $b = [42]; $a = $b; var_dump($a[0], $b[0]); $b[0] = 43; var_dump($a[0], $b[0]);`,
 		"int(42)\nint(42)\nint(42)\nint(43)\n",
 	)
+
+	// Key value
+	// Tests from https://www.php.net/manual/en/language.types.array.php
+	testInputOutput(t,
+		`<?php $array = [1 => "a", "1" => "b", 1.5 => "c", true => "d",]; var_dump($array);`,
+		"array(1) {\n  [1]=>\n  string(1) \"d\"\n}\n",
+	)
+	testInputOutput(t,
+		`<?php $array = ["foo" => "bar", "bar" => "foo", 100 => -100, -100 => 100,]; var_dump($array);`,
+		"array(4) {\n  [\"foo\"]=>\n  string(3) \"bar\"\n  [\"bar\"]=>\n  string(3) \"foo\"\n  [100]=>\n  int(-100)\n  [-100]=>\n  int(100)\n}\n",
+	)
+	testInputOutput(t,
+		`<?php $array = ["foo", "bar", "hello", "world"]; var_dump($array);`,
+		"array(4) {\n  [0]=>\n  string(3) \"foo\"\n  [1]=>\n  string(3) \"bar\"\n  [2]=>\n  string(5) \"hello\"\n  [3]=>\n  string(5) \"world\"\n}\n",
+	)
+	testInputOutput(t,
+		`<?php $array = ["a", "b", 6 => "c", "d"]; var_dump($array);`,
+		"array(4) {\n  [0]=>\n  string(1) \"a\"\n  [1]=>\n  string(1) \"b\"\n  [6]=>\n  string(1) \"c\"\n  [7]=>\n  string(1) \"d\"\n}\n",
+	)
+	testInputOutput(t,
+		`<?php $array = [
+			1    => 'a',
+			'1'  => 'b', // the value "a" will be overwritten by "b"
+			1.5  => 'c', // the value "b" will be overwritten by "c"
+			-1 => 'd',
+			'01'  => 'e', // as this is not an integer string it will NOT override the key for 1
+			'1.5' => 'f', // as this is not an integer string it will NOT override the key for 1
+			true => 'g', // the value "c" will be overwritten by "g"
+			false => 'h',
+			'' => 'i',
+			null => 'j', // the value "i" will be overwritten by "j"
+			'k', // value "k" is assigned the key 2. This is because the largest integer key before that was 1
+			2 => 'l', // the value "k" will be overwritten by "l"
+		]; var_dump($array);`,
+		"array(7) {\n  [1]=>\n  string(1) \"g\"\n  [-1]=>\n  string(1) \"d\"\n  [\"01\"]=>\n  string(1) \"e\"\n  [\"1.5\"]=>\n  string(1) \"f\"\n  [0]=>\n  string(1) \"h\"\n  [\"\"]=>\n  string(1) \"j\"\n  [2]=>\n  string(1) \"l\"\n}\n",
+	)
+	testInputOutput(t,
+		`<?php $array = [-5 => 1, 2]; var_dump($array);`,
+		"array(2) {\n  [-5]=>\n  int(1)\n  [-4]=>\n  int(2)\n}\n",
+	)
 }
 
 func TestCastExpression(t *testing.T) {

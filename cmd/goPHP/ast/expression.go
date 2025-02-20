@@ -258,8 +258,9 @@ func (stmt *ConstantAccessExpression) Process(visitor Visitor, context any) (any
 
 type ArrayLiteralExpression struct {
 	*Expression
-	Keys     []IExpression
-	Elements map[IExpression]IExpression
+	Keys           []IExpression
+	Elements       map[IExpression]IExpression
+	arrayNextKeyId int64
 }
 
 func NewArrayLiteralExpr(id int64, pos *position.Position) *ArrayLiteralExpression {
@@ -271,12 +272,44 @@ func NewArrayLiteralExpr(id int64, pos *position.Position) *ArrayLiteralExpressi
 }
 
 func (expr *ArrayLiteralExpression) AddElement(key IExpression, value IExpression) {
+	if key == nil {
+		key = NewArrayNextKey(expr.arrayNextKeyId)
+		expr.arrayNextKeyId++
+	}
 	expr.Keys = append(expr.Keys, key)
 	expr.Elements[key] = value
 }
 
-func (stmt *ArrayLiteralExpression) Process(visitor Visitor, context any) (any, error) {
-	return visitor.ProcessArrayLiteralExpr(stmt, context)
+func (expr *ArrayLiteralExpression) Process(visitor Visitor, context any) (any, error) {
+	return visitor.ProcessArrayLiteralExpr(expr, context)
+}
+
+type ArrayNextKeyExpression struct {
+	id int64
+}
+
+func NewArrayNextKey(id int64) *ArrayNextKeyExpression {
+	return &ArrayNextKeyExpression{id: id}
+}
+
+// GetId implements IExpression.
+func (expr *ArrayNextKeyExpression) GetId() int64 {
+	return expr.id
+}
+
+// GetKind implements IExpression.
+func (expr *ArrayNextKeyExpression) GetKind() NodeType {
+	return ArrayNextKeyExpr
+}
+
+// GetPosition implements IExpression.
+func (expr *ArrayNextKeyExpression) GetPosition() *position.Position {
+	return &position.Position{}
+}
+
+// Process implements IExpression.
+func (expr *ArrayNextKeyExpression) Process(visitor Visitor, context any) (any, error) {
+	return visitor.ProcessArrayNextKeyExpr(expr, context)
 }
 
 // ------------------- MARK: BooleanLiteralExpression -------------------

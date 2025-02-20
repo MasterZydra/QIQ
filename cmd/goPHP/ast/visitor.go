@@ -18,6 +18,7 @@ type Visitor interface {
 
 	// Expressions
 	ProcessArrayLiteralExpr(stmt *ArrayLiteralExpression, context any) (any, error)
+	ProcessArrayNextKeyExpr(stmt *ArrayNextKeyExpression, context any) (any, error)
 	ProcessBinaryOpExpr(stmt *BinaryOpExpression, context any) (any, error)
 	ProcessCastExpr(stmt *CastExpression, context any) (any, error)
 	ProcessCoalesceExpr(stmt *CoalesceExpression, context any) (any, error)

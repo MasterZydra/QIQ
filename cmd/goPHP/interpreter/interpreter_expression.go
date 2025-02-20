@@ -23,6 +23,11 @@ func (interpreter *Interpreter) ProcessVariableNameExpr(expr *ast.VariableNameEx
 	panic("ProcessVariableNameExpr should never be called")
 }
 
+// ProcessArrayNextKeyExpr implements Visitor.
+func (visitor *Interpreter) ProcessArrayNextKeyExpr(stmt *ast.ArrayNextKeyExpression, _ any) (any, error) {
+	panic("ProcessArrayNextKeyExpr should never be called")
+}
+
 // ProcessParenthesizedExpr implements Visitor.
 func (interpreter *Interpreter) ProcessParenthesizedExpr(stmt *ast.ParenthesizedExpression, env any) (any, error) {
 	return interpreter.processStmt(stmt.Expr, env)
@@ -128,7 +133,9 @@ func (interpreter *Interpreter) ProcessSimpleAssignmentExpr(expr *ast.SimpleAssi
 
 			if i == 0 {
 				value = must(interpreter.processStmt(expr.Value, env))
-				array.SetElement(keyValue, deepCopy(value))
+				if err := array.SetElement(keyValue, deepCopy(value)); err != nil {
+					return NewVoidRuntimeValue(), err
+				}
 				break
 			}
 
@@ -137,7 +144,9 @@ func (interpreter *Interpreter) ProcessSimpleAssignmentExpr(expr *ast.SimpleAssi
 				currentValue, _ = array.GetElement(keyValue)
 			} else {
 				newArray := NewArrayRuntimeValue()
-				array.SetElement(keyValue, newArray)
+				if err := array.SetElement(keyValue, newArray); err != nil {
+					return NewVoidRuntimeValue(), err
+				}
 				currentValue = newArray
 			}
 		}

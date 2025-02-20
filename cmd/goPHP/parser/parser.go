@@ -2072,7 +2072,6 @@ func (parser *Parser) parseArrayCreationExpr() (ast.IExpression, phpError.Error)
 		pos = parser.eat().Position
 	}
 
-	var index int64 = 0
 	arrayExpr := ast.NewArrayLiteralExpr(parser.nextId(), pos)
 	for {
 		if (!isShortSyntax && parser.isToken(lexer.OpOrPuncToken, ")", true)) ||
@@ -2080,13 +2079,24 @@ func (parser *Parser) parseArrayCreationExpr() (ast.IExpression, phpError.Error)
 			break
 		}
 
-		// TODO array-creation-expression - "key => value"
-		element, err := parser.parseExpr()
+		keyOrValue, err := parser.parseExpr()
+		var value ast.IExpression
 		if err != nil {
 			return ast.NewEmptyExpr(), err
 		}
-		arrayExpr.AddElement(ast.NewIntegerLiteralExpr(parser.nextId(), element.GetPosition(), index), element)
-		index++
+
+		if parser.isToken(lexer.OpOrPuncToken, "=>", true) {
+			value, err = parser.parseExpr()
+			if err != nil {
+				return ast.NewEmptyExpr(), err
+			}
+		}
+
+		if value == nil {
+			arrayExpr.AddElement(nil, keyOrValue)
+		} else {
+			arrayExpr.AddElement(keyOrValue, value)
+		}
 
 		if parser.isToken(lexer.OpOrPuncToken, ",", true) ||
 			(!isShortSyntax && parser.isToken(lexer.OpOrPuncToken, ")", false)) ||

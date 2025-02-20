@@ -84,9 +84,9 @@ func TestFunctionCall(t *testing.T) {
 func TestLiteral(t *testing.T) {
 	// Array literal
 	expected := ast.NewArrayLiteralExpr(0, nil)
-	expected.AddElement(ast.NewIntegerLiteralExpr(0, nil, 0), ast.NewIntegerLiteralExpr(0, nil, 1))
-	expected.AddElement(ast.NewIntegerLiteralExpr(0, nil, 1), ast.NewStringLiteralExpr(0, nil, "a", ast.DoubleQuotedString))
-	expected.AddElement(ast.NewIntegerLiteralExpr(0, nil, 2), ast.NewBooleanLiteralExpr(0, nil, false))
+	expected.AddElement(nil, ast.NewIntegerLiteralExpr(0, nil, 1))
+	expected.AddElement(nil, ast.NewStringLiteralExpr(0, nil, "a", ast.DoubleQuotedString))
+	expected.AddElement(nil, ast.NewBooleanLiteralExpr(0, nil, false))
 	testExpr(t, `<?php [1, "a", false];`, expected)
 	testExpr(t, `<?php array(1, "a", false);`, expected)
 

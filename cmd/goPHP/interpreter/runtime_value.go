@@ -1,6 +1,8 @@
 package interpreter
 
 import (
+	"GoPHP/cmd/goPHP/common"
+	"GoPHP/cmd/goPHP/phpError"
 	"fmt"
 	"strconv"
 )
@@ -79,18 +81,65 @@ func NewArrayRuntimeValueFromMap(elements map[IRuntimeValue]IRuntimeValue) *Arra
 	}
 }
 
-func (runtimeValue *ArrayRuntimeValue) SetElement(key IRuntimeValue, value IRuntimeValue) {
+func (runtimeValue *ArrayRuntimeValue) SetElement(key IRuntimeValue, value IRuntimeValue) phpError.Error {
 	if key == nil {
+		found := false
 		var lastInt int64 = -1
 		for i := len(runtimeValue.Keys) - 1; i >= 0; i-- {
 			if runtimeValue.Keys[i].GetType() != IntegerValue {
 				continue
 			}
 
-			lastInt = runtimeValue.Keys[i].(*IntegerRuntimeValue).Value
-			break
+			if !found {
+				lastInt = runtimeValue.Keys[i].(*IntegerRuntimeValue).Value
+				found = true
+			} else {
+				foundInt := runtimeValue.Keys[i].(*IntegerRuntimeValue).Value
+				if foundInt > lastInt {
+					lastInt = foundInt
+				}
+			}
 		}
 		key = NewIntegerRuntimeValue(lastInt + 1)
+	}
+
+	if key.GetType() == ArrayValue {
+		// Spec: https://www.php.net/manual/en/language.types.array.php
+		// Arrays and objects can not be used as keys. Doing so will result in a warning: Illegal offset type.
+		return phpError.NewWarning("Illegal offset type %s", paramTypeRuntimeValue[key.GetType()])
+	}
+
+	if key.GetType() == BooleanValue {
+		// Spec: https://www.php.net/manual/en/language.types.array.php
+		// Bools are cast to ints, too, i.e. the key true will actually be stored under 1 and the key false under 0.
+		if key.(*BooleanRuntimeValue).Value {
+			key = NewIntegerRuntimeValue(1)
+		} else {
+			key = NewIntegerRuntimeValue(0)
+		}
+	}
+
+	if key.GetType() == FloatingValue {
+		// Spec: https://www.php.net/manual/en/language.types.array.php
+		// Floats are also cast to ints, which means that the fractional part will be truncated. E.g. the key 8.7 will actually be stored under 8.
+		keyInt, err := lib_intval(key)
+		if err != nil {
+			return err
+		}
+		key = NewIntegerRuntimeValue(keyInt)
+	}
+
+	if key.GetType() == StringValue && common.IsDecimalLiteral(key.(*StringRuntimeValue).Value) {
+		// Spec: https://www.php.net/manual/en/language.types.array.php
+		// Strings containing valid decimal ints, unless the number is preceded by a + sign, will be cast to the int type.
+		// E.g. the key "8" will actually be stored under 8. On the other hand "08" will not be cast, as it isn't a valid decimal integer.
+		key = NewIntegerRuntimeValue(common.DecimalLiteralToInt64(key.(*StringRuntimeValue).Value))
+	}
+
+	if key.GetType() == NullValue {
+		// Spec: https://www.php.net/manual/en/language.types.array.php
+		// Null will be cast to the empty string, i.e. the key null will actually be stored under "".
+		key = NewStringRuntimeValue("")
 	}
 
 	existingKey, exists := runtimeValue.findKey(key)
@@ -100,6 +149,8 @@ func (runtimeValue *ArrayRuntimeValue) SetElement(key IRuntimeValue, value IRunt
 	} else {
 		runtimeValue.Elements[existingKey] = value
 	}
+
+	return nil
 }
 
 func (runtimeValue *ArrayRuntimeValue) findKey(key IRuntimeValue) (IRuntimeValue, bool) {
@@ -210,6 +261,7 @@ func DumpRuntimeValue(value IRuntimeValue) {
 	case FloatingValue:
 		fmt.Printf("{FloatingValue: %f}\n", value.(*FloatingRuntimeValue).Value)
 	case StringValue:
+		fmt.Printf("{StringValue: %s}\n", value.(*StringRuntimeValue).Value)
 	default:
 		fmt.Printf("Unsupported RuntimeValue type %s\n", value.GetType())
 	}

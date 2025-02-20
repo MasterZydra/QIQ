@@ -325,15 +325,21 @@ func (interpreter *Interpreter) exprToRuntimeValue(expr ast.IExpression, env *En
 	case ast.ArrayLiteralExpr:
 		arrayRuntimeValue := NewArrayRuntimeValue()
 		for _, key := range expr.(*ast.ArrayLiteralExpression).Keys {
-			keyValue, err := interpreter.processStmt(key, env)
-			if err != nil {
-				return NewVoidRuntimeValue(), err
+			var keyValue IRuntimeValue
+			var err phpError.Error
+			if key.GetKind() != ast.ArrayNextKeyExpr {
+				keyValue, err = interpreter.processStmt(key, env)
+				if err != nil {
+					return NewVoidRuntimeValue(), err
+				}
 			}
 			elementValue, err := interpreter.processStmt(expr.(*ast.ArrayLiteralExpression).Elements[key], env)
 			if err != nil {
 				return NewVoidRuntimeValue(), err
 			}
-			arrayRuntimeValue.SetElement(keyValue, elementValue)
+			if err = arrayRuntimeValue.SetElement(keyValue, elementValue); err != nil {
+				return NewVoidRuntimeValue(), err
+			}
 		}
 		return arrayRuntimeValue, nil
 	case ast.IntegerLiteralExpr:
