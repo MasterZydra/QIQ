@@ -193,7 +193,7 @@ func paramToArray(params [][]string) *ArrayRuntimeValue {
 
 		// Execute PHP to store new array values in env
 		interpreter := NewInterpreter(ini.NewDefaultIni(), NewRequest(), "")
-		interpreter.process(fmt.Sprintf(`<?php $%s = "%s";`, key, value), env)
+		interpreter.process(fmt.Sprintf(`<?php $%s = "%s";`, key, value), env, true)
 
 		// Extract array from environment
 		arrayValue = env.variables["$"+paramName]

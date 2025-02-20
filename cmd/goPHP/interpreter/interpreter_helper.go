@@ -353,7 +353,7 @@ func (interpreter *Interpreter) exprToRuntimeValue(expr ast.IExpression, env *En
 					varExpr = match[1 : len(match)-1]
 				}
 				exprStr := "<?= " + varExpr + ";"
-				result, err := NewInterpreter(interpreter.ini, interpreter.request, "").process(exprStr, env)
+				result, err := NewInterpreter(interpreter.ini, interpreter.request, "").process(exprStr, env, true)
 				if err != nil {
 					return NewVoidRuntimeValue(), err
 				}

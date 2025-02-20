@@ -291,6 +291,10 @@ func TestIntrinsic(t *testing.T) {
 	testInputOutput(t, `<?php echo empty($a) ? "y" : "n";`, "y")
 	testInputOutput(t, `<?php $a = 1; echo empty($a) ? "y" : "n";`, "n")
 
+	// Eval
+	testInputOutput(t, `<?php var_dump(eval("return 12;"));`, "int(12)\n")
+	testInputOutput(t, `<?php var_dump(eval("12;"));`, "NULL\n")
+
 	// Isset
 	testInputOutput(t, `<?php $a = 1; echo isset($a) ? "y" : "n";`, "y")
 	testInputOutput(t, `<?php echo isset($a) ? "y" : "n";`, "n")

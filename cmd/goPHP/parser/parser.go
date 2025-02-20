@@ -1749,6 +1749,8 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, phpError.Error) {
 		return variable, nil
 	}
 
+	// TODO The following expressions can occur multiple times: $a[0]()["abc"]()()...
+
 	// ------------------- MARK: subscript-expression -------------------
 
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-subscript-expression
@@ -1763,8 +1765,6 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, phpError.Error) {
 	//    array-creation-expression
 	//    string-literal
 
-	// TODO subscript-expression - dereferencable-expression (expression, array-creation, string)
-	// TODO allow nesting
 	if ast.IsVariableExpr(variable) && parser.isToken(lexer.OpOrPuncToken, "[", false) {
 		PrintParserCallstack("subscript-expression", parser)
 		for ast.IsVariableExpr(variable) && parser.isToken(lexer.OpOrPuncToken, "[", true) {
@@ -2136,7 +2136,28 @@ func (parser *Parser) parseIntrinsic() (ast.IExpression, phpError.Error) {
 		return ast.NewEmptyIntrinsic(parser.nextId(), pos, expr), nil
 	}
 
-	// TODO eval-intrinsic
+	// ------------------- MARK: eval-intrinsic -------------------
+
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-eval-intrinsic
+
+	// eval-intrinsic:
+	//    eval   (   expression   )
+
+	if parser.isToken(lexer.KeywordToken, "eval", false) {
+		PrintParserCallstack("eval-intrinsic", parser)
+		pos := parser.eat().Position
+		if !parser.isToken(lexer.OpOrPuncToken, "(", true) {
+			return ast.NewEmptyExpr(), phpError.NewParseError("Expected \"(\". Got: \"%s\"", parser.at())
+		}
+		expr, err := parser.parseExpr()
+		if err != nil {
+			return ast.NewEmptyExpr(), err
+		}
+		if !parser.isToken(lexer.OpOrPuncToken, ")", true) {
+			return ast.NewEmptyExpr(), phpError.NewParseError("Expected \")\". Got: \"%s\"", parser.at())
+		}
+		return ast.NewEvalIntrinsic(parser.nextId(), pos, expr), nil
+	}
 
 	// ------------------- MARK: exit-intrinsic -------------------
 

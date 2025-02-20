@@ -129,6 +129,7 @@
 - array_key_exists
 - die
 - error_reporting
+- eval
 - exit
 - getenv
 - ini_get

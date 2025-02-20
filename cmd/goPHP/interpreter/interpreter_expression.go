@@ -403,6 +403,30 @@ func (interpreter *Interpreter) ProcessEmptyIntrinsicExpr(expr *ast.EmptyIntrins
 	return NewBooleanRuntimeValue(!boolean), nil
 }
 
+// ProcessEvalIntrinsicExpr implements Visitor.
+func (interpreter *Interpreter) ProcessEvalIntrinsicExpr(expr *ast.EvalIntrinsicExpression, env any) (any, error) {
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-eval-intrinsic
+
+	expression, err := interpreter.processStmt(expr.Arguments[0], env)
+	if err != nil {
+		return NewVoidRuntimeValue(), phpError.NewParseError(err.Error())
+	}
+	expressionStr, err := lib_strval(expression)
+	if err != nil {
+		return NewVoidRuntimeValue(), err
+	}
+
+	_, err = interpreter.process("<?php "+expressionStr+" ?>", env.(*Environment), false)
+	if err != nil {
+		if err.GetErrorType() == phpError.EventError && err.GetMessage() == phpError.ReturnEvent {
+			return interpreter.resultRuntimeValue, nil
+		}
+		return NewBooleanRuntimeValue(false), err
+	}
+
+	return NewNullRuntimeValue(), nil
+}
+
 // ProcessExitIntrinsicExpr implements Visitor.
 func (interpreter *Interpreter) ProcessExitIntrinsicExpr(expr *ast.ExitIntrinsicExpression, env any) (any, error) {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-exit-intrinsic

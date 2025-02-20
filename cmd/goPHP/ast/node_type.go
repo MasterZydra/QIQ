@@ -16,6 +16,7 @@ const (
 	ConstantAccessExpr     NodeType = "ConstantAccessExpression"
 	EmptyIntrinsicExpr     NodeType = "EmptyIntrinsicExpression"
 	EqualityExpr           NodeType = "EqualityExpression"
+	EvalIntrinsicExpr      NodeType = "EvalIntrinsicExpression"
 	ExitIntrinsicExpr      NodeType = "ExitIntrinsicExpression"
 	FloatingLiteralExpr    NodeType = "FloatingLiteralExpression"
 	FunctionCallExpr       NodeType = "FunctionCallExpression"

@@ -34,8 +34,8 @@ func (parser *Parser) at() *lexer.Token {
 
 func (parser *Parser) next(offset int) *lexer.Token {
 	pos := parser.currPos + offset + 1
-	if pos > len(parser.tokens) {
-		pos = len(parser.tokens)
+	if parser.isEof() || pos >= len(parser.tokens) {
+		return lexer.NewToken(lexer.EndOfFileToken, "", nil)
 	}
 
 	return parser.tokens[pos]

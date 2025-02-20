@@ -9,15 +9,16 @@ import (
 )
 
 type Interpreter struct {
-	filename      string
-	includedFiles []string
-	ini           *ini.Ini
-	request       *Request
-	parser        *parser.Parser
-	env           *Environment
-	cache         map[int64]IRuntimeValue
-	result        string
-	exitCode      int64
+	filename           string
+	includedFiles      []string
+	ini                *ini.Ini
+	request            *Request
+	parser             *parser.Parser
+	env                *Environment
+	cache              map[int64]IRuntimeValue
+	result             string
+	resultRuntimeValue IRuntimeValue
+	exitCode           int64
 }
 
 func NewInterpreter(ini *ini.Ini, request *Request, filename string) *Interpreter {
@@ -45,15 +46,17 @@ func (interpreter *Interpreter) GetExitCode() int {
 }
 
 func (interpreter *Interpreter) Process(sourceCode string) (string, phpError.Error) {
-	return interpreter.process(sourceCode, interpreter.env)
+	return interpreter.process(sourceCode, interpreter.env, true)
 }
 
-func (interpreter *Interpreter) process(sourceCode string, env *Environment) (string, phpError.Error) {
-	interpreter.result = ""
+func (interpreter *Interpreter) process(sourceCode string, env *Environment, resetResult bool) (string, phpError.Error) {
+	if resetResult {
+		interpreter.result = ""
+	}
 
-	program, parserErr := interpreter.parser.ProduceAST(sourceCode, interpreter.filename)
-	if parserErr != nil {
-		return interpreter.result, parserErr
+	program, err := interpreter.parser.ProduceAST(sourceCode, interpreter.filename)
+	if err != nil {
+		return interpreter.result, err
 	}
 
 	stat := stats.Start()
@@ -63,7 +66,8 @@ func (interpreter *Interpreter) process(sourceCode string, env *Environment) (st
 	parser.PrintParserCallstack("Interpreter callstack", nil)
 	parser.PrintParserCallstack("---------------------", nil)
 
-	_, err := interpreter.processProgram(program, env)
+	interpreter.resultRuntimeValue = nil
+	interpreter.resultRuntimeValue, err = interpreter.processProgram(program, env)
 
 	return interpreter.result, err
 }

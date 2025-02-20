@@ -149,7 +149,7 @@ func (stmt *FunctionCallExpression) Process(visitor Visitor, context any) (any, 
 	return visitor.ProcessFunctionCallExpr(stmt, context)
 }
 
-// ------------------- MARK: EmptyIntrinsic -------------------
+// ------------------- MARK: ExitIntrinsic -------------------
 
 type ExitIntrinsicExpression struct {
 	*FunctionCallExpression
@@ -183,6 +183,24 @@ func NewEmptyIntrinsic(id int64, pos *position.Position, expression IExpression)
 
 func (stmt *EmptyIntrinsicExpression) Process(visitor Visitor, context any) (any, error) {
 	return visitor.ProcessEmptyIntrinsicExpr(stmt, context)
+}
+
+// ------------------- MARK: EvalIntrinsic -------------------
+
+type EvalIntrinsicExpression struct {
+	*FunctionCallExpression
+}
+
+func NewEvalIntrinsic(id int64, pos *position.Position, expression IExpression) *EvalIntrinsicExpression {
+	return &EvalIntrinsicExpression{&FunctionCallExpression{
+		Expression:   NewExpr(id, EvalIntrinsicExpr, pos),
+		FunctionName: NewStringLiteralExpr(id, pos, "eval", SingleQuotedString),
+		Arguments:    []IExpression{expression},
+	}}
+}
+
+func (stmt *EvalIntrinsicExpression) Process(visitor Visitor, context any) (any, error) {
+	return visitor.ProcessEvalIntrinsicExpr(stmt, context)
 }
 
 // ------------------- MARK: IssetIntrinsic -------------------

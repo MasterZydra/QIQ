@@ -135,6 +135,14 @@ func (visitor DumpVisitor) ProcessEqualityExpr(stmt *EqualityExpression, _ any) 
 	), nil
 }
 
+// ProcessEvalIntrinsicExpr implements Visitor.
+func (visitor DumpVisitor) ProcessEvalIntrinsicExpr(stmt *EvalIntrinsicExpression, _ any) (any, error) {
+	return fmt.Sprintf(
+		"{%s - functionName: \"%s\" arguments: %s}",
+		stmt.GetKind(), ToString(stmt.FunctionName), dumpExpressions(stmt.Arguments),
+	), nil
+}
+
 // ProcessExitIntrinsicExpr implements Visitor.
 func (visitor DumpVisitor) ProcessExitIntrinsicExpr(stmt *ExitIntrinsicExpression, _ any) (any, error) {
 	return fmt.Sprintf(

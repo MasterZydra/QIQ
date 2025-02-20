@@ -142,6 +142,14 @@ func (visitor InterpreterCallStackVisitor) ProcessEqualityExpr(stmt *EqualityExp
 	), nil
 }
 
+// ProcessEvalIntrinsicExpr implements Visitor.
+func (visitor InterpreterCallStackVisitor) ProcessEvalIntrinsicExpr(stmt *EvalIntrinsicExpression, _ any) (any, error) {
+	return fmt.Sprintf(
+		"{%s - functionName: \"%s\", arguments: %s, pos: %s}",
+		stmt.GetKind(), stmt.FunctionName, dumpInternalCallstackExpressions(stmt.Arguments), stmt.GetPosition().ToPosString(),
+	), nil
+}
+
 // ProcessExitIntrinsicExpr implements Visitor.
 func (visitor InterpreterCallStackVisitor) ProcessExitIntrinsicExpr(stmt *ExitIntrinsicExpression, _ any) (any, error) {
 	return fmt.Sprintf(
