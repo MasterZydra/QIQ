@@ -456,7 +456,7 @@ func lib_print_r_var(value IRuntimeValue, depth int) (string, phpError.Error) {
 
 			result += fmt.Sprintf("%s[%s] => %s\n", strings.Repeat(" ", depth), keyStr, valueStr)
 		}
-		result += fmt.Sprintf("%s)", strings.Repeat(" ", depth-4))
+		result += fmt.Sprintf("%s)\n", strings.Repeat(" ", depth-4))
 	case BooleanValue:
 		if value.(*BooleanRuntimeValue).Value {
 			result = "1"

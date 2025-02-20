@@ -53,6 +53,6 @@ func TestLibDate(t *testing.T) {
 func TestLibGetdate(t *testing.T) {
 	testInputOutput(t, `<?php print_r(getdate(1722707036));`,
 		"Array\n(\n    [seconds] => 56\n    [minutes] => 43\n    [hours] => 17\n    [mday] => 3\n    [wday] => 6\n    [mon] => 8\n"+
-			"    [year] => 2024\n    [yday] => 215\n    [weekday] => Saturday\n    [month] => August\n    [0] => 1722707036\n)",
+			"    [year] => 2024\n    [yday] => 215\n    [weekday] => Saturday\n    [month] => August\n    [0] => 1722707036\n)\n",
 	)
 }

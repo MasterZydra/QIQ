@@ -223,9 +223,9 @@ func TestLibPrintR(t *testing.T) {
 	testInputOutput(t, `<?php print_r(true);`, "1")
 	testInputOutput(t, `<?php print_r(false);`, "")
 	testInputOutput(t, `<?php print_r(null);`, "")
-	testInputOutput(t, `<?php print_r([]);`, "Array\n(\n)")
-	testInputOutput(t, `<?php print_r([1,2]);`, "Array\n(\n    [0] => 1\n    [1] => 2\n)")
-	testInputOutput(t, `<?php print_r([1, [1]]);`, "Array\n(\n    [0] => 1\n    [1] => Array\n        (\n            [0] => 1\n        )\n)")
+	testInputOutput(t, `<?php print_r([]);`, "Array\n(\n)\n")
+	testInputOutput(t, `<?php print_r([1,2]);`, "Array\n(\n    [0] => 1\n    [1] => 2\n)\n")
+	testInputOutput(t, `<?php print_r([1, [1]]);`, "Array\n(\n    [0] => 1\n    [1] => Array\n        (\n            [0] => 1\n        )\n\n)\n")
 }
 
 // ------------------- MARK: strval -------------------
