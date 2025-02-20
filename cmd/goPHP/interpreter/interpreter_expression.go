@@ -305,8 +305,14 @@ func (interpreter *Interpreter) ProcessSubscriptExpr(expr *ast.SubscriptExpressi
 
 // ProcessFunctionCallExpr implements Visitor.
 func (interpreter *Interpreter) ProcessFunctionCallExpr(expr *ast.FunctionCallExpression, env any) (any, error) {
+	var functionName string
+	if expr.FunctionName.GetKind() == ast.StringLiteralExpr {
+		functionName = expr.FunctionName.(*ast.StringLiteralExpression).Value
+	} else {
+		return NewVoidRuntimeValue(), phpError.NewError("ProcessFunctionCallExpr: Unsupported functionName type %s", expr.FunctionName.GetKind())
+	}
 	// Lookup native function
-	nativeFunction, err := env.(*Environment).lookupNativeFunction(expr.FunctionName)
+	nativeFunction, err := env.(*Environment).lookupNativeFunction(functionName)
 	if err == nil {
 		functionArguments := make([]IRuntimeValue, len(expr.Arguments))
 		for index, arg := range expr.Arguments {
@@ -317,7 +323,7 @@ func (interpreter *Interpreter) ProcessFunctionCallExpr(expr *ast.FunctionCallEx
 	}
 
 	// Lookup user function
-	userFunction := mustOrVoid(env.(*Environment).lookupUserFunction(expr.FunctionName))
+	userFunction := mustOrVoid(env.(*Environment).lookupUserFunction(functionName))
 
 	functionEnv := NewEnvironment(env.(*Environment), nil, interpreter.ini)
 	functionEnv.CurrentFunction = userFunction

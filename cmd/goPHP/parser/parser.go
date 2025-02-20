@@ -1650,6 +1650,8 @@ func (parser *Parser) parseCloneExpr() (ast.IExpression, phpError.Error) {
 }
 
 func (parser *Parser) parsePrimaryExpr() (ast.IExpression, phpError.Error) {
+	PrintParserCallstack("primary-expression", parser)
+
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-primary-expression
 
 	// primary-expression:
@@ -1699,6 +1701,7 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, phpError.Error) {
 	//    variable-name
 
 	if parser.isTokenType(lexer.VariableNameToken, false) {
+		PrintParserCallstack("simple-variable", parser)
 		variable = ast.NewSimpleVariableExpr(parser.nextId(), ast.NewVariableNameExpr(parser.nextId(), parser.at().Position, parser.eat().Value))
 	}
 
@@ -1808,7 +1811,7 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, phpError.Error) {
 		parser.next(0).TokenType == lexer.OpOrPuncToken && parser.next(0).Value == "(" {
 		PrintParserCallstack("function-call-expression", parser)
 		pos := parser.at().Position
-		functionName := parser.eat().Value
+		functionName := ast.NewStringLiteralExpr(parser.nextId(), pos, parser.eat().Value, ast.SingleQuotedString)
 		args := []ast.IExpression{}
 		// Eat opening parentheses
 		parser.eat()

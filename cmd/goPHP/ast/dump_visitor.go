@@ -123,7 +123,7 @@ func (visitor DumpVisitor) ProcessEchoStmt(stmt *EchoStatement, _ any) (any, err
 func (visitor DumpVisitor) ProcessEmptyIntrinsicExpr(stmt *EmptyIntrinsicExpression, _ any) (any, error) {
 	return fmt.Sprintf(
 		"{%s - functionName: \"%s\" arguments: %s}",
-		stmt.GetKind(), stmt.FunctionName, dumpExpressions(stmt.Arguments),
+		stmt.GetKind(), ToString(stmt.FunctionName), dumpExpressions(stmt.Arguments),
 	), nil
 }
 
@@ -139,7 +139,7 @@ func (visitor DumpVisitor) ProcessEqualityExpr(stmt *EqualityExpression, _ any) 
 func (visitor DumpVisitor) ProcessExitIntrinsicExpr(stmt *ExitIntrinsicExpression, _ any) (any, error) {
 	return fmt.Sprintf(
 		"{%s - functionName: \"%s\" arguments: %s}",
-		stmt.GetKind(), stmt.FunctionName, dumpExpressions(stmt.Arguments),
+		stmt.GetKind(), ToString(stmt.FunctionName), dumpExpressions(stmt.Arguments),
 	), nil
 }
 
@@ -170,7 +170,7 @@ func (visitor DumpVisitor) ProcessForStmt(stmt *ForStatement, context any) (any,
 func (visitor DumpVisitor) ProcessFunctionCallExpr(stmt *FunctionCallExpression, _ any) (any, error) {
 	return fmt.Sprintf(
 		"{%s - functionName: \"%s\", arguments: %s}",
-		stmt.GetKind(), stmt.FunctionName, dumpExpressions(stmt.Arguments),
+		stmt.GetKind(), ToString(stmt.FunctionName), dumpExpressions(stmt.Arguments),
 	), nil
 }
 
@@ -213,7 +213,7 @@ func (visitor DumpVisitor) ProcessIntegerLiteralExpr(stmt *IntegerLiteralExpress
 func (visitor DumpVisitor) ProcessIssetIntrinsicExpr(stmt *IssetIntrinsicExpression, _ any) (any, error) {
 	return fmt.Sprintf(
 		"{%s - functionName: \"%s\" arguments: %s}",
-		stmt.GetKind(), stmt.FunctionName, dumpExpressions(stmt.Arguments),
+		stmt.GetKind(), ToString(stmt.FunctionName), dumpExpressions(stmt.Arguments),
 	), nil
 }
 
@@ -321,7 +321,7 @@ func (visitor DumpVisitor) ProcessUnaryExpr(stmt *UnaryOpExpression, _ any) (any
 func (visitor DumpVisitor) ProcessUnsetIntrinsicExpr(stmt *UnsetIntrinsicExpression, _ any) (any, error) {
 	return fmt.Sprintf(
 		"{%s - functionName: \"%s\" arguments: %s}",
-		stmt.GetKind(), stmt.FunctionName, dumpExpressions(stmt.Arguments),
+		stmt.GetKind(), ToString(stmt.FunctionName), dumpExpressions(stmt.Arguments),
 	), nil
 }
 

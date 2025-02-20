@@ -137,11 +137,11 @@ func (stmt *SubscriptExpression) Process(visitor Visitor, context any) (any, err
 
 type FunctionCallExpression struct {
 	*Expression
-	FunctionName string
+	FunctionName IExpression
 	Arguments    []IExpression
 }
 
-func NewFunctionCallExpr(id int64, pos *position.Position, functionName string, arguments []IExpression) *FunctionCallExpression {
+func NewFunctionCallExpr(id int64, pos *position.Position, functionName IExpression, arguments []IExpression) *FunctionCallExpression {
 	return &FunctionCallExpression{Expression: NewExpr(id, FunctionCallExpr, pos), FunctionName: functionName, Arguments: arguments}
 }
 
@@ -157,7 +157,9 @@ type ExitIntrinsicExpression struct {
 
 func NewExitIntrinsic(id int64, pos *position.Position, expression IExpression) *ExitIntrinsicExpression {
 	return &ExitIntrinsicExpression{FunctionCallExpression: &FunctionCallExpression{
-		Expression: NewExpr(id, ExitIntrinsicExpr, pos), FunctionName: "exit", Arguments: []IExpression{expression},
+		Expression:   NewExpr(id, ExitIntrinsicExpr, pos),
+		FunctionName: NewStringLiteralExpr(id, pos, "exit", SingleQuotedString),
+		Arguments:    []IExpression{expression},
 	}}
 }
 
@@ -173,7 +175,9 @@ type EmptyIntrinsicExpression struct {
 
 func NewEmptyIntrinsic(id int64, pos *position.Position, expression IExpression) *EmptyIntrinsicExpression {
 	return &EmptyIntrinsicExpression{&FunctionCallExpression{
-		Expression: NewExpr(id, EmptyIntrinsicExpr, pos), FunctionName: "empty", Arguments: []IExpression{expression},
+		Expression:   NewExpr(id, EmptyIntrinsicExpr, pos),
+		FunctionName: NewStringLiteralExpr(id, pos, "empty", SingleQuotedString),
+		Arguments:    []IExpression{expression},
 	}}
 }
 
@@ -189,7 +193,9 @@ type IssetIntrinsicExpression struct {
 
 func NewIssetIntrinsic(id int64, pos *position.Position, arguments []IExpression) *IssetIntrinsicExpression {
 	return &IssetIntrinsicExpression{&FunctionCallExpression{
-		Expression: NewExpr(id, IssetIntrinsicExpr, pos), FunctionName: "isset", Arguments: arguments,
+		Expression:   NewExpr(id, IssetIntrinsicExpr, pos),
+		FunctionName: NewStringLiteralExpr(id, pos, "isset", SingleQuotedString),
+		Arguments:    arguments,
 	}}
 }
 
@@ -205,7 +211,9 @@ type UnsetIntrinsicExpression struct {
 
 func NewUnsetIntrinsic(id int64, pos *position.Position, arguments []IExpression) *UnsetIntrinsicExpression {
 	return &UnsetIntrinsicExpression{&FunctionCallExpression{
-		Expression: NewExpr(id, UnsetIntrinsicExpr, pos), FunctionName: "unset", Arguments: arguments,
+		Expression:   NewExpr(id, UnsetIntrinsicExpr, pos),
+		FunctionName: NewStringLiteralExpr(id, pos, "unset", SingleQuotedString),
+		Arguments:    arguments,
 	}}
 }
 

@@ -76,9 +76,9 @@ func TestArray(t *testing.T) {
 
 func TestFunctionCall(t *testing.T) {
 	// Without argument
-	testExpr(t, "<?php func();", ast.NewFunctionCallExpr(0, nil, "func", []ast.IExpression{}))
+	testExpr(t, "<?php func();", ast.NewFunctionCallExpr(0, nil, ast.NewStringLiteralExpr(0, nil, "func", ast.SingleQuotedString), []ast.IExpression{}))
 	// With argument
-	testExpr(t, "<?php func(42);", ast.NewFunctionCallExpr(0, nil, "func", []ast.IExpression{ast.NewIntegerLiteralExpr(0, nil, 42)}))
+	testExpr(t, "<?php func(42);", ast.NewFunctionCallExpr(0, nil, ast.NewStringLiteralExpr(0, nil, "func", ast.SingleQuotedString), []ast.IExpression{ast.NewIntegerLiteralExpr(0, nil, 42)}))
 }
 
 func TestLiteral(t *testing.T) {
