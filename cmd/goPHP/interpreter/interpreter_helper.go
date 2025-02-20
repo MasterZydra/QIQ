@@ -50,14 +50,14 @@ func (interpreter *Interpreter) processCondition(expr ast.IExpression, env *Envi
 	return runtimeValue, boolean, err
 }
 
-func (interpreter *Interpreter) lookupVariable(expr ast.IExpression, env *Environment, suppressWarning bool) (IRuntimeValue, phpError.Error) {
+func (interpreter *Interpreter) lookupVariable(expr ast.IExpression, env *Environment) (IRuntimeValue, phpError.Error) {
 	variableName, err := interpreter.varExprToVarName(expr, env)
 	if err != nil {
 		return NewVoidRuntimeValue(), err
 	}
 
 	runtimeValue, err := env.lookupVariable(variableName)
-	if !suppressWarning && err != nil {
+	if !interpreter.suppressWarning && err != nil {
 		interpreter.printError(err)
 	}
 	return runtimeValue, nil

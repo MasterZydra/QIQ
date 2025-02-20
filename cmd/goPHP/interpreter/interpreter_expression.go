@@ -55,7 +55,7 @@ func (interpreter *Interpreter) ProcessStringLiteralExpr(expr *ast.StringLiteral
 
 // ProcessSimpleVariableExpr implements Visitor.
 func (interpreter *Interpreter) ProcessSimpleVariableExpr(expr *ast.SimpleVariableExpression, env any) (any, error) {
-	return interpreter.lookupVariable(expr, env.(*Environment), false)
+	return interpreter.lookupVariable(expr, env.(*Environment))
 }
 
 // ProcessSimpleAssignmentExpr implements Visitor.
@@ -162,7 +162,7 @@ func (interpreter *Interpreter) ProcessSimpleAssignmentExpr(expr *ast.SimpleAssi
 func (interpreter *Interpreter) ProcessSubscriptExpr(expr *ast.SubscriptExpression, env any) (any, error) {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-subscript-expression
 
-	variable := must(interpreter.lookupVariable(expr.Variable, env.(*Environment), false))
+	variable := must(interpreter.lookupVariable(expr.Variable, env.(*Environment)))
 
 	if variable.GetType() == StringValue {
 		if expr.Index == nil {
@@ -400,7 +400,9 @@ func (interpreter *Interpreter) ProcessEmptyIntrinsicExpr(expr *ast.EmptyIntrins
 	var runtimeValue IRuntimeValue
 	var err phpError.Error
 	if ast.IsVariableExpr(expr.Arguments[0]) {
-		runtimeValue, err = interpreter.lookupVariable(expr.Arguments[0], env.(*Environment), true)
+		interpreter.suppressWarning = true
+		runtimeValue, err = interpreter.processStmt(expr.Arguments[0], env)
+		interpreter.suppressWarning = false
 		if err != nil {
 			return NewBooleanRuntimeValue(true), nil
 		}
@@ -486,7 +488,9 @@ func (interpreter *Interpreter) ProcessIssetIntrinsicExpr(expr *ast.IssetIntrins
 	// and if it is not NULL, the result is TRUE. Otherwise, the result is FALSE.
 
 	for _, arg := range expr.Arguments {
-		runtimeValue, _ := interpreter.lookupVariable(arg, env.(*Environment), true)
+		interpreter.suppressWarning = true
+		runtimeValue, _ := interpreter.lookupVariable(arg, env.(*Environment))
+		interpreter.suppressWarning = false
 		if runtimeValue.GetType() == NullValue {
 			return NewBooleanRuntimeValue(false), nil
 		}

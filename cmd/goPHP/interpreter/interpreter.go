@@ -19,6 +19,8 @@ type Interpreter struct {
 	result             string
 	resultRuntimeValue IRuntimeValue
 	exitCode           int64
+	// Status
+	suppressWarning bool
 }
 
 func NewInterpreter(ini *ini.Ini, request *Request, filename string) *Interpreter {
