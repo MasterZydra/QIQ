@@ -89,11 +89,19 @@ func (interpreter *Interpreter) varExprToVarName(expr ast.IExpression, env *Envi
 			return "$" + valueStr, nil
 		}
 
-		return "", phpError.NewError("varExprToVarName - SimpleVariableExpr: Unsupported expression: %s", expr)
+		variableName, err := interpreter.processStmt(variableNameExpr, env)
+		if err != nil {
+			return "", err
+		}
+		valueStr, err := lib_strval(variableName)
+		if err != nil {
+			return "", err
+		}
+		return "$" + valueStr, nil
 	case ast.SubscriptExpr:
 		return interpreter.varExprToVarName(expr.(*ast.SubscriptExpression).Variable, env)
 	default:
-		return "", phpError.NewError("varExprToVarName: Unsupported expression: %s", expr)
+		return "", phpError.NewError("varExprToVarName: Unsupported expression: %s", ast.ToString(expr))
 	}
 }
 

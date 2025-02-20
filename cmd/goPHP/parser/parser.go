@@ -1705,14 +1705,14 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, phpError.Error) {
 	// Spec: https://phplang.org/spec/10-expressions.html#simple-variable
 
 	// simple-variable:
-	//    variable-name
 	//    $   {   expression   }
 
 	if parser.isToken(lexer.OpOrPuncToken, "$", false) &&
 		parser.next(0).TokenType == lexer.OpOrPuncToken && parser.next(0).Value == "{" {
+		PrintParserCallstack("simple-variable", parser)
 		parser.eatN(2)
 		// Get expression
-		expr, err := parser.parsePrimaryExpr()
+		expr, err := parser.parseExpr()
 		if err != nil {
 			return ast.NewEmptyExpr(), err
 		}
@@ -1728,10 +1728,10 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, phpError.Error) {
 	// Spec: https://phplang.org/spec/10-expressions.html#simple-variable
 
 	// simple-variable:
-	//    variable-name
 	//    $   simple-variable
 
 	if parser.isToken(lexer.OpOrPuncToken, "$", true) {
+		PrintParserCallstack("simple-variable", parser)
 		if expr, err := parser.parsePrimaryExpr(); err != nil {
 			return ast.NewEmptyExpr(), err
 		} else {
@@ -1742,7 +1742,6 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, phpError.Error) {
 	if ast.IsVariableExpr(variable) &&
 		!parser.isToken(lexer.OpOrPuncToken, "[", false) && !parser.isToken(lexer.OpOrPuncToken, "{", false) &&
 		!parser.isToken(lexer.OpOrPuncToken, "++", false) && !parser.isToken(lexer.OpOrPuncToken, "--", false) {
-		PrintParserCallstack("simple-variable", parser)
 		return variable, nil
 	}
 

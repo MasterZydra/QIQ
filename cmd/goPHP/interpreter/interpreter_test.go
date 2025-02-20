@@ -75,6 +75,10 @@ func TestVariableExprToVariableName(t *testing.T) {
 	if actual != expected {
 		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
 	}
+
+	// ${$a}
+	testInputOutput(t, `<?php $b = "bb";$bb = "baa";$c = ${$b};var_dump($c);`, "string(3) \"baa\"\n")
+	testInputOutput(t, `<?php $b = "bb";$a = "aa";$bb = "baa";$c = ${$a=$b};var_dump($c);`, "string(3) \"baa\"\n")
 }
 
 // ------------------- MARK: input output tests -------------------
