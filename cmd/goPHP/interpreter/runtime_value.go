@@ -81,6 +81,52 @@ func NewArrayRuntimeValueFromMap(elements map[IRuntimeValue]IRuntimeValue) *Arra
 	}
 }
 
+func (runtimeValue *ArrayRuntimeValue) convertKey(key IRuntimeValue) (IRuntimeValue, phpError.Error) {
+	if key == nil {
+		return NewVoidRuntimeValue(), nil
+	}
+
+	if key.GetType() == ArrayValue {
+		// Spec: https://www.php.net/manual/en/language.types.array.php
+		// Arrays and objects can not be used as keys. Doing so will result in a warning: Illegal offset type.
+		return NewVoidRuntimeValue(), phpError.NewWarning("Illegal offset type %s", paramTypeRuntimeValue[key.GetType()])
+	}
+
+	if key.GetType() == BooleanValue {
+		// Spec: https://www.php.net/manual/en/language.types.array.php
+		// Bools are cast to ints, too, i.e. the key true will actually be stored under 1 and the key false under 0.
+		if key.(*BooleanRuntimeValue).Value {
+			return NewIntegerRuntimeValue(1), nil
+		}
+		return NewIntegerRuntimeValue(0), nil
+	}
+
+	if key.GetType() == FloatingValue {
+		// Spec: https://www.php.net/manual/en/language.types.array.php
+		// Floats are also cast to ints, which means that the fractional part will be truncated. E.g. the key 8.7 will actually be stored under 8.
+		keyInt, err := lib_intval(key)
+		if err != nil {
+			return NewVoidRuntimeValue(), err
+		}
+		return NewIntegerRuntimeValue(keyInt), nil
+	}
+
+	if key.GetType() == StringValue && common.IsDecimalLiteral(key.(*StringRuntimeValue).Value) {
+		// Spec: https://www.php.net/manual/en/language.types.array.php
+		// Strings containing valid decimal ints, unless the number is preceded by a + sign, will be cast to the int type.
+		// E.g. the key "8" will actually be stored under 8. On the other hand "08" will not be cast, as it isn't a valid decimal integer.
+		return NewIntegerRuntimeValue(common.DecimalLiteralToInt64(key.(*StringRuntimeValue).Value)), nil
+	}
+
+	if key.GetType() == NullValue {
+		// Spec: https://www.php.net/manual/en/language.types.array.php
+		// Null will be cast to the empty string, i.e. the key null will actually be stored under "".
+		return NewStringRuntimeValue(""), nil
+	}
+
+	return key, nil
+}
+
 func (runtimeValue *ArrayRuntimeValue) SetElement(key IRuntimeValue, value IRuntimeValue) phpError.Error {
 	if key == nil {
 		found := false
@@ -103,43 +149,9 @@ func (runtimeValue *ArrayRuntimeValue) SetElement(key IRuntimeValue, value IRunt
 		key = NewIntegerRuntimeValue(lastInt + 1)
 	}
 
-	if key.GetType() == ArrayValue {
-		// Spec: https://www.php.net/manual/en/language.types.array.php
-		// Arrays and objects can not be used as keys. Doing so will result in a warning: Illegal offset type.
-		return phpError.NewWarning("Illegal offset type %s", paramTypeRuntimeValue[key.GetType()])
-	}
-
-	if key.GetType() == BooleanValue {
-		// Spec: https://www.php.net/manual/en/language.types.array.php
-		// Bools are cast to ints, too, i.e. the key true will actually be stored under 1 and the key false under 0.
-		if key.(*BooleanRuntimeValue).Value {
-			key = NewIntegerRuntimeValue(1)
-		} else {
-			key = NewIntegerRuntimeValue(0)
-		}
-	}
-
-	if key.GetType() == FloatingValue {
-		// Spec: https://www.php.net/manual/en/language.types.array.php
-		// Floats are also cast to ints, which means that the fractional part will be truncated. E.g. the key 8.7 will actually be stored under 8.
-		keyInt, err := lib_intval(key)
-		if err != nil {
-			return err
-		}
-		key = NewIntegerRuntimeValue(keyInt)
-	}
-
-	if key.GetType() == StringValue && common.IsDecimalLiteral(key.(*StringRuntimeValue).Value) {
-		// Spec: https://www.php.net/manual/en/language.types.array.php
-		// Strings containing valid decimal ints, unless the number is preceded by a + sign, will be cast to the int type.
-		// E.g. the key "8" will actually be stored under 8. On the other hand "08" will not be cast, as it isn't a valid decimal integer.
-		key = NewIntegerRuntimeValue(common.DecimalLiteralToInt64(key.(*StringRuntimeValue).Value))
-	}
-
-	if key.GetType() == NullValue {
-		// Spec: https://www.php.net/manual/en/language.types.array.php
-		// Null will be cast to the empty string, i.e. the key null will actually be stored under "".
-		key = NewStringRuntimeValue("")
+	key, err := runtimeValue.convertKey(key)
+	if err != nil {
+		return err
 	}
 
 	existingKey, exists := runtimeValue.findKey(key)
@@ -155,6 +167,12 @@ func (runtimeValue *ArrayRuntimeValue) SetElement(key IRuntimeValue, value IRunt
 
 func (runtimeValue *ArrayRuntimeValue) findKey(key IRuntimeValue) (IRuntimeValue, bool) {
 	if key == nil {
+		return NewVoidRuntimeValue(), false
+	}
+
+	var err phpError.Error
+	key, err = runtimeValue.convertKey(key)
+	if err != nil {
 		return NewVoidRuntimeValue(), false
 	}
 
