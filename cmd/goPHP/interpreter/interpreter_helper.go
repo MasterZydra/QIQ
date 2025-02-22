@@ -3,6 +3,7 @@ package interpreter
 import (
 	"GoPHP/cmd/goPHP/ast"
 	"GoPHP/cmd/goPHP/common"
+	"GoPHP/cmd/goPHP/config"
 	"GoPHP/cmd/goPHP/phpError"
 	"math"
 	"os"
@@ -11,6 +12,12 @@ import (
 	"slices"
 	"strings"
 )
+
+func printDev(str string) {
+	if config.IsDevMode {
+		println(str)
+	}
+}
 
 func (interpreter *Interpreter) print(str string) {
 	interpreter.result += str
@@ -399,7 +406,8 @@ func deepCopy(value IRuntimeValue) IRuntimeValue {
 	copy := NewArrayRuntimeValue()
 	array := value.(*ArrayRuntimeValue)
 	for _, key := range array.Keys {
-		copy.SetElement(key, deepCopy(array.Elements[key]))
+		value, _ := array.GetElement(key)
+		copy.SetElement(key, deepCopy(value))
 	}
 	return copy
 }
@@ -1396,7 +1404,12 @@ func compare(lhs IRuntimeValue, operator string, rhs IRuntimeValue) (*BooleanRun
 				if len(lhsArray.Keys) != len(rhsArray.Keys) {
 					result = false
 				} else {
-					for key, lhsValue := range lhsArray.Elements {
+					for _, key := range lhsArray.Keys {
+						lhsValue, found := lhsArray.GetElement(key)
+						if !found {
+							result = false
+							break
+						}
 						rhsValue, found := rhsArray.GetElement(key)
 						if !found {
 							result = false

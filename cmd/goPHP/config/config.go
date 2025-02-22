@@ -31,6 +31,7 @@ func versionId() int64 {
 }
 
 // Runtime mode
+var IsDevMode bool = false
 var ShowStats bool = false
 var ShowParserCallStack bool = false
 var ShowInterpreterCallStack bool = false

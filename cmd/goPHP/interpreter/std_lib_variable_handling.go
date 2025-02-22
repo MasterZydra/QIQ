@@ -441,15 +441,15 @@ func lib_print_r_var(value IRuntimeValue, depth int) (string, phpError.Error) {
 	var err phpError.Error
 	switch value.GetType() {
 	case ArrayValue:
-		keys := value.(*ArrayRuntimeValue).Keys
-		elements := value.(*ArrayRuntimeValue).Elements
+		array := value.(*ArrayRuntimeValue)
 		result = fmt.Sprintf("Array\n%s(\n", strings.Repeat(" ", depth-4))
-		for _, key := range keys {
+		for _, key := range array.Keys {
 			keyStr, err := lib_print_r_var(key, depth+4)
 			if err != nil {
 				return "", err
 			}
-			valueStr, err := lib_print_r_var(elements[key], depth+8)
+			elementValue, _ := array.GetElement(key)
+			valueStr, err := lib_print_r_var(elementValue, depth+8)
 			if err != nil {
 				return "", err
 			}
@@ -568,10 +568,9 @@ func nativeFn_var_dump(args []IRuntimeValue, interpreter *Interpreter) (IRuntime
 func lib_var_dump_var(interpreter *Interpreter, value IRuntimeValue, depth int) phpError.Error {
 	switch value.GetType() {
 	case ArrayValue:
-		keys := value.(*ArrayRuntimeValue).Keys
-		elements := value.(*ArrayRuntimeValue).Elements
-		interpreter.println(fmt.Sprintf("array(%d) {", len(keys)))
-		for _, key := range keys {
+		array := value.(*ArrayRuntimeValue)
+		interpreter.println(fmt.Sprintf("array(%d) {", len(array.Keys)))
+		for _, key := range array.Keys {
 			switch key.GetType() {
 			case IntegerValue:
 				keyValue := key.(*IntegerRuntimeValue).Value
@@ -583,7 +582,8 @@ func lib_var_dump_var(interpreter *Interpreter, value IRuntimeValue, depth int) 
 				return phpError.NewError("lib_var_dump_var: Unsupported array key type %s", key.GetType())
 			}
 			interpreter.print(strings.Repeat(" ", depth))
-			if err := lib_var_dump_var(interpreter, elements[key], depth+2); err != nil {
+			elementValue, _ := array.GetElement(key)
+			if err := lib_var_dump_var(interpreter, elementValue, depth+2); err != nil {
 				return err
 			}
 		}
@@ -652,20 +652,20 @@ func lib_var_export_var(value IRuntimeValue, depth int) (string, phpError.Error)
 	var err phpError.Error
 	switch value.GetType() {
 	case ArrayValue:
-		keys := value.(*ArrayRuntimeValue).Keys
-		elements := value.(*ArrayRuntimeValue).Elements
+		array := value.(*ArrayRuntimeValue)
 		result = fmt.Sprintf("%sarray (\n", strings.Repeat(" ", depth-2))
-		for _, key := range keys {
+		for _, key := range array.Keys {
 			keyStr, err := lib_var_export_var(key, depth+2)
 			if err != nil {
 				return "", err
 			}
-			valueStr, err := lib_var_export_var(elements[key], depth+2)
+			elementValue, _ := array.GetElement(key)
+			valueStr, err := lib_var_export_var(elementValue, depth+2)
 			if err != nil {
 				return "", err
 			}
 
-			if elements[key].GetType() == ArrayValue {
+			if elementValue.GetType() == ArrayValue {
 				result += fmt.Sprintf("%s%s => \n%s%s,\n",
 					strings.Repeat(" ", depth), keyStr,
 					strings.Repeat(" ", depth-2), valueStr,

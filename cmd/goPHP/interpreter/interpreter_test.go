@@ -461,6 +461,10 @@ func TestArray(t *testing.T) {
 	)
 
 	// Key value
+	testInputOutput(t,
+		`<?php $array = [1.5 => "a"]; var_dump($array[1]);`,
+		"string(1) \"a\"\n",
+	)
 	// Tests from https://www.php.net/manual/en/language.types.array.php
 	testInputOutput(t,
 		`<?php $array = [1 => "a", "1" => "b", 1.5 => "c", true => "d",]; var_dump($array);`,

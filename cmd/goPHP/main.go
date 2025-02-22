@@ -18,7 +18,6 @@ import (
 
 var serverAddr string
 var documentRoot string
-var isDevMode bool
 
 func main() {
 	file := flag.String("f", "", "Parse and execute <file>.")
@@ -32,7 +31,7 @@ func main() {
 
 	flag.Parse()
 
-	isDevMode = *isDev
+	config.IsDevMode = *isDev
 	config.ShowStats = *showStats
 	if *debugMode {
 		config.ShowParserCallStack = true
@@ -113,7 +112,7 @@ func webServer() {
 	}
 
 	var mode string
-	if isDevMode {
+	if config.IsDevMode {
 		mode = "Development"
 	} else {
 		mode = "Production"
@@ -198,7 +197,7 @@ func processContent(r *http.Request, content string, filename string) (output st
 	defer stats.StopAndPrint(stat, "Total")
 
 	var initIni *ini.Ini
-	if isDevMode {
+	if config.IsDevMode {
 		initIni = ini.NewDevIni()
 	} else {
 		initIni = ini.NewDefaultIni()

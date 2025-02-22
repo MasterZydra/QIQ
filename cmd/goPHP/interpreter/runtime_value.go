@@ -58,27 +58,38 @@ func NewNullRuntimeValue() *RuntimeValue {
 type ArrayRuntimeValue struct {
 	*RuntimeValue
 	Keys     []IRuntimeValue
-	Elements map[IRuntimeValue]IRuntimeValue
+	Elements map[string]IRuntimeValue
+	// Keeping track of next key
+	nextKey    int64
+	nextKeySet bool
 }
 
 func NewArrayRuntimeValue() *ArrayRuntimeValue {
 	return &ArrayRuntimeValue{
 		RuntimeValue: NewRuntimeValue(ArrayValue),
 		Keys:         []IRuntimeValue{},
-		Elements:     map[IRuntimeValue]IRuntimeValue{},
+		Elements:     map[string]IRuntimeValue{},
 	}
 }
 
 func NewArrayRuntimeValueFromMap(elements map[IRuntimeValue]IRuntimeValue) *ArrayRuntimeValue {
-	keys := []IRuntimeValue{}
-	for key := range elements {
-		keys = append(keys, key)
+	array := NewArrayRuntimeValue()
+	for key, value := range elements {
+		if err := array.SetElement(key, value); err != nil {
+			printDev("NewArrayRuntimeValueFromMap: " + err.Error())
+		}
 	}
-	return &ArrayRuntimeValue{
-		RuntimeValue: NewRuntimeValue(ArrayValue),
-		Keys:         keys,
-		Elements:     elements,
+	return array
+}
+
+func (runtimeValue *ArrayRuntimeValue) keyToMapKey(key IRuntimeValue) (string, phpError.Error) {
+	if key.GetType() == IntegerValue {
+		return fmt.Sprintf("i_%d", key.(*IntegerRuntimeValue).Value), nil
 	}
+	if key.GetType() == StringValue {
+		return fmt.Sprintf("s_%s", key.(*StringRuntimeValue).Value), nil
+	}
+	return "", phpError.NewError("ArrayRuntimeValue.keyToMapKey: Unsupported key type %s", paramTypeRuntimeValue[key.GetType()])
 }
 
 func (runtimeValue *ArrayRuntimeValue) convertKey(key IRuntimeValue) (IRuntimeValue, phpError.Error) {
@@ -127,76 +138,117 @@ func (runtimeValue *ArrayRuntimeValue) convertKey(key IRuntimeValue) (IRuntimeVa
 	return key, nil
 }
 
-func (runtimeValue *ArrayRuntimeValue) SetElement(key IRuntimeValue, value IRuntimeValue) phpError.Error {
-	if key == nil {
+func (runtimeValue *ArrayRuntimeValue) getNextKey(key IRuntimeValue) (IRuntimeValue, phpError.Error) {
+	// If a key is passed
+	if key != nil {
+		var err phpError.Error
+		key, err = runtimeValue.convertKey(key)
+		if err != nil {
+			return key, err
+		}
+
+		// If the passed key is an integer after the convertion
+		if key.GetType() == IntegerValue {
+			keyValue := key.(*IntegerRuntimeValue).Value
+			// If no key is stored yet or the passed key is greater than nextKey
+			if !runtimeValue.nextKeySet ||
+				(runtimeValue.nextKeySet && keyValue > runtimeValue.nextKey) {
+				// Store value + 1 as next key
+				runtimeValue.nextKey = keyValue + 1
+				runtimeValue.nextKeySet = true
+			}
+		}
+
+		return key, nil
+	}
+
+	// If no key is passed and no nextKey is set yet
+	if !runtimeValue.nextKeySet {
+		// lastFoundInt is -1 because at the end of the loop it will be increased by one
+		var lastFoundInt int64 = -1
 		found := false
-		var lastInt int64 = -1
+		// Iterate all keys and search for integer values
 		for i := len(runtimeValue.Keys) - 1; i >= 0; i-- {
 			if runtimeValue.Keys[i].GetType() != IntegerValue {
 				continue
 			}
 
+			foundInt := runtimeValue.Keys[i].(*IntegerRuntimeValue).Value
 			if !found {
-				lastInt = runtimeValue.Keys[i].(*IntegerRuntimeValue).Value
+				lastFoundInt = foundInt
 				found = true
-			} else {
-				foundInt := runtimeValue.Keys[i].(*IntegerRuntimeValue).Value
-				if foundInt > lastInt {
-					lastInt = foundInt
-				}
+				continue
+			}
+
+			if foundInt > lastFoundInt {
+				lastFoundInt = foundInt
 			}
 		}
-		key = NewIntegerRuntimeValue(lastInt + 1)
+		runtimeValue.nextKey = lastFoundInt + 1
+		runtimeValue.nextKeySet = true
 	}
 
-	key, err := runtimeValue.convertKey(key)
+	key = NewIntegerRuntimeValue(runtimeValue.nextKey)
+	runtimeValue.nextKey++
+	return key, nil
+}
+
+func (runtimeValue *ArrayRuntimeValue) SetElement(key IRuntimeValue, value IRuntimeValue) phpError.Error {
+	key, err := runtimeValue.getNextKey(key)
 	if err != nil {
 		return err
 	}
 
-	existingKey, exists := runtimeValue.findKey(key)
-	if !exists {
-		runtimeValue.Keys = append(runtimeValue.Keys, key)
-		runtimeValue.Elements[key] = value
-	} else {
-		runtimeValue.Elements[existingKey] = value
+	mapKey, found, err := runtimeValue.getMapKey(key, false)
+	if err != nil {
+		return err
 	}
+
+	if !found {
+		runtimeValue.Keys = append(runtimeValue.Keys, key)
+	}
+	runtimeValue.Elements[mapKey] = value
 
 	return nil
 }
 
-func (runtimeValue *ArrayRuntimeValue) findKey(key IRuntimeValue) (IRuntimeValue, bool) {
-	if key == nil {
-		return NewVoidRuntimeValue(), false
-	}
-
-	var err phpError.Error
-	key, err = runtimeValue.convertKey(key)
-	if err != nil {
-		return NewVoidRuntimeValue(), false
-	}
-
-	for k := range runtimeValue.Elements {
-		if k.GetType() != key.GetType() {
-			continue
-		}
-		boolean, err := compare(key, "===", k)
+func (runtimeValue *ArrayRuntimeValue) getMapKey(key IRuntimeValue, convertKey bool) (string, bool, phpError.Error) {
+	if convertKey {
+		var err phpError.Error
+		key, err = runtimeValue.convertKey(key)
 		if err != nil {
-			return NewVoidRuntimeValue(), false
-		}
-		if boolean.Value {
-			return k, true
+			return "", false, err
 		}
 	}
-	return NewVoidRuntimeValue(), false
+
+	mapKey, err := runtimeValue.keyToMapKey(key)
+	if err != nil {
+		return "", false, err
+	}
+
+	_, found := runtimeValue.Elements[mapKey]
+
+	return mapKey, found, nil
+}
+
+func (runtimeValue *ArrayRuntimeValue) Contains(key IRuntimeValue) bool {
+	_, found, err := runtimeValue.getMapKey(key, true)
+	if err != nil {
+		printDev("ArrayRuntimeValue.Contains: " + err.Error())
+		return false
+	}
+	return found
 }
 
 func (runtimeValue *ArrayRuntimeValue) GetElement(key IRuntimeValue) (IRuntimeValue, bool) {
-	key, found := runtimeValue.findKey(key)
+	mapKey, found, err := runtimeValue.getMapKey(key, true)
+	if err != nil {
+		return NewVoidRuntimeValue(), false
+	}
 	if !found {
 		return NewVoidRuntimeValue(), false
 	}
-	return runtimeValue.Elements[key], true
+	return runtimeValue.Elements[mapKey], true
 }
 
 // MARK: BooleanRuntimeValue
@@ -264,7 +316,8 @@ func DumpRuntimeValue(value IRuntimeValue) {
 			fmt.Print("Key: ")
 			DumpRuntimeValue(key)
 			fmt.Print("Value: ")
-			DumpRuntimeValue(arrayValue.Elements[key])
+			value, _ := arrayValue.GetElement(key)
+			DumpRuntimeValue(value)
 
 		}
 		fmt.Printf("}\n")

@@ -32,9 +32,7 @@ func NewInterpreter(ini *ini.Ini, request *Request, filename string) *Interprete
 
 	if ini.GetBool("register_argc_argv") {
 		server := interpreter.env.predefinedVariables["$_SERVER"].(*ArrayRuntimeValue)
-		_, argvAlreadyDefined := server.findKey(NewStringRuntimeValue("argv"))
-		_, argcAlreadyDefined := server.findKey(NewStringRuntimeValue("argc"))
-		if !argcAlreadyDefined && !argvAlreadyDefined {
+		if !server.Contains(NewStringRuntimeValue("argc")) && !server.Contains(NewStringRuntimeValue("argv")) {
 			server.SetElement(NewStringRuntimeValue("argv"), interpreter.env.predefinedVariables["$_GET"])
 			server.SetElement(NewStringRuntimeValue("argc"), NewIntegerRuntimeValue(int64(len(interpreter.env.predefinedVariables["$_GET"].(*ArrayRuntimeValue).Keys))))
 		}
