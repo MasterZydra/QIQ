@@ -1,12 +1,13 @@
 package interpreter
 
 import (
+	"GoPHP/cmd/goPHP/ini"
 	"testing"
 )
 
 func TestParseQuery(t *testing.T) {
 	runTest := func(t *testing.T, input string, expected *ArrayRuntimeValue) {
-		actual, err := parseQuery(input)
+		actual, err := parseQuery(input, ini.NewDefaultIni())
 		if err != nil {
 			t.Errorf("Unexpected error: \"%s\"", err)
 			return

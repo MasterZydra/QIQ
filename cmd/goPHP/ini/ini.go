@@ -9,17 +9,27 @@ import (
 
 // Spec: https://www.php.net/manual/en/info.constants.php#constant.ini-system
 const (
-	INI_USER   int = 1 // Entry can be set in user scripts (like with ini_set()) or in the Windows registry. Entry can be set in .user.ini
-	INI_PERDIR int = 2 // Entry can be set in php.ini, .htaccess, httpd.conf or .user.ini
-	INI_SYSTEM int = 4 // Entry can be set in php.ini or httpd.conf
-	INI_ALL    int = 7 // Entry can be set anywhere
+	// Entry can be set in user scripts (like with ini_set()) or in the Windows registry. Entry can be set in .user.ini
+	INI_USER int = 1
+	// Entry can be set in php.ini, .htaccess, httpd.conf or .user.ini
+	INI_PERDIR int = 2
+	// Entry can be set in php.ini or httpd.conf
+	INI_SYSTEM int = 4
+	// Entry can be set anywhere
+	INI_ALL int = 7
 )
 
 var allowedDirectives = map[string]int{
-	"error_reporting":    INI_ALL,
-	"register_argc_argv": INI_PERDIR,
-	"short_open_tag":     INI_PERDIR,
-	"variables_order":    INI_PERDIR,
+	"arg_separator.input":  INI_SYSTEM,
+	"arg_separator.output": INI_ALL,
+	"default_charset":      INI_ALL,
+	"error_reporting":      INI_ALL,
+	"input_encoding":       INI_ALL,
+	"internal_encoding":    INI_ALL,
+	"output_encoding":      INI_ALL,
+	"register_argc_argv":   INI_PERDIR,
+	"short_open_tag":       INI_PERDIR,
+	"variables_order":      INI_PERDIR,
 }
 
 var boolDirectives = []string{
@@ -37,10 +47,16 @@ type Ini struct {
 func NewDefaultIni() *Ini {
 	return &Ini{
 		directives: map[string]string{
-			"error_reporting":    "0",
-			"register_argc_argv": "",
-			"short_open_tag":     "",
-			"variables_order":    "EGPCS",
+			"arg_separator.input":  "&",
+			"arg_separator.output": "&",
+			"default_charset":      "UTF-8",
+			"error_reporting":      "0",
+			"input_encoding":       "",
+			"internal_encoding":    "",
+			"output_encoding":      "",
+			"register_argc_argv":   "",
+			"short_open_tag":       "",
+			"variables_order":      "EGPCS",
 		},
 	}
 }
@@ -55,7 +71,7 @@ func NewIniFromArray(ini []string) *Ini {
 	defaultIni := NewDefaultIni()
 
 	for _, setting := range ini {
-		parts := strings.Split(setting, "=")
+		parts := strings.SplitN(setting, "=", 2)
 		defaultIni.Set(parts[0], parts[1], INI_ALL)
 	}
 

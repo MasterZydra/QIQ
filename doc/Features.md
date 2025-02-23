@@ -1,7 +1,13 @@
 # Supported syntax and features
 
 ## Ini directives
+- arg_separator.input
+- arg_separator.output
+- default_charset
 - error_reporting
+- input_encoding
+- internal_encoding
+- output_encoding
 - register_argc_argv
 - short_open_tag
 - variables_order

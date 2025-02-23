@@ -14,10 +14,10 @@ import (
 func registerPredefinedVariables(environment *Environment, request *Request, ini *ini.Ini) {
 	if ini == nil {
 		registerPredefinedVariableEnv(environment, request, true)
-		registerPredefinedVariableGet(environment, request, true)
-		registerPredefinedVariablePost(environment, request, true)
+		registerPredefinedVariableGet(environment, request, ini, true)
+		registerPredefinedVariablePost(environment, request, ini, true)
 		// TODO Cookie
-		registerPredefinedVariableServer(environment, request, true)
+		registerPredefinedVariableServer(environment, request, ini, true)
 		return
 	}
 
@@ -27,14 +27,14 @@ func registerPredefinedVariables(environment *Environment, request *Request, ini
 		case "E":
 			registerPredefinedVariableEnv(environment, request, true)
 		case "G":
-			registerPredefinedVariableGet(environment, request, true)
+			registerPredefinedVariableGet(environment, request, ini, true)
 		case "P":
-			registerPredefinedVariablePost(environment, request, true)
+			registerPredefinedVariablePost(environment, request, ini, true)
 		// TODO Cookie
 		// case "C":
 		// 	registerPredefinedVariableCookie(environment, request, true)
 		case "S":
-			registerPredefinedVariableServer(environment, request, true)
+			registerPredefinedVariableServer(environment, request, ini, true)
 		}
 	}
 
@@ -42,17 +42,17 @@ func registerPredefinedVariables(environment *Environment, request *Request, ini
 		registerPredefinedVariableEnv(environment, request, false)
 	}
 	if !strings.Contains(variables_order, "G") {
-		registerPredefinedVariableGet(environment, request, false)
+		registerPredefinedVariableGet(environment, request, ini, false)
 	}
 	if !strings.Contains(variables_order, "P") {
-		registerPredefinedVariablePost(environment, request, false)
+		registerPredefinedVariablePost(environment, request, ini, false)
 	}
 	// TODO Cookie
 	// if !strings.Contains(variables_order, "C") {
 	// 	registerPredefinedVariableCookie(environment, request, false)
 	// }
 	if !strings.Contains(variables_order, "S") {
-		registerPredefinedVariableServer(environment, request, false)
+		registerPredefinedVariableServer(environment, request, ini, false)
 	}
 
 	requestVar := NewArrayRuntimeValue()
@@ -79,9 +79,9 @@ func registerPredefinedVariableEnv(environment *Environment, request *Request, i
 	}
 }
 
-func registerPredefinedVariableGet(environment *Environment, request *Request, init bool) {
+func registerPredefinedVariableGet(environment *Environment, request *Request, ini *ini.Ini, init bool) {
 	if init {
-		array, err := parseQuery(request.QueryString)
+		array, err := parseQuery(request.QueryString, ini)
 		if err != nil {
 			println(err.Error())
 		}
@@ -91,9 +91,9 @@ func registerPredefinedVariableGet(environment *Environment, request *Request, i
 	}
 }
 
-func registerPredefinedVariablePost(environment *Environment, request *Request, init bool) {
+func registerPredefinedVariablePost(environment *Environment, request *Request, ini *ini.Ini, init bool) {
 	if init {
-		array, err := parseQuery(request.Post)
+		array, err := parseQuery(request.Post, ini)
 		if err != nil {
 			println(err.Error())
 		}
@@ -103,13 +103,13 @@ func registerPredefinedVariablePost(environment *Environment, request *Request, 
 	}
 }
 
-func registerPredefinedVariableServer(environment *Environment, request *Request, init bool) {
+func registerPredefinedVariableServer(environment *Environment, request *Request, ini *ini.Ini, init bool) {
 	environment.predefinedVariables["$_SERVER"] = NewArrayRuntimeValue()
 	if init {
 		server := environment.predefinedVariables["$_SERVER"].(*ArrayRuntimeValue)
 		if len(request.Args) > 0 {
 			server.SetElement(NewStringRuntimeValue("argc"), NewIntegerRuntimeValue(int64(len(request.Args))))
-			server.SetElement(NewStringRuntimeValue("argv"), paramToArray(request.Args))
+			server.SetElement(NewStringRuntimeValue("argv"), paramToArray(request.Args, ini))
 		}
 		server.SetElement(NewStringRuntimeValue("DOCUMENT_ROOT"), NewStringRuntimeValue(request.DocumentRoot))
 		server.SetElement(NewStringRuntimeValue("QUERY_STRING"), NewStringRuntimeValue(request.QueryString))
@@ -136,7 +136,7 @@ func stringMapToArray(stringMap map[string]string) *ArrayRuntimeValue {
 	return result
 }
 
-func paramToArray(params [][]string) *ArrayRuntimeValue {
+func paramToArray(params [][]string, ini *ini.Ini) *ArrayRuntimeValue {
 	result := NewArrayRuntimeValue()
 
 	for _, param := range params {
@@ -188,11 +188,11 @@ func paramToArray(params [][]string) *ArrayRuntimeValue {
 		}
 
 		// Prepare environment
-		env := NewEnvironment(nil, NewRequest(), nil)
+		env := NewEnvironment(nil, NewRequest(), ini)
 		env.declareVariable("$"+paramName, arrayValue)
 
 		// Execute PHP to store new array values in env
-		interpreter := NewInterpreter(ini.NewDefaultIni(), NewRequest(), "")
+		interpreter := NewInterpreter(ini, NewRequest(), "")
 		interpreter.process(fmt.Sprintf(`<?php $%s = "%s";`, key, value), env, true)
 
 		// Extract array from environment

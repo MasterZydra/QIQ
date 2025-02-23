@@ -9,12 +9,12 @@ import (
 	"strings"
 )
 
-func parseQuery(query string) (*ArrayRuntimeValue, error) {
+func parseQuery(query string, ini *ini.Ini) (*ArrayRuntimeValue, error) {
 	result := NewArrayRuntimeValue()
 
 	for query != "" {
 		var key string
-		key, query, _ = strings.Cut(query, "&")
+		key, query, _ = strings.Cut(query, ini.GetStr("arg_separator.input"))
 		if key == "" {
 			continue
 		}
