@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"runtime"
 	"slices"
+	"strconv"
 	"strings"
 )
 
@@ -355,8 +356,8 @@ func (interpreter *Interpreter) exprToRuntimeValue(expr ast.IExpression, env *En
 		return NewFloatingRuntimeValue(expr.(*ast.FloatingLiteralExpression).Value), nil
 	case ast.StringLiteralExpr:
 		str := expr.(*ast.StringLiteralExpression).Value
-		// variable substitution
 		if expr.(*ast.StringLiteralExpression).StringType == ast.DoubleQuotedString {
+			// variable substitution
 			r, _ := regexp.Compile(`({\$[A-Za-z_][A-Za-z0-9_]*['A-Za-z0-9\[\]]*[^}]*})|(\$[A-Za-z_][A-Za-z0-9_]*['A-Za-z0-9\[\]]*)`)
 			matches := r.FindAllString(str, -1)
 			for _, match := range matches {
@@ -371,6 +372,17 @@ func (interpreter *Interpreter) exprToRuntimeValue(expr ast.IExpression, env *En
 					return NewVoidRuntimeValue(), err
 				}
 				str = strings.Replace(str, match, result, 1)
+			}
+
+			// unicode escape sequence
+			r, _ = regexp.Compile(`\\u\{[0-9a-fA-F]+\}`)
+			matches = r.FindAllString(str, -1)
+			for _, match := range matches {
+				unicodeChar, err := strconv.ParseInt(match[3:len(match)-1], 16, 32)
+				if err != nil {
+					return NewVoidRuntimeValue(), phpError.NewError(err.Error())
+				}
+				str = strings.Replace(str, match, string(rune(unicodeChar)), 1)
 			}
 		}
 		return NewStringRuntimeValue(str), nil

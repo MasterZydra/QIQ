@@ -123,6 +123,14 @@ func TestOutput(t *testing.T) {
 	testInputOutput(t, `<?php $a = 42; $b = 'abc'; echo "$a $b";`, "42 abc")
 	testInputOutput(t, `<?php echo "$a";`, "Warning: Undefined variable $a\n")
 
+	// Unicode escape sequence
+	testInputOutput(t, `<?php var_dump("\u{61}");`, "string(1) \"a\"\n")
+	testInputOutput(t, `<?php var_dump("\u{FF}");`, "string(2) \"ÿ\"\n")
+	testInputOutput(t, `<?php var_dump("\u{ff}");`, "string(2) \"ÿ\"\n")
+	testInputOutput(t, `<?php var_dump("\u{2603}");`, "string(3) \"☃\"\n")
+	testInputOutput(t, `<?php var_dump("\u{1F602}");`, "string(4) \"😂\"\n")
+	testInputOutput(t, `<?php var_dump("\u{0000001F602}");`, "string(4) \"😂\"\n")
+
 	// Print
 	// From https://www.php.net/manual/en/function.print.php
 	testInputOutput(t, `<?php print "hello";print "world";print "\n";`, "helloworld\n")
