@@ -1,6 +1,7 @@
 package interpreter
 
 import (
+	"GoPHP/cmd/goPHP/ini"
 	"GoPHP/cmd/goPHP/phpError"
 	"slices"
 	"strconv"
@@ -10,13 +11,12 @@ func registerNativeFunctions(environment *Environment) {
 	registerNativeDateTimeFunctions(environment)
 	registerNativeMathFunctions(environment)
 	registerNativeMiscFunctions(environment)
+	registerNativeOptionsInfoFunctions(environment)
 	registerNativeStringsFunctions(environment)
 	registerNativeVariableHandlingFunctions(environment)
 
 	environment.nativeFunctions["array_key_exits"] = nativeFn_array_key_exists
 	environment.nativeFunctions["error_reporting"] = nativeFn_error_reporting
-	environment.nativeFunctions["getenv"] = nativeFn_getenv
-	environment.nativeFunctions["ini_get"] = nativeFn_ini_get
 	environment.nativeFunctions["key_exits"] = nativeFn_array_key_exists
 }
 
@@ -109,56 +109,7 @@ func nativeFn_error_reporting(args []IRuntimeValue, interpreter *Interpreter) (I
 	}
 
 	previous := interpreter.ini.GetInt("error_reporting")
-	interpreter.ini.Set("error_reporting", strconv.FormatInt(newValue, 10))
+	interpreter.ini.Set("error_reporting", strconv.FormatInt(newValue, 10), ini.INI_USER)
 
 	return NewIntegerRuntimeValue(previous), nil
-}
-
-// ------------------- MARK: getenv -------------------
-
-func nativeFn_getenv(args []IRuntimeValue, interpreter *Interpreter) (IRuntimeValue, phpError.Error) {
-	// Spec: https://www.php.net/manual/en/function.getenv.php
-
-	//  getenv(?string $name = null, bool $local_only = false): string|array|false
-
-	// Returns the value of the environment variable name, or false if the environment variable name does not exist.
-	// If name is null, all environment variables are returned as an associative array.
-
-	// TODO getenv - add support for $local_only
-	args, err := NewFuncParamValidator("getenv").addParam("$name", []string{"string"}, NewNullRuntimeValue()).validate(args)
-	if err != nil {
-		return NewVoidRuntimeValue(), err
-	}
-
-	if args[0].GetType() == NullValue {
-		return interpreter.env.lookupVariable("$_ENV")
-	}
-
-	envVars, err := interpreter.env.lookupVariable("$_ENV")
-	if err != nil {
-		return envVars, err
-	}
-	envArray := envVars.(*ArrayRuntimeValue)
-	value, found := envArray.GetElement(args[0])
-	if !found {
-		return NewBooleanRuntimeValue(false), nil
-	}
-	return value, nil
-}
-
-// ------------------- MARK: ini_get -------------------
-
-func nativeFn_ini_get(args []IRuntimeValue, interpreter *Interpreter) (IRuntimeValue, phpError.Error) {
-	// Spec: https://www.php.net/manual/en/function.ini-get
-
-	args, err := NewFuncParamValidator("ini_get").addParam("$option", []string{"string"}, nil).validate(args)
-	if err != nil {
-		return NewVoidRuntimeValue(), err
-	}
-
-	value, iniErr := interpreter.ini.Get(args[0].(*StringRuntimeValue).Value)
-	if iniErr != nil {
-		return NewBooleanRuntimeValue(false), nil
-	}
-	return NewStringRuntimeValue(value), nil
 }

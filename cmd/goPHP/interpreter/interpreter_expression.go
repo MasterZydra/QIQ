@@ -3,6 +3,7 @@ package interpreter
 import (
 	"GoPHP/cmd/goPHP/ast"
 	"GoPHP/cmd/goPHP/common"
+	"GoPHP/cmd/goPHP/ini"
 	"GoPHP/cmd/goPHP/phpError"
 	"strings"
 )
@@ -609,12 +610,12 @@ func (interpreter *Interpreter) ProcessCoalesceExpr(expr *ast.CoalesceExpression
 	// Store current error reporting
 	errorReporting, _ := interpreter.ini.Get("error_reporting")
 	// Suppress all errors
-	interpreter.ini.Set("error_reporting", "0")
+	interpreter.ini.Set("error_reporting", "0", ini.INI_ALL)
 
 	cond, err := interpreter.processStmt(expr.Cond, env)
 
 	// Restore previous error reporting
-	interpreter.ini.Set("error_reporting", errorReporting)
+	interpreter.ini.Set("error_reporting", errorReporting, ini.INI_ALL)
 
 	if err != nil {
 		return cond, err

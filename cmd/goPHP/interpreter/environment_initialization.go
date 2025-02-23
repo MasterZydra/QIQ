@@ -264,4 +264,10 @@ func registerPredefinedConstants(environment *Environment) {
 	environment.predefinedConstants["E_DEPRECATED"] = NewIntegerRuntimeValue(phpError.E_DEPRECATED)
 	environment.predefinedConstants["E_USER_DEPRECATED"] = NewIntegerRuntimeValue(phpError.E_USER_DEPRECATED)
 	environment.predefinedConstants["E_ALL"] = NewIntegerRuntimeValue(phpError.E_ALL)
+
+	// Spec: https://www.php.net/manual/en/info.constants.php
+	environment.predefinedConstants["INI_USER"] = NewIntegerRuntimeValue(int64(ini.INI_USER))
+	environment.predefinedConstants["INI_PERDIR"] = NewIntegerRuntimeValue(int64(ini.INI_PERDIR))
+	environment.predefinedConstants["INI_SYSTEM"] = NewIntegerRuntimeValue(int64(ini.INI_SYSTEM))
+	environment.predefinedConstants["INI_ALL"] = NewIntegerRuntimeValue(int64(ini.INI_ALL))
 }
