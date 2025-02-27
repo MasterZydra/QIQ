@@ -12,6 +12,7 @@ func registerNativeFunctions(environment *Environment) {
 	registerNativeMathFunctions(environment)
 	registerNativeMiscFunctions(environment)
 	registerNativeOptionsInfoFunctions(environment)
+	registerNativeOutputControlFunctions(environment)
 	registerNativeStringsFunctions(environment)
 	registerNativeVariableHandlingFunctions(environment)
 

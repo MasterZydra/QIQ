@@ -21,7 +21,11 @@ func printDev(str string) {
 }
 
 func (interpreter *Interpreter) print(str string) {
-	interpreter.result += str
+	if len(interpreter.outputBuffers) > 0 {
+		interpreter.outputBuffers[len(interpreter.outputBuffers)-1].Content += str
+	} else {
+		interpreter.result += str
+	}
 }
 
 var PHP_EOL string = getPhpEol()

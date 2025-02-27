@@ -16,6 +16,7 @@ type Interpreter struct {
 	parser             *parser.Parser
 	env                *Environment
 	cache              map[int64]IRuntimeValue
+	outputBuffers      []*OutputBuffer
 	result             string
 	resultRuntimeValue IRuntimeValue
 	exitCode           int64
@@ -27,7 +28,8 @@ func NewInterpreter(ini *ini.Ini, request *Request, filename string) *Interprete
 	interpreter := &Interpreter{
 		filename: filename, includedFiles: []string{}, ini: ini, request: request, parser: parser.NewParser(ini),
 		env: NewEnvironment(nil, request, ini), cache: map[int64]IRuntimeValue{},
-		exitCode: 0,
+		outputBuffers: []*OutputBuffer{},
+		exitCode:      0,
 	}
 
 	if ini.GetBool("register_argc_argv") {

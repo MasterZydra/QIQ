@@ -174,6 +174,17 @@
 - constant
 - defined
 
+### Output control
+- ob_clean
+- ob_flush
+- ob_end_clean
+- ob_end_flush
+- ob_get_clean
+- ob_get_flush
+- ob_get_contents
+- ob_get_level
+- ob_start
+
 ### Strings
 - bin2hex
 - chr
