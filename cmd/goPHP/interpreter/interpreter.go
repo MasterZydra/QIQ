@@ -80,6 +80,8 @@ func (interpreter *Interpreter) processProgram(program *ast.Program, env *Enviro
 		return NewVoidRuntimeValue(), err
 	}
 
+	defer interpreter.flushOutputBuffers()
+
 	var runtimeValue IRuntimeValue = NewVoidRuntimeValue()
 	for _, stmt := range program.GetStatements() {
 		if runtimeValue, err = interpreter.processStmt(stmt, env); err != nil {

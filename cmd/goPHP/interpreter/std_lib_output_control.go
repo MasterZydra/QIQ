@@ -19,6 +19,11 @@ func registerNativeOutputControlFunctions(environment *Environment) {
 func nativeFn_ob_clean(args []IRuntimeValue, interpreter *Interpreter) (IRuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.ob-clean.php
 
+	_, err := NewFuncParamValidator("ob_clean").validate(args)
+	if err != nil {
+		return NewVoidRuntimeValue(), err
+	}
+
 	// TODO Call output handler
 	// Spec: https://www.php.net/manual/en/function.ob-clean.php
 	// This function calls the output handler (with the PHP_OUTPUT_HANDLER_CLEAN flag),
@@ -39,6 +44,11 @@ func nativeFn_ob_clean(args []IRuntimeValue, interpreter *Interpreter) (IRuntime
 func nativeFn_ob_flush(args []IRuntimeValue, interpreter *Interpreter) (IRuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.ob-flush.php
 
+	_, err := NewFuncParamValidator("ob_flush").validate(args)
+	if err != nil {
+		return NewVoidRuntimeValue(), err
+	}
+
 	// TODO Call output handler
 	// Spec: https://www.php.net/manual/en/function.ob-flush.php
 	// This function calls the output handler (with the PHP_OUTPUT_HANDLER_FLUSH flag),
@@ -50,7 +60,12 @@ func nativeFn_ob_flush(args []IRuntimeValue, interpreter *Interpreter) (IRuntime
 		return NewBooleanRuntimeValue(false), nil
 	}
 
-	interpreter.result += interpreter.outputBuffers[len(interpreter.outputBuffers)-1].Content
+	if len(interpreter.outputBuffers) == 1 {
+		interpreter.result += interpreter.outputBuffers[len(interpreter.outputBuffers)-1].Content
+	} else {
+		interpreter.outputBuffers[len(interpreter.outputBuffers)-2].Content = interpreter.outputBuffers[len(interpreter.outputBuffers)-1].Content
+	}
+
 	nativeFn_ob_clean(args, interpreter)
 	return NewBooleanRuntimeValue(true), nil
 }
@@ -59,6 +74,11 @@ func nativeFn_ob_flush(args []IRuntimeValue, interpreter *Interpreter) (IRuntime
 
 func nativeFn_ob_end_clean(args []IRuntimeValue, interpreter *Interpreter) (IRuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.ob-end-clean.php
+
+	_, err := NewFuncParamValidator("ob_end_clean").validate(args)
+	if err != nil {
+		return NewVoidRuntimeValue(), err
+	}
 
 	// TODO Call output handler
 	// Spec: https://www.php.net/manual/en/function.ob-end-clean.php
@@ -80,6 +100,11 @@ func nativeFn_ob_end_clean(args []IRuntimeValue, interpreter *Interpreter) (IRun
 func nativeFn_ob_end_flush(args []IRuntimeValue, interpreter *Interpreter) (IRuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.ob-end-flush.php
 
+	_, err := NewFuncParamValidator("ob_end_flush").validate(args)
+	if err != nil {
+		return NewVoidRuntimeValue(), err
+	}
+
 	// TODO Call output handler
 	// Spec: https://www.php.net/manual/en/function.ob-end-flush.php
 	// This function calls the output handler (with the PHP_OUTPUT_HANDLER_FINAL flag),
@@ -91,7 +116,7 @@ func nativeFn_ob_end_flush(args []IRuntimeValue, interpreter *Interpreter) (IRun
 		return NewBooleanRuntimeValue(false), nil
 	}
 
-	interpreter.result += interpreter.outputBuffers[len(interpreter.outputBuffers)-1].Content
+	nativeFn_ob_flush(args, interpreter)
 	nativeFn_ob_end_clean(args, interpreter)
 	return NewBooleanRuntimeValue(true), nil
 }
@@ -100,6 +125,11 @@ func nativeFn_ob_end_flush(args []IRuntimeValue, interpreter *Interpreter) (IRun
 
 func nativeFn_ob_get_clean(args []IRuntimeValue, interpreter *Interpreter) (IRuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.ob-get-clean.php
+
+	_, err := NewFuncParamValidator("ob_get_clean").validate(args)
+	if err != nil {
+		return NewVoidRuntimeValue(), err
+	}
 
 	// TODO Call output handler
 	// Spec: https://www.php.net/manual/en/function.ob-get-clean.php
@@ -122,6 +152,11 @@ func nativeFn_ob_get_clean(args []IRuntimeValue, interpreter *Interpreter) (IRun
 func nativeFn_ob_get_flush(args []IRuntimeValue, interpreter *Interpreter) (IRuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.ob-get-flush.php
 
+	_, err := NewFuncParamValidator("ob_get_flush").validate(args)
+	if err != nil {
+		return NewVoidRuntimeValue(), err
+	}
+
 	// TODO Call output handler
 	// Spec: https://www.php.net/manual/en/function.ob-get-flush.php
 	// This function calls the output handler (with the PHP_OUTPUT_HANDLER_FINAL flag),
@@ -143,6 +178,11 @@ func nativeFn_ob_get_flush(args []IRuntimeValue, interpreter *Interpreter) (IRun
 func nativeFn_ob_get_contents(args []IRuntimeValue, interpreter *Interpreter) (IRuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.ob-get-contents.php
 
+	_, err := NewFuncParamValidator("nativeFn_ob_get_contents").validate(args)
+	if err != nil {
+		return NewVoidRuntimeValue(), err
+	}
+
 	if len(interpreter.outputBuffers) == 0 {
 		return NewBooleanRuntimeValue(false), nil
 	}
@@ -155,6 +195,11 @@ func nativeFn_ob_get_contents(args []IRuntimeValue, interpreter *Interpreter) (I
 func nativeFn_ob_get_level(args []IRuntimeValue, interpreter *Interpreter) (IRuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.ob-get-level.php
 
+	_, err := NewFuncParamValidator("ob_get_level").validate(args)
+	if err != nil {
+		return NewVoidRuntimeValue(), err
+	}
+
 	return NewIntegerRuntimeValue(int64(len(interpreter.outputBuffers))), nil
 }
 
@@ -162,6 +207,11 @@ func nativeFn_ob_get_level(args []IRuntimeValue, interpreter *Interpreter) (IRun
 
 func nativeFn_ob_start(args []IRuntimeValue, interpreter *Interpreter) (IRuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.ob-start
+
+	_, err := NewFuncParamValidator("ob_start").validate(args)
+	if err != nil {
+		return NewVoidRuntimeValue(), err
+	}
 
 	// TODO ob_start parameters
 	//  ob_start(?callable $callback = null, int $chunk_size = 0, int $flags = PHP_OUTPUT_HANDLER_STDFLAGS): bool

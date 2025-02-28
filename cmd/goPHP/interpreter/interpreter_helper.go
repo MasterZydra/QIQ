@@ -28,6 +28,16 @@ func (interpreter *Interpreter) print(str string) {
 	}
 }
 
+func (interpreter *Interpreter) flushOutputBuffers() {
+	if len(interpreter.outputBuffers) == 0 {
+		return
+	}
+
+	for len(interpreter.outputBuffers) > 0 {
+		nativeFn_ob_end_flush([]IRuntimeValue{}, interpreter)
+	}
+}
+
 var PHP_EOL string = getPhpEol()
 
 func getPhpEol() string {

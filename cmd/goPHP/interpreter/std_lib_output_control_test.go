@@ -11,3 +11,25 @@ package interpreter
 // TODO tests for ob_start
 
 // TODO test ob_start without explicit closing -> automatically closing and flushing
+
+/*
+<?php
+echo 0;
+    ob_start();
+        ob_start();
+            ob_start();
+                ob_start();
+                    echo 1;
+                ob_end_flush();
+                echo 2;
+            $ob = ob_get_clean();
+        echo 3;
+        ob_flush();
+        ob_end_clean();
+    echo 4;
+    ob_end_flush();
+echo '-' . $ob;
+?>
+--EXPECT--
+034-12
+*/
