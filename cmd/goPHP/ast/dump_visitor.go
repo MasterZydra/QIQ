@@ -140,6 +140,14 @@ func (visitor DumpVisitor) ProcessEqualityExpr(stmt *EqualityExpression, _ any) 
 	), nil
 }
 
+// ProcessErrorControlExpr implements Visitor.
+func (visitor DumpVisitor) ProcessErrorControlExpr(stmt *ErrorControlExpression, _ any) (any, error) {
+	return fmt.Sprintf(
+		"{%s - expr: %s }",
+		stmt.GetKind(), ToString(stmt.Expr),
+	), nil
+}
+
 // ProcessEvalIntrinsicExpr implements Visitor.
 func (visitor DumpVisitor) ProcessEvalIntrinsicExpr(stmt *EvalIntrinsicExpression, _ any) (any, error) {
 	return fmt.Sprintf(

@@ -27,6 +27,7 @@ type Visitor interface {
 	ProcessConstantAccessExpr(stmt *ConstantAccessExpression, context any) (any, error)
 	ProcessEmptyIntrinsicExpr(stmt *EmptyIntrinsicExpression, context any) (any, error)
 	ProcessEqualityExpr(stmt *EqualityExpression, context any) (any, error)
+	ProcessErrorControlExpr(stmt *ErrorControlExpression, context any) (any, error)
 	ProcessEvalIntrinsicExpr(stmt *EvalIntrinsicExpression, context any) (any, error)
 	ProcessExitIntrinsicExpr(stmt *ExitIntrinsicExpression, context any) (any, error)
 	ProcessExpr(stmt *Expression, context any) (any, error)

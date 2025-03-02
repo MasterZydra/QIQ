@@ -58,6 +58,21 @@ func (stmt *ParenthesizedExpression) Process(visitor Visitor, context any) (any,
 	return visitor.ProcessParenthesizedExpr(stmt, context)
 }
 
+// ------------------- MARK: ErrorControlExpression -------------------
+
+type ErrorControlExpression struct {
+	*Expression
+	Expr IExpression
+}
+
+func NewErrorControlExpr(id int64, pos *position.Position, expr IExpression) *ErrorControlExpression {
+	return &ErrorControlExpression{Expression: NewExpr(id, ErrorControlExpr, pos), Expr: expr}
+}
+
+func (stmt *ErrorControlExpression) Process(visitor Visitor, context any) (any, error) {
+	return visitor.ProcessErrorControlExpr(stmt, context)
+}
+
 // ------------------- MARK: PrintExpression -------------------
 
 type PrintExpression struct {

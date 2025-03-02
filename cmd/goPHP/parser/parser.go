@@ -1553,6 +1553,7 @@ func (parser *Parser) parseInstanceofExpr() (ast.IExpression, phpError.Error) {
 	//    instanceof-expression
 
 	// TODO instanceof-expression
+
 	return parser.parseUnaryExpr()
 }
 
@@ -1589,7 +1590,22 @@ func (parser *Parser) parseUnaryExpr() (ast.IExpression, phpError.Error) {
 		return ast.NewUnaryOpExpr(parser.nextId(), pos, operator, expr), nil
 	}
 
-	// TODO error-control-expression
+	// ------------------- MARK: error-control-expression -------------------
+
+	// Spec: https://phplang.org/spec/10-expressions.html#error-control-operator
+
+	// error-control-expression:
+	//    @   unary-expression
+
+	if parser.isToken(lexer.OpOrPuncToken, "@", false) {
+		PrintParserCallstack("error-control-expression", parser)
+		pos := parser.eat().Position
+		expr, err := parser.parseUnaryExpr()
+		if err != nil {
+			return ast.NewEmptyExpr(), err
+		}
+		return ast.NewErrorControlExpr(parser.nextId(), pos, expr), nil
+	}
 
 	// cast-expression
 

@@ -342,7 +342,7 @@ func (lexer *Lexer) tokenizeToken() error {
 			return nil
 		}
 
-		return fmt.Errorf("Uncaught char '%s'", lexer.at())
+		return fmt.Errorf("Uncaught char '%s' at %s:%d:%d", lexer.at(), lexer.filename, lexer.currPos.CurrLine, lexer.currPos.CurrCol)
 	}
 
 	return nil
@@ -749,7 +749,7 @@ func (lexer *Lexer) getOperatorOrPunctuator(eat bool) string {
 	//    $   /   %   <<   >>   <   >   <=   >=   ==   ===   !=   !==   ^   |
 	//    &   &&   ||   ?   :   ;   =   **=   *=   /=   %=   +=   -=   .=   <<=
 	//    >>=   &=   ^=   |=   ,   ??   <=>   ...   \
-	// Spec-Fix: =>
+	// Spec-Fix: =>   @
 
 	if op := lexer.nextN(3); slices.Contains([]string{"===", "!==", "**=", "<<=", ">>=", "<=>", "..."}, op) {
 		if eat {
@@ -770,6 +770,7 @@ func (lexer *Lexer) getOperatorOrPunctuator(eat bool) string {
 	if op := lexer.at(); slices.Contains([]string{
 		"[", "]", "(", ")", "{", "}", ".", "*", "+", "-", "~", "!", "$",
 		"/", "%", "<", ">", "^", "|", "&", "?", ":", ";", "=", ",", "\\",
+		"@",
 	}, op) {
 		if eat {
 			lexer.eat()
