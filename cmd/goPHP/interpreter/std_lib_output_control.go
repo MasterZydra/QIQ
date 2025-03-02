@@ -63,7 +63,7 @@ func nativeFn_ob_flush(args []IRuntimeValue, interpreter *Interpreter) (IRuntime
 	if len(interpreter.outputBuffers) == 1 {
 		interpreter.result += interpreter.outputBuffers[len(interpreter.outputBuffers)-1].Content
 	} else {
-		interpreter.outputBuffers[len(interpreter.outputBuffers)-2].Content = interpreter.outputBuffers[len(interpreter.outputBuffers)-1].Content
+		interpreter.outputBuffers[len(interpreter.outputBuffers)-2].Content += interpreter.outputBuffers[len(interpreter.outputBuffers)-1].Content
 	}
 
 	nativeFn_ob_clean(args, interpreter)
