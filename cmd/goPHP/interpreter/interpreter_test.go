@@ -194,6 +194,21 @@ func TestVariable(t *testing.T) {
 	testForError(t, `<?php ($a) = 42;`,
 		phpError.NewParseError(`Statement must end with a semicolon. Got: "=" at %s:1:12`, TEST_FILE_NAME),
 	)
+
+	// Global declaration
+	testInputOutput(t,
+		`<?php
+			$foo = 42;
+			function f() {
+				$foo = "abc";
+				var_dump($foo);
+				global $foo;
+				var_dump($foo);
+				$foo = 12;
+			}
+			f();
+			var_dump($foo);`,
+		"string(3) \"abc\"\nint(42)\nint(12)\n")
 }
 
 func TestConditionals(t *testing.T) {

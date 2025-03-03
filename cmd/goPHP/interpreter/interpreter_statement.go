@@ -262,3 +262,15 @@ func (interpreter *Interpreter) ProcessDoStmt(stmt *ast.DoStatement, env any) (a
 	}
 	return NewVoidRuntimeValue(), nil
 }
+
+// ProcessGlobalDeclarationStmt implements Visitor.
+func (interpreter *Interpreter) ProcessGlobalDeclarationStmt(stmt *ast.GlobalDeclarationStatement, env any) (any, error) {
+	for _, variable := range stmt.Variables {
+		variableName, err := interpreter.varExprToVarName(variable, env.(*Environment))
+		if err != nil {
+			return NewVoidRuntimeValue(), err
+		}
+		env.(*Environment).addGlobalVariable(variableName)
+	}
+	return NewVoidRuntimeValue(), nil
+}

@@ -55,6 +55,7 @@
 - return statement: `return 42;`
 - require(_once), include(_once): `require 'lib.php';`
 - error control expression: `@fn();`
+- global declaration: `global $var;`
 
 ## Data types
 - array

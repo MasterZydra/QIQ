@@ -239,3 +239,18 @@ func NewReturnStmt(id int64, pos *position.Position, expr IExpression) *ReturnSt
 func (stmt *ReturnStatement) Process(visitor Visitor, context any) (any, error) {
 	return visitor.ProcessReturnStmt(stmt, context)
 }
+
+// ------------------- MARK: GlobalDeclarationStatement -------------------
+
+type GlobalDeclarationStatement struct {
+	*Statement
+	Variables []IExpression
+}
+
+func NewGlobalDeclarationStmt(id int64, pos *position.Position, variables []IExpression) *GlobalDeclarationStatement {
+	return &GlobalDeclarationStatement{Statement: NewStmt(id, GlobalDeclarationStmt, pos), Variables: variables}
+}
+
+func (stmt *GlobalDeclarationStatement) Process(visitor Visitor, context any) (any, error) {
+	return visitor.ProcessGlobalDeclarationStmt(stmt, context)
+}

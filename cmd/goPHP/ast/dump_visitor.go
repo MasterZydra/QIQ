@@ -202,6 +202,13 @@ func (visitor DumpVisitor) ProcessFunctionDefinitionStmt(stmt *FunctionDefinitio
 	), nil
 }
 
+// ProcessGlobalDeclarationStmt implements Visitor.
+func (visitor DumpVisitor) ProcessGlobalDeclarationStmt(stmt *GlobalDeclarationStatement, _ any) (any, error) {
+	return fmt.Sprintf("{%s - variables: %s}",
+		stmt.GetKind(), dumpExpressions(stmt.Variables),
+	), nil
+}
+
 // ProcessIfStmt implements Visitor.
 func (visitor DumpVisitor) ProcessIfStmt(stmt *IfStatement, _ any) (any, error) {
 	elseIf := "{"

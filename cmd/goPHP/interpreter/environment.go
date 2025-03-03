@@ -4,14 +4,16 @@ import (
 	"GoPHP/cmd/goPHP/ast"
 	"GoPHP/cmd/goPHP/ini"
 	"GoPHP/cmd/goPHP/phpError"
+	"slices"
 	"strings"
 )
 
 type Environment struct {
-	parent    *Environment
-	variables map[string]IRuntimeValue
-	constants map[string]IRuntimeValue
-	functions map[string]*ast.FunctionDefinitionStatement
+	parent          *Environment
+	globalVariables []string
+	variables       map[string]IRuntimeValue
+	constants       map[string]IRuntimeValue
+	functions       map[string]*ast.FunctionDefinitionStatement
 	// StdLib
 	predefinedVariables map[string]IRuntimeValue
 	predefinedConstants map[string]IRuntimeValue
@@ -44,8 +46,11 @@ func NewEnvironment(parentEnv *Environment, request *Request, ini *ini.Ini) *Env
 // ------------------- MARK: Variables -------------------
 
 func (env *Environment) declareVariable(variableName string, value IRuntimeValue) (IRuntimeValue, phpError.Error) {
-	env.variables[variableName] = deepCopy(value)
+	if slices.Contains(env.globalVariables, variableName) {
+		return env.parent.declareVariable(variableName, value)
+	}
 
+	env.variables[variableName] = deepCopy(value)
 	return value, nil
 }
 
@@ -63,14 +68,23 @@ func (env *Environment) resolvePredefinedVariable(variableName string) (*Environ
 
 func (env *Environment) resolveVariable(variableName string) (*Environment, phpError.Error) {
 	environment, err := env.resolvePredefinedVariable(variableName)
-	if err != nil {
-		if _, ok := env.variables[variableName]; ok {
-			return env, nil
-		} else {
-			return nil, err
-		}
+	if err == nil {
+		return environment, nil
 	}
-	return environment, nil
+
+	if slices.Contains(env.globalVariables, variableName) {
+		rootEnv := env
+		for rootEnv.parent != nil {
+			rootEnv = rootEnv.parent
+		}
+		return rootEnv, nil
+	}
+
+	if _, ok := env.variables[variableName]; ok {
+		return env, nil
+	}
+
+	return nil, err
 }
 
 func (env *Environment) lookupVariable(variableName string) (IRuntimeValue, phpError.Error) {
@@ -80,6 +94,13 @@ func (env *Environment) lookupVariable(variableName string) (IRuntimeValue, phpE
 	}
 	if value, ok := environment.predefinedVariables[variableName]; ok {
 		return value, nil
+	}
+	if slices.Contains(env.globalVariables, variableName) {
+		value, ok := environment.variables[variableName]
+		if ok {
+			return value, nil
+		}
+		return NewNullRuntimeValue(), nil
 	}
 	if value, ok := environment.variables[variableName]; ok {
 		return value, nil
@@ -93,6 +114,16 @@ func (env *Environment) unsetVariable(variableName string) {
 		return
 	}
 	delete(environment.variables, variableName)
+}
+
+func (env *Environment) addGlobalVariable(variableName string) {
+	if env.parent == nil {
+		return
+	}
+	if slices.Contains(env.globalVariables, variableName) {
+		return
+	}
+	env.globalVariables = append(env.globalVariables, variableName)
 }
 
 // ------------------- MARK: Constants -------------------

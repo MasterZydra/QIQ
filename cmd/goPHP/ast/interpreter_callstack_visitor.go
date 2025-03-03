@@ -142,7 +142,7 @@ func (visitor InterpreterCallStackVisitor) ProcessEmptyIntrinsicExpr(stmt *Empty
 // ProcessEqualityExpr implements Visitor.
 func (visitor InterpreterCallStackVisitor) ProcessEqualityExpr(stmt *EqualityExpression, _ any) (any, error) {
 	return fmt.Sprintf(
-		"{%s - lhs: %s, operator: \"%s\", rhs: %s, pos: %s }",
+		"{%s - lhs: %s, operator: \"%s\", rhs: %s, pos: %s}",
 		stmt.GetKind(), ToString(stmt.Lhs), stmt.Operator, ToString(stmt.Rhs), stmt.GetPosition().ToPosString(),
 	), nil
 }
@@ -150,7 +150,7 @@ func (visitor InterpreterCallStackVisitor) ProcessEqualityExpr(stmt *EqualityExp
 // ProcessErrorControlExpr implements Visitor.
 func (visitor InterpreterCallStackVisitor) ProcessErrorControlExpr(stmt *ErrorControlExpression, _ any) (any, error) {
 	return fmt.Sprintf(
-		"{%s - expr: %s, pos: %s }",
+		"{%s - expr: %s, pos: %s}",
 		stmt.GetKind(), ToString(stmt.Expr), stmt.GetPosition().ToPosString(),
 	), nil
 }
@@ -206,6 +206,13 @@ func (visitor InterpreterCallStackVisitor) ProcessFunctionCallExpr(stmt *Functio
 func (visitor InterpreterCallStackVisitor) ProcessFunctionDefinitionStmt(stmt *FunctionDefinitionStatement, _ any) (any, error) {
 	return fmt.Sprintf("{%s - name: %s, params: %s, body: %s, returnType: %s, pos: %s}",
 		stmt.GetKind(), stmt.FunctionName, stmt.Params, ToString(stmt.Body), stmt.ReturnType, stmt.GetPosition().ToPosString(),
+	), nil
+}
+
+// ProcessGlobalDeclarationStmt implements Visitor.
+func (visitor InterpreterCallStackVisitor) ProcessGlobalDeclarationStmt(stmt *GlobalDeclarationStatement, _ any) (any, error) {
+	return fmt.Sprintf("{%s - variables: %s, pos: %s}",
+		stmt.GetKind(), dumpExpressions(stmt.Variables), stmt.GetPosition().ToPosString(),
 	), nil
 }
 

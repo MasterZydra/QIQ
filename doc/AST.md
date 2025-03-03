@@ -20,6 +20,7 @@ classDiagram
   Statement <|-- NamespaceDefinition
   Statement <|-- NamespaceUseDeclaration
   Statement <|-- GlobalDeclaration
+  GlobalDeclaration <|-- SimpleAssignmentExpression
   Statement <|-- FunctionStaticDeclaration
 
   ExpressionStatement <|-- Expression

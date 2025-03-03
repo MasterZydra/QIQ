@@ -275,3 +275,18 @@ func TestIntrinsic(t *testing.T) {
 		ast.NewUnsetIntrinsic(0, nil, []ast.IExpression{ast.NewSimpleVariableExpr(0, ast.NewVariableNameExpr(0, nil, "$a"))}),
 	)
 }
+
+func TestErrorControlExpression(t *testing.T) {
+	testExpr(t, `<?php @func();`,
+		ast.NewErrorControlExpr(0, nil, ast.NewFunctionCallExpr(0, nil, ast.NewStringLiteralExpr(0, nil, "func", ast.SingleQuotedString), []ast.IExpression{})),
+	)
+}
+
+func TestGlobalDeclaration(t *testing.T) {
+	testStmt(t, `<?php global $foo, $bar;`,
+		ast.NewGlobalDeclarationStmt(0, nil, []ast.IExpression{
+			ast.NewSimpleVariableExpr(0, ast.NewVariableNameExpr(0, nil, "$foo")),
+			ast.NewSimpleVariableExpr(0, ast.NewVariableNameExpr(0, nil, "$bar")),
+		}),
+	)
+}

@@ -6,6 +6,7 @@ type Visitor interface {
 	ProcessCompoundStmt(stmt *CompoundStatement, context any) (any, error)
 	ProcessConstDeclarationStmt(stmt *ConstDeclarationStatement, context any) (any, error)
 	ProcessContinueStmt(stmt *ContinueStatement, context any) (any, error)
+	ProcessGlobalDeclarationStmt(stmt *GlobalDeclarationStatement, context any) (any, error)
 	ProcessDoStmt(stmt *DoStatement, context any) (any, error)
 	ProcessEchoStmt(stmt *EchoStatement, context any) (any, error)
 	ProcessExpressionStmt(stmt *ExpressionStatement, context any) (any, error)

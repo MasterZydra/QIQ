@@ -299,7 +299,51 @@ func (parser *Parser) parseStmt() (ast.IStatement, phpError.Error) {
 	// TODO trait-declaration
 	// TODO namespace-definition
 	// TODO namespace-use-declaration
-	// TODO global-declaration
+
+	// ------------------- MARK: global-declaration -------------------
+
+	// Spec: https://phplang.org/spec/07-variables.html#grammar-global-declaration
+
+	// global-declaration:
+	//    global   variable-name-list   ;
+
+	// variable-name-list:
+	//    simple-variable
+	//    variable-name-list   ,   simple-variable
+
+	if parser.isToken(lexer.KeywordToken, "global", false) {
+		PrintParserCallstack("global-declaration-statement", parser)
+		pos := parser.eat().Position
+		variables := []ast.IExpression{}
+
+		for {
+			variable, err := parser.parsePrimaryExpr()
+			if err != nil {
+				return ast.NewEmptyStmt(), err
+			}
+			if variable.GetKind() != ast.SimpleVariableExpr {
+				return ast.NewEmptyStmt(), phpError.NewParseError("Global declaration expected a simple variable but got %s at %s", variable.GetKind(), variable.GetPosition().ToPosString())
+			}
+
+			variables = append(variables, variable)
+
+			if parser.isToken(lexer.OpOrPuncToken, ";", false) {
+				break
+			}
+			if parser.isToken(lexer.OpOrPuncToken, ",", true) {
+				continue
+			}
+
+			return ast.NewEmptyStmt(), phpError.NewParseError("Global declaration - expected \";\" or \"$\" but got token \"%s\" at %s", parser.at(), pos.ToPosString())
+		}
+
+		if !parser.isToken(lexer.OpOrPuncToken, ";", true) {
+			return ast.NewEmptyStmt(), phpError.NewParseError("Global declaration - unexpected token %s at %s", parser.at(), pos.ToPosString())
+		}
+
+		return ast.NewGlobalDeclarationStmt(parser.nextId(), pos, variables), nil
+	}
+
 	// TODO function-static-declaration
 
 	// ------------------- MARK: expression-statement -------------------

@@ -49,6 +49,7 @@ const (
 	ExpressionStmt         NodeType = "ExpressionStatement"
 	ForStmt                NodeType = "ForStatement"
 	FunctionDefinitionStmt NodeType = "FunctionDefinitionStatement"
+	GlobalDeclarationStmt  NodeType = "GlobalDeclarationStatement"
 	IfStmt                 NodeType = "IfStatement"
 	WhileStmt              NodeType = "WhileStatement"
 	DoStmt                 NodeType = "DoStatement"
