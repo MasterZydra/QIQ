@@ -1,6 +1,9 @@
 package interpreter
 
-import "GoPHP/cmd/goPHP/phpError"
+import (
+	"GoPHP/cmd/goPHP/phpError"
+	"GoPHP/cmd/goPHP/runtime/values"
+)
 
 func registerNativeOutputControlFunctions(environment *Environment) {
 	environment.nativeFunctions["ob_clean"] = nativeFn_ob_clean
@@ -16,12 +19,12 @@ func registerNativeOutputControlFunctions(environment *Environment) {
 
 // ------------------- MARK: ob_clean -------------------
 
-func nativeFn_ob_clean(args []IRuntimeValue, interpreter *Interpreter) (IRuntimeValue, phpError.Error) {
+func nativeFn_ob_clean(args []values.RuntimeValue, interpreter *Interpreter) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.ob-clean.php
 
 	_, err := NewFuncParamValidator("ob_clean").validate(args)
 	if err != nil {
-		return NewVoidRuntimeValue(), err
+		return values.NewVoid(), err
 	}
 
 	// TODO Call output handler
@@ -32,21 +35,21 @@ func nativeFn_ob_clean(args []IRuntimeValue, interpreter *Interpreter) (IRuntime
 	// TODO Throw notice if no buffer: e.g. Notice: ob_clean(): Failed to delete buffer. No buffer to delete in /home/user/scripts/code.php on line 5
 
 	if len(interpreter.outputBuffers) == 0 {
-		return NewBooleanRuntimeValue(false), nil
+		return values.NewBool(false), nil
 	}
 
 	interpreter.outputBuffers[len(interpreter.outputBuffers)-1].Content = ""
-	return NewBooleanRuntimeValue(true), nil
+	return values.NewBool(true), nil
 }
 
 // ------------------- MARK: ob_flush -------------------
 
-func nativeFn_ob_flush(args []IRuntimeValue, interpreter *Interpreter) (IRuntimeValue, phpError.Error) {
+func nativeFn_ob_flush(args []values.RuntimeValue, interpreter *Interpreter) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.ob-flush.php
 
 	_, err := NewFuncParamValidator("ob_flush").validate(args)
 	if err != nil {
-		return NewVoidRuntimeValue(), err
+		return values.NewVoid(), err
 	}
 
 	// TODO Call output handler
@@ -57,7 +60,7 @@ func nativeFn_ob_flush(args []IRuntimeValue, interpreter *Interpreter) (IRuntime
 	// TODO Throw notice if no buffer: e.g. Notice: ob_flush(): Failed to delete buffer. No buffer to delete in /home/user/scripts/code.php on line 5
 
 	if len(interpreter.outputBuffers) == 0 {
-		return NewBooleanRuntimeValue(false), nil
+		return values.NewBool(false), nil
 	}
 
 	if len(interpreter.outputBuffers) == 1 {
@@ -67,17 +70,17 @@ func nativeFn_ob_flush(args []IRuntimeValue, interpreter *Interpreter) (IRuntime
 	}
 
 	nativeFn_ob_clean(args, interpreter)
-	return NewBooleanRuntimeValue(true), nil
+	return values.NewBool(true), nil
 }
 
 // ------------------- MARK: ob_end_clean -------------------
 
-func nativeFn_ob_end_clean(args []IRuntimeValue, interpreter *Interpreter) (IRuntimeValue, phpError.Error) {
+func nativeFn_ob_end_clean(args []values.RuntimeValue, interpreter *Interpreter) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.ob-end-clean.php
 
 	_, err := NewFuncParamValidator("ob_end_clean").validate(args)
 	if err != nil {
-		return NewVoidRuntimeValue(), err
+		return values.NewVoid(), err
 	}
 
 	// TODO Call output handler
@@ -88,21 +91,21 @@ func nativeFn_ob_end_clean(args []IRuntimeValue, interpreter *Interpreter) (IRun
 	// TODO Throw notice if no buffer: e.g. Notice: ob_end_clean(): Failed to delete buffer. No buffer to delete in /home/user/scripts/code.php on line 5
 
 	if len(interpreter.outputBuffers) == 0 {
-		return NewBooleanRuntimeValue(false), nil
+		return values.NewBool(false), nil
 	}
 
 	interpreter.outputBuffers = interpreter.outputBuffers[:len(interpreter.outputBuffers)-1]
-	return NewBooleanRuntimeValue(true), nil
+	return values.NewBool(true), nil
 }
 
 // ------------------- MARK: ob_end_flush -------------------
 
-func nativeFn_ob_end_flush(args []IRuntimeValue, interpreter *Interpreter) (IRuntimeValue, phpError.Error) {
+func nativeFn_ob_end_flush(args []values.RuntimeValue, interpreter *Interpreter) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.ob-end-flush.php
 
 	_, err := NewFuncParamValidator("ob_end_flush").validate(args)
 	if err != nil {
-		return NewVoidRuntimeValue(), err
+		return values.NewVoid(), err
 	}
 
 	// TODO Call output handler
@@ -113,22 +116,22 @@ func nativeFn_ob_end_flush(args []IRuntimeValue, interpreter *Interpreter) (IRun
 	// TODO Throw notice if no buffer: e.g. Notice: ob_end_flush(): Failed to delete buffer. No buffer to delete in /home/user/scripts/code.php on line 5
 
 	if len(interpreter.outputBuffers) == 0 {
-		return NewBooleanRuntimeValue(false), nil
+		return values.NewBool(false), nil
 	}
 
 	nativeFn_ob_flush(args, interpreter)
 	nativeFn_ob_end_clean(args, interpreter)
-	return NewBooleanRuntimeValue(true), nil
+	return values.NewBool(true), nil
 }
 
 // ------------------- MARK: ob_get_clean -------------------
 
-func nativeFn_ob_get_clean(args []IRuntimeValue, interpreter *Interpreter) (IRuntimeValue, phpError.Error) {
+func nativeFn_ob_get_clean(args []values.RuntimeValue, interpreter *Interpreter) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.ob-get-clean.php
 
 	_, err := NewFuncParamValidator("ob_get_clean").validate(args)
 	if err != nil {
-		return NewVoidRuntimeValue(), err
+		return values.NewVoid(), err
 	}
 
 	// TODO Call output handler
@@ -139,22 +142,22 @@ func nativeFn_ob_get_clean(args []IRuntimeValue, interpreter *Interpreter) (IRun
 	// TODO Throw notice if no buffer: e.g. Notice: ob_get_clean(): Failed to delete buffer. No buffer to delete in /home/user/scripts/code.php on line 5
 
 	if len(interpreter.outputBuffers) == 0 {
-		return NewBooleanRuntimeValue(false), nil
+		return values.NewBool(false), nil
 	}
 
 	content := interpreter.outputBuffers[len(interpreter.outputBuffers)-1].Content
 	nativeFn_ob_end_clean(args, interpreter)
-	return NewStringRuntimeValue(content), nil
+	return values.NewStr(content), nil
 }
 
 // ------------------- MARK: ob_get_flush -------------------
 
-func nativeFn_ob_get_flush(args []IRuntimeValue, interpreter *Interpreter) (IRuntimeValue, phpError.Error) {
+func nativeFn_ob_get_flush(args []values.RuntimeValue, interpreter *Interpreter) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.ob-get-flush.php
 
 	_, err := NewFuncParamValidator("ob_get_flush").validate(args)
 	if err != nil {
-		return NewVoidRuntimeValue(), err
+		return values.NewVoid(), err
 	}
 
 	// TODO Call output handler
@@ -165,52 +168,52 @@ func nativeFn_ob_get_flush(args []IRuntimeValue, interpreter *Interpreter) (IRun
 	// TODO Throw notice if no buffer: e.g. Notice: ob_get_flush(): Failed to delete buffer. No buffer to delete in /home/user/scripts/code.php on line 5
 
 	if len(interpreter.outputBuffers) == 0 {
-		return NewBooleanRuntimeValue(false), nil
+		return values.NewBool(false), nil
 	}
 
 	content := interpreter.outputBuffers[len(interpreter.outputBuffers)-1].Content
 	nativeFn_ob_end_flush(args, interpreter)
-	return NewStringRuntimeValue(content), nil
+	return values.NewStr(content), nil
 }
 
 // ------------------- MARK: ob_get_contents -------------------
 
-func nativeFn_ob_get_contents(args []IRuntimeValue, interpreter *Interpreter) (IRuntimeValue, phpError.Error) {
+func nativeFn_ob_get_contents(args []values.RuntimeValue, interpreter *Interpreter) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.ob-get-contents.php
 
 	_, err := NewFuncParamValidator("nativeFn_ob_get_contents").validate(args)
 	if err != nil {
-		return NewVoidRuntimeValue(), err
+		return values.NewVoid(), err
 	}
 
 	if len(interpreter.outputBuffers) == 0 {
-		return NewBooleanRuntimeValue(false), nil
+		return values.NewBool(false), nil
 	}
 
-	return NewStringRuntimeValue(interpreter.outputBuffers[len(interpreter.outputBuffers)-1].Content), nil
+	return values.NewStr(interpreter.outputBuffers[len(interpreter.outputBuffers)-1].Content), nil
 }
 
 // ------------------- MARK: ob_get_level -------------------
 
-func nativeFn_ob_get_level(args []IRuntimeValue, interpreter *Interpreter) (IRuntimeValue, phpError.Error) {
+func nativeFn_ob_get_level(args []values.RuntimeValue, interpreter *Interpreter) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.ob-get-level.php
 
 	_, err := NewFuncParamValidator("ob_get_level").validate(args)
 	if err != nil {
-		return NewVoidRuntimeValue(), err
+		return values.NewVoid(), err
 	}
 
-	return NewIntegerRuntimeValue(int64(len(interpreter.outputBuffers))), nil
+	return values.NewInt(int64(len(interpreter.outputBuffers))), nil
 }
 
 // ------------------- MARK: ob_start -------------------
 
-func nativeFn_ob_start(args []IRuntimeValue, interpreter *Interpreter) (IRuntimeValue, phpError.Error) {
+func nativeFn_ob_start(args []values.RuntimeValue, interpreter *Interpreter) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.ob-start
 
 	_, err := NewFuncParamValidator("ob_start").validate(args)
 	if err != nil {
-		return NewVoidRuntimeValue(), err
+		return values.NewVoid(), err
 	}
 
 	// TODO ob_start parameters
@@ -218,7 +221,7 @@ func nativeFn_ob_start(args []IRuntimeValue, interpreter *Interpreter) (IRuntime
 
 	interpreter.outputBuffers = append(interpreter.outputBuffers, NewOutputBuffer())
 
-	return NewBooleanRuntimeValue(true), nil
+	return values.NewBool(true), nil
 }
 
 // TODO flush

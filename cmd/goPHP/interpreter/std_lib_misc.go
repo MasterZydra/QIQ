@@ -1,6 +1,9 @@
 package interpreter
 
-import "GoPHP/cmd/goPHP/phpError"
+import (
+	"GoPHP/cmd/goPHP/phpError"
+	"GoPHP/cmd/goPHP/runtime/values"
+)
 
 func registerNativeMiscFunctions(environment *Environment) {
 	environment.nativeFunctions["constant"] = nativeFn_constant
@@ -9,17 +12,17 @@ func registerNativeMiscFunctions(environment *Environment) {
 
 // ------------------- MARK: constant -------------------
 
-func nativeFn_constant(args []IRuntimeValue, interpreter *Interpreter) (IRuntimeValue, phpError.Error) {
+func nativeFn_constant(args []values.RuntimeValue, interpreter *Interpreter) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.constant.php
 
 	args, err := NewFuncParamValidator("constant").addParam("$name", []string{"string"}, nil).validate(args)
 	if err != nil {
-		return NewVoidRuntimeValue(), err
+		return values.NewVoid(), err
 	}
 
-	constantValue, err := interpreter.env.lookupConstant(args[0].(*StringRuntimeValue).Value)
+	constantValue, err := interpreter.env.lookupConstant(args[0].(*values.Str).Value)
 	if err != nil {
-		return NewVoidRuntimeValue(), err
+		return values.NewVoid(), err
 	}
 
 	return constantValue, nil
@@ -27,16 +30,16 @@ func nativeFn_constant(args []IRuntimeValue, interpreter *Interpreter) (IRuntime
 
 // ------------------- MARK: defined -------------------
 
-func nativeFn_defined(args []IRuntimeValue, interpreter *Interpreter) (IRuntimeValue, phpError.Error) {
+func nativeFn_defined(args []values.RuntimeValue, interpreter *Interpreter) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.defined.php
 
 	args, err := NewFuncParamValidator("defined").addParam("$name", []string{"string"}, nil).validate(args)
 	if err != nil {
-		return NewVoidRuntimeValue(), err
+		return values.NewVoid(), err
 	}
 
-	_, err = interpreter.env.lookupConstant(args[0].(*StringRuntimeValue).Value)
-	return NewBooleanRuntimeValue(err == nil), nil
+	_, err = interpreter.env.lookupConstant(args[0].(*values.Str).Value)
+	return values.NewBool(err == nil), nil
 }
 
 // TODO connection_​aborted

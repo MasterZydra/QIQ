@@ -4,6 +4,7 @@ import (
 	"GoPHP/cmd/goPHP/ast"
 	"GoPHP/cmd/goPHP/ini"
 	"GoPHP/cmd/goPHP/phpError"
+	"GoPHP/cmd/goPHP/runtime/values"
 	"slices"
 	"strings"
 )
@@ -11,12 +12,12 @@ import (
 type Environment struct {
 	parent          *Environment
 	globalVariables []string
-	variables       map[string]IRuntimeValue
-	constants       map[string]IRuntimeValue
+	variables       map[string]values.RuntimeValue
+	constants       map[string]values.RuntimeValue
 	functions       map[string]*ast.FunctionDefinitionStatement
 	// StdLib
-	predefinedVariables map[string]IRuntimeValue
-	predefinedConstants map[string]IRuntimeValue
+	predefinedVariables map[string]values.RuntimeValue
+	predefinedConstants map[string]values.RuntimeValue
 	nativeFunctions     map[string]nativeFunction
 	// Context
 	CurrentFunction *ast.FunctionDefinitionStatement
@@ -25,12 +26,12 @@ type Environment struct {
 func NewEnvironment(parentEnv *Environment, request *Request, ini *ini.Ini) *Environment {
 	env := &Environment{
 		parent:    parentEnv,
-		variables: map[string]IRuntimeValue{},
-		constants: map[string]IRuntimeValue{},
+		variables: map[string]values.RuntimeValue{},
+		constants: map[string]values.RuntimeValue{},
 		functions: map[string]*ast.FunctionDefinitionStatement{},
 		// StdLib
-		predefinedVariables: map[string]IRuntimeValue{},
-		predefinedConstants: map[string]IRuntimeValue{},
+		predefinedVariables: map[string]values.RuntimeValue{},
+		predefinedConstants: map[string]values.RuntimeValue{},
 		nativeFunctions:     map[string]nativeFunction{},
 	}
 
@@ -45,7 +46,7 @@ func NewEnvironment(parentEnv *Environment, request *Request, ini *ini.Ini) *Env
 
 // ------------------- MARK: Variables -------------------
 
-func (env *Environment) declareVariable(variableName string, value IRuntimeValue) (IRuntimeValue, phpError.Error) {
+func (env *Environment) declareVariable(variableName string, value values.RuntimeValue) (values.RuntimeValue, phpError.Error) {
 	if slices.Contains(env.globalVariables, variableName) {
 		return env.parent.declareVariable(variableName, value)
 	}
@@ -87,10 +88,10 @@ func (env *Environment) resolveVariable(variableName string) (*Environment, phpE
 	return nil, err
 }
 
-func (env *Environment) lookupVariable(variableName string) (IRuntimeValue, phpError.Error) {
+func (env *Environment) lookupVariable(variableName string) (values.RuntimeValue, phpError.Error) {
 	environment, err := env.resolveVariable(variableName)
 	if err != nil {
-		return NewNullRuntimeValue(), err
+		return values.NewNull(), err
 	}
 	if value, ok := environment.predefinedVariables[variableName]; ok {
 		return value, nil
@@ -100,12 +101,12 @@ func (env *Environment) lookupVariable(variableName string) (IRuntimeValue, phpE
 		if ok {
 			return value, nil
 		}
-		return NewNullRuntimeValue(), nil
+		return values.NewNull(), nil
 	}
 	if value, ok := environment.variables[variableName]; ok {
 		return value, nil
 	}
-	return NewNullRuntimeValue(), phpError.NewWarning("Undefined variable %s", variableName)
+	return values.NewNull(), phpError.NewWarning("Undefined variable %s", variableName)
 }
 
 func (env *Environment) unsetVariable(variableName string) {
@@ -128,7 +129,7 @@ func (env *Environment) addGlobalVariable(variableName string) {
 
 // ------------------- MARK: Constants -------------------
 
-func (env *Environment) declareConstant(constantName string, value IRuntimeValue) (IRuntimeValue, phpError.Error) {
+func (env *Environment) declareConstant(constantName string, value values.RuntimeValue) (values.RuntimeValue, phpError.Error) {
 	// Get "global" environment
 	var environment *Environment = env
 	for environment.parent != nil {
@@ -136,7 +137,7 @@ func (env *Environment) declareConstant(constantName string, value IRuntimeValue
 	}
 
 	if _, err := environment.lookupConstant(constantName); err == nil {
-		return NewVoidRuntimeValue(), phpError.NewWarning("Constant %s already defined", constantName)
+		return values.NewVoid(), phpError.NewWarning("Constant %s already defined", constantName)
 	}
 
 	environment.constants[constantName] = value
@@ -144,7 +145,7 @@ func (env *Environment) declareConstant(constantName string, value IRuntimeValue
 	return value, nil
 }
 
-func (env *Environment) lookupConstant(constantName string) (IRuntimeValue, phpError.Error) {
+func (env *Environment) lookupConstant(constantName string) (values.RuntimeValue, phpError.Error) {
 	// Get "global" environment
 	var environment *Environment = env
 	for environment.parent != nil {
@@ -157,7 +158,7 @@ func (env *Environment) lookupConstant(constantName string) (IRuntimeValue, phpE
 	if value, ok := environment.constants[constantName]; ok {
 		return value, nil
 	}
-	return NewVoidRuntimeValue(), phpError.NewError("Undefined constant \"%s\"", constantName)
+	return values.NewVoid(), phpError.NewError("Undefined constant \"%s\"", constantName)
 }
 
 // ------------------- MARK: Native functions -------------------

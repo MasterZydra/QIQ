@@ -2,11 +2,12 @@ package interpreter
 
 import (
 	"GoPHP/cmd/goPHP/ini"
+	"GoPHP/cmd/goPHP/runtime/values"
 	"testing"
 )
 
 func TestParseQuery(t *testing.T) {
-	runTest := func(t *testing.T, input string, expected *ArrayRuntimeValue) {
+	runTest := func(t *testing.T, input string, expected *values.Array) {
 		actual, err := parseQuery(input, ini.NewDefaultIni())
 		if err != nil {
 			t.Errorf("Unexpected error: \"%s\"", err)
@@ -25,46 +26,46 @@ func TestParseQuery(t *testing.T) {
 	// Query with only values without keys
 	runTest(t,
 		"ab+cd+ef",
-		NewArrayRuntimeValueFromMap(map[IRuntimeValue]IRuntimeValue{
-			NewIntegerRuntimeValue(0): NewStringRuntimeValue("ab"),
-			NewIntegerRuntimeValue(1): NewStringRuntimeValue("cd"),
-			NewIntegerRuntimeValue(2): NewStringRuntimeValue("ef"),
+		values.NewArrayFromMap(map[values.RuntimeValue]values.RuntimeValue{
+			values.NewInt(0): values.NewStr("ab"),
+			values.NewInt(1): values.NewStr("cd"),
+			values.NewInt(2): values.NewStr("ef"),
 		}),
 	)
 
 	// Query with only key-value-pairs
 	runTest(t,
 		"b=Hello+Again+World&c=Hi+Mom",
-		NewArrayRuntimeValueFromMap(map[IRuntimeValue]IRuntimeValue{
-			NewStringRuntimeValue("b"): NewStringRuntimeValue("Hello Again World"),
-			NewStringRuntimeValue("c"): NewStringRuntimeValue("Hi Mom"),
+		values.NewArrayFromMap(map[values.RuntimeValue]values.RuntimeValue{
+			values.NewStr("b"): values.NewStr("Hello Again World"),
+			values.NewStr("c"): values.NewStr("Hi Mom"),
 		}),
 	)
 
 	// Query with special characters
 	runTest(t,
 		"a+-_!.%22%C2%A7$/()%=a",
-		NewArrayRuntimeValueFromMap(map[IRuntimeValue]IRuntimeValue{
-			NewStringRuntimeValue(`a_-_!_"§$/()%`): NewStringRuntimeValue("a"),
+		values.NewArrayFromMap(map[values.RuntimeValue]values.RuntimeValue{
+			values.NewStr(`a_-_!_"§$/()%`): values.NewStr("a"),
 		}),
 	)
 	runTest(t,
 		"a[+-_!%22%C2%A7$/()%=a",
-		NewArrayRuntimeValueFromMap(map[IRuntimeValue]IRuntimeValue{
-			NewStringRuntimeValue(`a__-_!"§$/()%`): NewStringRuntimeValue("a"),
+		values.NewArrayFromMap(map[values.RuntimeValue]values.RuntimeValue{
+			values.NewStr(`a__-_!"§$/()%`): values.NewStr("a"),
 		}),
 	)
 	runTest(t,
 		"a]+-_!%22%C2%A7$/()%=a",
-		NewArrayRuntimeValueFromMap(map[IRuntimeValue]IRuntimeValue{
-			NewStringRuntimeValue(`a]_-_!"§$/()%`): NewStringRuntimeValue("a"),
+		values.NewArrayFromMap(map[values.RuntimeValue]values.RuntimeValue{
+			values.NewStr(`a]_-_!"§$/()%`): values.NewStr("a"),
 		}),
 	)
 	runTest(t,
 		"a[+-_!]%22%C2%A7$/()%=a",
-		NewArrayRuntimeValueFromMap(map[IRuntimeValue]IRuntimeValue{
-			NewStringRuntimeValue("a"): NewArrayRuntimeValueFromMap(map[IRuntimeValue]IRuntimeValue{
-				NewStringRuntimeValue(" -_!"): NewStringRuntimeValue("a"),
+		values.NewArrayFromMap(map[values.RuntimeValue]values.RuntimeValue{
+			values.NewStr("a"): values.NewArrayFromMap(map[values.RuntimeValue]values.RuntimeValue{
+				values.NewStr(" -_!"): values.NewStr("a"),
 			}),
 		}),
 	)
@@ -72,47 +73,47 @@ func TestParseQuery(t *testing.T) {
 	// Simple Query with array
 	runTest(t,
 		"123[]=SEGV",
-		NewArrayRuntimeValueFromMap(map[IRuntimeValue]IRuntimeValue{
-			NewIntegerRuntimeValue(123): NewArrayRuntimeValueFromMap(map[IRuntimeValue]IRuntimeValue{
-				NewIntegerRuntimeValue(0): NewStringRuntimeValue("SEGV"),
+		values.NewArrayFromMap(map[values.RuntimeValue]values.RuntimeValue{
+			values.NewInt(123): values.NewArrayFromMap(map[values.RuntimeValue]values.RuntimeValue{
+				values.NewInt(0): values.NewStr("SEGV"),
 			}),
 		}),
 	)
 	// Query with too many closing "]"
 	runTest(t,
 		"123[]]]]]]]]]=SEGV",
-		NewArrayRuntimeValueFromMap(map[IRuntimeValue]IRuntimeValue{
-			NewIntegerRuntimeValue(123): NewArrayRuntimeValueFromMap(map[IRuntimeValue]IRuntimeValue{
-				NewIntegerRuntimeValue(0): NewStringRuntimeValue("SEGV"),
+		values.NewArrayFromMap(map[values.RuntimeValue]values.RuntimeValue{
+			values.NewInt(123): values.NewArrayFromMap(map[values.RuntimeValue]values.RuntimeValue{
+				values.NewInt(0): values.NewStr("SEGV"),
 			}),
 		}),
 	)
 	// Simple Query with array that overwrites old value
 	runTest(t,
 		"a[]=1&a[0]=5",
-		NewArrayRuntimeValueFromMap(map[IRuntimeValue]IRuntimeValue{
-			NewStringRuntimeValue("a"): NewArrayRuntimeValueFromMap(map[IRuntimeValue]IRuntimeValue{
-				NewIntegerRuntimeValue(0): NewStringRuntimeValue("5"),
+		values.NewArrayFromMap(map[values.RuntimeValue]values.RuntimeValue{
+			values.NewStr("a"): values.NewArrayFromMap(map[values.RuntimeValue]values.RuntimeValue{
+				values.NewInt(0): values.NewStr("5"),
 			}),
 		}),
 	)
 	// Complex Query with array
 	runTest(t,
 		"a[][]=1&a[][]=3&b[a][b][c]=1&b[a][b][d]=1",
-		NewArrayRuntimeValueFromMap(map[IRuntimeValue]IRuntimeValue{
-			NewStringRuntimeValue("a"): NewArrayRuntimeValueFromMap(map[IRuntimeValue]IRuntimeValue{
-				NewIntegerRuntimeValue(0): NewArrayRuntimeValueFromMap(map[IRuntimeValue]IRuntimeValue{
-					NewIntegerRuntimeValue(0): NewStringRuntimeValue("1"),
+		values.NewArrayFromMap(map[values.RuntimeValue]values.RuntimeValue{
+			values.NewStr("a"): values.NewArrayFromMap(map[values.RuntimeValue]values.RuntimeValue{
+				values.NewInt(0): values.NewArrayFromMap(map[values.RuntimeValue]values.RuntimeValue{
+					values.NewInt(0): values.NewStr("1"),
 				}),
-				NewIntegerRuntimeValue(1): NewArrayRuntimeValueFromMap(map[IRuntimeValue]IRuntimeValue{
-					NewIntegerRuntimeValue(0): NewStringRuntimeValue("3"),
+				values.NewInt(1): values.NewArrayFromMap(map[values.RuntimeValue]values.RuntimeValue{
+					values.NewInt(0): values.NewStr("3"),
 				}),
 			}),
-			NewStringRuntimeValue("b"): NewArrayRuntimeValueFromMap(map[IRuntimeValue]IRuntimeValue{
-				NewStringRuntimeValue("a"): NewArrayRuntimeValueFromMap(map[IRuntimeValue]IRuntimeValue{
-					NewStringRuntimeValue("b"): NewArrayRuntimeValueFromMap(map[IRuntimeValue]IRuntimeValue{
-						NewStringRuntimeValue("c"): NewStringRuntimeValue("1"),
-						NewStringRuntimeValue("d"): NewStringRuntimeValue("1"),
+			values.NewStr("b"): values.NewArrayFromMap(map[values.RuntimeValue]values.RuntimeValue{
+				values.NewStr("a"): values.NewArrayFromMap(map[values.RuntimeValue]values.RuntimeValue{
+					values.NewStr("b"): values.NewArrayFromMap(map[values.RuntimeValue]values.RuntimeValue{
+						values.NewStr("c"): values.NewStr("1"),
+						values.NewStr("d"): values.NewStr("1"),
 					}),
 				}),
 			}),

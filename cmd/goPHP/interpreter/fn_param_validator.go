@@ -2,6 +2,7 @@ package interpreter
 
 import (
 	"GoPHP/cmd/goPHP/phpError"
+	"GoPHP/cmd/goPHP/runtime/values"
 	"slices"
 	"strings"
 )
@@ -10,7 +11,7 @@ type funcParam struct {
 	name          string
 	paramType     []string
 	isVariableLen bool
-	defaultValue  IRuntimeValue
+	defaultValue  values.RuntimeValue
 }
 
 type funcParamValidator struct {
@@ -23,12 +24,12 @@ func NewFuncParamValidator(funcName string) *funcParamValidator {
 }
 
 // Add parameter value
-func (validator *funcParamValidator) addParam(name string, paramType []string, defaultValue IRuntimeValue) *funcParamValidator {
+func (validator *funcParamValidator) addParam(name string, paramType []string, defaultValue values.RuntimeValue) *funcParamValidator {
 	// Add type of default value to allowed types
 	// e.g. function test(int $a = null) => Allowed types: int|null
 	if defaultValue != nil {
-		defaultValueType, found := paramTypeRuntimeValue[defaultValue.GetType()]
-		if found && !slices.Contains(paramType, defaultValueType) && !slices.Contains(paramType, "mixed") {
+		defaultValueType := values.ToPhpType(defaultValue)
+		if defaultValueType == "" && !slices.Contains(paramType, defaultValueType) && !slices.Contains(paramType, "mixed") {
 			paramType = append(paramType, defaultValueType)
 		}
 	}
@@ -40,17 +41,17 @@ func (validator *funcParamValidator) addParam(name string, paramType []string, d
 // Add parameter with variable length (e.g. "mixed ...$args")
 func (validator *funcParamValidator) addVariableLenParam(name string, paramType []string) *funcParamValidator {
 	validator.params = append(validator.params, funcParam{
-		name: name, paramType: paramType, isVariableLen: true, defaultValue: NewArrayRuntimeValue(),
+		name: name, paramType: paramType, isVariableLen: true, defaultValue: values.NewArray(),
 	})
 	return validator
 }
 
 // Validate the given arguments
-func (validator *funcParamValidator) validate(args []IRuntimeValue) ([]IRuntimeValue, phpError.Error) {
+func (validator *funcParamValidator) validate(args []values.RuntimeValue) ([]values.RuntimeValue, phpError.Error) {
 
-	typeMatches := func(param funcParam, arg IRuntimeValue) bool {
-		typeStr, found := paramTypeRuntimeValue[arg.GetType()]
-		if !found {
+	typeMatches := func(param funcParam, arg values.RuntimeValue) bool {
+		typeStr := values.ToPhpType(arg)
+		if typeStr == "" {
 			return false
 		}
 		return slices.Contains(param.paramType, "mixed") || slices.Contains(param.paramType, typeStr)
@@ -58,7 +59,7 @@ func (validator *funcParamValidator) validate(args []IRuntimeValue) ([]IRuntimeV
 
 	lastArgIndex := 0
 	allArgsValidated := false
-	validatedArgs := []IRuntimeValue{}
+	validatedArgs := []values.RuntimeValue{}
 	for paramIndex, param := range validator.params {
 		lastArgIndex = paramIndex
 		if paramIndex >= len(args) {
@@ -83,8 +84,8 @@ func (validator *funcParamValidator) validate(args []IRuntimeValue) ([]IRuntimeV
 				continue
 			}
 
-			typeStr, found := paramTypeRuntimeValue[arg.GetType()]
-			if !found {
+			typeStr := values.ToPhpType(arg)
+			if typeStr == "" {
 				return args, phpError.NewError("validate: No mapping for type %s", arg.GetType())
 			}
 
@@ -98,17 +99,17 @@ func (validator *funcParamValidator) validate(args []IRuntimeValue) ([]IRuntimeV
 
 		// Variable length parameter
 		argIndex := paramIndex
-		varLenArg := NewArrayRuntimeValue()
+		varLenArg := values.NewArray()
 		for argIndex < len(args) {
 			arg := args[argIndex]
 			if typeMatches(param, arg) {
-				varLenArg.SetElement(NewIntegerRuntimeValue(int64(argIndex-paramIndex)), arg)
+				varLenArg.SetElement(values.NewInt(int64(argIndex-paramIndex)), arg)
 				argIndex++
 				continue
 			}
 
-			typeStr, found := paramTypeRuntimeValue[arg.GetType()]
-			if !found {
+			typeStr := values.ToPhpType(arg)
+			if typeStr == "" {
 				return args, phpError.NewError("validate: No mapping for type %s", arg.GetType())
 			}
 

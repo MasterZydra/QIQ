@@ -3,6 +3,7 @@ package interpreter
 import (
 	"GoPHP/cmd/goPHP/common"
 	"GoPHP/cmd/goPHP/phpError"
+	"GoPHP/cmd/goPHP/runtime/values"
 	"fmt"
 	"math"
 	"strings"
@@ -21,52 +22,52 @@ func registerNativeDateTimeFunctions(environment *Environment) {
 
 // ------------------- MARK: checkdate -------------------
 
-func nativeFn_checkdate(args []IRuntimeValue, _ *Interpreter) (IRuntimeValue, phpError.Error) {
+func nativeFn_checkdate(args []values.RuntimeValue, _ *Interpreter) (values.RuntimeValue, phpError.Error) {
 	args, err := NewFuncParamValidator("checkdate").
 		addParam("$month", []string{"int"}, nil).addParam("$day", []string{"int"}, nil).addParam("$year", []string{"int"}, nil).
 		validate(args)
 	if err != nil {
-		return NewVoidRuntimeValue(), err
+		return values.NewVoid(), err
 	}
 
 	// Spec: https://www.php.net/manual/en/function.checkdate.php
-	year := args[2].(*IntegerRuntimeValue).Value
-	month := args[0].(*IntegerRuntimeValue).Value
-	day := args[1].(*IntegerRuntimeValue).Value
+	year := args[2].(*values.Int).Value
+	month := args[0].(*values.Int).Value
+	day := args[1].(*values.Int).Value
 
 	// Spec: https://www.php.net/manual/en/function.checkdate.php
 	// The year is between 1 and 32767 inclusive.
 	if year < 1 || year > 32767 {
-		return NewBooleanRuntimeValue(false), nil
+		return values.NewBool(false), nil
 	}
 
 	// Spec: https://www.php.net/manual/en/function.checkdate.php
 	// The month is between 1 and 12 inclusive.
 	if month < 1 || month > 12 {
-		return NewBooleanRuntimeValue(false), nil
+		return values.NewBool(false), nil
 	}
 
 	// Spec: https://www.php.net/manual/en/function.checkdate.php
 	// The day is within the allowed number of days for the given month. Leap years are taken into consideration.
-	return NewBooleanRuntimeValue(day >= 1 && day <= int64(common.DaysIn(time.Month(month), int(year)))), nil
+	return values.NewBool(day >= 1 && day <= int64(common.DaysIn(time.Month(month), int(year)))), nil
 }
 
 // ------------------- MARK: date -------------------
 
-func nativeFn_date(args []IRuntimeValue, _ *Interpreter) (IRuntimeValue, phpError.Error) {
+func nativeFn_date(args []values.RuntimeValue, _ *Interpreter) (values.RuntimeValue, phpError.Error) {
 	args, err := NewFuncParamValidator("date").
-		addParam("$format", []string{"string"}, nil).addParam("$timestamp", []string{"int"}, NewNullRuntimeValue()).
+		addParam("$format", []string{"string"}, nil).addParam("$timestamp", []string{"int"}, values.NewNull()).
 		validate(args)
 	if err != nil {
-		return NewVoidRuntimeValue(), err
+		return values.NewVoid(), err
 	}
 
 	timestamp := time.Now()
-	if args[1].GetType() != NullValue {
-		timestamp = time.Unix(args[1].(*IntegerRuntimeValue).Value, 0)
+	if args[1].GetType() != values.NullValue {
+		timestamp = time.Unix(args[1].(*values.Int).Value, 0)
 	}
 
-	format := args[0].(*StringRuntimeValue).Value
+	format := args[0].(*values.Str).Value
 
 	// Spec: https://www.php.net/manual/en/datetime.format.php
 	// Day
@@ -160,7 +161,7 @@ func nativeFn_date(args []IRuntimeValue, _ *Interpreter) (IRuntimeValue, phpErro
 		format = strings.ReplaceAll(format, "H", fmt.Sprintf("%02d", timestamp.Hour()))
 	}
 
-	return NewStringRuntimeValue(format), nil
+	return values.NewStr(format), nil
 
 	// TODO date() missing formats
 	/*
@@ -201,84 +202,84 @@ func nativeFn_date(args []IRuntimeValue, _ *Interpreter) (IRuntimeValue, phpErro
 
 // ------------------- MARK: getdate -------------------
 
-func nativeFn_getdate(args []IRuntimeValue, _ *Interpreter) (IRuntimeValue, phpError.Error) {
-	args, err := NewFuncParamValidator("getdate").addParam("$timestamp", []string{"int"}, NewNullRuntimeValue()).validate(args)
+func nativeFn_getdate(args []values.RuntimeValue, _ *Interpreter) (values.RuntimeValue, phpError.Error) {
+	args, err := NewFuncParamValidator("getdate").addParam("$timestamp", []string{"int"}, values.NewNull()).validate(args)
 	if err != nil {
-		return NewVoidRuntimeValue(), err
+		return values.NewVoid(), err
 	}
 
 	// Spec: https://www.php.net/manual/en/function.getdate.php
 
 	// If timestamp is omitted, use the default value `time()`
-	if args[0].GetType() == NullValue {
+	if args[0].GetType() == values.NullValue {
 		args[0] = lib_time()
 	}
 
-	timestamp := time.Unix(args[0].(*IntegerRuntimeValue).Value, 0)
-	array := NewArrayRuntimeValue()
-	array.SetElement(NewStringRuntimeValue("seconds"), NewIntegerRuntimeValue(int64(timestamp.UTC().Second())))
-	array.SetElement(NewStringRuntimeValue("minutes"), NewIntegerRuntimeValue(int64(timestamp.UTC().Minute())))
-	array.SetElement(NewStringRuntimeValue("hours"), NewIntegerRuntimeValue(int64(timestamp.UTC().Hour())))
-	array.SetElement(NewStringRuntimeValue("mday"), NewIntegerRuntimeValue(int64(timestamp.UTC().Day())))
-	array.SetElement(NewStringRuntimeValue("wday"), NewIntegerRuntimeValue(int64(timestamp.UTC().Weekday())))
-	array.SetElement(NewStringRuntimeValue("mon"), NewIntegerRuntimeValue(int64(timestamp.UTC().Month())))
-	array.SetElement(NewStringRuntimeValue("year"), NewIntegerRuntimeValue(int64(timestamp.UTC().Year())))
-	array.SetElement(NewStringRuntimeValue("yday"), NewIntegerRuntimeValue(int64(timestamp.UTC().YearDay()-1)))
-	array.SetElement(NewStringRuntimeValue("weekday"), NewStringRuntimeValue(timestamp.UTC().Weekday().String()))
-	array.SetElement(NewStringRuntimeValue("month"), NewStringRuntimeValue(timestamp.UTC().Month().String()))
-	array.SetElement(nil, NewIntegerRuntimeValue(timestamp.UTC().Unix()))
+	timestamp := time.Unix(args[0].(*values.Int).Value, 0)
+	array := values.NewArray()
+	array.SetElement(values.NewStr("seconds"), values.NewInt(int64(timestamp.UTC().Second())))
+	array.SetElement(values.NewStr("minutes"), values.NewInt(int64(timestamp.UTC().Minute())))
+	array.SetElement(values.NewStr("hours"), values.NewInt(int64(timestamp.UTC().Hour())))
+	array.SetElement(values.NewStr("mday"), values.NewInt(int64(timestamp.UTC().Day())))
+	array.SetElement(values.NewStr("wday"), values.NewInt(int64(timestamp.UTC().Weekday())))
+	array.SetElement(values.NewStr("mon"), values.NewInt(int64(timestamp.UTC().Month())))
+	array.SetElement(values.NewStr("year"), values.NewInt(int64(timestamp.UTC().Year())))
+	array.SetElement(values.NewStr("yday"), values.NewInt(int64(timestamp.UTC().YearDay()-1)))
+	array.SetElement(values.NewStr("weekday"), values.NewStr(timestamp.UTC().Weekday().String()))
+	array.SetElement(values.NewStr("month"), values.NewStr(timestamp.UTC().Month().String()))
+	array.SetElement(nil, values.NewInt(timestamp.UTC().Unix()))
 
 	return array, nil
 }
 
 // ------------------- MARK: localtime -------------------
 
-func nativeFn_localtime(args []IRuntimeValue, _ *Interpreter) (IRuntimeValue, phpError.Error) {
+func nativeFn_localtime(args []values.RuntimeValue, _ *Interpreter) (values.RuntimeValue, phpError.Error) {
 	args, err := NewFuncParamValidator("localtime").
-		addParam("$timestamp", []string{"int"}, NewNullRuntimeValue()).
-		addParam("associative", []string{"bool"}, NewBooleanRuntimeValue(false)).
+		addParam("$timestamp", []string{"int"}, values.NewNull()).
+		addParam("associative", []string{"bool"}, values.NewBool(false)).
 		validate(args)
 	if err != nil {
-		return NewVoidRuntimeValue(), err
+		return values.NewVoid(), err
 	}
 
 	// Spec: https://www.php.net/manual/en/function.localtime.php
 
 	// If timestamp is omitted, use the default value `time()`
-	if args[0].GetType() == NullValue {
+	if args[0].GetType() == values.NullValue {
 		args[0] = lib_time()
 	}
 
-	timestamp := time.Unix(args[0].(*IntegerRuntimeValue).Value, 0)
-	array := NewArrayRuntimeValue()
+	timestamp := time.Unix(args[0].(*values.Int).Value, 0)
+	array := values.NewArray()
 	var isDst int64
 	if timestamp.Local().IsDST() {
 		isDst = 1
 	}
 	year := int64(timestamp.Local().Year()) - 1900
 
-	if args[1].(*BooleanRuntimeValue).Value {
+	if args[1].(*values.Bool).Value {
 		// Associative array
-		array.SetElement(NewStringRuntimeValue("tm_sec"), NewIntegerRuntimeValue(int64(timestamp.Local().Second())))
-		array.SetElement(NewStringRuntimeValue("tm_min"), NewIntegerRuntimeValue(int64(timestamp.Local().Minute())))
-		array.SetElement(NewStringRuntimeValue("tm_hour"), NewIntegerRuntimeValue(int64(timestamp.Local().Hour())))
-		array.SetElement(NewStringRuntimeValue("tm_mday"), NewIntegerRuntimeValue(int64(timestamp.Local().Day())))
-		array.SetElement(NewStringRuntimeValue("tm_mon"), NewIntegerRuntimeValue(int64(timestamp.Local().Month())))
-		array.SetElement(NewStringRuntimeValue("tm_year"), NewIntegerRuntimeValue(year))
-		array.SetElement(NewStringRuntimeValue("tm_wday"), NewIntegerRuntimeValue(int64(timestamp.Local().Weekday())))
-		array.SetElement(NewStringRuntimeValue("tm_yday"), NewIntegerRuntimeValue(int64(timestamp.Local().YearDay()-1)))
-		array.SetElement(NewStringRuntimeValue("tm_isdst"), NewIntegerRuntimeValue(isDst))
+		array.SetElement(values.NewStr("tm_sec"), values.NewInt(int64(timestamp.Local().Second())))
+		array.SetElement(values.NewStr("tm_min"), values.NewInt(int64(timestamp.Local().Minute())))
+		array.SetElement(values.NewStr("tm_hour"), values.NewInt(int64(timestamp.Local().Hour())))
+		array.SetElement(values.NewStr("tm_mday"), values.NewInt(int64(timestamp.Local().Day())))
+		array.SetElement(values.NewStr("tm_mon"), values.NewInt(int64(timestamp.Local().Month())))
+		array.SetElement(values.NewStr("tm_year"), values.NewInt(year))
+		array.SetElement(values.NewStr("tm_wday"), values.NewInt(int64(timestamp.Local().Weekday())))
+		array.SetElement(values.NewStr("tm_yday"), values.NewInt(int64(timestamp.Local().YearDay()-1)))
+		array.SetElement(values.NewStr("tm_isdst"), values.NewInt(isDst))
 	} else {
 		//Numerically index array
-		array.SetElement(nil, NewIntegerRuntimeValue(int64(timestamp.Local().Second())))
-		array.SetElement(nil, NewIntegerRuntimeValue(int64(timestamp.Local().Minute())))
-		array.SetElement(nil, NewIntegerRuntimeValue(int64(timestamp.Local().Hour())))
-		array.SetElement(nil, NewIntegerRuntimeValue(int64(timestamp.Local().Day())))
-		array.SetElement(nil, NewIntegerRuntimeValue(int64(timestamp.Local().Month())))
-		array.SetElement(nil, NewIntegerRuntimeValue(year))
-		array.SetElement(nil, NewIntegerRuntimeValue(int64(timestamp.Local().Weekday())))
-		array.SetElement(nil, NewIntegerRuntimeValue(int64(timestamp.Local().YearDay()-1)))
-		array.SetElement(nil, NewIntegerRuntimeValue(isDst))
+		array.SetElement(nil, values.NewInt(int64(timestamp.Local().Second())))
+		array.SetElement(nil, values.NewInt(int64(timestamp.Local().Minute())))
+		array.SetElement(nil, values.NewInt(int64(timestamp.Local().Hour())))
+		array.SetElement(nil, values.NewInt(int64(timestamp.Local().Day())))
+		array.SetElement(nil, values.NewInt(int64(timestamp.Local().Month())))
+		array.SetElement(nil, values.NewInt(year))
+		array.SetElement(nil, values.NewInt(int64(timestamp.Local().Weekday())))
+		array.SetElement(nil, values.NewInt(int64(timestamp.Local().YearDay()-1)))
+		array.SetElement(nil, values.NewInt(isDst))
 	}
 
 	return array, nil
@@ -286,10 +287,10 @@ func nativeFn_localtime(args []IRuntimeValue, _ *Interpreter) (IRuntimeValue, ph
 
 // ------------------- MARK: microtime -------------------
 
-func nativeFn_microtime(args []IRuntimeValue, _ *Interpreter) (IRuntimeValue, phpError.Error) {
-	args, err := NewFuncParamValidator("microtime").addParam("$as_float", []string{"bool"}, NewBooleanRuntimeValue(false)).validate(args)
+func nativeFn_microtime(args []values.RuntimeValue, _ *Interpreter) (values.RuntimeValue, phpError.Error) {
+	args, err := NewFuncParamValidator("microtime").addParam("$as_float", []string{"bool"}, values.NewBool(false)).validate(args)
 	if err != nil {
-		return NewVoidRuntimeValue(), err
+		return values.NewVoid(), err
 	}
 
 	// Spec: https://www.php.net/manual/en/function.microtime.php
@@ -298,57 +299,57 @@ func nativeFn_microtime(args []IRuntimeValue, _ *Interpreter) (IRuntimeValue, ph
 	micro := float64(now.UnixMicro()) / math.Pow(10, 6)
 
 	// As float
-	if args[0].(*BooleanRuntimeValue).Value {
-		return NewFloatingRuntimeValue(micro), nil
+	if args[0].(*values.Bool).Value {
+		return values.NewFloat(micro), nil
 	}
 	// As string
-	return NewStringRuntimeValue(fmt.Sprintf("%f %d", micro-float64(now.Unix()), now.Unix())), nil
+	return values.NewStr(fmt.Sprintf("%f %d", micro-float64(now.Unix()), now.Unix())), nil
 }
 
 // ------------------- MARK: mktime -------------------
 
-func nativeFn_mktime(args []IRuntimeValue, _ *Interpreter) (IRuntimeValue, phpError.Error) {
+func nativeFn_mktime(args []values.RuntimeValue, _ *Interpreter) (values.RuntimeValue, phpError.Error) {
 	args, err := NewFuncParamValidator("mktime").
 		addParam("$hour", []string{"int"}, nil).
-		addParam("$minute", []string{"int"}, NewNullRuntimeValue()).
-		addParam("$second", []string{"int"}, NewNullRuntimeValue()).
-		addParam("$month", []string{"int"}, NewNullRuntimeValue()).
-		addParam("$day", []string{"int"}, NewNullRuntimeValue()).
-		addParam("$year", []string{"int"}, NewNullRuntimeValue()).
+		addParam("$minute", []string{"int"}, values.NewNull()).
+		addParam("$second", []string{"int"}, values.NewNull()).
+		addParam("$month", []string{"int"}, values.NewNull()).
+		addParam("$day", []string{"int"}, values.NewNull()).
+		addParam("$year", []string{"int"}, values.NewNull()).
 		validate(args)
 	if err != nil {
-		return NewVoidRuntimeValue(), err
+		return values.NewVoid(), err
 	}
 
 	// Spec: https://www.php.net/manual/en/function.mktime.php
 
 	now := time.Now().Local()
 
-	hour := int(args[0].(*IntegerRuntimeValue).Value)
+	hour := int(args[0].(*values.Int).Value)
 
 	minute := now.Minute()
-	if args[1].GetType() != NullValue {
-		minute = int(args[1].(*IntegerRuntimeValue).Value)
+	if args[1].GetType() != values.NullValue {
+		minute = int(args[1].(*values.Int).Value)
 	}
 
 	second := now.Second()
-	if args[2].GetType() != NullValue {
-		second = int(args[2].(*IntegerRuntimeValue).Value)
+	if args[2].GetType() != values.NullValue {
+		second = int(args[2].(*values.Int).Value)
 	}
 
 	month := now.Month()
-	if args[3].GetType() != NullValue {
-		month = time.Month(args[3].(*IntegerRuntimeValue).Value)
+	if args[3].GetType() != values.NullValue {
+		month = time.Month(args[3].(*values.Int).Value)
 	}
 
 	day := now.Day()
-	if args[4].GetType() != NullValue {
-		day = int(args[4].(*IntegerRuntimeValue).Value)
+	if args[4].GetType() != values.NullValue {
+		day = int(args[4].(*values.Int).Value)
 	}
 
 	year := now.Year()
-	if args[5].GetType() != NullValue {
-		year = int(args[5].(*IntegerRuntimeValue).Value)
+	if args[5].GetType() != values.NullValue {
+		year = int(args[5].(*values.Int).Value)
 	}
 	if year >= 0 && year <= 69 {
 		year = 2000 + year
@@ -359,23 +360,23 @@ func nativeFn_mktime(args []IRuntimeValue, _ *Interpreter) (IRuntimeValue, phpEr
 
 	timestamp := time.Date(year, month, day, hour, minute, second, 0, time.Local)
 
-	return NewIntegerRuntimeValue(timestamp.Unix()), nil
+	return values.NewInt(timestamp.Unix()), nil
 }
 
 // ------------------- MARK: time -------------------
 
-func nativeFn_time(args []IRuntimeValue, _ *Interpreter) (IRuntimeValue, phpError.Error) {
+func nativeFn_time(args []values.RuntimeValue, _ *Interpreter) (values.RuntimeValue, phpError.Error) {
 	_, err := NewFuncParamValidator("time").validate(args)
 	if err != nil {
-		return NewVoidRuntimeValue(), err
+		return values.NewVoid(), err
 	}
 
 	return lib_time(), nil
 }
 
-func lib_time() *IntegerRuntimeValue {
+func lib_time() *values.Int {
 	// Spec: https://www.php.net/manual/en/function.time.php
-	return NewIntegerRuntimeValue(time.Now().UTC().Unix())
+	return values.NewInt(time.Now().UTC().Unix())
 }
 
 // TODO date_add

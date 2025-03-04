@@ -3,6 +3,7 @@ package interpreter
 import (
 	"GoPHP/cmd/goPHP/ast"
 	"GoPHP/cmd/goPHP/phpError"
+	"GoPHP/cmd/goPHP/runtime/values"
 )
 
 // ProcessStmt implements Visitor.
@@ -21,7 +22,7 @@ func (interpreter *Interpreter) ProcessCompoundStmt(stmt *ast.CompoundStatement,
 	for _, statement := range stmt.Statements {
 		must(interpreter.processStmt(statement, env))
 	}
-	return NewVoidRuntimeValue(), nil
+	return values.NewVoid(), nil
 }
 
 // ProcessEchoStmt implements Visitor.
@@ -32,7 +33,7 @@ func (interpreter *Interpreter) ProcessEchoStmt(stmt *ast.EchoStatement, env any
 		str := mustOrVoid(lib_strval(runtimeValue))
 		interpreter.print(str)
 	}
-	return NewVoidRuntimeValue(), nil
+	return values.NewVoid(), nil
 }
 
 // ProcessExpressionStmt implements Visitor.
@@ -44,18 +45,18 @@ func (interpreter *Interpreter) ProcessExpressionStmt(stmt *ast.ExpressionStatem
 func (interpreter *Interpreter) ProcessFunctionDefinitionStmt(stmt *ast.FunctionDefinitionStatement, env any) (any, error) {
 	// Check if this function definition was already processed before interpreting the code
 	if interpreter.isCached(stmt) {
-		return NewVoidRuntimeValue(), nil
+		return values.NewVoid(), nil
 	}
 
 	mustOrVoid(0, env.(*Environment).defineUserFunction(stmt))
 
-	return interpreter.writeCache(stmt, NewVoidRuntimeValue()), nil
+	return interpreter.writeCache(stmt, values.NewVoid()), nil
 }
 
 // ProcessReturnStmt implements Visitor.
 func (interpreter *Interpreter) ProcessReturnStmt(stmt *ast.ReturnStatement, env any) (any, error) {
 	if stmt.Expr == nil {
-		return NewVoidRuntimeValue(), phpError.NewEvent(phpError.ReturnEvent)
+		return values.NewVoid(), phpError.NewEvent(phpError.ReturnEvent)
 	}
 	runtimeValue := must(interpreter.processStmt(stmt.Expr, env))
 	return runtimeValue, phpError.NewEvent(phpError.ReturnEvent)
@@ -64,29 +65,29 @@ func (interpreter *Interpreter) ProcessReturnStmt(stmt *ast.ReturnStatement, env
 // ProcessContinueStmt implements Visitor.
 func (interpreter *Interpreter) ProcessContinueStmt(stmt *ast.ContinueStatement, env any) (any, error) {
 	if stmt.Expr == nil {
-		return NewVoidRuntimeValue(), phpError.NewEvent(phpError.ReturnEvent)
+		return values.NewVoid(), phpError.NewEvent(phpError.ReturnEvent)
 	}
 	runtimeValue := must(interpreter.processStmt(stmt.Expr, env))
 
-	if runtimeValue.GetType() != IntegerValue {
+	if runtimeValue.GetType() != values.IntValue {
 		return runtimeValue, phpError.NewError("Breakout level must be an integer value. Got %s", runtimeValue.GetType())
 	}
 
-	return runtimeValue, phpError.NewContinueEvent(runtimeValue.(*IntegerRuntimeValue).Value)
+	return runtimeValue, phpError.NewContinueEvent(runtimeValue.(*values.Int).Value)
 }
 
 // ProcessBreakStmt implements Visitor.
 func (interpreter *Interpreter) ProcessBreakStmt(stmt *ast.BreakStatement, env any) (any, error) {
 	if stmt.Expr == nil {
-		return NewVoidRuntimeValue(), phpError.NewEvent(phpError.ReturnEvent)
+		return values.NewVoid(), phpError.NewEvent(phpError.ReturnEvent)
 	}
 	runtimeValue := must(interpreter.processStmt(stmt.Expr, env))
 
-	if runtimeValue.GetType() != IntegerValue {
+	if runtimeValue.GetType() != values.IntValue {
 		return runtimeValue, phpError.NewError("Breakout level must be an integer value. Got %s", runtimeValue.GetType())
 	}
 
-	return runtimeValue, phpError.NewBreakEvent(runtimeValue.(*IntegerRuntimeValue).Value)
+	return runtimeValue, phpError.NewBreakEvent(runtimeValue.(*values.Int).Value)
 }
 
 // ProcessForStmt implements Visitor.
@@ -110,7 +111,7 @@ func (interpreter *Interpreter) ProcessForStmt(stmt *ast.ForStatement, env any) 
 		// Then the group of expressions in for-control is evaluated left-to-right (with all but the right-most one for their side
 		// effects only), with the right-most expression’s value being converted to type bool.
 		if stmt.Control != nil {
-			var conditionRuntimeValue IRuntimeValue
+			var conditionRuntimeValue values.RuntimeValue
 			for _, statement := range stmt.Control.Statements {
 				conditionRuntimeValue = mustOrVoid(interpreter.processStmt(statement, env))
 			}
@@ -141,7 +142,7 @@ func (interpreter *Interpreter) ProcessForStmt(stmt *ast.ForStatement, env any) 
 					if breakoutLevel == 1 {
 						break
 					}
-					return NewVoidRuntimeValue(), phpError.NewBreakEvent(breakoutLevel - 1)
+					return values.NewVoid(), phpError.NewBreakEvent(breakoutLevel - 1)
 				}
 				if err.GetErrorType() == phpError.EventError && err.GetMessage() == "continue" {
 					breakoutLevel := err.(*phpError.ContinueEventError).GetBreakoutLevel()
@@ -150,9 +151,9 @@ func (interpreter *Interpreter) ProcessForStmt(stmt *ast.ForStatement, env any) 
 						mustOrVoid(0, executeEndOfLoop())
 						continue
 					}
-					return NewVoidRuntimeValue(), phpError.NewContinueEvent(breakoutLevel - 1)
+					return values.NewVoid(), phpError.NewContinueEvent(breakoutLevel - 1)
 				}
-				return NewVoidRuntimeValue(), err
+				return values.NewVoid(), err
 			}
 		}
 
@@ -167,7 +168,7 @@ func (interpreter *Interpreter) ProcessForStmt(stmt *ast.ForStatement, env any) 
 		}
 	}
 
-	return NewVoidRuntimeValue(), nil
+	return values.NewVoid(), nil
 }
 
 // ProcessIfStmt implements Visitor.
@@ -176,7 +177,7 @@ func (interpreter *Interpreter) ProcessIfStmt(stmt *ast.IfStatement, env any) (a
 	condition := mustOrVoid(lib_boolval(conditionRuntimeValue))
 	if condition {
 		must(interpreter.processStmt(stmt.IfBlock, env))
-		return NewVoidRuntimeValue(), nil
+		return values.NewVoid(), nil
 	}
 
 	if len(stmt.ElseIf) > 0 {
@@ -188,16 +189,16 @@ func (interpreter *Interpreter) ProcessIfStmt(stmt *ast.IfStatement, env any) (a
 			}
 
 			must(interpreter.processStmt(elseIf.IfBlock, env))
-			return NewVoidRuntimeValue(), nil
+			return values.NewVoid(), nil
 		}
 	}
 
 	if stmt.ElseBlock != nil {
 		must(interpreter.processStmt(stmt.ElseBlock, env))
-		return NewVoidRuntimeValue(), nil
+		return values.NewVoid(), nil
 	}
 
-	return NewVoidRuntimeValue(), nil
+	return values.NewVoid(), nil
 }
 
 // ProcessWhileStmt implements Visitor.
@@ -214,21 +215,21 @@ func (interpreter *Interpreter) ProcessWhileStmt(stmt *ast.WhileStatement, env a
 			if err.GetErrorType() == phpError.EventError && err.GetMessage() == "break" {
 				breakoutLevel := err.(*phpError.ContinueEventError).GetBreakoutLevel()
 				if breakoutLevel == 1 {
-					return NewVoidRuntimeValue(), nil
+					return values.NewVoid(), nil
 				}
-				return NewVoidRuntimeValue(), phpError.NewBreakEvent(breakoutLevel - 1)
+				return values.NewVoid(), phpError.NewBreakEvent(breakoutLevel - 1)
 			}
 			if err.GetErrorType() == phpError.EventError && err.GetMessage() == "continue" {
 				breakoutLevel := err.(*phpError.ContinueEventError).GetBreakoutLevel()
 				if breakoutLevel == 1 {
 					continue
 				}
-				return NewVoidRuntimeValue(), phpError.NewContinueEvent(breakoutLevel - 1)
+				return values.NewVoid(), phpError.NewContinueEvent(breakoutLevel - 1)
 			}
 			return runtimeValue, err
 		}
 	}
-	return NewVoidRuntimeValue(), nil
+	return values.NewVoid(), nil
 }
 
 // ProcessDoStmt implements Visitor.
@@ -240,16 +241,16 @@ func (interpreter *Interpreter) ProcessDoStmt(stmt *ast.DoStatement, env any) (a
 			if err.GetErrorType() == phpError.EventError && err.GetMessage() == "break" {
 				breakoutLevel := err.(*phpError.ContinueEventError).GetBreakoutLevel()
 				if breakoutLevel == 1 {
-					return NewVoidRuntimeValue(), nil
+					return values.NewVoid(), nil
 				}
-				return NewVoidRuntimeValue(), phpError.NewBreakEvent(breakoutLevel - 1)
+				return values.NewVoid(), phpError.NewBreakEvent(breakoutLevel - 1)
 			}
 			if err.GetErrorType() == phpError.EventError && err.GetMessage() == "continue" {
 				breakoutLevel := err.(*phpError.ContinueEventError).GetBreakoutLevel()
 				if breakoutLevel == 1 {
 					continue
 				}
-				return NewVoidRuntimeValue(), phpError.NewContinueEvent(breakoutLevel - 1)
+				return values.NewVoid(), phpError.NewContinueEvent(breakoutLevel - 1)
 			}
 			return runtimeValue, err
 		}
@@ -260,7 +261,7 @@ func (interpreter *Interpreter) ProcessDoStmt(stmt *ast.DoStatement, env any) (a
 			break
 		}
 	}
-	return NewVoidRuntimeValue(), nil
+	return values.NewVoid(), nil
 }
 
 // ProcessGlobalDeclarationStmt implements Visitor.
@@ -268,9 +269,9 @@ func (interpreter *Interpreter) ProcessGlobalDeclarationStmt(stmt *ast.GlobalDec
 	for _, variable := range stmt.Variables {
 		variableName, err := interpreter.varExprToVarName(variable, env.(*Environment))
 		if err != nil {
-			return NewVoidRuntimeValue(), err
+			return values.NewVoid(), err
 		}
 		env.(*Environment).addGlobalVariable(variableName)
 	}
-	return NewVoidRuntimeValue(), nil
+	return values.NewVoid(), nil
 }

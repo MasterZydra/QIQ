@@ -1,11 +1,14 @@
 package interpreter
 
-import "testing"
+import (
+	"GoPHP/cmd/goPHP/runtime/values"
+	"testing"
+)
 
 // ------------------- MARK: boolval -------------------
 
 func TestLibBoolval(t *testing.T) {
-	doTest := func(runtimeValue IRuntimeValue, expected bool) {
+	doTest := func(runtimeValue values.RuntimeValue, expected bool) {
 		actual, err := lib_boolval(runtimeValue)
 		if err != nil {
 			t.Errorf("Unexpected error: \"%s\"", err)
@@ -17,41 +20,41 @@ func TestLibBoolval(t *testing.T) {
 	}
 
 	// array to boolean
-	doTest(NewArrayRuntimeValue(), false)
-	array := NewArrayRuntimeValue()
-	array.SetElement(nil, NewIntegerRuntimeValue(42))
+	doTest(values.NewArray(), false)
+	array := values.NewArray()
+	array.SetElement(nil, values.NewInt(42))
 	doTest(array, true)
 
 	// boolean to boolean
-	doTest(NewBooleanRuntimeValue(true), true)
-	doTest(NewBooleanRuntimeValue(false), false)
+	doTest(values.NewBool(true), true)
+	doTest(values.NewBool(false), false)
 
 	// integer to boolean
-	doTest(NewIntegerRuntimeValue(0), false)
-	doTest(NewIntegerRuntimeValue(-0), false)
-	doTest(NewIntegerRuntimeValue(1), true)
-	doTest(NewIntegerRuntimeValue(42), true)
-	doTest(NewIntegerRuntimeValue(-2), true)
+	doTest(values.NewInt(0), false)
+	doTest(values.NewInt(-0), false)
+	doTest(values.NewInt(1), true)
+	doTest(values.NewInt(42), true)
+	doTest(values.NewInt(-2), true)
 
 	// floating to boolean
-	doTest(NewFloatingRuntimeValue(0.0), false)
-	doTest(NewFloatingRuntimeValue(1.5), true)
-	doTest(NewFloatingRuntimeValue(42.0), true)
-	doTest(NewFloatingRuntimeValue(-2.0), true)
+	doTest(values.NewFloat(0.0), false)
+	doTest(values.NewFloat(1.5), true)
+	doTest(values.NewFloat(42.0), true)
+	doTest(values.NewFloat(-2.0), true)
 
 	// string to boolean
-	doTest(NewStringRuntimeValue(""), false)
-	doTest(NewStringRuntimeValue("0"), false)
-	doTest(NewStringRuntimeValue("Hi"), true)
+	doTest(values.NewStr(""), false)
+	doTest(values.NewStr("0"), false)
+	doTest(values.NewStr("Hi"), true)
 
 	// null to boolean
-	doTest(NewNullRuntimeValue(), false)
+	doTest(values.NewNull(), false)
 }
 
 // ------------------- MARK: floatval -------------------
 
 func TestLibFloatval(t *testing.T) {
-	doTest := func(runtimeValue IRuntimeValue, expected float64) {
+	doTest := func(runtimeValue values.RuntimeValue, expected float64) {
 		actual, err := lib_floatval(runtimeValue)
 		if err != nil {
 			t.Errorf("Unexpected error: \"%s\"", err)
@@ -63,32 +66,32 @@ func TestLibFloatval(t *testing.T) {
 	}
 
 	// boolean to floating
-	doTest(NewBooleanRuntimeValue(true), 1)
-	doTest(NewBooleanRuntimeValue(false), 0)
+	doTest(values.NewBool(true), 1)
+	doTest(values.NewBool(false), 0)
 
 	// integer to floating
-	doTest(NewIntegerRuntimeValue(0), 0)
-	doTest(NewIntegerRuntimeValue(-0), 0)
-	doTest(NewIntegerRuntimeValue(1), 1)
-	doTest(NewIntegerRuntimeValue(42), 42)
-	doTest(NewIntegerRuntimeValue(-2), -2)
+	doTest(values.NewInt(0), 0)
+	doTest(values.NewInt(-0), 0)
+	doTest(values.NewInt(1), 1)
+	doTest(values.NewInt(42), 42)
+	doTest(values.NewInt(-2), -2)
 
 	// floating to floating
-	doTest(NewFloatingRuntimeValue(0.0), 0)
-	doTest(NewFloatingRuntimeValue(1.5), 1.5)
-	doTest(NewFloatingRuntimeValue(42.0), 42)
-	doTest(NewFloatingRuntimeValue(-2.0), -2)
+	doTest(values.NewFloat(0.0), 0)
+	doTest(values.NewFloat(1.5), 1.5)
+	doTest(values.NewFloat(42.0), 42)
+	doTest(values.NewFloat(-2.0), -2)
 
 	// string to floating
-	doTest(NewStringRuntimeValue(""), 0)
-	doTest(NewStringRuntimeValue("0"), 0)
-	doTest(NewStringRuntimeValue("42"), 42)
-	doTest(NewStringRuntimeValue("+42"), 42)
-	doTest(NewStringRuntimeValue("-42.4"), -42.4)
-	doTest(NewStringRuntimeValue("Hi"), 0)
+	doTest(values.NewStr(""), 0)
+	doTest(values.NewStr("0"), 0)
+	doTest(values.NewStr("42"), 42)
+	doTest(values.NewStr("+42"), 42)
+	doTest(values.NewStr("-42.4"), -42.4)
+	doTest(values.NewStr("Hi"), 0)
 
 	// null to floating
-	doTest(NewNullRuntimeValue(), 0)
+	doTest(values.NewNull(), 0)
 }
 
 // ------------------- MARK: get_debug_type -------------------
@@ -130,7 +133,7 @@ func TestLibGettype(t *testing.T) {
 // ------------------- MARK: intval -------------------
 
 func TestLibIntval(t *testing.T) {
-	doTest := func(runtimeValue IRuntimeValue, expected int64) {
+	doTest := func(runtimeValue values.RuntimeValue, expected int64) {
 		actual, err := lib_intval(runtimeValue)
 		if err != nil {
 			t.Errorf("Unexpected error: \"%s\"", err)
@@ -142,39 +145,39 @@ func TestLibIntval(t *testing.T) {
 	}
 
 	// array to integer
-	doTest(NewArrayRuntimeValue(), 0)
-	array := NewArrayRuntimeValue()
-	array.SetElement(nil, NewIntegerRuntimeValue(42))
+	doTest(values.NewArray(), 0)
+	array := values.NewArray()
+	array.SetElement(nil, values.NewInt(42))
 	doTest(array, 1)
 
 	// boolean to integer
-	doTest(NewBooleanRuntimeValue(true), 1)
-	doTest(NewBooleanRuntimeValue(false), 0)
+	doTest(values.NewBool(true), 1)
+	doTest(values.NewBool(false), 0)
 
 	// integer to integer
-	doTest(NewIntegerRuntimeValue(0), 0)
-	doTest(NewIntegerRuntimeValue(-0), 0)
-	doTest(NewIntegerRuntimeValue(1), 1)
-	doTest(NewIntegerRuntimeValue(42), 42)
-	doTest(NewIntegerRuntimeValue(-2), -2)
+	doTest(values.NewInt(0), 0)
+	doTest(values.NewInt(-0), 0)
+	doTest(values.NewInt(1), 1)
+	doTest(values.NewInt(42), 42)
+	doTest(values.NewInt(-2), -2)
 
 	// floating to integer
-	doTest(NewFloatingRuntimeValue(0.0), 0)
-	doTest(NewFloatingRuntimeValue(1.5), 1)
-	doTest(NewFloatingRuntimeValue(42.0), 42)
-	doTest(NewFloatingRuntimeValue(-2.0), -2)
+	doTest(values.NewFloat(0.0), 0)
+	doTest(values.NewFloat(1.5), 1)
+	doTest(values.NewFloat(42.0), 42)
+	doTest(values.NewFloat(-2.0), -2)
 
 	// string to integer
-	doTest(NewStringRuntimeValue(""), 0)
-	doTest(NewStringRuntimeValue("0"), 0)
-	doTest(NewStringRuntimeValue("1"), 1)
-	doTest(NewStringRuntimeValue("42"), 42)
-	doTest(NewStringRuntimeValue("+42"), 42)
-	doTest(NewStringRuntimeValue("-42"), -42)
-	doTest(NewStringRuntimeValue("Hi"), 0)
+	doTest(values.NewStr(""), 0)
+	doTest(values.NewStr("0"), 0)
+	doTest(values.NewStr("1"), 1)
+	doTest(values.NewStr("42"), 42)
+	doTest(values.NewStr("+42"), 42)
+	doTest(values.NewStr("-42"), -42)
+	doTest(values.NewStr("Hi"), 0)
 
 	// null to integer
-	doTest(NewNullRuntimeValue(), 0)
+	doTest(values.NewNull(), 0)
 }
 
 // ------------------- MARK: is_XXX -------------------
@@ -231,7 +234,7 @@ func TestLibPrintR(t *testing.T) {
 // ------------------- MARK: strval -------------------
 
 func TestLibStrval(t *testing.T) {
-	doTest := func(runtimeValue IRuntimeValue, expected string) {
+	doTest := func(runtimeValue values.RuntimeValue, expected string) {
 		actual, err := lib_strval(runtimeValue)
 		if err != nil {
 			t.Errorf("Unexpected error: \"%s\"", err)
@@ -243,32 +246,32 @@ func TestLibStrval(t *testing.T) {
 	}
 
 	// array to string
-	doTest(NewArrayRuntimeValue(), "Array")
+	doTest(values.NewArray(), "Array")
 
 	// boolean to string
-	doTest(NewBooleanRuntimeValue(true), "1")
-	doTest(NewBooleanRuntimeValue(false), "")
+	doTest(values.NewBool(true), "1")
+	doTest(values.NewBool(false), "")
 
 	// integer to string
-	doTest(NewIntegerRuntimeValue(0), "0")
-	doTest(NewIntegerRuntimeValue(-0), "0")
-	doTest(NewIntegerRuntimeValue(1), "1")
-	doTest(NewIntegerRuntimeValue(42), "42")
-	doTest(NewIntegerRuntimeValue(-2), "-2")
+	doTest(values.NewInt(0), "0")
+	doTest(values.NewInt(-0), "0")
+	doTest(values.NewInt(1), "1")
+	doTest(values.NewInt(42), "42")
+	doTest(values.NewInt(-2), "-2")
 
 	// floating to string
-	doTest(NewFloatingRuntimeValue(0.0), "0")
-	doTest(NewFloatingRuntimeValue(1.5), "1.5")
-	doTest(NewFloatingRuntimeValue(42.0), "42")
-	doTest(NewFloatingRuntimeValue(-2.0), "-2")
+	doTest(values.NewFloat(0.0), "0")
+	doTest(values.NewFloat(1.5), "1.5")
+	doTest(values.NewFloat(42.0), "42")
+	doTest(values.NewFloat(-2.0), "-2")
 
 	// string to string
-	doTest(NewStringRuntimeValue(""), "")
-	doTest(NewStringRuntimeValue("0"), "0")
-	doTest(NewStringRuntimeValue("Hi"), "Hi")
+	doTest(values.NewStr(""), "")
+	doTest(values.NewStr("0"), "0")
+	doTest(values.NewStr("Hi"), "Hi")
 
 	// null to string
-	doTest(NewNullRuntimeValue(), "")
+	doTest(values.NewNull(), "")
 }
 
 // ------------------- MARK: var_dump -------------------

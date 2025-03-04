@@ -2,6 +2,7 @@ package interpreter
 
 import (
 	"GoPHP/cmd/goPHP/phpError"
+	"GoPHP/cmd/goPHP/runtime/values"
 	"encoding/hex"
 	"strings"
 )
@@ -23,35 +24,35 @@ func registerNativeStringsFunctions(environment *Environment) {
 
 // ------------------- MARK: bin2hex -------------------
 
-func nativeFn_bin2hex(args []IRuntimeValue, _ *Interpreter) (IRuntimeValue, phpError.Error) {
+func nativeFn_bin2hex(args []values.RuntimeValue, _ *Interpreter) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.bin2hex.php
 
 	args, err := NewFuncParamValidator("bin2hex").addParam("$string", []string{"string"}, nil).validate(args)
 	if err != nil {
-		return NewVoidRuntimeValue(), err
+		return values.NewVoid(), err
 	}
 
-	input := args[0].(*StringRuntimeValue).Value
+	input := args[0].(*values.Str).Value
 
 	var output strings.Builder
 	for i := 0; i < len(input); i++ {
 		output.WriteString(strings.ToLower(hex.EncodeToString([]byte{input[i]})))
 	}
 
-	return NewStringRuntimeValue(output.String()), nil
+	return values.NewStr(output.String()), nil
 }
 
 // ------------------- MARK: chr -------------------
 
-func nativeFn_chr(args []IRuntimeValue, _ *Interpreter) (IRuntimeValue, phpError.Error) {
+func nativeFn_chr(args []values.RuntimeValue, _ *Interpreter) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.chr.php
 
 	args, err := NewFuncParamValidator("chr").addParam("$codepoint", []string{"int"}, nil).validate(args)
 	if err != nil {
-		return NewVoidRuntimeValue(), err
+		return values.NewVoid(), err
 	}
 
-	codepoint := args[0].(*IntegerRuntimeValue).Value
+	codepoint := args[0].(*values.Int).Value
 
 	// Spec: https://www.php.net/manual/en/function.chr.php
 	// Values outside the valid range (0..255) will be bitwise and'ed with 255
@@ -60,23 +61,23 @@ func nativeFn_chr(args []IRuntimeValue, _ *Interpreter) (IRuntimeValue, phpError
 	}
 	codepoint %= 256
 
-	return NewStringRuntimeValue(string(rune(codepoint))), nil
+	return values.NewStr(string(rune(codepoint))), nil
 }
 
 // ------------------- MARK: lcfirst -------------------
 
-func nativeFn_lcfirst(args []IRuntimeValue, _ *Interpreter) (IRuntimeValue, phpError.Error) {
+func nativeFn_lcfirst(args []values.RuntimeValue, _ *Interpreter) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.lcfirst.php
 
 	args, err := NewFuncParamValidator("lcfirst").addParam("$string", []string{"string"}, nil).validate(args)
 	if err != nil {
-		return NewVoidRuntimeValue(), err
+		return values.NewVoid(), err
 	}
 
-	input := args[0].(*StringRuntimeValue).Value
+	input := args[0].(*values.Str).Value
 
 	if len(input) == 0 {
-		return NewStringRuntimeValue(""), nil
+		return values.NewStr(""), nil
 	}
 
 	// Spec: https://www.php.net/manual/en/function.lcfirst.php
@@ -86,23 +87,23 @@ func nativeFn_lcfirst(args []IRuntimeValue, _ *Interpreter) (IRuntimeValue, phpE
 		input = string(input[0]+32) + input[1:]
 	}
 
-	return NewStringRuntimeValue(input), nil
+	return values.NewStr(input), nil
 }
 
 // ------------------- MARK: quotemeta -------------------
 
-func nativeFn_quotemeta(args []IRuntimeValue, _ *Interpreter) (IRuntimeValue, phpError.Error) {
+func nativeFn_quotemeta(args []values.RuntimeValue, _ *Interpreter) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.quotemeta.php
 
 	args, err := NewFuncParamValidator("quotemeta").addParam("$string", []string{"string"}, nil).validate(args)
 	if err != nil {
-		return NewVoidRuntimeValue(), err
+		return values.NewVoid(), err
 	}
 
-	input := args[0].(*StringRuntimeValue).Value
+	input := args[0].(*values.Str).Value
 
 	if input == "" {
-		return NewBooleanRuntimeValue(false), nil
+		return values.NewBool(false), nil
 	}
 
 	var output strings.Builder
@@ -113,12 +114,12 @@ func nativeFn_quotemeta(args []IRuntimeValue, _ *Interpreter) (IRuntimeValue, ph
 		output.WriteByte(input[i])
 	}
 
-	return NewStringRuntimeValue(output.String()), nil
+	return values.NewStr(output.String()), nil
 }
 
 // ------------------- MARK: str_contains -------------------
 
-func nativeFn_str_contains(args []IRuntimeValue, _ *Interpreter) (IRuntimeValue, phpError.Error) {
+func nativeFn_str_contains(args []values.RuntimeValue, _ *Interpreter) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.str-contains.php
 
 	args, err := NewFuncParamValidator("str_contains").
@@ -126,18 +127,18 @@ func nativeFn_str_contains(args []IRuntimeValue, _ *Interpreter) (IRuntimeValue,
 		addParam("$needle", []string{"string"}, nil).
 		validate(args)
 	if err != nil {
-		return NewVoidRuntimeValue(), err
+		return values.NewVoid(), err
 	}
 
-	haystack := args[0].(*StringRuntimeValue).Value
-	needle := args[1].(*StringRuntimeValue).Value
+	haystack := args[0].(*values.Str).Value
+	needle := args[1].(*values.Str).Value
 
-	return NewBooleanRuntimeValue(strings.Contains(haystack, needle)), nil
+	return values.NewBool(strings.Contains(haystack, needle)), nil
 }
 
 // ------------------- MARK: str_ends_with -------------------
 
-func nativeFn_str_ends_with(args []IRuntimeValue, _ *Interpreter) (IRuntimeValue, phpError.Error) {
+func nativeFn_str_ends_with(args []values.RuntimeValue, _ *Interpreter) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.str-ends-with.php
 
 	args, err := NewFuncParamValidator("str_ends_with").
@@ -145,18 +146,18 @@ func nativeFn_str_ends_with(args []IRuntimeValue, _ *Interpreter) (IRuntimeValue
 		addParam("$needle", []string{"string"}, nil).
 		validate(args)
 	if err != nil {
-		return NewVoidRuntimeValue(), err
+		return values.NewVoid(), err
 	}
 
-	haystack := args[0].(*StringRuntimeValue).Value
-	needle := args[1].(*StringRuntimeValue).Value
+	haystack := args[0].(*values.Str).Value
+	needle := args[1].(*values.Str).Value
 
-	return NewBooleanRuntimeValue(strings.HasSuffix(haystack, needle)), nil
+	return values.NewBool(strings.HasSuffix(haystack, needle)), nil
 }
 
 // ------------------- MARK: str_repeat -------------------
 
-func nativeFn_str_repeat(args []IRuntimeValue, _ *Interpreter) (IRuntimeValue, phpError.Error) {
+func nativeFn_str_repeat(args []values.RuntimeValue, _ *Interpreter) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.str-repeat.php
 
 	args, err := NewFuncParamValidator("str_repeat").
@@ -164,25 +165,25 @@ func nativeFn_str_repeat(args []IRuntimeValue, _ *Interpreter) (IRuntimeValue, p
 		addParam("$times", []string{"int"}, nil).
 		validate(args)
 	if err != nil {
-		return NewVoidRuntimeValue(), err
+		return values.NewVoid(), err
 	}
 
-	input := args[0].(*StringRuntimeValue).Value
-	times := args[1].(*IntegerRuntimeValue).Value
+	input := args[0].(*values.Str).Value
+	times := args[1].(*values.Int).Value
 
 	// Spec: https://www.php.net/manual/en/function.str-repeat.php
 	// times has to be greater than or equal to 0.
 	// If the times is set to 0, the function will return an empty string.
 	if times < 0 {
-		return NewVoidRuntimeValue(), phpError.NewError("Uncaught ValueError: str_repeat(): Argument #2 ($times) must be greater than or equal to 0")
+		return values.NewVoid(), phpError.NewError("Uncaught ValueError: str_repeat(): Argument #2 ($times) must be greater than or equal to 0")
 	}
 
-	return NewStringRuntimeValue(strings.Repeat(input, int(times))), nil
+	return values.NewStr(strings.Repeat(input, int(times))), nil
 }
 
 // ------------------- MARK: str_starts_with -------------------
 
-func nativeFn_str_starts_with(args []IRuntimeValue, _ *Interpreter) (IRuntimeValue, phpError.Error) {
+func nativeFn_str_starts_with(args []values.RuntimeValue, _ *Interpreter) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.str-starts-with.php
 
 	args, err := NewFuncParamValidator("str_starts_with").
@@ -190,42 +191,42 @@ func nativeFn_str_starts_with(args []IRuntimeValue, _ *Interpreter) (IRuntimeVal
 		addParam("$needle", []string{"string"}, nil).
 		validate(args)
 	if err != nil {
-		return NewVoidRuntimeValue(), err
+		return values.NewVoid(), err
 	}
 
-	haystack := args[0].(*StringRuntimeValue).Value
-	needle := args[1].(*StringRuntimeValue).Value
+	haystack := args[0].(*values.Str).Value
+	needle := args[1].(*values.Str).Value
 
-	return NewBooleanRuntimeValue(strings.HasPrefix(haystack, needle)), nil
+	return values.NewBool(strings.HasPrefix(haystack, needle)), nil
 }
 
 // ------------------- MARK: strlen -------------------
 
-func nativeFn_strlen(args []IRuntimeValue, _ *Interpreter) (IRuntimeValue, phpError.Error) {
+func nativeFn_strlen(args []values.RuntimeValue, _ *Interpreter) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.strlen.php
 
 	args, err := NewFuncParamValidator("strlen").addParam("$string", []string{"string"}, nil).validate(args)
 	if err != nil {
-		return NewVoidRuntimeValue(), err
+		return values.NewVoid(), err
 	}
 
-	return NewIntegerRuntimeValue(int64(len(args[0].(*StringRuntimeValue).Value))), nil
+	return values.NewInt(int64(len(args[0].(*values.Str).Value))), nil
 }
 
 // ------------------- MARK: strtolower -------------------
 
-func nativeFn_strtolower(args []IRuntimeValue, _ *Interpreter) (IRuntimeValue, phpError.Error) {
+func nativeFn_strtolower(args []values.RuntimeValue, _ *Interpreter) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.strtolower.php
 
 	args, err := NewFuncParamValidator("strtolower").addParam("$string", []string{"string"}, nil).validate(args)
 	if err != nil {
-		return NewVoidRuntimeValue(), err
+		return values.NewVoid(), err
 	}
 
 	// Spec: https://www.php.net/manual/en/function.strtolower.php
 	// Bytes in the range "A" (0x41) to "Z" (0x5a) will be converted to the corresponding lowercase letter by adding 32 to each byte value.
 
-	input := args[0].(*StringRuntimeValue).Value
+	input := args[0].(*values.Str).Value
 
 	for i := 0; i < len(input); i++ {
 		if input[i] >= 'A' && input[i] <= 'Z' {
@@ -233,23 +234,23 @@ func nativeFn_strtolower(args []IRuntimeValue, _ *Interpreter) (IRuntimeValue, p
 		}
 	}
 
-	return NewStringRuntimeValue(input), nil
+	return values.NewStr(input), nil
 }
 
 // ------------------- MARK: strtoupper -------------------
 
-func nativeFn_strtoupper(args []IRuntimeValue, _ *Interpreter) (IRuntimeValue, phpError.Error) {
+func nativeFn_strtoupper(args []values.RuntimeValue, _ *Interpreter) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.strtoupper.php
 
 	args, err := NewFuncParamValidator("strtoupper").addParam("$string", []string{"string"}, nil).validate(args)
 	if err != nil {
-		return NewVoidRuntimeValue(), err
+		return values.NewVoid(), err
 	}
 
 	// Spec: https://www.php.net/manual/en/function.strtoupper.php
 	// Bytes in the range "a" (0x61) to "z" (0x7a) will be converted to the corresponding uppercase letter by subtracting 32 from each byte value.
 
-	input := args[0].(*StringRuntimeValue).Value
+	input := args[0].(*values.Str).Value
 
 	for i := 0; i < len(input); i++ {
 		if input[i] >= 'a' && input[i] <= 'z' {
@@ -257,23 +258,23 @@ func nativeFn_strtoupper(args []IRuntimeValue, _ *Interpreter) (IRuntimeValue, p
 		}
 	}
 
-	return NewStringRuntimeValue(input), nil
+	return values.NewStr(input), nil
 }
 
 // ------------------- MARK: ucfirst -------------------
 
-func nativeFn_ucfirst(args []IRuntimeValue, _ *Interpreter) (IRuntimeValue, phpError.Error) {
+func nativeFn_ucfirst(args []values.RuntimeValue, _ *Interpreter) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.ucfirst.php
 
 	args, err := NewFuncParamValidator("ucfirst").addParam("$string", []string{"string"}, nil).validate(args)
 	if err != nil {
-		return NewVoidRuntimeValue(), err
+		return values.NewVoid(), err
 	}
 
-	input := args[0].(*StringRuntimeValue).Value
+	input := args[0].(*values.Str).Value
 
 	if len(input) == 0 {
-		return NewStringRuntimeValue(""), nil
+		return values.NewStr(""), nil
 	}
 
 	// Spec: https://www.php.net/manual/en/function.ucfirst.php
@@ -283,7 +284,7 @@ func nativeFn_ucfirst(args []IRuntimeValue, _ *Interpreter) (IRuntimeValue, phpE
 		input = string(input[0]-32) + input[1:]
 	}
 
-	return NewStringRuntimeValue(input), nil
+	return values.NewStr(input), nil
 }
 
 // TODO addcslashes

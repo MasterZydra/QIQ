@@ -5,6 +5,7 @@ import (
 	"GoPHP/cmd/goPHP/ini"
 	"GoPHP/cmd/goPHP/parser"
 	"GoPHP/cmd/goPHP/phpError"
+	"GoPHP/cmd/goPHP/runtime/values"
 	"GoPHP/cmd/goPHP/stats"
 )
 
@@ -15,10 +16,10 @@ type Interpreter struct {
 	request            *Request
 	parser             *parser.Parser
 	env                *Environment
-	cache              map[int64]IRuntimeValue
+	cache              map[int64]values.RuntimeValue
 	outputBuffers      []*OutputBuffer
 	result             string
-	resultRuntimeValue IRuntimeValue
+	resultRuntimeValue values.RuntimeValue
 	exitCode           int64
 	// Status
 	suppressWarning bool
@@ -27,16 +28,16 @@ type Interpreter struct {
 func NewInterpreter(ini *ini.Ini, request *Request, filename string) *Interpreter {
 	interpreter := &Interpreter{
 		filename: filename, includedFiles: []string{}, ini: ini, request: request, parser: parser.NewParser(ini),
-		env: NewEnvironment(nil, request, ini), cache: map[int64]IRuntimeValue{},
+		env: NewEnvironment(nil, request, ini), cache: map[int64]values.RuntimeValue{},
 		outputBuffers: []*OutputBuffer{},
 		exitCode:      0,
 	}
 
 	if ini.GetBool("register_argc_argv") {
-		server := interpreter.env.predefinedVariables["$_SERVER"].(*ArrayRuntimeValue)
-		if !server.Contains(NewStringRuntimeValue("argc")) && !server.Contains(NewStringRuntimeValue("argv")) {
-			server.SetElement(NewStringRuntimeValue("argv"), interpreter.env.predefinedVariables["$_GET"])
-			server.SetElement(NewStringRuntimeValue("argc"), NewIntegerRuntimeValue(int64(len(interpreter.env.predefinedVariables["$_GET"].(*ArrayRuntimeValue).Keys))))
+		server := interpreter.env.predefinedVariables["$_SERVER"].(*values.Array)
+		if !server.Contains(values.NewStr("argc")) && !server.Contains(values.NewStr("argv")) {
+			server.SetElement(values.NewStr("argv"), interpreter.env.predefinedVariables["$_GET"])
+			server.SetElement(values.NewStr("argc"), values.NewInt(int64(len(interpreter.env.predefinedVariables["$_GET"].(*values.Array).Keys))))
 		}
 	}
 
@@ -74,15 +75,15 @@ func (interpreter *Interpreter) process(sourceCode string, env *Environment, res
 	return interpreter.result, err
 }
 
-func (interpreter *Interpreter) processProgram(program *ast.Program, env *Environment) (IRuntimeValue, phpError.Error) {
+func (interpreter *Interpreter) processProgram(program *ast.Program, env *Environment) (values.RuntimeValue, phpError.Error) {
 	err := interpreter.scanForFunctionDefinition(program.GetStatements(), env)
 	if err != nil {
-		return NewVoidRuntimeValue(), err
+		return values.NewVoid(), err
 	}
 
 	defer interpreter.flushOutputBuffers()
 
-	var runtimeValue IRuntimeValue = NewVoidRuntimeValue()
+	var runtimeValue values.RuntimeValue = values.NewVoid()
 	for _, stmt := range program.GetStatements() {
 		if runtimeValue, err = interpreter.processStmt(stmt, env); err != nil {
 			// Handle exit event - Stop code execution
@@ -95,7 +96,7 @@ func (interpreter *Interpreter) processProgram(program *ast.Program, env *Enviro
 	return runtimeValue, nil
 }
 
-func (interpreter *Interpreter) processStmt(stmt ast.IStatement, env any) (value IRuntimeValue, phpErr phpError.Error) {
+func (interpreter *Interpreter) processStmt(stmt ast.IStatement, env any) (value values.RuntimeValue, phpErr phpError.Error) {
 	defer func() {
 		if r := recover(); r != nil {
 			value = r.(ValueOrError).Value
@@ -108,25 +109,25 @@ func (interpreter *Interpreter) processStmt(stmt ast.IStatement, env any) (value
 	if err != nil {
 		phpErr = err.(phpError.Error)
 	}
-	return runtimeValue.(IRuntimeValue), phpErr
+	return runtimeValue.(values.RuntimeValue), phpErr
 }
 
 type ValueOrError struct {
-	Value IRuntimeValue
+	Value values.RuntimeValue
 	Error error
 }
 
-func must(value IRuntimeValue, err error) IRuntimeValue {
+func must(value values.RuntimeValue, err error) values.RuntimeValue {
 	if err != nil {
 		panic(ValueOrError{Value: value, Error: err})
 	}
 	return value
 }
 
-// Return VoidRuntimeValue if error is not nil
+// Return Void if error is not nil
 func mustOrVoid[V any](value V, err error) V {
 	if err != nil {
-		panic(ValueOrError{Value: NewVoidRuntimeValue(), Error: err})
+		panic(ValueOrError{Value: values.NewVoid(), Error: err})
 	}
 	return value
 }

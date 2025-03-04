@@ -3,6 +3,7 @@ package interpreter
 import (
 	"GoPHP/cmd/goPHP/ini"
 	"GoPHP/cmd/goPHP/phpError"
+	"GoPHP/cmd/goPHP/runtime/values"
 	"slices"
 	"strconv"
 )
@@ -21,28 +22,28 @@ func registerNativeFunctions(environment *Environment) {
 	environment.nativeFunctions["key_exits"] = nativeFn_array_key_exists
 }
 
-type nativeFunction func([]IRuntimeValue, *Interpreter) (IRuntimeValue, phpError.Error)
+type nativeFunction func([]values.RuntimeValue, *Interpreter) (values.RuntimeValue, phpError.Error)
 
 // ------------------- MARK: array_key_exits -------------------
 
-func nativeFn_array_key_exists(args []IRuntimeValue, _ *Interpreter) (IRuntimeValue, phpError.Error) {
+func nativeFn_array_key_exists(args []values.RuntimeValue, _ *Interpreter) (values.RuntimeValue, phpError.Error) {
 	args, err := NewFuncParamValidator("array_key_exists").
 		addParam("$key", []string{"string", "int", "float", "bool", "resource", "null"}, nil).
 		addParam("$array", []string{"array"}, nil).
 		validate(args)
 	if err != nil {
-		return NewVoidRuntimeValue(), err
+		return values.NewVoid(), err
 	}
 
-	boolean, err := lib_array_key_exists(args[0], args[1].(*ArrayRuntimeValue))
-	return NewBooleanRuntimeValue(boolean), err
+	boolean, err := lib_array_key_exists(args[0], args[1].(*values.Array))
+	return values.NewBool(boolean), err
 }
 
-func lib_array_key_exists(key IRuntimeValue, array *ArrayRuntimeValue) (bool, phpError.Error) {
+func lib_array_key_exists(key values.RuntimeValue, array *values.Array) (bool, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.array-key-exists.php
 
 	// TODO lib_array_key_exists - allowedKeyTypes - resource
-	allowedKeyTypes := []ValueType{StringValue, IntegerValue, FloatingValue, BooleanValue, NullValue}
+	allowedKeyTypes := []values.ValueType{values.StrValue, values.IntValue, values.FloatValue, values.BoolValue, values.NullValue}
 
 	if !slices.Contains(allowedKeyTypes, key.GetType()) {
 		return false, phpError.NewError("Values of type %s are not allowed as array key", key.GetType())
@@ -55,15 +56,15 @@ func lib_array_key_exists(key IRuntimeValue, array *ArrayRuntimeValue) (bool, ph
 // ------------------- MARK: arrayval -------------------
 
 // This is not an official function. But converting different types to array is needed in several places
-func lib_arrayval(runtimeValue IRuntimeValue) (*ArrayRuntimeValue, phpError.Error) {
+func lib_arrayval(runtimeValue values.RuntimeValue) (*values.Array, phpError.Error) {
 	// Spec: https://phplang.org/spec/08-conversions.html#converting-to-array-type
 
 	// The result type is array.
 
-	if runtimeValue.GetType() == NullValue {
+	if runtimeValue.GetType() == values.NullValue {
 		// Spec: https://phplang.org/spec/08-conversions.html#converting-to-array-type
 		// If the source value is NULL, the result value is an array of zero elements.
-		return NewArrayRuntimeValue(), nil
+		return values.NewArray(), nil
 	}
 
 	// TODO lib_arrayval - resource
@@ -71,7 +72,7 @@ func lib_arrayval(runtimeValue IRuntimeValue) (*ArrayRuntimeValue, phpError.Erro
 		// Spec: https://phplang.org/spec/08-conversions.html#converting-to-array-type
 		// If the source type is scalar or resource and it is non-NULL,
 		// the result value is an array of one element under the key 0 whose value is that of the source.
-		array := NewArrayRuntimeValue()
+		array := values.NewArray()
 		array.SetElement(nil, runtimeValue)
 		return array, nil
 	}
@@ -87,24 +88,24 @@ func lib_arrayval(runtimeValue IRuntimeValue) (*ArrayRuntimeValue, phpError.Erro
 	// The key for a protected instance property has the form “\0*\0name”, where name is that of the property.
 	// The value for each key is that from the corresponding property, or NULL if the property was not initialized.
 
-	return NewArrayRuntimeValue(), phpError.NewError("lib_arrayval: Unsupported type %s", runtimeValue.GetType())
+	return values.NewArray(), phpError.NewError("lib_arrayval: Unsupported type %s", runtimeValue.GetType())
 }
 
 // ------------------- MARK: error_reporting -------------------
 
-func nativeFn_error_reporting(args []IRuntimeValue, interpreter *Interpreter) (IRuntimeValue, phpError.Error) {
+func nativeFn_error_reporting(args []values.RuntimeValue, interpreter *Interpreter) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.error-reporting.php
 
-	args, err := NewFuncParamValidator("error_reporting").addParam("$error_level", []string{"int"}, NewNullRuntimeValue()).validate(args)
+	args, err := NewFuncParamValidator("error_reporting").addParam("$error_level", []string{"int"}, values.NewNull()).validate(args)
 	if err != nil {
-		return NewVoidRuntimeValue(), err
+		return values.NewVoid(), err
 	}
 
-	if args[0].GetType() == NullValue {
-		return NewIntegerRuntimeValue(interpreter.ini.GetInt("error_reporting")), nil
+	if args[0].GetType() == values.NullValue {
+		return values.NewInt(interpreter.ini.GetInt("error_reporting")), nil
 	}
 
-	newValue := args[0].(*IntegerRuntimeValue).Value
+	newValue := args[0].(*values.Int).Value
 	if newValue == -1 {
 		newValue = phpError.E_ALL
 	}
@@ -112,5 +113,5 @@ func nativeFn_error_reporting(args []IRuntimeValue, interpreter *Interpreter) (I
 	previous := interpreter.ini.GetInt("error_reporting")
 	interpreter.ini.Set("error_reporting", strconv.FormatInt(newValue, 10), ini.INI_USER)
 
-	return NewIntegerRuntimeValue(previous), nil
+	return values.NewInt(previous), nil
 }

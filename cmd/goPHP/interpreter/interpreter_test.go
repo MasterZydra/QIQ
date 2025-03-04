@@ -4,6 +4,7 @@ import (
 	"GoPHP/cmd/goPHP/ast"
 	"GoPHP/cmd/goPHP/ini"
 	"GoPHP/cmd/goPHP/phpError"
+	"GoPHP/cmd/goPHP/runtime/values"
 	"fmt"
 	"testing"
 )
@@ -46,7 +47,7 @@ func TestVariableExprToVariableName(t *testing.T) {
 
 	// $$var
 	interpreter = NewInterpreter(ini.NewDevIni(), &Request{}, "test.php")
-	interpreter.env.declareVariable("$var", NewStringRuntimeValue("hi"))
+	interpreter.env.declareVariable("$var", values.NewStr("hi"))
 	actual, err = interpreter.varExprToVarName(
 		ast.NewSimpleVariableExpr(0,
 			ast.NewSimpleVariableExpr(0, ast.NewVariableNameExpr(0, nil, "$var"))), interpreter.env)
@@ -61,8 +62,8 @@ func TestVariableExprToVariableName(t *testing.T) {
 
 	// $$$var
 	interpreter = NewInterpreter(ini.NewDevIni(), &Request{}, "test.php")
-	interpreter.env.declareVariable("$var1", NewStringRuntimeValue("hi"))
-	interpreter.env.declareVariable("$var", NewStringRuntimeValue("var1"))
+	interpreter.env.declareVariable("$var1", values.NewStr("hi"))
+	interpreter.env.declareVariable("$var", values.NewStr("var1"))
 	actual, err = interpreter.varExprToVarName(
 		ast.NewSimpleVariableExpr(0,
 			ast.NewSimpleVariableExpr(0,

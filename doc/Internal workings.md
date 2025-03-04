@@ -13,7 +13,7 @@ For this "jump back" logic, the lexer can push and pop a `PositionSnapshot` of t
 The cases that might end with a "jump back" then push a snapshot. If a jump back is required, the latest snapshot is popped and applied, otherwise the snapshot is popped and discarded.
 
 ## Pass by value
-The interpreter uses the structs that implement `IRuntimeValue` as pointers.
+The interpreter uses the structs that implement `RuntimeValue` as pointers.
 The interpreter creates new instances for each new runtime value of type `Boolean`, `Integer`, `Floating` or `String`.
 This results in "pass by value" behavior.
 
@@ -31,12 +31,12 @@ In the first iteration, the array implementation was very slow.
 One reason was the iteration over all keys to get the next key if no key was passed (e.g. `$a[] = 1;`).
 But this was only a small part of the performance issue.  
 The second reason was the way how an element was stored and looked up.
-A GoLang `map[IRuntimeValue]IRuntimeValue` was used.
-`IRuntimeValue` is a pointer to one struct implementing the `IRuntimeValue` interface.
-The lookup of a value required the iteration of all keys to check if the given key (also a `IRuntimeValue`) is equal to the one of the keys of the array.
+A GoLang `map[RuntimeValue]RuntimeValue` was used.
+`RuntimeValue` is a pointer to one struct implementing the `RuntimeValue` interface.
+The lookup of a value required the iteration of all keys to check if the given key (also a `RuntimeValue`) is equal to the one of the keys of the array.
 
 The second iteration is now a lot faster (see [#47](https://github.com/MasterZydra/GoPHP/issues/47)).  
-Now a GoLang `map[string]IRuntimeValue` is used.
+Now a GoLang `map[string]RuntimeValue` is used.
 PHP only allows integers and strings as keys.
 So the map key is `i_%d` for integers and `s_%s` for strings.
 This convertion from a given key to a string allows a lookup without the iteration of every key.

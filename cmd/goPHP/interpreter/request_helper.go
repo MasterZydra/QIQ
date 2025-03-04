@@ -3,14 +3,15 @@ package interpreter
 import (
 	"GoPHP/cmd/goPHP/common"
 	"GoPHP/cmd/goPHP/ini"
+	"GoPHP/cmd/goPHP/runtime/values"
 	"fmt"
 	"net/url"
 	"regexp"
 	"strings"
 )
 
-func parseQuery(query string, ini *ini.Ini) (*ArrayRuntimeValue, error) {
-	result := NewArrayRuntimeValue()
+func parseQuery(query string, ini *ini.Ini) (*values.Array, error) {
+	result := values.NewArray()
 
 	for query != "" {
 		var key string
@@ -25,7 +26,7 @@ func parseQuery(query string, ini *ini.Ini) (*ArrayRuntimeValue, error) {
 		if !strings.Contains(key, "=") && strings.Contains(key, "+") {
 			parts := strings.Split(key, "+")
 			for i := 0; i < len(parts); i++ {
-				if err := result.SetElement(nil, NewStringRuntimeValue(parts[i])); err != nil {
+				if err := result.SetElement(nil, values.NewStr(parts[i])); err != nil {
 					return result, err
 				}
 			}
@@ -53,21 +54,21 @@ func parseQuery(query string, ini *ini.Ini) (*ArrayRuntimeValue, error) {
 		} else {
 			key = replaceSpecialCharacters(key)
 
-			var keyValue IRuntimeValue
+			var keyValue values.RuntimeValue
 			if common.IsIntegerLiteral(key) {
 				intValue, _ := common.IntegerLiteralToInt64(key)
-				keyValue = NewIntegerRuntimeValue(intValue)
+				keyValue = values.NewInt(intValue)
 			} else {
-				keyValue = NewStringRuntimeValue(key)
+				keyValue = values.NewStr(key)
 			}
-			result.SetElement(keyValue, NewStringRuntimeValue(value))
+			result.SetElement(keyValue, values.NewStr(value))
 		}
 	}
 
 	return result, nil
 }
 
-func parseQueryKey(key string, value string, result *ArrayRuntimeValue) (*ArrayRuntimeValue, error) {
+func parseQueryKey(key string, value string, result *values.Array) (*values.Array, error) {
 	// The parsing of a complex key with arrays is solved by using the interpreter itself:
 	// The key and value is transformed into valid PHP code and executed.
 	// Example:
@@ -108,7 +109,7 @@ func parseQueryKey(key string, value string, result *ArrayRuntimeValue) (*ArrayR
 	interpreter.env.declareVariable("$array", result)
 	_, err := interpreter.Process(php)
 
-	return interpreter.env.variables["$array"].(*ArrayRuntimeValue), err
+	return interpreter.env.variables["$array"].(*values.Array), err
 }
 
 // This fix is required because "url.QueryUnescape()" cannot handle an unescaped percent

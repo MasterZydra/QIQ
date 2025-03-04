@@ -5,13 +5,14 @@ import (
 	"GoPHP/cmd/goPHP/common"
 	"GoPHP/cmd/goPHP/ini"
 	"GoPHP/cmd/goPHP/phpError"
+	"GoPHP/cmd/goPHP/runtime/values"
 	"strings"
 )
 
 // ProcessTextExpr implements Visitor.
 func (interpreter *Interpreter) ProcessTextExpr(expr *ast.TextExpression, _ any) (any, error) {
 	interpreter.print(expr.Value)
-	return NewVoidRuntimeValue(), nil
+	return values.NewVoid(), nil
 }
 
 // ProcessExpr implements Visitor.
@@ -62,55 +63,55 @@ func (interpreter *Interpreter) ProcessSimpleVariableExpr(expr *ast.SimpleVariab
 // ProcessSimpleAssignmentExpr implements Visitor.
 func (interpreter *Interpreter) ProcessSimpleAssignmentExpr(expr *ast.SimpleAssignmentExpression, env any) (any, error) {
 	if !ast.IsVariableExpr(expr.Variable) {
-		return NewVoidRuntimeValue(),
+		return values.NewVoid(),
 			phpError.NewError("processSimpleAssignmentExpr: Invalid variable: %s", expr.Variable)
 	}
 
 	variableName := mustOrVoid(interpreter.varExprToVarName(expr.Variable, env.(*Environment)))
 	currentValue, _ := env.(*Environment).lookupVariable(variableName)
 
-	if currentValue.GetType() == StringValue && expr.Variable.GetKind() == ast.SubscriptExpr {
+	if currentValue.GetType() == values.StrValue && expr.Variable.GetKind() == ast.SubscriptExpr {
 		if expr.Variable.(*ast.SubscriptExpression).Index == nil {
-			return NewVoidRuntimeValue(), phpError.NewError("[] operator not supported for strings in %s", expr.Variable.GetPosition().ToPosString())
+			return values.NewVoid(), phpError.NewError("[] operator not supported for strings in %s", expr.Variable.GetPosition().ToPosString())
 		}
 		if expr.Variable.(*ast.SubscriptExpression).Index.GetKind() != ast.IntegerLiteralExpr {
 			indexType, err := literalExprTypeToRuntimeValue(expr.Variable.(*ast.SubscriptExpression).Index)
 			if err != nil {
-				return NewVoidRuntimeValue(), err
+				return values.NewVoid(), err
 			}
-			return NewVoidRuntimeValue(), phpError.NewError("Cannot access offset of type %s on string in %s", indexType, expr.Variable.(*ast.SubscriptExpression).Index.GetPosition().ToPosString())
+			return values.NewVoid(), phpError.NewError("Cannot access offset of type %s on string in %s", indexType, expr.Variable.(*ast.SubscriptExpression).Index.GetPosition().ToPosString())
 		}
 
 		key := expr.Variable.(*ast.SubscriptExpression).Index.(*ast.IntegerLiteralExpression).Value
 		value := must(interpreter.processStmt(expr.Value, env))
 
 		currentValue, _ = env.(*Environment).lookupVariable(variableName)
-		str := currentValue.(*StringRuntimeValue).Value
+		str := currentValue.(*values.Str).Value
 
 		valueStr, err := lib_strval(value)
 		if err != nil {
-			return NewVoidRuntimeValue(), err
+			return values.NewVoid(), err
 		}
 		if valueStr == "" {
-			return NewVoidRuntimeValue(),
+			return values.NewVoid(),
 				phpError.NewError("Cannot assign an empty string to a string offset in %s", expr.Value.GetPosition().ToPosString())
 		}
 
 		str = common.ExtendWithSpaces(str, int(key+1))
 		str = common.ReplaceAtPos(str, valueStr, int(key))
 
-		_, err = env.(*Environment).declareVariable(variableName, NewStringRuntimeValue(str))
+		_, err = env.(*Environment).declareVariable(variableName, values.NewStr(str))
 		return value, err
 	}
 
-	if currentValue.GetType() == NullValue && expr.Variable.GetKind() == ast.SubscriptExpr {
-		env.(*Environment).declareVariable(variableName, NewArrayRuntimeValue())
+	if currentValue.GetType() == values.NullValue && expr.Variable.GetKind() == ast.SubscriptExpr {
+		env.(*Environment).declareVariable(variableName, values.NewArray())
 		currentValue, _ = env.(*Environment).lookupVariable(variableName)
 	}
 
-	if currentValue.GetType() == ArrayValue {
+	if currentValue.GetType() == values.ArrayValue {
 		if expr.Variable.GetKind() != ast.SubscriptExpr {
-			return NewVoidRuntimeValue(), phpError.NewError("processSimpleAssignmentExpr: Unsupported variable type %s", expr.Variable.GetKind())
+			return values.NewVoid(), phpError.NewError("processSimpleAssignmentExpr: Unsupported variable type %s", expr.Variable.GetKind())
 		}
 
 		keys := []ast.IExpression{expr.Variable.(*ast.SubscriptExpression).Index}
@@ -120,14 +121,14 @@ func (interpreter *Interpreter) ProcessSimpleAssignmentExpr(expr *ast.SimpleAssi
 			subarray = subarray.(*ast.SubscriptExpression).Variable
 		}
 
-		var value IRuntimeValue
+		var value values.RuntimeValue
 		for i := len(keys) - 1; i >= 0; i-- {
-			if currentValue.GetType() != ArrayValue {
-				return NewVoidRuntimeValue(), phpError.NewError("processSimpleAssignmentExpr: Unexpected currentValue type %s", currentValue.GetType())
+			if currentValue.GetType() != values.ArrayValue {
+				return values.NewVoid(), phpError.NewError("processSimpleAssignmentExpr: Unexpected currentValue type %s", currentValue.GetType())
 			}
 
-			array := currentValue.(*ArrayRuntimeValue)
-			var keyValue IRuntimeValue = nil
+			array := currentValue.(*values.Array)
+			var keyValue values.RuntimeValue = nil
 			if keys[i] != nil {
 				keyValue = must(interpreter.processStmt(keys[i], env))
 			}
@@ -135,7 +136,7 @@ func (interpreter *Interpreter) ProcessSimpleAssignmentExpr(expr *ast.SimpleAssi
 			if i == 0 {
 				value = must(interpreter.processStmt(expr.Value, env))
 				if err := array.SetElement(keyValue, deepCopy(value)); err != nil {
-					return NewVoidRuntimeValue(), err
+					return values.NewVoid(), err
 				}
 				break
 			}
@@ -143,9 +144,9 @@ func (interpreter *Interpreter) ProcessSimpleAssignmentExpr(expr *ast.SimpleAssi
 			if array.Contains(keyValue) {
 				currentValue, _ = array.GetElement(keyValue)
 			} else {
-				newArray := NewArrayRuntimeValue()
+				newArray := values.NewArray()
 				if err := array.SetElement(keyValue, newArray); err != nil {
-					return NewVoidRuntimeValue(), err
+					return values.NewVoid(), err
 				}
 				currentValue = newArray
 			}
@@ -164,37 +165,37 @@ func (interpreter *Interpreter) ProcessSubscriptExpr(expr *ast.SubscriptExpressi
 
 	variable := must(interpreter.lookupVariable(expr.Variable, env.(*Environment)))
 
-	if variable.GetType() == StringValue {
+	if variable.GetType() == values.StrValue {
 		if expr.Index == nil {
-			return NewVoidRuntimeValue(), phpError.NewError("Cannot use [] for reading in %s", expr.Variable.GetPosition().ToPosString())
+			return values.NewVoid(), phpError.NewError("Cannot use [] for reading in %s", expr.Variable.GetPosition().ToPosString())
 		}
 		if expr.Index.GetKind() != ast.IntegerLiteralExpr {
 			indexType, err := literalExprTypeToRuntimeValue(expr.Index)
 			if err != nil {
-				return NewVoidRuntimeValue(), err
+				return values.NewVoid(), err
 			}
-			return NewVoidRuntimeValue(), phpError.NewError("Cannot access offset of type %s on string in %s", indexType, expr.Index.GetPosition().ToPosString())
+			return values.NewVoid(), phpError.NewError("Cannot access offset of type %s on string in %s", indexType, expr.Index.GetPosition().ToPosString())
 		}
 
 		key := expr.Index.(*ast.IntegerLiteralExpression).Value
-		str := variable.(*StringRuntimeValue).Value
+		str := variable.(*values.Str).Value
 
 		if len(str) <= int(key) {
-			return NewVoidRuntimeValue(), phpError.NewError("Uninitialized string offset %d in %s", key, expr.Index.GetPosition().ToPosString())
+			return values.NewVoid(), phpError.NewError("Uninitialized string offset %d in %s", key, expr.Index.GetPosition().ToPosString())
 		}
 
-		return NewStringRuntimeValue(str[key : key+1]), nil
+		return values.NewStr(str[key : key+1]), nil
 		// str = common.ExtendWithSpaces(str, int(key+1))
 		// str = common.ReplaceAtPos(str, valueStr, int(key))
 
-		// _, err = env.(*Environment).declareVariable(variableName, NewStringRuntimeValue(str))
+		// _, err = env.(*Environment).declareVariable(variableName, NewStr(str))
 		// return value, err
 	}
 
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-subscript-expression
 	// dereferencable-expression designates an array
-	if variable.GetType() == ArrayValue {
-		array := variable.(*ArrayRuntimeValue)
+	if variable.GetType() == values.ArrayValue {
+		array := variable.(*values.Array)
 
 		keys := []ast.IExpression{expr.Index}
 		subarray := expr.Variable
@@ -220,19 +221,19 @@ func (interpreter *Interpreter) ProcessSubscriptExpr(expr *ast.SubscriptExpressi
 					element, _ := array.GetElement(keyValue)
 					return element, nil
 				} else {
-					return NewNullRuntimeValue(), nil
+					return values.NewNull(), nil
 				}
 			}
 
 			if exists {
 				element, _ := array.GetElement(keyValue)
-				if element.GetType() != ArrayValue {
-					return NewNullRuntimeValue(), phpError.NewError("ProcessSubscriptExpr: Expected type Array. Got: %s", element.GetType())
+				if element.GetType() != values.ArrayValue {
+					return values.NewNull(), phpError.NewError("ProcessSubscriptExpr: Expected type Array. Got: %s", element.GetType())
 				}
-				array = element.(*ArrayRuntimeValue)
+				array = element.(*values.Array)
 				continue
 			}
-			return NewNullRuntimeValue(), phpError.NewError("ProcessSubscriptExpr: Array does not contain key: %s", keyValue.GetType())
+			return values.NewNull(), phpError.NewError("ProcessSubscriptExpr: Array does not contain key: %s", keyValue.GetType())
 
 			// TODO processSubscriptExpr
 			// If the usage context is as the left-hand side of a simple-assignment-expression, the value of the new element is the value of the right-hand side of that simple-assignment-expression.
@@ -241,7 +242,7 @@ func (interpreter *Interpreter) ProcessSubscriptExpr(expr *ast.SubscriptExpressi
 		}
 	}
 
-	return NewVoidRuntimeValue(), phpError.NewError("Unsupported subscript expression: %s", ast.ToString(expr))
+	return values.NewVoid(), phpError.NewError("Unsupported subscript expression: %s", ast.ToString(expr))
 
 	/*
 	   If dereferencable-expression designates a string, expression must not designate a string.
@@ -320,7 +321,7 @@ func (interpreter *Interpreter) ProcessFunctionCallExpr(expr *ast.FunctionCallEx
 	// Lookup native function
 	nativeFunction, err := env.(*Environment).lookupNativeFunction(functionName)
 	if err == nil {
-		functionArguments := make([]IRuntimeValue, len(expr.Arguments))
+		functionArguments := make([]values.RuntimeValue, len(expr.Arguments))
 		for index, arg := range expr.Arguments {
 			runtimeValue := must(interpreter.processStmt(arg, env))
 			functionArguments[index] = deepCopy(runtimeValue)
@@ -335,7 +336,7 @@ func (interpreter *Interpreter) ProcessFunctionCallExpr(expr *ast.FunctionCallEx
 	functionEnv.CurrentFunction = userFunction
 
 	if len(userFunction.Params) != len(expr.Arguments) {
-		return NewVoidRuntimeValue(), phpError.NewError(
+		return values.NewVoid(), phpError.NewError(
 			"Uncaught ArgumentCountError: %s() expects exactly %d arguments, %d given",
 			userFunction.FunctionName, len(userFunction.Params), len(expr.Arguments),
 		)
@@ -348,9 +349,9 @@ func (interpreter *Interpreter) ProcessFunctionCallExpr(expr *ast.FunctionCallEx
 		if err != nil && err.GetMessage() == "Types do not match" {
 			givenType, err := lib_gettype(runtimeValue)
 			if err != nil {
-				return NewVoidRuntimeValue(), err
+				return values.NewVoid(), err
 			}
-			return NewVoidRuntimeValue(), phpError.NewError(
+			return values.NewVoid(), phpError.NewError(
 				"Uncaught TypeError: %s(): Argument #%d (%s) must be of type %s, %s given",
 				userFunction.FunctionName, index+1, param.Name, strings.Join(param.Type, "|"), givenType,
 			)
@@ -366,7 +367,7 @@ func (interpreter *Interpreter) ProcessFunctionCallExpr(expr *ast.FunctionCallEx
 	err = checkParameterTypes(runtimeValue, userFunction.ReturnType)
 	if err != nil && err.GetMessage() == "Types do not match" {
 		givenType, err := lib_gettype(runtimeValue)
-		if runtimeValue.GetType() == VoidValue {
+		if runtimeValue.GetType() == values.VoidValue {
 			givenType = "void"
 		}
 		if err != nil {
@@ -397,21 +398,21 @@ func (interpreter *Interpreter) ProcessEmptyIntrinsicExpr(expr *ast.EmptyIntrins
 	// If that method returns TRUE, the value of the property is retrieved (which may call __get if defined)
 	// and compared to FALSE as described above. Otherwise, the result is FALSE.
 
-	var runtimeValue IRuntimeValue
+	var runtimeValue values.RuntimeValue
 	var err phpError.Error
 	if ast.IsVariableExpr(expr.Arguments[0]) {
 		interpreter.suppressWarning = true
 		runtimeValue, err = interpreter.processStmt(expr.Arguments[0], env)
 		interpreter.suppressWarning = false
 		if err != nil {
-			return NewBooleanRuntimeValue(true), nil
+			return values.NewBool(true), nil
 		}
 	} else {
 		runtimeValue = must(interpreter.processStmt(expr.Arguments[0], env))
 	}
 
 	boolean := mustOrVoid(lib_boolval(runtimeValue))
-	return NewBooleanRuntimeValue(!boolean), nil
+	return values.NewBool(!boolean), nil
 }
 
 // ProcessEvalIntrinsicExpr implements Visitor.
@@ -420,11 +421,11 @@ func (interpreter *Interpreter) ProcessEvalIntrinsicExpr(expr *ast.EvalIntrinsic
 
 	expression, err := interpreter.processStmt(expr.Arguments[0], env)
 	if err != nil {
-		return NewVoidRuntimeValue(), phpError.NewParseError(err.Error())
+		return values.NewVoid(), phpError.NewParseError(err.Error())
 	}
 	expressionStr, err := lib_strval(expression)
 	if err != nil {
-		return NewVoidRuntimeValue(), err
+		return values.NewVoid(), err
 	}
 
 	_, err = interpreter.process("<?php "+expressionStr+" ?>", env.(*Environment), false)
@@ -432,10 +433,10 @@ func (interpreter *Interpreter) ProcessEvalIntrinsicExpr(expr *ast.EvalIntrinsic
 		if err.GetErrorType() == phpError.EventError && err.GetMessage() == phpError.ReturnEvent {
 			return interpreter.resultRuntimeValue, nil
 		}
-		return NewBooleanRuntimeValue(false), err
+		return values.NewBool(false), err
 	}
 
-	return NewNullRuntimeValue(), nil
+	return values.NewNull(), nil
 }
 
 // ProcessExitIntrinsicExpr implements Visitor.
@@ -458,11 +459,11 @@ func (interpreter *Interpreter) ProcessExitIntrinsicExpr(expr *ast.ExitIntrinsic
 	expression := expr.Arguments[0]
 	if expression != nil {
 		exprValue := must(interpreter.processStmt(expression, env))
-		if exprValue.GetType() == StringValue {
-			interpreter.print(exprValue.(*StringRuntimeValue).Value)
+		if exprValue.GetType() == values.StrValue {
+			interpreter.print(exprValue.(*values.Str).Value)
 		}
-		if exprValue.GetType() == IntegerValue {
-			exitCode := exprValue.(*IntegerRuntimeValue).Value
+		if exprValue.GetType() == values.IntValue {
+			exitCode := exprValue.(*values.Int).Value
 			if exitCode >= 0 && exitCode < 255 {
 				interpreter.exitCode = exitCode
 			}
@@ -472,7 +473,7 @@ func (interpreter *Interpreter) ProcessExitIntrinsicExpr(expr *ast.ExitIntrinsic
 	// TODO processExitIntrinsicExpr - call shutdown functions
 	// TODO processExitIntrinsicExpr - call destructors
 
-	return NewVoidRuntimeValue(), phpError.NewEvent(phpError.ExitEvent)
+	return values.NewVoid(), phpError.NewEvent(phpError.ExitEvent)
 }
 
 // ProcessIssetIntrinsicExpr implements Visitor.
@@ -491,11 +492,11 @@ func (interpreter *Interpreter) ProcessIssetIntrinsicExpr(expr *ast.IssetIntrins
 		interpreter.suppressWarning = true
 		runtimeValue, _ := interpreter.lookupVariable(arg, env.(*Environment))
 		interpreter.suppressWarning = false
-		if runtimeValue.GetType() == NullValue {
-			return NewBooleanRuntimeValue(false), nil
+		if runtimeValue.GetType() == values.NullValue {
+			return values.NewBool(false), nil
 		}
 	}
-	return NewBooleanRuntimeValue(true), nil
+	return values.NewBool(true), nil
 }
 
 // ProcessUnsetIntrinsicExpr implements Visitor.
@@ -509,7 +510,7 @@ func (interpreter *Interpreter) ProcessUnsetIntrinsicExpr(expr *ast.UnsetIntrins
 		variableName := mustOrVoid(interpreter.varExprToVarName(arg, env.(*Environment)))
 		env.(*Environment).unsetVariable(variableName)
 	}
-	return NewVoidRuntimeValue(), nil
+	return values.NewVoid(), nil
 }
 
 // ProcessConstantAccessExpr implements Visitor.
@@ -521,29 +522,29 @@ func (interpreter *Interpreter) ProcessConstantAccessExpr(expr *ast.ConstantAcce
 	// This is equivalent to dirname(__FILE__). This directory name does not have a trailing slash unless it is the root directory.
 	if expr.ConstantName == "__DIR__" {
 		// TODO Use lib function dirname
-		return NewStringRuntimeValue(common.ExtractPath(expr.GetPosition().Filename)), nil
+		return values.NewStr(common.ExtractPath(expr.GetPosition().Filename)), nil
 	}
 
 	// Spec: https://www.php.net/manual/en/language.constants.magic.php
 	// The full path and filename of the file with symlinks resolved.
 	// If used inside an include, the name of the included file is returned.
 	if expr.ConstantName == "__FILE__" {
-		return NewStringRuntimeValue(expr.GetPosition().Filename), nil
+		return values.NewStr(expr.GetPosition().Filename), nil
 	}
 
 	// Spec: https://www.php.net/manual/en/language.constants.magic.php
 	// The function name, or {closure} for anonymous functions.
 	if expr.ConstantName == "__FUNCTION__" {
 		if env.(*Environment).CurrentFunction != nil {
-			return NewStringRuntimeValue(env.(*Environment).CurrentFunction.FunctionName), nil
+			return values.NewStr(env.(*Environment).CurrentFunction.FunctionName), nil
 		}
-		return NewStringRuntimeValue(""), nil
+		return values.NewStr(""), nil
 	}
 
 	// Spec: https://www.php.net/manual/en/language.constants.magic.php
 	// The current line number of the file.
 	if expr.ConstantName == "__LINE__" {
-		return NewIntegerRuntimeValue(int64(expr.GetPosition().Line)), nil
+		return values.NewInt(int64(expr.GetPosition().Line)), nil
 	}
 
 	// TODO __CLASS__ 	The class name. The class name includes the namespace it was declared in (e.g. Foo\Bar). When used inside a trait method, __CLASS__ is the name of the class the trait is used in.
@@ -558,7 +559,7 @@ func (interpreter *Interpreter) ProcessConstantAccessExpr(expr *ast.ConstantAcce
 // ProcessCompoundAssignmentExpr implements Visitor.
 func (interpreter *Interpreter) ProcessCompoundAssignmentExpr(expr *ast.CompoundAssignmentExpression, env any) (any, error) {
 	if !ast.IsVariableExpr(expr.Variable) {
-		return NewVoidRuntimeValue(),
+		return values.NewVoid(),
 			phpError.NewError("processCompoundAssignmentExpr: Invalid variable: %s", expr.Variable)
 	}
 
@@ -623,7 +624,7 @@ func (interpreter *Interpreter) ProcessCoalesceExpr(expr *ast.CoalesceExpression
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-coalesce-expression
 	// Given the expression e1 ?? e2, if e1 is set and not NULL (i.e. TRUE for isset), then the result is e1.
 
-	if cond.GetType() != NullValue {
+	if cond.GetType() != values.NullValue {
 		return cond, nil
 	}
 
@@ -635,7 +636,7 @@ func (interpreter *Interpreter) ProcessCoalesceExpr(expr *ast.CoalesceExpression
 	// TODO processCoalesceExpr - handle uninitialized variables
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-coalesce-expression
 	// Note that the semantics of ?? is similar to isset so that uninitialized variables will not produce warnings when used in e1.
-	// TODO use isset here - Steps: Add caching of expression results - map[exprId]IRuntimeValue
+	// TODO use isset here - Steps: Add caching of expression results - map[exprId]RuntimeValue
 }
 
 // ProcessRelationalExpr implements Visitor.
@@ -688,21 +689,21 @@ func (interpreter *Interpreter) ProcessCastExpr(expr *ast.CastExpression, env an
 		// Spec: https://phplang.org/spec/10-expressions.html#grammar-cast-type
 		// A cast-type of "binary" is reserved for future use in dealing with so-called binary strings. For now, it is fully equivalent to "string" cast.
 		// A cast-type of "string" results in a conversion to type "string".
-		return runtimeValueToValueType(StringValue, value)
+		return runtimeValueToValueType(values.StrValue, value)
 	case "bool", "boolean":
 		// Spec: https://phplang.org/spec/10-expressions.html#grammar-cast-type
 		// A cast-type of "bool" or "boolean" results in a conversion to type "bool".
-		return runtimeValueToValueType(BooleanValue, value)
+		return runtimeValueToValueType(values.BoolValue, value)
 	case "double", "float", "real":
 		// Spec: https://phplang.org/spec/10-expressions.html#grammar-cast-type
 		// A cast-type of "float", "double", or "real" results in a conversion to type "float".
-		return runtimeValueToValueType(FloatingValue, value)
+		return runtimeValueToValueType(values.FloatValue, value)
 	case "int", "integer":
 		// Spec: https://phplang.org/spec/10-expressions.html#grammar-cast-type
 		// A cast-type of "int" or "integer" results in a conversion to type "int".
-		return runtimeValueToValueType(IntegerValue, value)
+		return runtimeValueToValueType(values.IntValue, value)
 	default:
-		return NewVoidRuntimeValue(), phpError.NewError("processCastExpr: Unsupported cast type %s", expr.Operator)
+		return values.NewVoid(), phpError.NewError("processCastExpr: Unsupported cast type %s", expr.Operator)
 	}
 }
 
@@ -717,12 +718,12 @@ func (interpreter *Interpreter) ProcessLogicalExpr(expr *ast.LogicalExpression, 
 	if expr.Operator == "||" {
 		// if LHS of "or" is true, the result is already true
 		if left {
-			return NewBooleanRuntimeValue(true), nil
+			return values.NewBool(true), nil
 		}
 	} else if expr.Operator == "&&" {
 		// if LHS of "and" is false, the result is already false
 		if !left {
-			return NewBooleanRuntimeValue(false), nil
+			return values.NewBool(false), nil
 		}
 	}
 
@@ -732,17 +733,17 @@ func (interpreter *Interpreter) ProcessLogicalExpr(expr *ast.LogicalExpression, 
 	right := mustOrVoid(lib_boolval(rhs))
 
 	if expr.Operator == "xor" {
-		return NewBooleanRuntimeValue(left != right), nil
+		return values.NewBool(left != right), nil
 	}
 
-	return NewBooleanRuntimeValue(right), nil
+	return values.NewBool(right), nil
 }
 
 // ProcessLogicalNotExpr implements Visitor.
 func (interpreter *Interpreter) ProcessLogicalNotExpr(expr *ast.LogicalNotExpression, env any) (any, error) {
 	runtimeValue := must(interpreter.processStmt(expr.Expr, env))
 	boolValue := mustOrVoid(lib_boolval(runtimeValue))
-	return NewBooleanRuntimeValue(!boolValue), nil
+	return values.NewBool(!boolValue), nil
 }
 
 // ProcessPostfixIncExpr implements Visitor.
@@ -783,7 +784,7 @@ func (interpreter *Interpreter) ProcessPrintExpr(expr *ast.PrintExpression, env 
 	if err == nil {
 		interpreter.print(str)
 	}
-	return NewIntegerRuntimeValue(1), err
+	return values.NewInt(1), err
 }
 
 // ProcessRequireExpr implements Visitor.
