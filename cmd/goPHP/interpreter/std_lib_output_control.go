@@ -2,6 +2,7 @@ package interpreter
 
 import (
 	"GoPHP/cmd/goPHP/phpError"
+	"GoPHP/cmd/goPHP/runtime"
 	"GoPHP/cmd/goPHP/runtime/values"
 )
 
@@ -19,7 +20,7 @@ func registerNativeOutputControlFunctions(environment *Environment) {
 
 // ------------------- MARK: ob_clean -------------------
 
-func nativeFn_ob_clean(args []values.RuntimeValue, interpreter *Interpreter) (values.RuntimeValue, phpError.Error) {
+func nativeFn_ob_clean(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.ob-clean.php
 
 	_, err := NewFuncParamValidator("ob_clean").validate(args)
@@ -34,17 +35,17 @@ func nativeFn_ob_clean(args []values.RuntimeValue, interpreter *Interpreter) (va
 
 	// TODO Throw notice if no buffer: e.g. Notice: ob_clean(): Failed to delete buffer. No buffer to delete in /home/user/scripts/code.php on line 5
 
-	if len(interpreter.outputBuffers) == 0 {
+	if context.Interpreter.GetOutputBufferStack().Len() == 0 {
 		return values.NewBool(false), nil
 	}
 
-	interpreter.outputBuffers[len(interpreter.outputBuffers)-1].Content = ""
+	context.Interpreter.GetOutputBufferStack().GetLast().Content = ""
 	return values.NewBool(true), nil
 }
 
 // ------------------- MARK: ob_flush -------------------
 
-func nativeFn_ob_flush(args []values.RuntimeValue, interpreter *Interpreter) (values.RuntimeValue, phpError.Error) {
+func nativeFn_ob_flush(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.ob-flush.php
 
 	_, err := NewFuncParamValidator("ob_flush").validate(args)
@@ -59,23 +60,23 @@ func nativeFn_ob_flush(args []values.RuntimeValue, interpreter *Interpreter) (va
 
 	// TODO Throw notice if no buffer: e.g. Notice: ob_flush(): Failed to delete buffer. No buffer to delete in /home/user/scripts/code.php on line 5
 
-	if len(interpreter.outputBuffers) == 0 {
+	if context.Interpreter.GetOutputBufferStack().Len() == 0 {
 		return values.NewBool(false), nil
 	}
 
-	if len(interpreter.outputBuffers) == 1 {
-		interpreter.result += interpreter.outputBuffers[len(interpreter.outputBuffers)-1].Content
+	if context.Interpreter.GetOutputBufferStack().Len() == 1 {
+		context.Interpreter.WriteResult(context.Interpreter.GetOutputBufferStack().GetLast().Content)
 	} else {
-		interpreter.outputBuffers[len(interpreter.outputBuffers)-2].Content += interpreter.outputBuffers[len(interpreter.outputBuffers)-1].Content
+		context.Interpreter.GetOutputBufferStack().Get(context.Interpreter.GetOutputBufferStack().Len() - 2).Content += context.Interpreter.GetOutputBufferStack().GetLast().Content
 	}
 
-	nativeFn_ob_clean(args, interpreter)
+	nativeFn_ob_clean(args, context)
 	return values.NewBool(true), nil
 }
 
 // ------------------- MARK: ob_end_clean -------------------
 
-func nativeFn_ob_end_clean(args []values.RuntimeValue, interpreter *Interpreter) (values.RuntimeValue, phpError.Error) {
+func nativeFn_ob_end_clean(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.ob-end-clean.php
 
 	_, err := NewFuncParamValidator("ob_end_clean").validate(args)
@@ -90,17 +91,17 @@ func nativeFn_ob_end_clean(args []values.RuntimeValue, interpreter *Interpreter)
 
 	// TODO Throw notice if no buffer: e.g. Notice: ob_end_clean(): Failed to delete buffer. No buffer to delete in /home/user/scripts/code.php on line 5
 
-	if len(interpreter.outputBuffers) == 0 {
+	if context.Interpreter.GetOutputBufferStack().Len() == 0 {
 		return values.NewBool(false), nil
 	}
 
-	interpreter.outputBuffers = interpreter.outputBuffers[:len(interpreter.outputBuffers)-1]
+	context.Interpreter.GetOutputBufferStack().Pop()
 	return values.NewBool(true), nil
 }
 
 // ------------------- MARK: ob_end_flush -------------------
 
-func nativeFn_ob_end_flush(args []values.RuntimeValue, interpreter *Interpreter) (values.RuntimeValue, phpError.Error) {
+func nativeFn_ob_end_flush(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.ob-end-flush.php
 
 	_, err := NewFuncParamValidator("ob_end_flush").validate(args)
@@ -115,18 +116,18 @@ func nativeFn_ob_end_flush(args []values.RuntimeValue, interpreter *Interpreter)
 
 	// TODO Throw notice if no buffer: e.g. Notice: ob_end_flush(): Failed to delete buffer. No buffer to delete in /home/user/scripts/code.php on line 5
 
-	if len(interpreter.outputBuffers) == 0 {
+	if context.Interpreter.GetOutputBufferStack().Len() == 0 {
 		return values.NewBool(false), nil
 	}
 
-	nativeFn_ob_flush(args, interpreter)
-	nativeFn_ob_end_clean(args, interpreter)
+	nativeFn_ob_flush(args, context)
+	context.Interpreter.GetOutputBufferStack().Pop()
 	return values.NewBool(true), nil
 }
 
 // ------------------- MARK: ob_get_clean -------------------
 
-func nativeFn_ob_get_clean(args []values.RuntimeValue, interpreter *Interpreter) (values.RuntimeValue, phpError.Error) {
+func nativeFn_ob_get_clean(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.ob-get-clean.php
 
 	_, err := NewFuncParamValidator("ob_get_clean").validate(args)
@@ -141,18 +142,18 @@ func nativeFn_ob_get_clean(args []values.RuntimeValue, interpreter *Interpreter)
 
 	// TODO Throw notice if no buffer: e.g. Notice: ob_get_clean(): Failed to delete buffer. No buffer to delete in /home/user/scripts/code.php on line 5
 
-	if len(interpreter.outputBuffers) == 0 {
+	if context.Interpreter.GetOutputBufferStack().Len() == 0 {
 		return values.NewBool(false), nil
 	}
 
-	content := interpreter.outputBuffers[len(interpreter.outputBuffers)-1].Content
-	nativeFn_ob_end_clean(args, interpreter)
+	content := context.Interpreter.GetOutputBufferStack().GetLast().Content
+	context.Interpreter.GetOutputBufferStack().Pop()
 	return values.NewStr(content), nil
 }
 
 // ------------------- MARK: ob_get_flush -------------------
 
-func nativeFn_ob_get_flush(args []values.RuntimeValue, interpreter *Interpreter) (values.RuntimeValue, phpError.Error) {
+func nativeFn_ob_get_flush(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.ob-get-flush.php
 
 	_, err := NewFuncParamValidator("ob_get_flush").validate(args)
@@ -167,18 +168,18 @@ func nativeFn_ob_get_flush(args []values.RuntimeValue, interpreter *Interpreter)
 
 	// TODO Throw notice if no buffer: e.g. Notice: ob_get_flush(): Failed to delete buffer. No buffer to delete in /home/user/scripts/code.php on line 5
 
-	if len(interpreter.outputBuffers) == 0 {
+	if context.Interpreter.GetOutputBufferStack().Len() == 0 {
 		return values.NewBool(false), nil
 	}
 
-	content := interpreter.outputBuffers[len(interpreter.outputBuffers)-1].Content
-	nativeFn_ob_end_flush(args, interpreter)
+	content := context.Interpreter.GetOutputBufferStack().GetLast().Content
+	nativeFn_ob_end_flush(args, context)
 	return values.NewStr(content), nil
 }
 
 // ------------------- MARK: ob_get_contents -------------------
 
-func nativeFn_ob_get_contents(args []values.RuntimeValue, interpreter *Interpreter) (values.RuntimeValue, phpError.Error) {
+func nativeFn_ob_get_contents(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.ob-get-contents.php
 
 	_, err := NewFuncParamValidator("nativeFn_ob_get_contents").validate(args)
@@ -186,16 +187,16 @@ func nativeFn_ob_get_contents(args []values.RuntimeValue, interpreter *Interpret
 		return values.NewVoid(), err
 	}
 
-	if len(interpreter.outputBuffers) == 0 {
+	if context.Interpreter.GetOutputBufferStack().Len() == 0 {
 		return values.NewBool(false), nil
 	}
 
-	return values.NewStr(interpreter.outputBuffers[len(interpreter.outputBuffers)-1].Content), nil
+	return values.NewStr(context.Interpreter.GetOutputBufferStack().GetLast().Content), nil
 }
 
 // ------------------- MARK: ob_get_level -------------------
 
-func nativeFn_ob_get_level(args []values.RuntimeValue, interpreter *Interpreter) (values.RuntimeValue, phpError.Error) {
+func nativeFn_ob_get_level(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.ob-get-level.php
 
 	_, err := NewFuncParamValidator("ob_get_level").validate(args)
@@ -203,12 +204,12 @@ func nativeFn_ob_get_level(args []values.RuntimeValue, interpreter *Interpreter)
 		return values.NewVoid(), err
 	}
 
-	return values.NewInt(int64(len(interpreter.outputBuffers))), nil
+	return values.NewInt(int64(context.Interpreter.GetOutputBufferStack().Len())), nil
 }
 
 // ------------------- MARK: ob_start -------------------
 
-func nativeFn_ob_start(args []values.RuntimeValue, interpreter *Interpreter) (values.RuntimeValue, phpError.Error) {
+func nativeFn_ob_start(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.ob-start
 
 	_, err := NewFuncParamValidator("ob_start").validate(args)
@@ -219,7 +220,7 @@ func nativeFn_ob_start(args []values.RuntimeValue, interpreter *Interpreter) (va
 	// TODO ob_start parameters
 	//  ob_start(?callable $callback = null, int $chunk_size = 0, int $flags = PHP_OUTPUT_HANDLER_STDFLAGS): bool
 
-	interpreter.outputBuffers = append(interpreter.outputBuffers, NewOutputBuffer())
+	context.Interpreter.GetOutputBufferStack().Push()
 
 	return values.NewBool(true), nil
 }

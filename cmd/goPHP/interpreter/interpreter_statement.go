@@ -31,7 +31,7 @@ func (interpreter *Interpreter) ProcessEchoStmt(stmt *ast.EchoStatement, env any
 		runtimeValue := must(interpreter.processStmt(expr, env))
 
 		str := mustOrVoid(lib_strval(runtimeValue))
-		interpreter.print(str)
+		interpreter.Print(str)
 	}
 	return values.NewVoid(), nil
 }

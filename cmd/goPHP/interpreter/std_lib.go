@@ -3,6 +3,7 @@ package interpreter
 import (
 	"GoPHP/cmd/goPHP/ini"
 	"GoPHP/cmd/goPHP/phpError"
+	"GoPHP/cmd/goPHP/runtime"
 	"GoPHP/cmd/goPHP/runtime/values"
 	"slices"
 	"strconv"
@@ -22,11 +23,11 @@ func registerNativeFunctions(environment *Environment) {
 	environment.nativeFunctions["key_exits"] = nativeFn_array_key_exists
 }
 
-type nativeFunction func([]values.RuntimeValue, *Interpreter) (values.RuntimeValue, phpError.Error)
+type nativeFunction func([]values.RuntimeValue, runtime.Context) (values.RuntimeValue, phpError.Error)
 
 // ------------------- MARK: array_key_exits -------------------
 
-func nativeFn_array_key_exists(args []values.RuntimeValue, _ *Interpreter) (values.RuntimeValue, phpError.Error) {
+func nativeFn_array_key_exists(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	args, err := NewFuncParamValidator("array_key_exists").
 		addParam("$key", []string{"string", "int", "float", "bool", "resource", "null"}, nil).
 		addParam("$array", []string{"array"}, nil).
@@ -93,7 +94,7 @@ func lib_arrayval(runtimeValue values.RuntimeValue) (*values.Array, phpError.Err
 
 // ------------------- MARK: error_reporting -------------------
 
-func nativeFn_error_reporting(args []values.RuntimeValue, interpreter *Interpreter) (values.RuntimeValue, phpError.Error) {
+func nativeFn_error_reporting(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.error-reporting.php
 
 	args, err := NewFuncParamValidator("error_reporting").addParam("$error_level", []string{"int"}, values.NewNull()).validate(args)
@@ -102,7 +103,7 @@ func nativeFn_error_reporting(args []values.RuntimeValue, interpreter *Interpret
 	}
 
 	if args[0].GetType() == values.NullValue {
-		return values.NewInt(interpreter.ini.GetInt("error_reporting")), nil
+		return values.NewInt(context.Interpreter.GetIni().GetInt("error_reporting")), nil
 	}
 
 	newValue := args[0].(*values.Int).Value
@@ -110,8 +111,8 @@ func nativeFn_error_reporting(args []values.RuntimeValue, interpreter *Interpret
 		newValue = phpError.E_ALL
 	}
 
-	previous := interpreter.ini.GetInt("error_reporting")
-	interpreter.ini.Set("error_reporting", strconv.FormatInt(newValue, 10), ini.INI_USER)
+	previous := context.Interpreter.GetIni().GetInt("error_reporting")
+	context.Interpreter.GetIni().Set("error_reporting", strconv.FormatInt(newValue, 10), ini.INI_USER)
 
 	return values.NewInt(previous), nil
 }

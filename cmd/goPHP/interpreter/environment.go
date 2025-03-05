@@ -88,7 +88,7 @@ func (env *Environment) resolveVariable(variableName string) (*Environment, phpE
 	return nil, err
 }
 
-func (env *Environment) lookupVariable(variableName string) (values.RuntimeValue, phpError.Error) {
+func (env *Environment) LookupVariable(variableName string) (values.RuntimeValue, phpError.Error) {
 	environment, err := env.resolveVariable(variableName)
 	if err != nil {
 		return values.NewNull(), err
@@ -136,7 +136,7 @@ func (env *Environment) declareConstant(constantName string, value values.Runtim
 		environment = environment.parent
 	}
 
-	if _, err := environment.lookupConstant(constantName); err == nil {
+	if _, err := environment.LookupConstant(constantName); err == nil {
 		return values.NewVoid(), phpError.NewWarning("Constant %s already defined", constantName)
 	}
 
@@ -145,7 +145,7 @@ func (env *Environment) declareConstant(constantName string, value values.Runtim
 	return value, nil
 }
 
-func (env *Environment) lookupConstant(constantName string) (values.RuntimeValue, phpError.Error) {
+func (env *Environment) LookupConstant(constantName string) (values.RuntimeValue, phpError.Error) {
 	// Get "global" environment
 	var environment *Environment = env
 	for environment.parent != nil {

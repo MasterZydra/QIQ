@@ -3,6 +3,7 @@ package interpreter
 import (
 	"GoPHP/cmd/goPHP/ini"
 	"GoPHP/cmd/goPHP/phpError"
+	"GoPHP/cmd/goPHP/runtime"
 	"GoPHP/cmd/goPHP/runtime/values"
 )
 
@@ -14,7 +15,7 @@ func registerNativeOptionsInfoFunctions(environment *Environment) {
 
 // ------------------- MARK: getenv -------------------
 
-func nativeFn_getenv(args []values.RuntimeValue, interpreter *Interpreter) (values.RuntimeValue, phpError.Error) {
+func nativeFn_getenv(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.getenv.php
 
 	//  getenv(?string $name = null, bool $local_only = false): string|array|false
@@ -29,10 +30,10 @@ func nativeFn_getenv(args []values.RuntimeValue, interpreter *Interpreter) (valu
 	}
 
 	if args[0].GetType() == values.NullValue {
-		return interpreter.env.lookupVariable("$_ENV")
+		return context.Env.LookupVariable("$_ENV")
 	}
 
-	envVars, err := interpreter.env.lookupVariable("$_ENV")
+	envVars, err := context.Env.LookupVariable("$_ENV")
 	if err != nil {
 		return envVars, err
 	}
@@ -46,7 +47,7 @@ func nativeFn_getenv(args []values.RuntimeValue, interpreter *Interpreter) (valu
 
 // ------------------- MARK: ini_get -------------------
 
-func nativeFn_ini_get(args []values.RuntimeValue, interpreter *Interpreter) (values.RuntimeValue, phpError.Error) {
+func nativeFn_ini_get(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.ini-get
 
 	args, err := NewFuncParamValidator("ini_get").addParam("$option", []string{"string"}, nil).validate(args)
@@ -54,7 +55,7 @@ func nativeFn_ini_get(args []values.RuntimeValue, interpreter *Interpreter) (val
 		return values.NewVoid(), err
 	}
 
-	value, iniErr := interpreter.ini.Get(args[0].(*values.Str).Value)
+	value, iniErr := context.Interpreter.GetIni().Get(args[0].(*values.Str).Value)
 	if iniErr != nil {
 		return values.NewBool(false), nil
 	}
@@ -63,7 +64,7 @@ func nativeFn_ini_get(args []values.RuntimeValue, interpreter *Interpreter) (val
 
 // ------------------- MARK: ini_set -------------------
 
-func nativeFn_ini_set(args []values.RuntimeValue, interpreter *Interpreter) (values.RuntimeValue, phpError.Error) {
+func nativeFn_ini_set(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.ini-set
 
 	args, err := NewFuncParamValidator("ini_set").
@@ -81,11 +82,11 @@ func nativeFn_ini_set(args []values.RuntimeValue, interpreter *Interpreter) (val
 
 	option := args[0].(*values.Str).Value
 
-	oldValue, err := interpreter.ini.Get(option)
+	oldValue, err := context.Interpreter.GetIni().Get(option)
 	if err != nil {
 		return values.NewBool(false), nil
 	}
-	err = interpreter.ini.Set(option, value, ini.INI_USER)
+	err = context.Interpreter.GetIni().Set(option, value, ini.INI_USER)
 	if err != nil {
 		return values.NewBool(false), nil
 	}

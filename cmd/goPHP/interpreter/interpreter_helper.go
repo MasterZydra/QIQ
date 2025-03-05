@@ -3,39 +3,41 @@ package interpreter
 import (
 	"GoPHP/cmd/goPHP/ast"
 	"GoPHP/cmd/goPHP/common"
-	"GoPHP/cmd/goPHP/config"
 	"GoPHP/cmd/goPHP/phpError"
+	"GoPHP/cmd/goPHP/runtime"
 	"GoPHP/cmd/goPHP/runtime/values"
 	"math"
 	"os"
 	"regexp"
-	"runtime"
+	goRuntime "runtime"
 	"slices"
 	"strconv"
 	"strings"
 )
 
-func printDev(str string) {
-	if config.IsDevMode {
-		println(str)
+func (interpreter *Interpreter) Print(str string) {
+	if interpreter.outputBufferStack.Len() > 0 {
+		interpreter.outputBufferStack.Get(interpreter.outputBufferStack.Len() - 1).Content += str
+	} else {
+		interpreter.WriteResult(str)
 	}
 }
 
-func (interpreter *Interpreter) print(str string) {
-	if len(interpreter.outputBuffers) > 0 {
-		interpreter.outputBuffers[len(interpreter.outputBuffers)-1].Content += str
-	} else {
-		interpreter.result += str
-	}
+func (interpreter *Interpreter) Println(str string) {
+	interpreter.Print(str + PHP_EOL)
+}
+
+func (interpreter *Interpreter) WriteResult(str string) {
+	interpreter.result += str
 }
 
 func (interpreter *Interpreter) flushOutputBuffers() {
-	if len(interpreter.outputBuffers) == 0 {
+	if interpreter.outputBufferStack.Len() == 0 {
 		return
 	}
 
-	for len(interpreter.outputBuffers) > 0 {
-		nativeFn_ob_end_flush([]values.RuntimeValue{}, interpreter)
+	for interpreter.outputBufferStack.Len() > 0 {
+		nativeFn_ob_end_flush([]values.RuntimeValue{}, runtime.NewContext(interpreter, nil))
 	}
 }
 
@@ -59,10 +61,6 @@ func getPhpDirectorySeparator() string {
 	}
 }
 
-func (interpreter *Interpreter) println(str string) {
-	interpreter.print(str + PHP_EOL)
-}
-
 func (interpreter *Interpreter) processCondition(expr ast.IExpression, env *Environment) (values.RuntimeValue, bool, phpError.Error) {
 	runtimeValue, err := interpreter.processStmt(expr, env)
 	if err != nil {
@@ -79,7 +77,7 @@ func (interpreter *Interpreter) lookupVariable(expr ast.IExpression, env *Enviro
 		return values.NewVoid(), err
 	}
 
-	runtimeValue, err := env.lookupVariable(variableName)
+	runtimeValue, err := env.LookupVariable(variableName)
 	if !interpreter.suppressWarning && err != nil {
 		interpreter.printError(err)
 	}
@@ -101,7 +99,7 @@ func (interpreter *Interpreter) varExprToVarName(expr ast.IExpression, env *Envi
 			if err != nil {
 				return "", err
 			}
-			runtimeValue, err := env.lookupVariable(variableName)
+			runtimeValue, err := env.LookupVariable(variableName)
 			if err != nil {
 				interpreter.printError(err)
 			}
@@ -141,12 +139,12 @@ func (interpreter *Interpreter) printError(err phpError.Error) {
 	if errStr := interpreter.ErrorToString(err); errStr == "" {
 		return
 	} else {
-		interpreter.println(errStr)
+		interpreter.Println(errStr)
 	}
 }
 
 func getPhpOs() string {
-	switch runtime.GOOS {
+	switch goRuntime.GOOS {
 	case "android":
 		return "Android"
 	case "darwin":
@@ -173,7 +171,7 @@ func getPhpOs() string {
 }
 
 func getPhpOsFamily() string {
-	switch runtime.GOOS {
+	switch goRuntime.GOOS {
 	case "android", "linux":
 		return "Linux"
 	case "darwin":
@@ -258,10 +256,10 @@ func (interpreter *Interpreter) includeFile(filepathExpr ast.IExpression, env *E
 	// Spec: https://phplang.org/spec/10-expressions.html#the-require-operator
 	// Once an include file has been included, a subsequent use of require_once on that include file
 	// results in a return value of TRUE but nothing else happens.
-	if once && slices.Contains(interpreter.includedFiles, filename) && runtime.GOOS != "windows" {
+	if once && slices.Contains(interpreter.includedFiles, filename) && goRuntime.GOOS != "windows" {
 		return values.NewBool(true), nil
 	}
-	if once && slices.Contains(interpreter.includedFiles, strings.ToLower(filename)) && runtime.GOOS == "windows" {
+	if once && slices.Contains(interpreter.includedFiles, strings.ToLower(filename)) && goRuntime.GOOS == "windows" {
 		return values.NewBool(true), nil
 	}
 
@@ -308,7 +306,7 @@ func (interpreter *Interpreter) includeFile(filepathExpr ast.IExpression, env *E
 	}
 	program, parserErr := interpreter.parser.ProduceAST(string(content), filename)
 
-	if runtime.GOOS != "windows" {
+	if goRuntime.GOOS != "windows" {
 		interpreter.includedFiles = append(interpreter.includedFiles, absFilename)
 	} else {
 		interpreter.includedFiles = append(interpreter.includedFiles, strings.ToLower(absFilename))

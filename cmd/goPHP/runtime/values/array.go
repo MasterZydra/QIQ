@@ -34,7 +34,7 @@ func NewArrayFromMap(elements map[RuntimeValue]RuntimeValue) *Array {
 	return array
 }
 
-func (runtimeValue *Array) keyToMapKey(key RuntimeValue) (string, phpError.Error) {
+func keyToMapKey(key RuntimeValue) (string, phpError.Error) {
 	if key.GetType() == IntValue {
 		return fmt.Sprintf("i_%d", key.(*Int).Value), nil
 	}
@@ -44,7 +44,7 @@ func (runtimeValue *Array) keyToMapKey(key RuntimeValue) (string, phpError.Error
 	return "", phpError.NewError("Array.keyToMapKey: Unsupported key type %s", ToPhpType(key))
 }
 
-func (runtimeValue *Array) convertKey(key RuntimeValue) (RuntimeValue, phpError.Error) {
+func convertKey(key RuntimeValue) (RuntimeValue, phpError.Error) {
 	if key == nil {
 		return NewVoid(), nil
 	}
@@ -86,11 +86,11 @@ func (runtimeValue *Array) convertKey(key RuntimeValue) (RuntimeValue, phpError.
 	return key, nil
 }
 
-func (runtimeValue *Array) getNextKey(key RuntimeValue) (RuntimeValue, phpError.Error) {
+func (array *Array) getNextKey(key RuntimeValue) (RuntimeValue, phpError.Error) {
 	// If a key is passed
 	if key != nil {
 		var err phpError.Error
-		key, err = runtimeValue.convertKey(key)
+		key, err = convertKey(key)
 		if err != nil {
 			return key, err
 		}
@@ -99,11 +99,11 @@ func (runtimeValue *Array) getNextKey(key RuntimeValue) (RuntimeValue, phpError.
 		if key.GetType() == IntValue {
 			keyValue := key.(*Int).Value
 			// If no key is stored yet or the passed key is greater than nextKey
-			if !runtimeValue.nextKeySet ||
-				(runtimeValue.nextKeySet && keyValue > runtimeValue.nextKey) {
+			if !array.nextKeySet ||
+				(array.nextKeySet && keyValue > array.nextKey) {
 				// Store value + 1 as next key
-				runtimeValue.nextKey = keyValue + 1
-				runtimeValue.nextKeySet = true
+				array.nextKey = keyValue + 1
+				array.nextKeySet = true
 			}
 		}
 
@@ -111,17 +111,17 @@ func (runtimeValue *Array) getNextKey(key RuntimeValue) (RuntimeValue, phpError.
 	}
 
 	// If no key is passed and no nextKey is set yet
-	if !runtimeValue.nextKeySet {
+	if !array.nextKeySet {
 		// lastFoundInt is -1 because at the end of the loop it will be increased by one
 		var lastFoundInt int64 = -1
 		found := false
 		// Iterate all keys and search for integer values
-		for i := len(runtimeValue.Keys) - 1; i >= 0; i-- {
-			if runtimeValue.Keys[i].GetType() != IntValue {
+		for i := len(array.Keys) - 1; i >= 0; i-- {
+			if array.Keys[i].GetType() != IntValue {
 				continue
 			}
 
-			foundInt := runtimeValue.Keys[i].(*Int).Value
+			foundInt := array.Keys[i].(*Int).Value
 			if !found {
 				lastFoundInt = foundInt
 				found = true
@@ -132,55 +132,55 @@ func (runtimeValue *Array) getNextKey(key RuntimeValue) (RuntimeValue, phpError.
 				lastFoundInt = foundInt
 			}
 		}
-		runtimeValue.nextKey = lastFoundInt + 1
-		runtimeValue.nextKeySet = true
+		array.nextKey = lastFoundInt + 1
+		array.nextKeySet = true
 	}
 
-	key = NewInt(runtimeValue.nextKey)
-	runtimeValue.nextKey++
+	key = NewInt(array.nextKey)
+	array.nextKey++
 	return key, nil
 }
 
-func (runtimeValue *Array) SetElement(key RuntimeValue, value RuntimeValue) phpError.Error {
-	key, err := runtimeValue.getNextKey(key)
+func (array *Array) SetElement(key RuntimeValue, value RuntimeValue) phpError.Error {
+	key, err := array.getNextKey(key)
 	if err != nil {
 		return err
 	}
 
-	mapKey, found, err := runtimeValue.getMapKey(key, false)
+	mapKey, found, err := array.getMapKey(key, false)
 	if err != nil {
 		return err
 	}
 
 	if !found {
-		runtimeValue.Keys = append(runtimeValue.Keys, key)
+		array.Keys = append(array.Keys, key)
 	}
-	runtimeValue.Elements[mapKey] = value
+	array.Elements[mapKey] = value
 
 	return nil
 }
 
-func (runtimeValue *Array) getMapKey(key RuntimeValue, convertKey bool) (string, bool, phpError.Error) {
-	if convertKey {
+func (array *Array) getMapKey(key RuntimeValue, shouldConvertKey bool) (string, bool, phpError.Error) {
+	if shouldConvertKey {
 		var err phpError.Error
-		key, err = runtimeValue.convertKey(key)
+		key, err = convertKey(key)
 		if err != nil {
 			return "", false, err
 		}
 	}
 
-	mapKey, err := runtimeValue.keyToMapKey(key)
+	mapKey, err := keyToMapKey(key)
 	if err != nil {
 		return "", false, err
 	}
 
-	_, found := runtimeValue.Elements[mapKey]
+	_, found := array.Elements[mapKey]
 
 	return mapKey, found, nil
 }
 
-func (runtimeValue *Array) Contains(key RuntimeValue) bool {
-	_, found, err := runtimeValue.getMapKey(key, true)
+func (array *Array) Contains(key RuntimeValue) bool {
+	_, found, err := array.getMapKey(key, true)
 	if err != nil && config.IsDevMode {
 		fmt.Println("Array.Contains: " + err.Error())
 		return false
@@ -188,13 +188,13 @@ func (runtimeValue *Array) Contains(key RuntimeValue) bool {
 	return found
 }
 
-func (runtimeValue *Array) GetElement(key RuntimeValue) (RuntimeValue, bool) {
-	mapKey, found, err := runtimeValue.getMapKey(key, true)
+func (array *Array) GetElement(key RuntimeValue) (RuntimeValue, bool) {
+	mapKey, found, err := array.getMapKey(key, true)
 	if err != nil {
 		return NewVoid(), false
 	}
 	if !found {
 		return NewVoid(), false
 	}
-	return runtimeValue.Elements[mapKey], true
+	return array.Elements[mapKey], true
 }

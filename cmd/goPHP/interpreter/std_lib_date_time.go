@@ -3,6 +3,7 @@ package interpreter
 import (
 	"GoPHP/cmd/goPHP/common"
 	"GoPHP/cmd/goPHP/phpError"
+	"GoPHP/cmd/goPHP/runtime"
 	"GoPHP/cmd/goPHP/runtime/values"
 	"fmt"
 	"math"
@@ -22,7 +23,7 @@ func registerNativeDateTimeFunctions(environment *Environment) {
 
 // ------------------- MARK: checkdate -------------------
 
-func nativeFn_checkdate(args []values.RuntimeValue, _ *Interpreter) (values.RuntimeValue, phpError.Error) {
+func nativeFn_checkdate(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	args, err := NewFuncParamValidator("checkdate").
 		addParam("$month", []string{"int"}, nil).addParam("$day", []string{"int"}, nil).addParam("$year", []string{"int"}, nil).
 		validate(args)
@@ -54,7 +55,7 @@ func nativeFn_checkdate(args []values.RuntimeValue, _ *Interpreter) (values.Runt
 
 // ------------------- MARK: date -------------------
 
-func nativeFn_date(args []values.RuntimeValue, _ *Interpreter) (values.RuntimeValue, phpError.Error) {
+func nativeFn_date(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	args, err := NewFuncParamValidator("date").
 		addParam("$format", []string{"string"}, nil).addParam("$timestamp", []string{"int"}, values.NewNull()).
 		validate(args)
@@ -202,7 +203,7 @@ func nativeFn_date(args []values.RuntimeValue, _ *Interpreter) (values.RuntimeVa
 
 // ------------------- MARK: getdate -------------------
 
-func nativeFn_getdate(args []values.RuntimeValue, _ *Interpreter) (values.RuntimeValue, phpError.Error) {
+func nativeFn_getdate(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	args, err := NewFuncParamValidator("getdate").addParam("$timestamp", []string{"int"}, values.NewNull()).validate(args)
 	if err != nil {
 		return values.NewVoid(), err
@@ -234,7 +235,7 @@ func nativeFn_getdate(args []values.RuntimeValue, _ *Interpreter) (values.Runtim
 
 // ------------------- MARK: localtime -------------------
 
-func nativeFn_localtime(args []values.RuntimeValue, _ *Interpreter) (values.RuntimeValue, phpError.Error) {
+func nativeFn_localtime(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	args, err := NewFuncParamValidator("localtime").
 		addParam("$timestamp", []string{"int"}, values.NewNull()).
 		addParam("associative", []string{"bool"}, values.NewBool(false)).
@@ -287,7 +288,7 @@ func nativeFn_localtime(args []values.RuntimeValue, _ *Interpreter) (values.Runt
 
 // ------------------- MARK: microtime -------------------
 
-func nativeFn_microtime(args []values.RuntimeValue, _ *Interpreter) (values.RuntimeValue, phpError.Error) {
+func nativeFn_microtime(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	args, err := NewFuncParamValidator("microtime").addParam("$as_float", []string{"bool"}, values.NewBool(false)).validate(args)
 	if err != nil {
 		return values.NewVoid(), err
@@ -308,7 +309,7 @@ func nativeFn_microtime(args []values.RuntimeValue, _ *Interpreter) (values.Runt
 
 // ------------------- MARK: mktime -------------------
 
-func nativeFn_mktime(args []values.RuntimeValue, _ *Interpreter) (values.RuntimeValue, phpError.Error) {
+func nativeFn_mktime(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	args, err := NewFuncParamValidator("mktime").
 		addParam("$hour", []string{"int"}, nil).
 		addParam("$minute", []string{"int"}, values.NewNull()).
@@ -365,7 +366,7 @@ func nativeFn_mktime(args []values.RuntimeValue, _ *Interpreter) (values.Runtime
 
 // ------------------- MARK: time -------------------
 
-func nativeFn_time(args []values.RuntimeValue, _ *Interpreter) (values.RuntimeValue, phpError.Error) {
+func nativeFn_time(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	_, err := NewFuncParamValidator("time").validate(args)
 	if err != nil {
 		return values.NewVoid(), err

@@ -2,6 +2,7 @@ package interpreter
 
 import (
 	"GoPHP/cmd/goPHP/phpError"
+	"GoPHP/cmd/goPHP/runtime"
 	"GoPHP/cmd/goPHP/runtime/values"
 )
 
@@ -12,7 +13,7 @@ func registerNativeMiscFunctions(environment *Environment) {
 
 // ------------------- MARK: constant -------------------
 
-func nativeFn_constant(args []values.RuntimeValue, interpreter *Interpreter) (values.RuntimeValue, phpError.Error) {
+func nativeFn_constant(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.constant.php
 
 	args, err := NewFuncParamValidator("constant").addParam("$name", []string{"string"}, nil).validate(args)
@@ -20,7 +21,7 @@ func nativeFn_constant(args []values.RuntimeValue, interpreter *Interpreter) (va
 		return values.NewVoid(), err
 	}
 
-	constantValue, err := interpreter.env.lookupConstant(args[0].(*values.Str).Value)
+	constantValue, err := context.Env.LookupConstant(args[0].(*values.Str).Value)
 	if err != nil {
 		return values.NewVoid(), err
 	}
@@ -30,7 +31,7 @@ func nativeFn_constant(args []values.RuntimeValue, interpreter *Interpreter) (va
 
 // ------------------- MARK: defined -------------------
 
-func nativeFn_defined(args []values.RuntimeValue, interpreter *Interpreter) (values.RuntimeValue, phpError.Error) {
+func nativeFn_defined(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.defined.php
 
 	args, err := NewFuncParamValidator("defined").addParam("$name", []string{"string"}, nil).validate(args)
@@ -38,7 +39,7 @@ func nativeFn_defined(args []values.RuntimeValue, interpreter *Interpreter) (val
 		return values.NewVoid(), err
 	}
 
-	_, err = interpreter.env.lookupConstant(args[0].(*values.Str).Value)
+	_, err = context.Env.LookupConstant(args[0].(*values.Str).Value)
 	return values.NewBool(err == nil), nil
 }
 

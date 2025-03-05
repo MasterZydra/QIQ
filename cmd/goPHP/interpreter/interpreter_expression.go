@@ -5,13 +5,14 @@ import (
 	"GoPHP/cmd/goPHP/common"
 	"GoPHP/cmd/goPHP/ini"
 	"GoPHP/cmd/goPHP/phpError"
+	"GoPHP/cmd/goPHP/runtime"
 	"GoPHP/cmd/goPHP/runtime/values"
 	"strings"
 )
 
 // ProcessTextExpr implements Visitor.
 func (interpreter *Interpreter) ProcessTextExpr(expr *ast.TextExpression, _ any) (any, error) {
-	interpreter.print(expr.Value)
+	interpreter.Print(expr.Value)
 	return values.NewVoid(), nil
 }
 
@@ -68,7 +69,7 @@ func (interpreter *Interpreter) ProcessSimpleAssignmentExpr(expr *ast.SimpleAssi
 	}
 
 	variableName := mustOrVoid(interpreter.varExprToVarName(expr.Variable, env.(*Environment)))
-	currentValue, _ := env.(*Environment).lookupVariable(variableName)
+	currentValue, _ := env.(*Environment).LookupVariable(variableName)
 
 	if currentValue.GetType() == values.StrValue && expr.Variable.GetKind() == ast.SubscriptExpr {
 		if expr.Variable.(*ast.SubscriptExpression).Index == nil {
@@ -85,7 +86,7 @@ func (interpreter *Interpreter) ProcessSimpleAssignmentExpr(expr *ast.SimpleAssi
 		key := expr.Variable.(*ast.SubscriptExpression).Index.(*ast.IntegerLiteralExpression).Value
 		value := must(interpreter.processStmt(expr.Value, env))
 
-		currentValue, _ = env.(*Environment).lookupVariable(variableName)
+		currentValue, _ = env.(*Environment).LookupVariable(variableName)
 		str := currentValue.(*values.Str).Value
 
 		valueStr, err := lib_strval(value)
@@ -106,7 +107,7 @@ func (interpreter *Interpreter) ProcessSimpleAssignmentExpr(expr *ast.SimpleAssi
 
 	if currentValue.GetType() == values.NullValue && expr.Variable.GetKind() == ast.SubscriptExpr {
 		env.(*Environment).declareVariable(variableName, values.NewArray())
-		currentValue, _ = env.(*Environment).lookupVariable(variableName)
+		currentValue, _ = env.(*Environment).LookupVariable(variableName)
 	}
 
 	if currentValue.GetType() == values.ArrayValue {
@@ -326,7 +327,7 @@ func (interpreter *Interpreter) ProcessFunctionCallExpr(expr *ast.FunctionCallEx
 			runtimeValue := must(interpreter.processStmt(arg, env))
 			functionArguments[index] = deepCopy(runtimeValue)
 		}
-		return nativeFunction(functionArguments, interpreter)
+		return nativeFunction(functionArguments, runtime.NewContext(interpreter, env.(*Environment)))
 	}
 
 	// Lookup user function
@@ -460,7 +461,7 @@ func (interpreter *Interpreter) ProcessExitIntrinsicExpr(expr *ast.ExitIntrinsic
 	if expression != nil {
 		exprValue := must(interpreter.processStmt(expression, env))
 		if exprValue.GetType() == values.StrValue {
-			interpreter.print(exprValue.(*values.Str).Value)
+			interpreter.Print(exprValue.(*values.Str).Value)
 		}
 		if exprValue.GetType() == values.IntValue {
 			exitCode := exprValue.(*values.Int).Value
@@ -553,7 +554,7 @@ func (interpreter *Interpreter) ProcessConstantAccessExpr(expr *ast.ConstantAcce
 	// TODO __PROPERTY__ 	Only valid inside a property hook. It is equal to the name of the property.
 	// TODO __NAMESPACE__ 	The name of the current namespace.
 
-	return env.(*Environment).lookupConstant(expr.ConstantName)
+	return env.(*Environment).LookupConstant(expr.ConstantName)
 }
 
 // ProcessCompoundAssignmentExpr implements Visitor.
@@ -782,7 +783,7 @@ func (interpreter *Interpreter) ProcessPrintExpr(expr *ast.PrintExpression, env 
 
 	str, err := lib_strval(runtimeValue)
 	if err == nil {
-		interpreter.print(str)
+		interpreter.Print(str)
 	}
 	return values.NewInt(1), err
 }

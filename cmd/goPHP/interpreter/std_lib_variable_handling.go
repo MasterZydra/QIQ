@@ -3,6 +3,7 @@ package interpreter
 import (
 	"GoPHP/cmd/goPHP/common"
 	"GoPHP/cmd/goPHP/phpError"
+	"GoPHP/cmd/goPHP/runtime"
 	"GoPHP/cmd/goPHP/runtime/values"
 	"fmt"
 	"math"
@@ -35,7 +36,7 @@ func registerNativeVariableHandlingFunctions(environment *Environment) {
 
 // ------------------- MARK: boolval -------------------
 
-func nativeFn_boolval(args []values.RuntimeValue, _ *Interpreter) (values.RuntimeValue, phpError.Error) {
+func nativeFn_boolval(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	args, err := NewFuncParamValidator("boolval").addParam("$value", []string{"mixed"}, nil).validate(args)
 	if err != nil {
 		return values.NewVoid(), err
@@ -90,7 +91,7 @@ func lib_boolval(runtimeValue values.RuntimeValue) (bool, phpError.Error) {
 
 // ------------------- MARK: floatval -------------------
 
-func nativeFn_floatval(args []values.RuntimeValue, _ *Interpreter) (values.RuntimeValue, phpError.Error) {
+func nativeFn_floatval(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	args, err := NewFuncParamValidator("floatval").addParam("$value", []string{"mixed"}, nil).validate(args)
 	if err != nil {
 		return values.NewVoid(), err
@@ -151,7 +152,7 @@ func lib_floatval(runtimeValue values.RuntimeValue) (float64, phpError.Error) {
 
 // ------------------- MARK: get_debug_type -------------------
 
-func nativeFn_get_debug_type(args []values.RuntimeValue, _ *Interpreter) (values.RuntimeValue, phpError.Error) {
+func nativeFn_get_debug_type(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	args, err := NewFuncParamValidator("get_debug_type").addParam("$value", []string{"mixed"}, nil).validate(args)
 	if err != nil {
 		return values.NewVoid(), err
@@ -187,7 +188,7 @@ func lib_get_debug_type(runtimeValue values.RuntimeValue) (string, phpError.Erro
 
 // ------------------- MARK: gettype -------------------
 
-func nativeFn_gettype(args []values.RuntimeValue, _ *Interpreter) (values.RuntimeValue, phpError.Error) {
+func nativeFn_gettype(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	args, err := NewFuncParamValidator("gettype").addParam("$value", []string{"mixed"}, nil).validate(args)
 	if err != nil {
 		return values.NewVoid(), err
@@ -223,7 +224,7 @@ func lib_gettype(runtimeValue values.RuntimeValue) (string, phpError.Error) {
 
 // ------------------- MARK: intval -------------------
 
-func nativeFn_intval(args []values.RuntimeValue, _ *Interpreter) (values.RuntimeValue, phpError.Error) {
+func nativeFn_intval(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	args, err := NewFuncParamValidator("intval").addParam("$value", []string{"mixed"}, nil).validate(args)
 	if err != nil {
 		return values.NewVoid(), err
@@ -299,7 +300,7 @@ func lib_intval(runtimeValue values.RuntimeValue) (int64, phpError.Error) {
 
 // ------------------- MARK: is_array -------------------
 
-func nativeFn_is_array(args []values.RuntimeValue, _ *Interpreter) (values.RuntimeValue, phpError.Error) {
+func nativeFn_is_array(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	args, err := NewFuncParamValidator("is_array").addParam("$value", []string{"mixed"}, nil).validate(args)
 	if err != nil {
 		return values.NewVoid(), err
@@ -315,7 +316,7 @@ func lib_is_array(runtimeValue values.RuntimeValue) bool {
 
 // ------------------- MARK: is_bool -------------------
 
-func nativeFn_is_bool(args []values.RuntimeValue, _ *Interpreter) (values.RuntimeValue, phpError.Error) {
+func nativeFn_is_bool(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	args, err := NewFuncParamValidator("is_bool").addParam("$value", []string{"mixed"}, nil).validate(args)
 	if err != nil {
 		return values.NewVoid(), err
@@ -331,7 +332,7 @@ func lib_is_bool(runtimeValue values.RuntimeValue) bool {
 
 // ------------------- MARK: is_float -------------------
 
-func nativeFn_is_float(args []values.RuntimeValue, _ *Interpreter) (values.RuntimeValue, phpError.Error) {
+func nativeFn_is_float(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	args, err := NewFuncParamValidator("is_float").addParam("$value", []string{"mixed"}, nil).validate(args)
 	if err != nil {
 		return values.NewVoid(), err
@@ -347,7 +348,7 @@ func lib_is_float(runtimeValue values.RuntimeValue) bool {
 
 // ------------------- MARK: is_int -------------------
 
-func nativeFn_is_int(args []values.RuntimeValue, _ *Interpreter) (values.RuntimeValue, phpError.Error) {
+func nativeFn_is_int(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	args, err := NewFuncParamValidator("is_int").addParam("$value", []string{"mixed"}, nil).validate(args)
 	if err != nil {
 		return values.NewVoid(), err
@@ -363,7 +364,7 @@ func lib_is_int(runtimeValue values.RuntimeValue) bool {
 
 // ------------------- MARK: is_null -------------------
 
-func nativeFn_is_null(args []values.RuntimeValue, _ *Interpreter) (values.RuntimeValue, phpError.Error) {
+func nativeFn_is_null(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	args, err := NewFuncParamValidator("is_null").addParam("$value", []string{"mixed"}, nil).validate(args)
 	if err != nil {
 		return values.NewVoid(), err
@@ -379,7 +380,7 @@ func lib_is_null(runtimeValue values.RuntimeValue) bool {
 
 // ------------------- MARK: is_scalar -------------------
 
-func nativeFn_is_scalar(args []values.RuntimeValue, _ *Interpreter) (values.RuntimeValue, phpError.Error) {
+func nativeFn_is_scalar(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	args, err := NewFuncParamValidator("is_scalar").addParam("$value", []string{"mixed"}, nil).validate(args)
 	if err != nil {
 		return values.NewVoid(), err
@@ -395,7 +396,7 @@ func lib_is_scalar(runtimeValue values.RuntimeValue) bool {
 
 // ------------------- MARK: is_string -------------------
 
-func nativeFn_is_string(args []values.RuntimeValue, _ *Interpreter) (values.RuntimeValue, phpError.Error) {
+func nativeFn_is_string(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	args, err := NewFuncParamValidator("is_string").addParam("$value", []string{"mixed"}, nil).validate(args)
 	if err != nil {
 		return values.NewVoid(), err
@@ -411,7 +412,7 @@ func lib_is_string(runtimeValue values.RuntimeValue) bool {
 
 // ------------------- MARK: print_r -------------------
 
-func nativeFn_print_r(args []values.RuntimeValue, interpreter *Interpreter) (values.RuntimeValue, phpError.Error) {
+func nativeFn_print_r(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
 	args, err := NewFuncParamValidator("print_r").
 		addParam("$value", []string{"mixed"}, nil).
 		addParam("$return", []string{"bool"}, values.NewBool(false)).
@@ -420,10 +421,10 @@ func nativeFn_print_r(args []values.RuntimeValue, interpreter *Interpreter) (val
 		return values.NewVoid(), err
 	}
 
-	return lib_print_r(args[0], args[1].(*values.Bool).Value, interpreter)
+	return lib_print_r(args[0], args[1].(*values.Bool).Value, context)
 }
 
-func lib_print_r(value values.RuntimeValue, returnValue bool, interpreter *Interpreter) (values.RuntimeValue, phpError.Error) {
+func lib_print_r(value values.RuntimeValue, returnValue bool, context runtime.Context) (values.RuntimeValue, phpError.Error) {
 	result, err := lib_print_r_var(value, 4)
 	if err != nil {
 		return values.NewVoid(), err
@@ -432,7 +433,7 @@ func lib_print_r(value values.RuntimeValue, returnValue bool, interpreter *Inter
 	if returnValue {
 		return values.NewStr(result), nil
 	} else {
-		interpreter.print(result)
+		context.Interpreter.Print(result)
 		return values.NewBool(true), nil
 	}
 }
@@ -481,7 +482,7 @@ func lib_print_r_var(value values.RuntimeValue, depth int) (string, phpError.Err
 
 // ------------------- MARK: strval -------------------
 
-func nativeFn_strval(args []values.RuntimeValue, _ *Interpreter) (values.RuntimeValue, phpError.Error) {
+func nativeFn_strval(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	args, err := NewFuncParamValidator("strval").addParam("$value", []string{"mixed"}, nil).validate(args)
 	if err != nil {
 		return values.NewVoid(), err
@@ -539,7 +540,7 @@ func lib_strval(runtimeValue values.RuntimeValue) (string, phpError.Error) {
 
 // ------------------- MARK: var_dump -------------------
 
-func nativeFn_var_dump(args []values.RuntimeValue, interpreter *Interpreter) (values.RuntimeValue, phpError.Error) {
+func nativeFn_var_dump(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.var-dump
 
 	args, err := NewFuncParamValidator("var_dump").
@@ -549,7 +550,7 @@ func nativeFn_var_dump(args []values.RuntimeValue, interpreter *Interpreter) (va
 		return values.NewVoid(), err
 	}
 
-	if err := lib_var_dump_var(interpreter, args[0], 2); err != nil {
+	if err := lib_var_dump_var(context, args[0], 2); err != nil {
 		return values.NewVoid(), err
 	}
 
@@ -557,7 +558,7 @@ func nativeFn_var_dump(args []values.RuntimeValue, interpreter *Interpreter) (va
 		arrayValues := args[1].(*values.Array)
 		for _, key := range arrayValues.Keys {
 			argValue, _ := arrayValues.GetElement(key)
-			if err := lib_var_dump_var(interpreter, argValue, 2); err != nil {
+			if err := lib_var_dump_var(context, argValue, 2); err != nil {
 				return values.NewVoid(), err
 			}
 		}
@@ -566,52 +567,52 @@ func nativeFn_var_dump(args []values.RuntimeValue, interpreter *Interpreter) (va
 	return values.NewVoid(), nil
 }
 
-func lib_var_dump_var(interpreter *Interpreter, value values.RuntimeValue, depth int) phpError.Error {
+func lib_var_dump_var(context runtime.Context, value values.RuntimeValue, depth int) phpError.Error {
 	switch value.GetType() {
 	case values.ArrayValue:
 		array := value.(*values.Array)
-		interpreter.println(fmt.Sprintf("array(%d) {", len(array.Keys)))
+		context.Interpreter.Println(fmt.Sprintf("array(%d) {", len(array.Keys)))
 		for _, key := range array.Keys {
 			switch key.GetType() {
 			case values.IntValue:
 				keyValue := key.(*values.Int).Value
-				interpreter.println(fmt.Sprintf("%s[%d]=>", strings.Repeat(" ", depth), keyValue))
+				context.Interpreter.Println(fmt.Sprintf("%s[%d]=>", strings.Repeat(" ", depth), keyValue))
 			case values.StrValue:
 				keyValue := key.(*values.Str).Value
-				interpreter.println(fmt.Sprintf(`%s["%s"]=>`, strings.Repeat(" ", depth), keyValue))
+				context.Interpreter.Println(fmt.Sprintf(`%s["%s"]=>`, strings.Repeat(" ", depth), keyValue))
 			default:
 				return phpError.NewError("lib_var_dump_var: Unsupported array key type %s", key.GetType())
 			}
-			interpreter.print(strings.Repeat(" ", depth))
+			context.Interpreter.Print(strings.Repeat(" ", depth))
 			elementValue, _ := array.GetElement(key)
-			if err := lib_var_dump_var(interpreter, elementValue, depth+2); err != nil {
+			if err := lib_var_dump_var(context, elementValue, depth+2); err != nil {
 				return err
 			}
 		}
-		interpreter.println(strings.Repeat(" ", depth-2) + "}")
+		context.Interpreter.Println(strings.Repeat(" ", depth-2) + "}")
 	case values.BoolValue:
 		if value.(*values.Bool).Value {
-			interpreter.println("bool(true)")
+			context.Interpreter.Println("bool(true)")
 		} else {
-			interpreter.println("bool(false)")
+			context.Interpreter.Println("bool(false)")
 		}
 	case values.FloatValue:
 		strVal, err := lib_strval(value)
 		if err != nil {
 			return err
 		}
-		interpreter.println("float(" + strVal + ")")
+		context.Interpreter.Println("float(" + strVal + ")")
 	case values.IntValue:
 		strVal, err := lib_strval(value)
 		if err != nil {
 			return err
 		}
-		interpreter.println("int(" + strVal + ")")
+		context.Interpreter.Println("int(" + strVal + ")")
 	case values.NullValue:
-		interpreter.println("NULL")
+		context.Interpreter.Println("NULL")
 	case values.StrValue:
 		strVal := value.(*values.Str).Value
-		interpreter.println(fmt.Sprintf("string(%d) \"%s\"", len(strVal), strVal))
+		context.Interpreter.Println(fmt.Sprintf("string(%d) \"%s\"", len(strVal), strVal))
 	default:
 		return phpError.NewError("lib_var_dump_var: Unsupported runtime value %s", value.GetType())
 	}
@@ -620,7 +621,7 @@ func lib_var_dump_var(interpreter *Interpreter, value values.RuntimeValue, depth
 
 // ------------------- MARK: var_export -------------------
 
-func nativeFn_var_export(args []values.RuntimeValue, interpreter *Interpreter) (values.RuntimeValue, phpError.Error) {
+func nativeFn_var_export(args []values.RuntimeValue, interpreter runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.var-export
 
 	args, err := NewFuncParamValidator("var_dump").
@@ -634,7 +635,7 @@ func nativeFn_var_export(args []values.RuntimeValue, interpreter *Interpreter) (
 	return lib_var_export(args[0], args[1].(*values.Bool).Value, interpreter)
 }
 
-func lib_var_export(value values.RuntimeValue, returnValue bool, interpreter *Interpreter) (values.RuntimeValue, phpError.Error) {
+func lib_var_export(value values.RuntimeValue, returnValue bool, context runtime.Context) (values.RuntimeValue, phpError.Error) {
 	result, err := lib_var_export_var(value, 2)
 	if err != nil {
 		return values.NewVoid(), err
@@ -643,7 +644,7 @@ func lib_var_export(value values.RuntimeValue, returnValue bool, interpreter *In
 	if returnValue {
 		return values.NewStr(result), nil
 	} else {
-		interpreter.print(result)
+		context.Interpreter.Print(result)
 		return values.NewNull(), nil
 	}
 }

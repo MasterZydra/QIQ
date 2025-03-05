@@ -2,6 +2,7 @@ package interpreter
 
 import (
 	"GoPHP/cmd/goPHP/phpError"
+	"GoPHP/cmd/goPHP/runtime"
 	"GoPHP/cmd/goPHP/runtime/values"
 	"math"
 )
@@ -17,7 +18,7 @@ func registerNativeMathFunctions(environment *Environment) {
 
 // ------------------- MARK: abs -------------------
 
-func nativeFn_abs(args []values.RuntimeValue, _ *Interpreter) (values.RuntimeValue, phpError.Error) {
+func nativeFn_abs(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	args, err := NewFuncParamValidator("abs").addParam("$num", []string{"int", "float"}, nil).validate(args)
 	if err != nil {
 		return values.NewVoid(), err
@@ -47,7 +48,7 @@ func nativeFn_abs(args []values.RuntimeValue, _ *Interpreter) (values.RuntimeVal
 
 // ------------------- MARK: acos -------------------
 
-func nativeFn_acos(args []values.RuntimeValue, _ *Interpreter) (values.RuntimeValue, phpError.Error) {
+func nativeFn_acos(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	args, err := NewFuncParamValidator("acos").addParam("$num", []string{"float"}, nil).validate(args)
 	if err != nil {
 		return values.NewVoid(), err
@@ -59,7 +60,7 @@ func nativeFn_acos(args []values.RuntimeValue, _ *Interpreter) (values.RuntimeVa
 
 // ------------------- MARK: acosh -------------------
 
-func nativeFn_acosh(args []values.RuntimeValue, _ *Interpreter) (values.RuntimeValue, phpError.Error) {
+func nativeFn_acosh(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	args, err := NewFuncParamValidator("acosh").addParam("$num", []string{"float"}, nil).validate(args)
 	if err != nil {
 		return values.NewVoid(), err
@@ -71,7 +72,7 @@ func nativeFn_acosh(args []values.RuntimeValue, _ *Interpreter) (values.RuntimeV
 
 // ------------------- MARK: asin -------------------
 
-func nativeFn_asin(args []values.RuntimeValue, _ *Interpreter) (values.RuntimeValue, phpError.Error) {
+func nativeFn_asin(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	args, err := NewFuncParamValidator("asin").addParam("$num", []string{"float"}, nil).validate(args)
 	if err != nil {
 		return values.NewVoid(), err
@@ -83,7 +84,7 @@ func nativeFn_asin(args []values.RuntimeValue, _ *Interpreter) (values.RuntimeVa
 
 // ------------------- MARK: asinh -------------------
 
-func nativeFn_asinh(args []values.RuntimeValue, _ *Interpreter) (values.RuntimeValue, phpError.Error) {
+func nativeFn_asinh(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	args, err := NewFuncParamValidator("asinh").addParam("$num", []string{"float"}, nil).validate(args)
 	if err != nil {
 		return values.NewVoid(), err
@@ -95,14 +96,14 @@ func nativeFn_asinh(args []values.RuntimeValue, _ *Interpreter) (values.RuntimeV
 
 // ------------------- MARK: pi -------------------
 
-func nativeFn_pi(args []values.RuntimeValue, interpreter *Interpreter) (values.RuntimeValue, phpError.Error) {
+func nativeFn_pi(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
 	_, err := NewFuncParamValidator("pi").validate(args)
 	if err != nil {
 		return values.NewVoid(), err
 	}
 
 	// Spec: https://www.php.net/manual/en/function.pi.php
-	return interpreter.env.predefinedConstants["M_PI"], nil
+	return context.Env.LookupConstant("M_PI")
 }
 
 // TODO atan

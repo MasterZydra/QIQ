@@ -5,6 +5,7 @@ import (
 	"GoPHP/cmd/goPHP/ini"
 	"GoPHP/cmd/goPHP/parser"
 	"GoPHP/cmd/goPHP/phpError"
+	"GoPHP/cmd/goPHP/runtime/outputBuffer"
 	"GoPHP/cmd/goPHP/runtime/values"
 	"GoPHP/cmd/goPHP/stats"
 )
@@ -17,7 +18,7 @@ type Interpreter struct {
 	parser             *parser.Parser
 	env                *Environment
 	cache              map[int64]values.RuntimeValue
-	outputBuffers      []*OutputBuffer
+	outputBufferStack  *outputBuffer.Stack
 	result             string
 	resultRuntimeValue values.RuntimeValue
 	exitCode           int64
@@ -29,8 +30,8 @@ func NewInterpreter(ini *ini.Ini, request *Request, filename string) *Interprete
 	interpreter := &Interpreter{
 		filename: filename, includedFiles: []string{}, ini: ini, request: request, parser: parser.NewParser(ini),
 		env: NewEnvironment(nil, request, ini), cache: map[int64]values.RuntimeValue{},
-		outputBuffers: []*OutputBuffer{},
-		exitCode:      0,
+		outputBufferStack: outputBuffer.NewStack(),
+		exitCode:          0,
 	}
 
 	if ini.GetBool("register_argc_argv") {
@@ -42,6 +43,14 @@ func NewInterpreter(ini *ini.Ini, request *Request, filename string) *Interprete
 	}
 
 	return interpreter
+}
+
+func (interpreter *Interpreter) GetIni() *ini.Ini {
+	return interpreter.ini
+}
+
+func (interpreter *Interpreter) GetOutputBufferStack() *outputBuffer.Stack {
+	return interpreter.outputBufferStack
 }
 
 func (interpreter *Interpreter) GetExitCode() int {
