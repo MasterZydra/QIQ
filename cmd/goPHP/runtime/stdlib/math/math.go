@@ -1,25 +1,26 @@
-package interpreter
+package math
 
 import (
 	"GoPHP/cmd/goPHP/phpError"
 	"GoPHP/cmd/goPHP/runtime"
+	"GoPHP/cmd/goPHP/runtime/funcParamValidator"
 	"GoPHP/cmd/goPHP/runtime/values"
-	"math"
+	goMath "math"
 )
 
-func registerNativeMathFunctions(environment *Environment) {
-	environment.nativeFunctions["abs"] = nativeFn_abs
-	environment.nativeFunctions["acos"] = nativeFn_acos
-	environment.nativeFunctions["acosh"] = nativeFn_acosh
-	environment.nativeFunctions["asin"] = nativeFn_asin
-	environment.nativeFunctions["asinh"] = nativeFn_asinh
-	environment.nativeFunctions["pi"] = nativeFn_pi
+func Register(environment runtime.Environment) {
+	environment.AddNativeFunction("abs", nativeFn_abs)
+	environment.AddNativeFunction("acos", nativeFn_acos)
+	environment.AddNativeFunction("acosh", nativeFn_acosh)
+	environment.AddNativeFunction("asin", nativeFn_asin)
+	environment.AddNativeFunction("asinh", nativeFn_asinh)
+	environment.AddNativeFunction("pi", nativeFn_pi)
 }
 
 // ------------------- MARK: abs -------------------
 
 func nativeFn_abs(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
-	args, err := NewFuncParamValidator("abs").addParam("$num", []string{"int", "float"}, nil).validate(args)
+	args, err := funcParamValidator.NewValidator("abs").AddParam("$num", []string{"int", "float"}, nil).Validate(args)
 	if err != nil {
 		return values.NewVoid(), err
 	}
@@ -35,7 +36,7 @@ func nativeFn_abs(args []values.RuntimeValue, _ runtime.Context) (values.Runtime
 	if numType == values.IntValue {
 		numValue = float64(args[0].(*values.Int).Value)
 	}
-	numValue = math.Abs(numValue)
+	numValue = goMath.Abs(numValue)
 	if numType == values.FloatValue {
 		return values.NewFloat(numValue), nil
 	}
@@ -49,55 +50,55 @@ func nativeFn_abs(args []values.RuntimeValue, _ runtime.Context) (values.Runtime
 // ------------------- MARK: acos -------------------
 
 func nativeFn_acos(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
-	args, err := NewFuncParamValidator("acos").addParam("$num", []string{"float"}, nil).validate(args)
+	args, err := funcParamValidator.NewValidator("acos").AddParam("$num", []string{"float"}, nil).Validate(args)
 	if err != nil {
 		return values.NewVoid(), err
 	}
 
 	// Spec: https://www.php.net/manual/en/function.acos.php
-	return values.NewFloat(math.Acos(args[0].(*values.Float).Value)), nil
+	return values.NewFloat(goMath.Acos(args[0].(*values.Float).Value)), nil
 }
 
 // ------------------- MARK: acosh -------------------
 
 func nativeFn_acosh(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
-	args, err := NewFuncParamValidator("acosh").addParam("$num", []string{"float"}, nil).validate(args)
+	args, err := funcParamValidator.NewValidator("acosh").AddParam("$num", []string{"float"}, nil).Validate(args)
 	if err != nil {
 		return values.NewVoid(), err
 	}
 
 	// Spec: https://www.php.net/manual/en/function.acosh.php
-	return values.NewFloat(math.Acosh(args[0].(*values.Float).Value)), nil
+	return values.NewFloat(goMath.Acosh(args[0].(*values.Float).Value)), nil
 }
 
 // ------------------- MARK: asin -------------------
 
 func nativeFn_asin(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
-	args, err := NewFuncParamValidator("asin").addParam("$num", []string{"float"}, nil).validate(args)
+	args, err := funcParamValidator.NewValidator("asin").AddParam("$num", []string{"float"}, nil).Validate(args)
 	if err != nil {
 		return values.NewVoid(), err
 	}
 
 	// Spec: https://www.php.net/manual/en/function.sin.php
-	return values.NewFloat(math.Asin(args[0].(*values.Float).Value)), nil
+	return values.NewFloat(goMath.Asin(args[0].(*values.Float).Value)), nil
 }
 
 // ------------------- MARK: asinh -------------------
 
 func nativeFn_asinh(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
-	args, err := NewFuncParamValidator("asinh").addParam("$num", []string{"float"}, nil).validate(args)
+	args, err := funcParamValidator.NewValidator("asinh").AddParam("$num", []string{"float"}, nil).Validate(args)
 	if err != nil {
 		return values.NewVoid(), err
 	}
 
 	// Spec: https://www.php.net/manual/en/function.sinh.php
-	return values.NewFloat(math.Asinh(args[0].(*values.Float).Value)), nil
+	return values.NewFloat(goMath.Asinh(args[0].(*values.Float).Value)), nil
 }
 
 // ------------------- MARK: pi -------------------
 
 func nativeFn_pi(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
-	_, err := NewFuncParamValidator("pi").validate(args)
+	_, err := funcParamValidator.NewValidator("pi").Validate(args)
 	if err != nil {
 		return values.NewVoid(), err
 	}

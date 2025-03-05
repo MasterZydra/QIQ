@@ -3,6 +3,7 @@ package interpreter
 import (
 	"GoPHP/cmd/goPHP/ast"
 	"GoPHP/cmd/goPHP/phpError"
+	"GoPHP/cmd/goPHP/runtime/stdlib/variableHandling"
 	"GoPHP/cmd/goPHP/runtime/values"
 )
 
@@ -30,7 +31,7 @@ func (interpreter *Interpreter) ProcessEchoStmt(stmt *ast.EchoStatement, env any
 	for _, expr := range stmt.Expressions {
 		runtimeValue := must(interpreter.processStmt(expr, env))
 
-		str := mustOrVoid(lib_strval(runtimeValue))
+		str := mustOrVoid(variableHandling.StrVal(runtimeValue))
 		interpreter.Print(str)
 	}
 	return values.NewVoid(), nil
@@ -115,7 +116,7 @@ func (interpreter *Interpreter) ProcessForStmt(stmt *ast.ForStatement, env any) 
 			for _, statement := range stmt.Control.Statements {
 				conditionRuntimeValue = mustOrVoid(interpreter.processStmt(statement, env))
 			}
-			condition = mustOrVoid(lib_boolval(conditionRuntimeValue))
+			condition = mustOrVoid(variableHandling.BoolVal(conditionRuntimeValue))
 		}
 
 		executeEndOfLoop := func() phpError.Error {
@@ -174,7 +175,7 @@ func (interpreter *Interpreter) ProcessForStmt(stmt *ast.ForStatement, env any) 
 // ProcessIfStmt implements Visitor.
 func (interpreter *Interpreter) ProcessIfStmt(stmt *ast.IfStatement, env any) (any, error) {
 	conditionRuntimeValue := must(interpreter.processStmt(stmt.Condition, env))
-	condition := mustOrVoid(lib_boolval(conditionRuntimeValue))
+	condition := mustOrVoid(variableHandling.BoolVal(conditionRuntimeValue))
 	if condition {
 		must(interpreter.processStmt(stmt.IfBlock, env))
 		return values.NewVoid(), nil
@@ -183,7 +184,7 @@ func (interpreter *Interpreter) ProcessIfStmt(stmt *ast.IfStatement, env any) (a
 	if len(stmt.ElseIf) > 0 {
 		for _, elseIf := range stmt.ElseIf {
 			conditionRuntimeValue := must(interpreter.processStmt(elseIf.Condition, env))
-			condition := mustOrVoid(lib_boolval(conditionRuntimeValue))
+			condition := mustOrVoid(variableHandling.BoolVal(conditionRuntimeValue))
 			if !condition {
 				continue
 			}
@@ -205,7 +206,7 @@ func (interpreter *Interpreter) ProcessIfStmt(stmt *ast.IfStatement, env any) (a
 func (interpreter *Interpreter) ProcessWhileStmt(stmt *ast.WhileStatement, env any) (any, error) {
 	for {
 		conditionRuntimeValue := must(interpreter.processStmt(stmt.Condition, env))
-		condition := mustOrVoid(lib_boolval(conditionRuntimeValue))
+		condition := mustOrVoid(variableHandling.BoolVal(conditionRuntimeValue))
 		if !condition {
 			break
 		}
@@ -256,7 +257,7 @@ func (interpreter *Interpreter) ProcessDoStmt(stmt *ast.DoStatement, env any) (a
 		}
 
 		conditionRuntimeValue := must(interpreter.processStmt(stmt.Condition, env))
-		condition = mustOrVoid(lib_boolval(conditionRuntimeValue))
+		condition = mustOrVoid(variableHandling.BoolVal(conditionRuntimeValue))
 		if !condition {
 			break
 		}

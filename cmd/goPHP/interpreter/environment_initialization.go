@@ -5,6 +5,7 @@ import (
 	"GoPHP/cmd/goPHP/config"
 	"GoPHP/cmd/goPHP/ini"
 	"GoPHP/cmd/goPHP/phpError"
+	"GoPHP/cmd/goPHP/request"
 	"GoPHP/cmd/goPHP/runtime/values"
 	"fmt"
 	"math"
@@ -12,7 +13,7 @@ import (
 	"strings"
 )
 
-func registerPredefinedVariables(environment *Environment, request *Request, ini *ini.Ini) {
+func registerPredefinedVariables(environment *Environment, request *request.Request, ini *ini.Ini) {
 	if ini == nil {
 		registerPredefinedVariableEnv(environment, request, true)
 		registerPredefinedVariableGet(environment, request, ini, true)
@@ -72,7 +73,7 @@ func mergeArrays(a, b *values.Array) {
 	}
 }
 
-func registerPredefinedVariableEnv(environment *Environment, request *Request, init bool) {
+func registerPredefinedVariableEnv(environment *Environment, request *request.Request, init bool) {
 	if init {
 		environment.predefinedVariables["$_ENV"] = stringMapToArray(request.Env)
 	} else {
@@ -80,7 +81,7 @@ func registerPredefinedVariableEnv(environment *Environment, request *Request, i
 	}
 }
 
-func registerPredefinedVariableGet(environment *Environment, request *Request, ini *ini.Ini, init bool) {
+func registerPredefinedVariableGet(environment *Environment, request *request.Request, ini *ini.Ini, init bool) {
 	if init {
 		array, err := parseQuery(request.QueryString, ini)
 		if err != nil {
@@ -92,7 +93,7 @@ func registerPredefinedVariableGet(environment *Environment, request *Request, i
 	}
 }
 
-func registerPredefinedVariablePost(environment *Environment, request *Request, ini *ini.Ini, init bool) {
+func registerPredefinedVariablePost(environment *Environment, request *request.Request, ini *ini.Ini, init bool) {
 	if init {
 		array, err := parseQuery(request.Post, ini)
 		if err != nil {
@@ -104,7 +105,7 @@ func registerPredefinedVariablePost(environment *Environment, request *Request, 
 	}
 }
 
-func registerPredefinedVariableServer(environment *Environment, request *Request, ini *ini.Ini, init bool) {
+func registerPredefinedVariableServer(environment *Environment, request *request.Request, ini *ini.Ini, init bool) {
 	environment.predefinedVariables["$_SERVER"] = values.NewArray()
 	if init {
 		server := environment.predefinedVariables["$_SERVER"].(*values.Array)
@@ -189,11 +190,11 @@ func paramToArray(params [][]string, ini *ini.Ini) *values.Array {
 		}
 
 		// Prepare environment
-		env := NewEnvironment(nil, NewRequest(), ini)
+		env := NewEnvironment(nil, request.NewRequest(), ini)
 		env.declareVariable("$"+paramName, arrayValue)
 
 		// Execute PHP to store new array values in env
-		interpreter := NewInterpreter(ini, NewRequest(), "")
+		interpreter := NewInterpreter(ini, request.NewRequest(), "")
 		interpreter.process(fmt.Sprintf(`<?php $%s = "%s";`, key, value), env, true)
 
 		// Extract array from environment

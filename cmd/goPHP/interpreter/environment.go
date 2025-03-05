@@ -4,6 +4,9 @@ import (
 	"GoPHP/cmd/goPHP/ast"
 	"GoPHP/cmd/goPHP/ini"
 	"GoPHP/cmd/goPHP/phpError"
+	"GoPHP/cmd/goPHP/request"
+	"GoPHP/cmd/goPHP/runtime"
+	"GoPHP/cmd/goPHP/runtime/stdlib"
 	"GoPHP/cmd/goPHP/runtime/values"
 	"slices"
 	"strings"
@@ -18,12 +21,12 @@ type Environment struct {
 	// StdLib
 	predefinedVariables map[string]values.RuntimeValue
 	predefinedConstants map[string]values.RuntimeValue
-	nativeFunctions     map[string]nativeFunction
+	nativeFunctions     map[string]runtime.NativeFunction
 	// Context
 	CurrentFunction *ast.FunctionDefinitionStatement
 }
 
-func NewEnvironment(parentEnv *Environment, request *Request, ini *ini.Ini) *Environment {
+func NewEnvironment(parentEnv *Environment, request *request.Request, ini *ini.Ini) *Environment {
 	env := &Environment{
 		parent:    parentEnv,
 		variables: map[string]values.RuntimeValue{},
@@ -32,11 +35,11 @@ func NewEnvironment(parentEnv *Environment, request *Request, ini *ini.Ini) *Env
 		// StdLib
 		predefinedVariables: map[string]values.RuntimeValue{},
 		predefinedConstants: map[string]values.RuntimeValue{},
-		nativeFunctions:     map[string]nativeFunction{},
+		nativeFunctions:     map[string]runtime.NativeFunction{},
 	}
 
 	if parentEnv == nil {
-		registerNativeFunctions(env)
+		stdlib.RegisterNativeFunctions(env)
 		registerPredefinedVariables(env, request, ini)
 		registerPredefinedConstants(env)
 	}
@@ -163,6 +166,10 @@ func (env *Environment) LookupConstant(constantName string) (values.RuntimeValue
 
 // ------------------- MARK: Native functions -------------------
 
+func (env *Environment) AddNativeFunction(functionName string, function runtime.NativeFunction) {
+	env.nativeFunctions[functionName] = function
+}
+
 func (env *Environment) resolveNativeFunction(functionName string) (*Environment, phpError.Error) {
 	if _, ok := env.nativeFunctions[functionName]; ok {
 		return env, nil
@@ -175,7 +182,7 @@ func (env *Environment) resolveNativeFunction(functionName string) (*Environment
 	return env.parent.resolveNativeFunction(functionName)
 }
 
-func (env *Environment) lookupNativeFunction(functionName string) (nativeFunction, phpError.Error) {
+func (env *Environment) lookupNativeFunction(functionName string) (runtime.NativeFunction, phpError.Error) {
 	functionName = strings.ToLower(functionName)
 
 	environment, err := env.resolveNativeFunction(functionName)

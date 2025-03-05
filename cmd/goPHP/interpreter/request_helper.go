@@ -3,6 +3,7 @@ package interpreter
 import (
 	"GoPHP/cmd/goPHP/common"
 	"GoPHP/cmd/goPHP/ini"
+	"GoPHP/cmd/goPHP/request"
 	"GoPHP/cmd/goPHP/runtime/values"
 	"fmt"
 	"net/url"
@@ -105,7 +106,7 @@ func parseQueryKey(key string, value string, result *values.Array) (*values.Arra
 	}
 	php += " = '" + value + "';"
 
-	interpreter := NewInterpreter(ini.NewDefaultIni(), &Request{}, "")
+	interpreter := NewInterpreter(ini.NewDefaultIni(), &request.Request{}, "")
 	interpreter.env.declareVariable("$array", result)
 	_, err := interpreter.Process(php)
 

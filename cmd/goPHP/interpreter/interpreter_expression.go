@@ -6,6 +6,7 @@ import (
 	"GoPHP/cmd/goPHP/ini"
 	"GoPHP/cmd/goPHP/phpError"
 	"GoPHP/cmd/goPHP/runtime"
+	"GoPHP/cmd/goPHP/runtime/stdlib/variableHandling"
 	"GoPHP/cmd/goPHP/runtime/values"
 	"strings"
 )
@@ -89,7 +90,7 @@ func (interpreter *Interpreter) ProcessSimpleAssignmentExpr(expr *ast.SimpleAssi
 		currentValue, _ = env.(*Environment).LookupVariable(variableName)
 		str := currentValue.(*values.Str).Value
 
-		valueStr, err := lib_strval(value)
+		valueStr, err := variableHandling.StrVal(value)
 		if err != nil {
 			return values.NewVoid(), err
 		}
@@ -317,7 +318,7 @@ func (interpreter *Interpreter) ProcessSubscriptExpr(expr *ast.SubscriptExpressi
 // ProcessFunctionCallExpr implements Visitor.
 func (interpreter *Interpreter) ProcessFunctionCallExpr(expr *ast.FunctionCallExpression, env any) (any, error) {
 	functionNameRuntime := must(interpreter.processStmt(expr.FunctionName, env))
-	functionName := mustOrVoid(lib_strval(functionNameRuntime))
+	functionName := mustOrVoid(variableHandling.StrVal(functionNameRuntime))
 
 	// Lookup native function
 	nativeFunction, err := env.(*Environment).lookupNativeFunction(functionName)
@@ -348,7 +349,7 @@ func (interpreter *Interpreter) ProcessFunctionCallExpr(expr *ast.FunctionCallEx
 		// Check if the parameter types match
 		err = checkParameterTypes(runtimeValue, param.Type)
 		if err != nil && err.GetMessage() == "Types do not match" {
-			givenType, err := lib_gettype(runtimeValue)
+			givenType, err := variableHandling.GetType(runtimeValue)
 			if err != nil {
 				return values.NewVoid(), err
 			}
@@ -367,7 +368,7 @@ func (interpreter *Interpreter) ProcessFunctionCallExpr(expr *ast.FunctionCallEx
 	}
 	err = checkParameterTypes(runtimeValue, userFunction.ReturnType)
 	if err != nil && err.GetMessage() == "Types do not match" {
-		givenType, err := lib_gettype(runtimeValue)
+		givenType, err := variableHandling.GetType(runtimeValue)
 		if runtimeValue.GetType() == values.VoidValue {
 			givenType = "void"
 		}
@@ -412,7 +413,7 @@ func (interpreter *Interpreter) ProcessEmptyIntrinsicExpr(expr *ast.EmptyIntrins
 		runtimeValue = must(interpreter.processStmt(expr.Arguments[0], env))
 	}
 
-	boolean := mustOrVoid(lib_boolval(runtimeValue))
+	boolean := mustOrVoid(variableHandling.BoolVal(runtimeValue))
 	return values.NewBool(!boolean), nil
 }
 
@@ -424,7 +425,7 @@ func (interpreter *Interpreter) ProcessEvalIntrinsicExpr(expr *ast.EvalIntrinsic
 	if err != nil {
 		return values.NewVoid(), phpError.NewParseError(err.Error())
 	}
-	expressionStr, err := lib_strval(expression)
+	expressionStr, err := variableHandling.StrVal(expression)
 	if err != nil {
 		return values.NewVoid(), err
 	}
@@ -685,7 +686,7 @@ func (interpreter *Interpreter) ProcessCastExpr(expr *ast.CastExpression, env an
 	case "array":
 		// Spec: https://phplang.org/spec/10-expressions.html#grammar-cast-type
 		// A cast-type of "array" results in a conversion to type array.
-		return lib_arrayval(value)
+		return variableHandling.ArrayVal(value)
 	case "binary", "string":
 		// Spec: https://phplang.org/spec/10-expressions.html#grammar-cast-type
 		// A cast-type of "binary" is reserved for future use in dealing with so-called binary strings. For now, it is fully equivalent to "string" cast.
@@ -713,7 +714,7 @@ func (interpreter *Interpreter) ProcessLogicalExpr(expr *ast.LogicalExpression, 
 	// Evaluate LHS first
 	lhs := must(interpreter.processStmt(expr.Lhs, env))
 	// Convert LHS to boolean value
-	left := mustOrVoid(lib_boolval(lhs))
+	left := mustOrVoid(variableHandling.BoolVal(lhs))
 
 	// Check if condition is already short circuited
 	if expr.Operator == "||" {
@@ -731,7 +732,7 @@ func (interpreter *Interpreter) ProcessLogicalExpr(expr *ast.LogicalExpression, 
 	// Evaluate RHS after checking if condition is already short circuited
 	rhs := must(interpreter.processStmt(expr.Rhs, env))
 	// Convert RHS to boolean value
-	right := mustOrVoid(lib_boolval(rhs))
+	right := mustOrVoid(variableHandling.BoolVal(rhs))
 
 	if expr.Operator == "xor" {
 		return values.NewBool(left != right), nil
@@ -743,7 +744,7 @@ func (interpreter *Interpreter) ProcessLogicalExpr(expr *ast.LogicalExpression, 
 // ProcessLogicalNotExpr implements Visitor.
 func (interpreter *Interpreter) ProcessLogicalNotExpr(expr *ast.LogicalNotExpression, env any) (any, error) {
 	runtimeValue := must(interpreter.processStmt(expr.Expr, env))
-	boolValue := mustOrVoid(lib_boolval(runtimeValue))
+	boolValue := mustOrVoid(variableHandling.BoolVal(runtimeValue))
 	return values.NewBool(!boolValue), nil
 }
 
@@ -781,7 +782,7 @@ func (interpreter *Interpreter) ProcessPrintExpr(expr *ast.PrintExpression, env 
 
 	runtimeValue := must(interpreter.processStmt(expr.Expr, env))
 
-	str, err := lib_strval(runtimeValue)
+	str, err := variableHandling.StrVal(runtimeValue)
 	if err == nil {
 		interpreter.Print(str)
 	}

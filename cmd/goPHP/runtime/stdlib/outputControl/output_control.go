@@ -1,21 +1,22 @@
-package interpreter
+package outputControl
 
 import (
 	"GoPHP/cmd/goPHP/phpError"
 	"GoPHP/cmd/goPHP/runtime"
+	"GoPHP/cmd/goPHP/runtime/funcParamValidator"
 	"GoPHP/cmd/goPHP/runtime/values"
 )
 
-func registerNativeOutputControlFunctions(environment *Environment) {
-	environment.nativeFunctions["ob_clean"] = nativeFn_ob_clean
-	environment.nativeFunctions["ob_flush"] = nativeFn_ob_flush
-	environment.nativeFunctions["ob_end_clean"] = nativeFn_ob_end_clean
-	environment.nativeFunctions["ob_end_flush"] = nativeFn_ob_end_flush
-	environment.nativeFunctions["ob_get_clean"] = nativeFn_ob_get_clean
-	environment.nativeFunctions["ob_get_flush"] = nativeFn_ob_get_flush
-	environment.nativeFunctions["ob_get_contents"] = nativeFn_ob_get_contents
-	environment.nativeFunctions["ob_get_level"] = nativeFn_ob_get_level
-	environment.nativeFunctions["ob_start"] = nativeFn_ob_start
+func Register(environment runtime.Environment) {
+	environment.AddNativeFunction("ob_clean", nativeFn_ob_clean)
+	environment.AddNativeFunction("ob_flush", nativeFn_ob_flush)
+	environment.AddNativeFunction("ob_end_clean", nativeFn_ob_end_clean)
+	environment.AddNativeFunction("ob_end_flush", nativeFn_ob_end_flush)
+	environment.AddNativeFunction("ob_get_clean", nativeFn_ob_get_clean)
+	environment.AddNativeFunction("ob_get_flush", nativeFn_ob_get_flush)
+	environment.AddNativeFunction("ob_get_contents", nativeFn_ob_get_contents)
+	environment.AddNativeFunction("ob_get_level", nativeFn_ob_get_level)
+	environment.AddNativeFunction("ob_start", nativeFn_ob_start)
 }
 
 // ------------------- MARK: ob_clean -------------------
@@ -23,7 +24,7 @@ func registerNativeOutputControlFunctions(environment *Environment) {
 func nativeFn_ob_clean(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.ob-clean.php
 
-	_, err := NewFuncParamValidator("ob_clean").validate(args)
+	_, err := funcParamValidator.NewValidator("ob_clean").Validate(args)
 	if err != nil {
 		return values.NewVoid(), err
 	}
@@ -48,7 +49,7 @@ func nativeFn_ob_clean(args []values.RuntimeValue, context runtime.Context) (val
 func nativeFn_ob_flush(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.ob-flush.php
 
-	_, err := NewFuncParamValidator("ob_flush").validate(args)
+	_, err := funcParamValidator.NewValidator("ob_flush").Validate(args)
 	if err != nil {
 		return values.NewVoid(), err
 	}
@@ -79,7 +80,7 @@ func nativeFn_ob_flush(args []values.RuntimeValue, context runtime.Context) (val
 func nativeFn_ob_end_clean(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.ob-end-clean.php
 
-	_, err := NewFuncParamValidator("ob_end_clean").validate(args)
+	_, err := funcParamValidator.NewValidator("ob_end_clean").Validate(args)
 	if err != nil {
 		return values.NewVoid(), err
 	}
@@ -104,11 +105,15 @@ func nativeFn_ob_end_clean(args []values.RuntimeValue, context runtime.Context) 
 func nativeFn_ob_end_flush(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.ob-end-flush.php
 
-	_, err := NewFuncParamValidator("ob_end_flush").validate(args)
+	_, err := funcParamValidator.NewValidator("ob_end_flush").Validate(args)
 	if err != nil {
 		return values.NewVoid(), err
 	}
 
+	return ObEndFlush(context)
+}
+
+func ObEndFlush(context runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// TODO Call output handler
 	// Spec: https://www.php.net/manual/en/function.ob-end-flush.php
 	// This function calls the output handler (with the PHP_OUTPUT_HANDLER_FINAL flag),
@@ -120,7 +125,7 @@ func nativeFn_ob_end_flush(args []values.RuntimeValue, context runtime.Context) 
 		return values.NewBool(false), nil
 	}
 
-	nativeFn_ob_flush(args, context)
+	nativeFn_ob_flush([]values.RuntimeValue{}, context)
 	context.Interpreter.GetOutputBufferStack().Pop()
 	return values.NewBool(true), nil
 }
@@ -130,7 +135,7 @@ func nativeFn_ob_end_flush(args []values.RuntimeValue, context runtime.Context) 
 func nativeFn_ob_get_clean(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.ob-get-clean.php
 
-	_, err := NewFuncParamValidator("ob_get_clean").validate(args)
+	_, err := funcParamValidator.NewValidator("ob_get_clean").Validate(args)
 	if err != nil {
 		return values.NewVoid(), err
 	}
@@ -156,7 +161,7 @@ func nativeFn_ob_get_clean(args []values.RuntimeValue, context runtime.Context) 
 func nativeFn_ob_get_flush(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.ob-get-flush.php
 
-	_, err := NewFuncParamValidator("ob_get_flush").validate(args)
+	_, err := funcParamValidator.NewValidator("ob_get_flush").Validate(args)
 	if err != nil {
 		return values.NewVoid(), err
 	}
@@ -182,7 +187,7 @@ func nativeFn_ob_get_flush(args []values.RuntimeValue, context runtime.Context) 
 func nativeFn_ob_get_contents(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.ob-get-contents.php
 
-	_, err := NewFuncParamValidator("nativeFn_ob_get_contents").validate(args)
+	_, err := funcParamValidator.NewValidator("nativeFn_ob_get_contents").Validate(args)
 	if err != nil {
 		return values.NewVoid(), err
 	}
@@ -199,7 +204,7 @@ func nativeFn_ob_get_contents(args []values.RuntimeValue, context runtime.Contex
 func nativeFn_ob_get_level(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.ob-get-level.php
 
-	_, err := NewFuncParamValidator("ob_get_level").validate(args)
+	_, err := funcParamValidator.NewValidator("ob_get_level").Validate(args)
 	if err != nil {
 		return values.NewVoid(), err
 	}
@@ -212,7 +217,7 @@ func nativeFn_ob_get_level(args []values.RuntimeValue, context runtime.Context) 
 func nativeFn_ob_start(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.ob-start
 
-	_, err := NewFuncParamValidator("ob_start").validate(args)
+	_, err := funcParamValidator.NewValidator("ob_start").Validate(args)
 	if err != nil {
 		return values.NewVoid(), err
 	}

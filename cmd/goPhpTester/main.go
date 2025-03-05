@@ -4,6 +4,7 @@ import (
 	"GoPHP/cmd/goPHP/common"
 	"GoPHP/cmd/goPHP/ini"
 	"GoPHP/cmd/goPHP/interpreter"
+	"GoPHP/cmd/goPHP/request"
 	"GoPHP/cmd/goPhpTester/phpt"
 	"flag"
 	"fmt"
@@ -110,7 +111,7 @@ func doTest(path string, info os.FileInfo, err error) error {
 		return nil
 	}
 
-	request := interpreter.NewRequest()
+	request := request.NewRequest()
 	request.Env = testFile.Env
 	request.Args = testFile.Args
 	request.QueryString = testFile.Get

@@ -5,6 +5,7 @@ import (
 	"GoPHP/cmd/goPHP/ini"
 	"GoPHP/cmd/goPHP/parser"
 	"GoPHP/cmd/goPHP/phpError"
+	"GoPHP/cmd/goPHP/request"
 	"GoPHP/cmd/goPHP/runtime/outputBuffer"
 	"GoPHP/cmd/goPHP/runtime/values"
 	"GoPHP/cmd/goPHP/stats"
@@ -14,7 +15,7 @@ type Interpreter struct {
 	filename           string
 	includedFiles      []string
 	ini                *ini.Ini
-	request            *Request
+	request            *request.Request
 	parser             *parser.Parser
 	env                *Environment
 	cache              map[int64]values.RuntimeValue
@@ -26,7 +27,7 @@ type Interpreter struct {
 	suppressWarning bool
 }
 
-func NewInterpreter(ini *ini.Ini, request *Request, filename string) *Interpreter {
+func NewInterpreter(ini *ini.Ini, request *request.Request, filename string) *Interpreter {
 	interpreter := &Interpreter{
 		filename: filename, includedFiles: []string{}, ini: ini, request: request, parser: parser.NewParser(ini),
 		env: NewEnvironment(nil, request, ini), cache: map[int64]values.RuntimeValue{},

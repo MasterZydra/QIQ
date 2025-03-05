@@ -1,16 +1,18 @@
-package interpreter
+package optionsInfo
 
 import (
 	"GoPHP/cmd/goPHP/ini"
 	"GoPHP/cmd/goPHP/phpError"
 	"GoPHP/cmd/goPHP/runtime"
+	"GoPHP/cmd/goPHP/runtime/funcParamValidator"
+	"GoPHP/cmd/goPHP/runtime/stdlib/variableHandling"
 	"GoPHP/cmd/goPHP/runtime/values"
 )
 
-func registerNativeOptionsInfoFunctions(environment *Environment) {
-	environment.nativeFunctions["getenv"] = nativeFn_getenv
-	environment.nativeFunctions["ini_get"] = nativeFn_ini_get
-	environment.nativeFunctions["ini_set"] = nativeFn_ini_set
+func Register(environment runtime.Environment) {
+	environment.AddNativeFunction("getenv", nativeFn_getenv)
+	environment.AddNativeFunction("ini_get", nativeFn_ini_get)
+	environment.AddNativeFunction("ini_set", nativeFn_ini_set)
 }
 
 // ------------------- MARK: getenv -------------------
@@ -24,7 +26,7 @@ func nativeFn_getenv(args []values.RuntimeValue, context runtime.Context) (value
 	// If name is null, all environment variables are returned as an associative array.
 
 	// TODO getenv - add support for $local_only
-	args, err := NewFuncParamValidator("getenv").addParam("$name", []string{"string"}, values.NewNull()).validate(args)
+	args, err := funcParamValidator.NewValidator("getenv").AddParam("$name", []string{"string"}, values.NewNull()).Validate(args)
 	if err != nil {
 		return values.NewVoid(), err
 	}
@@ -50,7 +52,7 @@ func nativeFn_getenv(args []values.RuntimeValue, context runtime.Context) (value
 func nativeFn_ini_get(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.ini-get
 
-	args, err := NewFuncParamValidator("ini_get").addParam("$option", []string{"string"}, nil).validate(args)
+	args, err := funcParamValidator.NewValidator("ini_get").AddParam("$option", []string{"string"}, nil).Validate(args)
 	if err != nil {
 		return values.NewVoid(), err
 	}
@@ -67,15 +69,15 @@ func nativeFn_ini_get(args []values.RuntimeValue, context runtime.Context) (valu
 func nativeFn_ini_set(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.ini-set
 
-	args, err := NewFuncParamValidator("ini_set").
-		addParam("$option", []string{"string"}, nil).
-		addParam("$value", []string{"string", "int", "float", "bool", "null"}, nil).
-		validate(args)
+	args, err := funcParamValidator.NewValidator("ini_set").
+		AddParam("$option", []string{"string"}, nil).
+		AddParam("$value", []string{"string", "int", "float", "bool", "null"}, nil).
+		Validate(args)
 	if err != nil {
 		return values.NewVoid(), err
 	}
 
-	value, err := lib_strval(args[1])
+	value, err := variableHandling.StrVal(args[1])
 	if err != nil {
 		return values.NewVoid(), err
 	}

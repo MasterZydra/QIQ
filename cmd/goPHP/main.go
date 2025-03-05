@@ -5,6 +5,7 @@ import (
 	"GoPHP/cmd/goPHP/config"
 	"GoPHP/cmd/goPHP/ini"
 	"GoPHP/cmd/goPHP/interpreter"
+	"GoPHP/cmd/goPHP/request"
 	"GoPHP/cmd/goPHP/stats"
 	"bufio"
 	"flag"
@@ -203,7 +204,7 @@ func processContent(r *http.Request, content string, filename string) (output st
 		initIni = ini.NewDefaultIni()
 	}
 
-	request := interpreter.NewRequestFromGoRequest(r, documentRoot, serverAddr, filename)
+	request := request.NewRequestFromGoRequest(r, documentRoot, serverAddr, filename)
 	interpreter := interpreter.NewInterpreter(initIni, request, filename)
 	result, err := interpreter.Process(content)
 	if err != nil {

@@ -1,26 +1,27 @@
-package interpreter
+package strings
 
 import (
 	"GoPHP/cmd/goPHP/phpError"
 	"GoPHP/cmd/goPHP/runtime"
+	"GoPHP/cmd/goPHP/runtime/funcParamValidator"
 	"GoPHP/cmd/goPHP/runtime/values"
 	"encoding/hex"
-	"strings"
+	goStrings "strings"
 )
 
-func registerNativeStringsFunctions(environment *Environment) {
-	environment.nativeFunctions["bin2hex"] = nativeFn_bin2hex
-	environment.nativeFunctions["chr"] = nativeFn_chr
-	environment.nativeFunctions["lcfirst"] = nativeFn_lcfirst
-	environment.nativeFunctions["quotemeta"] = nativeFn_quotemeta
-	environment.nativeFunctions["str_contains"] = nativeFn_str_contains
-	environment.nativeFunctions["str_ends_with"] = nativeFn_str_ends_with
-	environment.nativeFunctions["str_repeat"] = nativeFn_str_repeat
-	environment.nativeFunctions["str_starts_with"] = nativeFn_str_starts_with
-	environment.nativeFunctions["strlen"] = nativeFn_strlen
-	environment.nativeFunctions["strtolower"] = nativeFn_strtolower
-	environment.nativeFunctions["strtoupper"] = nativeFn_strtoupper
-	environment.nativeFunctions["ucfirst"] = nativeFn_ucfirst
+func Register(environment runtime.Environment) {
+	environment.AddNativeFunction("bin2hex", nativeFn_bin2hex)
+	environment.AddNativeFunction("chr", nativeFn_chr)
+	environment.AddNativeFunction("lcfirst", nativeFn_lcfirst)
+	environment.AddNativeFunction("quotemeta", nativeFn_quotemeta)
+	environment.AddNativeFunction("str_contains", nativeFn_str_contains)
+	environment.AddNativeFunction("str_ends_with", nativeFn_str_ends_with)
+	environment.AddNativeFunction("str_repeat", nativeFn_str_repeat)
+	environment.AddNativeFunction("str_starts_with", nativeFn_str_starts_with)
+	environment.AddNativeFunction("strlen", nativeFn_strlen)
+	environment.AddNativeFunction("strtolower", nativeFn_strtolower)
+	environment.AddNativeFunction("strtoupper", nativeFn_strtoupper)
+	environment.AddNativeFunction("ucfirst", nativeFn_ucfirst)
 }
 
 // ------------------- MARK: bin2hex -------------------
@@ -28,16 +29,16 @@ func registerNativeStringsFunctions(environment *Environment) {
 func nativeFn_bin2hex(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.bin2hex.php
 
-	args, err := NewFuncParamValidator("bin2hex").addParam("$string", []string{"string"}, nil).validate(args)
+	args, err := funcParamValidator.NewValidator("bin2hex").AddParam("$string", []string{"string"}, nil).Validate(args)
 	if err != nil {
 		return values.NewVoid(), err
 	}
 
 	input := args[0].(*values.Str).Value
 
-	var output strings.Builder
+	var output goStrings.Builder
 	for i := 0; i < len(input); i++ {
-		output.WriteString(strings.ToLower(hex.EncodeToString([]byte{input[i]})))
+		output.WriteString(goStrings.ToLower(hex.EncodeToString([]byte{input[i]})))
 	}
 
 	return values.NewStr(output.String()), nil
@@ -48,7 +49,7 @@ func nativeFn_bin2hex(args []values.RuntimeValue, _ runtime.Context) (values.Run
 func nativeFn_chr(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.chr.php
 
-	args, err := NewFuncParamValidator("chr").addParam("$codepoint", []string{"int"}, nil).validate(args)
+	args, err := funcParamValidator.NewValidator("chr").AddParam("$codepoint", []string{"int"}, nil).Validate(args)
 	if err != nil {
 		return values.NewVoid(), err
 	}
@@ -70,7 +71,7 @@ func nativeFn_chr(args []values.RuntimeValue, _ runtime.Context) (values.Runtime
 func nativeFn_lcfirst(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.lcfirst.php
 
-	args, err := NewFuncParamValidator("lcfirst").addParam("$string", []string{"string"}, nil).validate(args)
+	args, err := funcParamValidator.NewValidator("lcfirst").AddParam("$string", []string{"string"}, nil).Validate(args)
 	if err != nil {
 		return values.NewVoid(), err
 	}
@@ -96,7 +97,7 @@ func nativeFn_lcfirst(args []values.RuntimeValue, _ runtime.Context) (values.Run
 func nativeFn_quotemeta(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.quotemeta.php
 
-	args, err := NewFuncParamValidator("quotemeta").addParam("$string", []string{"string"}, nil).validate(args)
+	args, err := funcParamValidator.NewValidator("quotemeta").AddParam("$string", []string{"string"}, nil).Validate(args)
 	if err != nil {
 		return values.NewVoid(), err
 	}
@@ -107,9 +108,9 @@ func nativeFn_quotemeta(args []values.RuntimeValue, _ runtime.Context) (values.R
 		return values.NewBool(false), nil
 	}
 
-	var output strings.Builder
+	var output goStrings.Builder
 	for i := 0; i < len(input); i++ {
-		if strings.ContainsAny(string(input[i]), `.\+*?[^($)`) {
+		if goStrings.ContainsAny(string(input[i]), `.\+*?[^($)`) {
 			output.WriteByte('\\')
 		}
 		output.WriteByte(input[i])
@@ -123,10 +124,10 @@ func nativeFn_quotemeta(args []values.RuntimeValue, _ runtime.Context) (values.R
 func nativeFn_str_contains(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.str-contains.php
 
-	args, err := NewFuncParamValidator("str_contains").
-		addParam("$haystack", []string{"string"}, nil).
-		addParam("$needle", []string{"string"}, nil).
-		validate(args)
+	args, err := funcParamValidator.NewValidator("str_contains").
+		AddParam("$haystack", []string{"string"}, nil).
+		AddParam("$needle", []string{"string"}, nil).
+		Validate(args)
 	if err != nil {
 		return values.NewVoid(), err
 	}
@@ -134,7 +135,7 @@ func nativeFn_str_contains(args []values.RuntimeValue, _ runtime.Context) (value
 	haystack := args[0].(*values.Str).Value
 	needle := args[1].(*values.Str).Value
 
-	return values.NewBool(strings.Contains(haystack, needle)), nil
+	return values.NewBool(goStrings.Contains(haystack, needle)), nil
 }
 
 // ------------------- MARK: str_ends_with -------------------
@@ -142,10 +143,10 @@ func nativeFn_str_contains(args []values.RuntimeValue, _ runtime.Context) (value
 func nativeFn_str_ends_with(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.str-ends-with.php
 
-	args, err := NewFuncParamValidator("str_ends_with").
-		addParam("$haystack", []string{"string"}, nil).
-		addParam("$needle", []string{"string"}, nil).
-		validate(args)
+	args, err := funcParamValidator.NewValidator("str_ends_with").
+		AddParam("$haystack", []string{"string"}, nil).
+		AddParam("$needle", []string{"string"}, nil).
+		Validate(args)
 	if err != nil {
 		return values.NewVoid(), err
 	}
@@ -153,7 +154,7 @@ func nativeFn_str_ends_with(args []values.RuntimeValue, _ runtime.Context) (valu
 	haystack := args[0].(*values.Str).Value
 	needle := args[1].(*values.Str).Value
 
-	return values.NewBool(strings.HasSuffix(haystack, needle)), nil
+	return values.NewBool(goStrings.HasSuffix(haystack, needle)), nil
 }
 
 // ------------------- MARK: str_repeat -------------------
@@ -161,10 +162,10 @@ func nativeFn_str_ends_with(args []values.RuntimeValue, _ runtime.Context) (valu
 func nativeFn_str_repeat(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.str-repeat.php
 
-	args, err := NewFuncParamValidator("str_repeat").
-		addParam("$string", []string{"string"}, nil).
-		addParam("$times", []string{"int"}, nil).
-		validate(args)
+	args, err := funcParamValidator.NewValidator("str_repeat").
+		AddParam("$string", []string{"string"}, nil).
+		AddParam("$times", []string{"int"}, nil).
+		Validate(args)
 	if err != nil {
 		return values.NewVoid(), err
 	}
@@ -179,7 +180,7 @@ func nativeFn_str_repeat(args []values.RuntimeValue, _ runtime.Context) (values.
 		return values.NewVoid(), phpError.NewError("Uncaught ValueError: str_repeat(): Argument #2 ($times) must be greater than or equal to 0")
 	}
 
-	return values.NewStr(strings.Repeat(input, int(times))), nil
+	return values.NewStr(goStrings.Repeat(input, int(times))), nil
 }
 
 // ------------------- MARK: str_starts_with -------------------
@@ -187,10 +188,10 @@ func nativeFn_str_repeat(args []values.RuntimeValue, _ runtime.Context) (values.
 func nativeFn_str_starts_with(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.str-starts-with.php
 
-	args, err := NewFuncParamValidator("str_starts_with").
-		addParam("$haystack", []string{"string"}, nil).
-		addParam("$needle", []string{"string"}, nil).
-		validate(args)
+	args, err := funcParamValidator.NewValidator("str_starts_with").
+		AddParam("$haystack", []string{"string"}, nil).
+		AddParam("$needle", []string{"string"}, nil).
+		Validate(args)
 	if err != nil {
 		return values.NewVoid(), err
 	}
@@ -198,7 +199,7 @@ func nativeFn_str_starts_with(args []values.RuntimeValue, _ runtime.Context) (va
 	haystack := args[0].(*values.Str).Value
 	needle := args[1].(*values.Str).Value
 
-	return values.NewBool(strings.HasPrefix(haystack, needle)), nil
+	return values.NewBool(goStrings.HasPrefix(haystack, needle)), nil
 }
 
 // ------------------- MARK: strlen -------------------
@@ -206,7 +207,7 @@ func nativeFn_str_starts_with(args []values.RuntimeValue, _ runtime.Context) (va
 func nativeFn_strlen(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.strlen.php
 
-	args, err := NewFuncParamValidator("strlen").addParam("$string", []string{"string"}, nil).validate(args)
+	args, err := funcParamValidator.NewValidator("strlen").AddParam("$string", []string{"string"}, nil).Validate(args)
 	if err != nil {
 		return values.NewVoid(), err
 	}
@@ -219,7 +220,7 @@ func nativeFn_strlen(args []values.RuntimeValue, _ runtime.Context) (values.Runt
 func nativeFn_strtolower(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.strtolower.php
 
-	args, err := NewFuncParamValidator("strtolower").addParam("$string", []string{"string"}, nil).validate(args)
+	args, err := funcParamValidator.NewValidator("strtolower").AddParam("$string", []string{"string"}, nil).Validate(args)
 	if err != nil {
 		return values.NewVoid(), err
 	}
@@ -243,7 +244,7 @@ func nativeFn_strtolower(args []values.RuntimeValue, _ runtime.Context) (values.
 func nativeFn_strtoupper(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.strtoupper.php
 
-	args, err := NewFuncParamValidator("strtoupper").addParam("$string", []string{"string"}, nil).validate(args)
+	args, err := funcParamValidator.NewValidator("strtoupper").AddParam("$string", []string{"string"}, nil).Validate(args)
 	if err != nil {
 		return values.NewVoid(), err
 	}
@@ -267,7 +268,7 @@ func nativeFn_strtoupper(args []values.RuntimeValue, _ runtime.Context) (values.
 func nativeFn_ucfirst(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.ucfirst.php
 
-	args, err := NewFuncParamValidator("ucfirst").addParam("$string", []string{"string"}, nil).validate(args)
+	args, err := funcParamValidator.NewValidator("ucfirst").AddParam("$string", []string{"string"}, nil).Validate(args)
 	if err != nil {
 		return values.NewVoid(), err
 	}

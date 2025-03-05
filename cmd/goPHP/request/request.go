@@ -1,4 +1,4 @@
-package interpreter
+package request
 
 import (
 	"net/http"

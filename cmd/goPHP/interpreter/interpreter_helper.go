@@ -5,6 +5,8 @@ import (
 	"GoPHP/cmd/goPHP/common"
 	"GoPHP/cmd/goPHP/phpError"
 	"GoPHP/cmd/goPHP/runtime"
+	"GoPHP/cmd/goPHP/runtime/stdlib/outputControl"
+	"GoPHP/cmd/goPHP/runtime/stdlib/variableHandling"
 	"GoPHP/cmd/goPHP/runtime/values"
 	"math"
 	"os"
@@ -37,7 +39,7 @@ func (interpreter *Interpreter) flushOutputBuffers() {
 	}
 
 	for interpreter.outputBufferStack.Len() > 0 {
-		nativeFn_ob_end_flush([]values.RuntimeValue{}, runtime.NewContext(interpreter, nil))
+		outputControl.ObEndFlush(runtime.NewContext(interpreter, nil))
 	}
 }
 
@@ -67,7 +69,7 @@ func (interpreter *Interpreter) processCondition(expr ast.IExpression, env *Envi
 		return runtimeValue, false, err
 	}
 
-	boolean, err := lib_boolval(runtimeValue)
+	boolean, err := variableHandling.BoolVal(runtimeValue)
 	return runtimeValue, boolean, err
 }
 
@@ -103,7 +105,7 @@ func (interpreter *Interpreter) varExprToVarName(expr ast.IExpression, env *Envi
 			if err != nil {
 				interpreter.printError(err)
 			}
-			valueStr, err := lib_strval(runtimeValue)
+			valueStr, err := variableHandling.StrVal(runtimeValue)
 			if err != nil {
 				return "", err
 			}
@@ -114,7 +116,7 @@ func (interpreter *Interpreter) varExprToVarName(expr ast.IExpression, env *Envi
 		if err != nil {
 			return "", err
 		}
-		valueStr, err := lib_strval(variableName)
+		valueStr, err := variableHandling.StrVal(variableName)
 		if err != nil {
 			return "", err
 		}
@@ -248,7 +250,7 @@ func (interpreter *Interpreter) includeFile(filepathExpr ast.IExpression, env *E
 		return runtimeValue, phpError.NewError("Uncaught ValueError: Path cannot be empty in %s", filepathExpr.GetPosition().ToPosString())
 	}
 
-	filename, err := lib_strval(runtimeValue)
+	filename, err := variableHandling.StrVal(runtimeValue)
 	if err != nil {
 		return runtimeValue, err
 	}
@@ -397,16 +399,16 @@ func (interpreter *Interpreter) exprToRuntimeValue(expr ast.IExpression, env *En
 func runtimeValueToValueType(valueType values.ValueType, runtimeValue values.RuntimeValue) (values.RuntimeValue, phpError.Error) {
 	switch valueType {
 	case values.BoolValue:
-		boolean, err := lib_boolval(runtimeValue)
+		boolean, err := variableHandling.BoolVal(runtimeValue)
 		return values.NewBool(boolean), err
 	case values.FloatValue:
-		floating, err := lib_floatval(runtimeValue)
+		floating, err := variableHandling.FloatVal(runtimeValue)
 		return values.NewFloat(floating), err
 	case values.IntValue:
-		integer, err := lib_intval(runtimeValue)
+		integer, err := variableHandling.IntVal(runtimeValue)
 		return values.NewInt(integer), err
 	case values.StrValue:
-		str, err := lib_strval(runtimeValue)
+		str, err := variableHandling.StrVal(runtimeValue)
 		return values.NewStr(str), err
 	default:
 		return values.NewVoid(), phpError.NewError("runtimeValueToValueType: Unsupported runtime value: %s", valueType)
@@ -867,7 +869,7 @@ func compareRelationArray(lhs *values.Array, operator string, rhs values.Runtime
 
 	if rhs.GetType() == values.NullValue {
 		var err phpError.Error
-		rhs, err = lib_arrayval(rhs)
+		rhs, err = variableHandling.ArrayVal(rhs)
 		if err != nil {
 			return values.NewVoid(), err
 		}
@@ -925,7 +927,7 @@ func compareRelationArray(lhs *values.Array, operator string, rhs values.Runtime
 		}
 
 	case values.BoolValue:
-		lhsBoolean, err := lib_boolval(lhs)
+		lhsBoolean, err := variableHandling.BoolVal(lhs)
 		if err != nil {
 			return values.NewVoid(), err
 		}
@@ -955,18 +957,16 @@ func compareRelationBoolean(lhs *values.Bool, operator string, rhs values.Runtim
 	//   1. If either operand has type bool, the other operand is converted to that type.
 	//      The result is the logical comparison of the two operands after conversion, where FALSE is defined to be less than TRUE.
 
-	rhsBoolean, err := lib_boolval(rhs)
+	rhsBoolean, err := variableHandling.BoolVal(rhs)
 	if err != nil {
 		return values.NewVoid(), err
 	}
-	// TODO compareRelationBoolean - object - implement in lib_boolval
-	// TODO compareRelationBoolean - resource - implement in lib_boolval
-
-	lhsInt, err := lib_intval(lhs)
+	// TODO compareRelationBoolean - object - implement in variableHandling.BoolVal(	// TODO compareRelationBoolean - resource - implement in variableHandling.BoolVal(
+	lhsInt, err := variableHandling.IntVal(lhs)
 	if err != nil {
 		return values.NewVoid(), err
 	}
-	rhsInt, err := lib_intval(values.NewBool(rhsBoolean))
+	rhsInt, err := variableHandling.IntVal(values.NewBool(rhsBoolean))
 	if err != nil {
 		return values.NewVoid(), err
 	}
@@ -1045,7 +1045,7 @@ func compareRelationFloating(lhs *values.Float, operator string, rhs values.Runt
 		}
 
 	case values.BoolValue:
-		lhsBoolean, err := lib_boolval(lhs)
+		lhsBoolean, err := variableHandling.BoolVal(lhs)
 		if err != nil {
 			return values.NewVoid(), err
 		}
@@ -1128,14 +1128,14 @@ func compareRelationInteger(lhs *values.Int, operator string, rhs values.Runtime
 		}
 
 	case values.BoolValue:
-		lhsBoolean, err := lib_boolval(lhs)
+		lhsBoolean, err := variableHandling.BoolVal(lhs)
 		if err != nil {
 			return values.NewVoid(), err
 		}
 		return compareRelationBoolean(values.NewBool(lhsBoolean), operator, rhs)
 
 	case values.FloatValue:
-		lhsFloat, err := lib_floatval(lhs)
+		lhsFloat, err := variableHandling.FloatVal(lhs)
 		if err != nil {
 			return values.NewVoid(), err
 		}
@@ -1175,28 +1175,28 @@ func compareRelationNull(operator string, rhs values.RuntimeValue) (values.Runti
 
 	switch rhs.GetType() {
 	case values.ArrayValue:
-		lhs, err := lib_arrayval(values.NewNull())
+		lhs, err := variableHandling.ArrayVal(values.NewNull())
 		if err != nil {
 			return values.NewVoid(), err
 		}
 		return compareRelationArray(lhs, operator, rhs)
 
 	case values.BoolValue:
-		lhs, err := lib_boolval(values.NewNull())
+		lhs, err := variableHandling.BoolVal(values.NewNull())
 		if err != nil {
 			return values.NewVoid(), err
 		}
 		return compareRelationBoolean(values.NewBool(lhs), operator, rhs)
 
 	case values.FloatValue:
-		lhs, err := lib_floatval(values.NewNull())
+		lhs, err := variableHandling.FloatVal(values.NewNull())
 		if err != nil {
 			return values.NewVoid(), err
 		}
 		return compareRelationFloating(values.NewFloat(lhs), operator, rhs)
 
 	case values.IntValue:
-		lhs, err := lib_intval(values.NewNull())
+		lhs, err := variableHandling.IntVal(values.NewNull())
 		if err != nil {
 			return values.NewVoid(), err
 		}
@@ -1217,7 +1217,7 @@ func compareRelationNull(operator string, rhs values.RuntimeValue) (values.Runti
 		// TODO compareRelationNull - resource
 
 	case values.StrValue:
-		lhs, err := lib_strval(values.NewNull())
+		lhs, err := variableHandling.StrVal(values.NewNull())
 		if err != nil {
 			return values.NewVoid(), err
 		}
@@ -1281,21 +1281,21 @@ func compareRelationString(lhs *values.Str, operator string, rhs values.RuntimeV
 		}
 
 	case values.BoolValue:
-		lhs, err := lib_boolval(lhs)
+		lhs, err := variableHandling.BoolVal(lhs)
 		if err != nil {
 			return values.NewVoid(), err
 		}
 		return compareRelationBoolean(values.NewBool(lhs), operator, rhs)
 
 	case values.FloatValue:
-		lhs, err := lib_floatval(lhs)
+		lhs, err := variableHandling.FloatVal(lhs)
 		if err != nil {
 			return values.NewVoid(), err
 		}
 		return compareRelationFloating(values.NewFloat(lhs), operator, rhs)
 
 	case values.IntValue:
-		lhs, err := lib_intval(lhs)
+		lhs, err := variableHandling.IntVal(lhs)
 		if err != nil {
 			return values.NewVoid(), err
 		}
@@ -1309,14 +1309,14 @@ func compareRelationString(lhs *values.Str, operator string, rhs values.RuntimeV
 		//      and resources converting to int. The result is the numerical comparison of the two operands after conversion.
 		rhsStr := rhs.(*values.Str).Value
 		if common.IsFloatingLiteralWithSign(lhs.Value) && (common.IsIntegerLiteralWithSign(rhsStr) || common.IsFloatingLiteralWithSign(rhsStr)) {
-			lhs, err := lib_floatval(lhs)
+			lhs, err := variableHandling.FloatVal(lhs)
 			if err != nil {
 				return values.NewVoid(), err
 			}
 			return compareRelationFloating(values.NewFloat(lhs), operator, rhs)
 		}
 		if common.IsIntegerLiteralWithSign(lhs.Value) && (common.IsIntegerLiteralWithSign(rhsStr) || common.IsFloatingLiteralWithSign(rhsStr)) {
-			lhs, err := lib_intval(lhs)
+			lhs, err := variableHandling.IntVal(lhs)
 			if err != nil {
 				return values.NewVoid(), err
 			}

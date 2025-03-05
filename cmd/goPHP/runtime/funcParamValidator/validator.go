@@ -1,4 +1,4 @@
-package interpreter
+package funcParamValidator
 
 import (
 	"GoPHP/cmd/goPHP/phpError"
@@ -14,17 +14,17 @@ type funcParam struct {
 	defaultValue  values.RuntimeValue
 }
 
-type funcParamValidator struct {
+type Validator struct {
 	funcName string
 	params   []funcParam
 }
 
-func NewFuncParamValidator(funcName string) *funcParamValidator {
-	return &funcParamValidator{funcName: funcName, params: []funcParam{}}
+func NewValidator(funcName string) *Validator {
+	return &Validator{funcName: funcName, params: []funcParam{}}
 }
 
 // Add parameter value
-func (validator *funcParamValidator) addParam(name string, paramType []string, defaultValue values.RuntimeValue) *funcParamValidator {
+func (validator *Validator) AddParam(name string, paramType []string, defaultValue values.RuntimeValue) *Validator {
 	// Add type of default value to allowed types
 	// e.g. function test(int $a = null) => Allowed types: int|null
 	if defaultValue != nil {
@@ -39,7 +39,7 @@ func (validator *funcParamValidator) addParam(name string, paramType []string, d
 }
 
 // Add parameter with variable length (e.g. "mixed ...$args")
-func (validator *funcParamValidator) addVariableLenParam(name string, paramType []string) *funcParamValidator {
+func (validator *Validator) AddVariableLenParam(name string, paramType []string) *Validator {
 	validator.params = append(validator.params, funcParam{
 		name: name, paramType: paramType, isVariableLen: true, defaultValue: values.NewArray(),
 	})
@@ -47,7 +47,7 @@ func (validator *funcParamValidator) addVariableLenParam(name string, paramType 
 }
 
 // Validate the given arguments
-func (validator *funcParamValidator) validate(args []values.RuntimeValue) ([]values.RuntimeValue, phpError.Error) {
+func (validator *Validator) Validate(args []values.RuntimeValue) ([]values.RuntimeValue, phpError.Error) {
 
 	typeMatches := func(param funcParam, arg values.RuntimeValue) bool {
 		typeStr := values.ToPhpType(arg)
@@ -143,7 +143,7 @@ func (validator *funcParamValidator) validate(args []values.RuntimeValue) ([]val
 	return validatedArgs, nil
 }
 
-func (validator *funcParamValidator) getLeastExpectedParams() int {
+func (validator *Validator) getLeastExpectedParams() int {
 	leastParams := 0
 	for _, param := range validator.params {
 		if param.defaultValue == nil {

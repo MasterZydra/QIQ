@@ -8,4 +8,5 @@ import (
 type Environment interface {
 	LookupConstant(constantName string) (values.RuntimeValue, phpError.Error)
 	LookupVariable(variableName string) (values.RuntimeValue, phpError.Error)
+	AddNativeFunction(functionName string, function NativeFunction)
 }
