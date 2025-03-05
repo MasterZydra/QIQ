@@ -12,6 +12,7 @@ The goals of the project are:
 - [AST](doc/AST.md)
 - [Features](doc/Features.md)
 - [Internal workings](doc/Internal%20workings.md)
+- [Packages](doc/Packages.md)
 
 ## Usage
 ```
