@@ -114,6 +114,7 @@ func doTest(path string, info os.FileInfo, err error) error {
 	request := request.NewRequest()
 	request.Env = testFile.Env
 	request.Args = testFile.Args
+	request.Cookie = testFile.Cookie
 	request.QueryString = testFile.Get
 	request.Post = testFile.Post
 

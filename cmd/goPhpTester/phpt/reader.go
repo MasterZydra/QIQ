@@ -90,6 +90,12 @@ func (reader *Reader) GetTestFile() (*TestFile, error) {
 			continue
 		}
 
+		if reader.at() == "--COOKIE--" {
+			reader.eat()
+			reader.testFile.Cookie = reader.eat()
+			reader.sections = append(reader.sections, "--COOKIE--")
+		}
+
 		if reader.at() == "--INI--" {
 			ini := []string{}
 			reader.eat()

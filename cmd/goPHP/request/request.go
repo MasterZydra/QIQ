@@ -21,6 +21,7 @@ type Request struct {
 	Env            map[string]string
 	Args           [][]string
 	Post           string
+	Cookie         string
 }
 
 func NewRequest() *Request {
@@ -36,6 +37,7 @@ func NewRequestFromGoRequest(r *http.Request, documentRoot string, serverAddr st
 		request.DocumentRoot = documentRoot
 		request.Method = r.Method
 		request.QueryString = r.URL.RawQuery
+		request.Cookie = strings.Join(r.Header["Cookie"], "")
 		request.Protocol = r.Proto
 		request.RequestURI = r.RequestURI
 		request.RemoteAddr = strings.Split(r.RemoteAddr, ":")[0]

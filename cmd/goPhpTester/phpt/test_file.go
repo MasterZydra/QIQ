@@ -7,6 +7,7 @@ type TestFile struct {
 	Post       string
 	Args       [][]string
 	Env        map[string]string
+	Cookie     string
 	Ini        []string
 	File       string
 	Expect     string

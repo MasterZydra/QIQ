@@ -2,6 +2,7 @@ package interpreter
 
 import (
 	"GoPHP/cmd/goPHP/common"
+	"GoPHP/cmd/goPHP/config"
 	"GoPHP/cmd/goPHP/ini"
 	"GoPHP/cmd/goPHP/request"
 	"GoPHP/cmd/goPHP/runtime/values"
@@ -10,6 +11,50 @@ import (
 	"regexp"
 	"strings"
 )
+
+func parseCookies(cookies string) *values.Array {
+	result := values.NewArray()
+
+	for cookies != "" {
+		var cookie string
+		cookie, cookies, _ = strings.Cut(cookies, ";")
+		if cookie == "" {
+			continue
+		}
+
+		var name string
+		var value string
+		if !strings.Contains(cookie, "=") {
+			// Cookie without value is an empty string
+			name = cookie
+			value = ""
+		} else {
+			// Get parameter with key-value-pair
+			name, value, _ = strings.Cut(cookie, "=")
+		}
+		name = strings.Trim(name, " ")
+		key := values.NewStr(strings.NewReplacer(
+			" ", "_",
+			"[", "_",
+			".", "_",
+		).Replace(name))
+		if result.Contains(key) {
+			continue
+		}
+		// Escape plus sign so that it will not be replaced with space
+		value = strings.ReplaceAll(value, "+", "%2b")
+		value, err := url.QueryUnescape(fixPercentEscaping(value))
+		if err != nil {
+			if config.IsDevMode {
+				println("parseCookies: ", err)
+			}
+			continue
+		}
+		result.SetElement(key, values.NewStr(value))
+	}
+
+	return result
+}
 
 func parseQuery(query string, ini *ini.Ini) (*values.Array, error) {
 	result := values.NewArray()
@@ -41,7 +86,6 @@ func parseQuery(query string, ini *ini.Ini) (*values.Array, error) {
 		if err != nil {
 			return result, err
 		}
-		// fmt.Println(key)
 
 		value, err = url.QueryUnescape(value)
 		if err != nil {
@@ -53,7 +97,12 @@ func parseQuery(query string, ini *ini.Ini) (*values.Array, error) {
 				return result, err
 			}
 		} else {
-			key = replaceSpecialCharacters(key)
+			key = strings.NewReplacer(
+				" ", "_",
+				"+", "_",
+				"[", "_",
+				".", "_",
+			).Replace(key)
 
 			var keyValue values.RuntimeValue
 			if common.IsIntegerLiteral(key, false) {
@@ -120,13 +169,4 @@ func fixPercentEscaping(key string) string {
 	return re.ReplaceAllStringFunc(key, func(match string) string {
 		return "%25" + match[1:]
 	})
-}
-
-func replaceSpecialCharacters(key string) string {
-	return strings.NewReplacer(
-		" ", "_",
-		"+", "_",
-		"[", "_",
-		".", "_",
-	).Replace(key)
 }

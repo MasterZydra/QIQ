@@ -18,7 +18,7 @@ func registerPredefinedVariables(environment *Environment, request *request.Requ
 		registerPredefinedVariableEnv(environment, request, true)
 		registerPredefinedVariableGet(environment, request, ini, true)
 		registerPredefinedVariablePost(environment, request, ini, true)
-		// TODO Cookie
+		registerPredefinedVariableCookie(environment, request, true)
 		registerPredefinedVariableServer(environment, request, ini, true)
 		return
 	}
@@ -32,9 +32,8 @@ func registerPredefinedVariables(environment *Environment, request *request.Requ
 			registerPredefinedVariableGet(environment, request, ini, true)
 		case "P":
 			registerPredefinedVariablePost(environment, request, ini, true)
-		// TODO Cookie
-		// case "C":
-		// 	registerPredefinedVariableCookie(environment, request, true)
+		case "C":
+			registerPredefinedVariableCookie(environment, request, true)
 		case "S":
 			registerPredefinedVariableServer(environment, request, ini, true)
 		}
@@ -49,10 +48,9 @@ func registerPredefinedVariables(environment *Environment, request *request.Requ
 	if !strings.Contains(variables_order, "P") {
 		registerPredefinedVariablePost(environment, request, ini, false)
 	}
-	// TODO Cookie
-	// if !strings.Contains(variables_order, "C") {
-	// 	registerPredefinedVariableCookie(environment, request, false)
-	// }
+	if !strings.Contains(variables_order, "C") {
+		registerPredefinedVariableCookie(environment, request, false)
+	}
 	if !strings.Contains(variables_order, "S") {
 		registerPredefinedVariableServer(environment, request, ini, false)
 	}
@@ -60,8 +58,7 @@ func registerPredefinedVariables(environment *Environment, request *request.Requ
 	requestVar := values.NewArray()
 	mergeArrays(requestVar, environment.predefinedVariables["$_GET"].(*values.Array))
 	mergeArrays(requestVar, environment.predefinedVariables["$_POST"].(*values.Array))
-	// TODO Cookie
-	// mergeArrays(requestVar, environment.predefinedVariables["$_COOKIE"].(*values.Array))
+	mergeArrays(requestVar, environment.predefinedVariables["$_COOKIE"].(*values.Array))
 	environment.predefinedVariables["$_REQUEST"] = requestVar
 }
 
@@ -78,6 +75,14 @@ func registerPredefinedVariableEnv(environment *Environment, request *request.Re
 		environment.predefinedVariables["$_ENV"] = stringMapToArray(request.Env)
 	} else {
 		environment.predefinedVariables["$_ENV"] = values.NewArray()
+	}
+}
+
+func registerPredefinedVariableCookie(environment *Environment, request *request.Request, init bool) {
+	if init {
+		environment.predefinedVariables["$_COOKIE"] = parseCookies(request.Cookie)
+	} else {
+		environment.predefinedVariables["$_COOKIE"] = values.NewArray()
 	}
 }
 
