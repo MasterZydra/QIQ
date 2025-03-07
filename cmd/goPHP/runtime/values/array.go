@@ -70,11 +70,11 @@ func convertKey(key RuntimeValue) (RuntimeValue, phpError.Error) {
 		return NewInt(int64(key.(*Float).Value)), nil
 	}
 
-	if key.GetType() == StrValue && common.IsDecimalLiteral(key.(*Str).Value) {
+	if key.GetType() == StrValue && common.IsDecimalLiteral(key.(*Str).Value, false) {
 		// Spec: https://www.php.net/manual/en/language.types.array.php
 		// Strings containing valid decimal ints, unless the number is preceded by a + sign, will be cast to the int type.
 		// E.g. the key "8" will actually be stored under 8. On the other hand "08" will not be cast, as it isn't a valid decimal integer.
-		return NewInt(common.DecimalLiteralToInt64(key.(*Str).Value)), nil
+		return NewInt(common.DecimalLiteralToInt64(key.(*Str).Value, false)), nil
 	}
 
 	if key.GetType() == NullValue {

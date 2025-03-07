@@ -426,7 +426,7 @@ func (lexer *Lexer) getIntegerLiteral(eat bool) string {
 			intStr += lexer.eat()
 		}
 
-		if common.IsBinaryLiteral(intStr) {
+		if common.IsBinaryLiteral(intStr, false) {
 			lexer.popSnapShot(!eat)
 			return intStr
 		}
@@ -457,7 +457,7 @@ func (lexer *Lexer) getIntegerLiteral(eat bool) string {
 			intStr += lexer.eat()
 		}
 
-		if common.IsHexadecimalLiteral(intStr) {
+		if common.IsHexadecimalLiteral(intStr, false) {
 			lexer.popSnapShot(!eat)
 			return intStr
 		}
@@ -476,14 +476,14 @@ func (lexer *Lexer) getIntegerLiteral(eat bool) string {
 
 	// ------------------- decimal-literal -------------------
 
-	if common.IsDecimalLiteral(intStr) {
+	if common.IsDecimalLiteral(intStr, false) {
 		lexer.popSnapShot(!eat)
 		return intStr
 	}
 
 	// ------------------- octal-literal -------------------
 
-	if common.IsOctalLiteral(intStr) {
+	if common.IsOctalLiteral(intStr, false) {
 		lexer.popSnapShot(!eat)
 		return intStr
 	}
@@ -571,7 +571,7 @@ func (lexer *Lexer) getFloatingPointLiteral(eat bool) string {
 
 	lexer.popSnapShot(!eat)
 
-	if common.IsFloatingLiteral(floatStr) {
+	if common.IsFloatingLiteral(floatStr, false) {
 		return floatStr
 	}
 

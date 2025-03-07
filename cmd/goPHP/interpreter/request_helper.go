@@ -56,8 +56,8 @@ func parseQuery(query string, ini *ini.Ini) (*values.Array, error) {
 			key = replaceSpecialCharacters(key)
 
 			var keyValue values.RuntimeValue
-			if common.IsIntegerLiteral(key) {
-				intValue, _ := common.IntegerLiteralToInt64(key)
+			if common.IsIntegerLiteral(key, false) {
+				intValue, _ := common.IntegerLiteralToInt64(key, false)
 				keyValue = values.NewInt(intValue)
 			} else {
 				keyValue = values.NewStr(key)
@@ -97,8 +97,8 @@ func parseQueryKey(key string, value string, result *values.Array) (*values.Arra
 	for _, phpArrayKey := range phpArrayKeys {
 		if phpArrayKey == "" {
 			php += "[]"
-		} else if common.IsIntegerLiteral(phpArrayKey) {
-			phpArrayKeyInt, _ := common.IntegerLiteralToInt64(phpArrayKey)
+		} else if common.IsIntegerLiteral(phpArrayKey, false) {
+			phpArrayKeyInt, _ := common.IntegerLiteralToInt64(phpArrayKey, false)
 			php += fmt.Sprintf("[%d]", phpArrayKeyInt)
 		} else {
 			php += "['" + phpArrayKey + "']"

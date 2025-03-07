@@ -98,7 +98,7 @@ func (ini *Ini) Set(directive string, value string, source int) phpError.Error {
 	}
 
 	if slices.Contains(intDirectives, directive) {
-		if !common.IsIntegerLiteralWithSign(value) {
+		if !common.IsIntegerLiteralWithSign(value, false) {
 			return nil
 		}
 		ini.directives[directive] = value
@@ -130,8 +130,8 @@ func (ini *Ini) GetInt(directive string) int64 {
 	if err != nil {
 		return -1
 	}
-	if common.IsIntegerLiteralWithSign(value) {
-		intVal, _ := common.IntegerLiteralToInt64WithSign(value)
+	if common.IsIntegerLiteralWithSign(value, false) {
+		intVal, _ := common.IntegerLiteralToInt64WithSign(value, false)
 		return intVal
 	}
 	return -1

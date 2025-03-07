@@ -154,7 +154,7 @@ func doTest(path string, info os.FileInfo, err error) error {
 	var equal bool
 	switch testFile.ExpectType {
 	case "--EXPECT--":
-		equal = testFile.Expect == common.TrimTrailingLineBreaks(result)
+		equal = testFile.Expect == common.TrimLineBreaks(result)
 	default:
 		failed++
 		fmt.Errorf("Unsupported expect section: %s", testFile.ExpectType)

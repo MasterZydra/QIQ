@@ -55,7 +55,7 @@ func TestLibBoolval(t *testing.T) {
 
 func TestLibFloatval(t *testing.T) {
 	doTest := func(runtimeValue values.RuntimeValue, expected float64) {
-		actual, err := FloatVal(runtimeValue)
+		actual, err := FloatVal(runtimeValue, true)
 		if err != nil {
 			t.Errorf("Unexpected error: \"%s\"", err)
 			return
@@ -98,7 +98,7 @@ func TestLibFloatval(t *testing.T) {
 
 func TestLibIntval(t *testing.T) {
 	doTest := func(runtimeValue values.RuntimeValue, expected int64) {
-		actual, err := IntVal(runtimeValue)
+		actual, err := IntVal(runtimeValue, true)
 		if err != nil {
 			t.Errorf("Unexpected error: \"%s\"", err)
 			return

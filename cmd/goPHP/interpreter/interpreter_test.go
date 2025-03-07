@@ -588,6 +588,32 @@ func TestNumbers(t *testing.T) {
 	testForError(t, `<?php var_dump(1._0);`, phpError.NewError("Undefined constant \"_0\""))
 	testForError(t, `<?php var_dump(1_e2);`, phpError.NewParseError("Unsupported number format detected"))
 	testForError(t, `<?php var_dump(1e_2);`, phpError.NewParseError("Expected \",\" or \")\". Got: &{Token - type: Name, value: \"e_2\", position: {Position - file: \"%s\", ln: 1, col: 17}}", TEST_FILE_NAME))
+
+	// Convertion
+	// intval
+	testInputOutput(t, `<?php var_dump(intval('..9'));`, "int(0)\n")
+	testInputOutput(t, `<?php var_dump(intval('.9.'));`, "int(0)\n")
+	testInputOutput(t, `<?php var_dump(intval('9..'));`, "int(9)\n")
+	testInputOutput(t, `<?php var_dump(intval('9'));`, "int(9)\n")
+	testInputOutput(t, `<?php var_dump(intval('9.9'));`, "int(9)\n")
+	testInputOutput(t, `<?php var_dump(intval('9.9.9'));`, "int(9)\n")
+	testInputOutput(t, `<?php var_dump(intval('9X'));`, "int(9)\n")
+	// floatval
+	testInputOutput(t, `<?php var_dump(floatval('..9'));`, "float(0)\n")
+	testInputOutput(t, `<?php var_dump(floatval('.9.'));`, "float(0.9)\n")
+	testInputOutput(t, `<?php var_dump(floatval('9..'));`, "float(9)\n")
+	testInputOutput(t, `<?php var_dump(floatval('9'));`, "float(9)\n")
+	testInputOutput(t, `<?php var_dump(floatval('9.9'));`, "float(9.9)\n")
+	testInputOutput(t, `<?php var_dump(floatval('9.9.9'));`, "float(9.9)\n")
+	testInputOutput(t, `<?php var_dump(floatval('9X'));`, "float(9)\n")
+	// boolval
+	testInputOutput(t, `<?php var_dump(boolval('..9'));`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump(boolval('.9.'));`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump(boolval('9..'));`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump(boolval('9'));`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump(boolval('9.9'));`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump(boolval('9.9.9'));`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump(boolval('9X'));`, "bool(true)\n")
 }
 
 func TestOperators(t *testing.T) {
@@ -721,6 +747,8 @@ func TestOperators(t *testing.T) {
 	testInputOutput(t, `<?php echo 2 * (3 + 4) * 5 + 6;`, "76")
 	testInputOutput(t, `<?php echo 2 + 3 * 4 + 5 * 6;`, "44")
 }
+
+// ------------------- MARK: comparison -------------------
 
 func TestStrictComparison(t *testing.T) {
 	// Table from https://www.php.net/manual/en/types.comparisons.php
@@ -1127,6 +1155,14 @@ func TestCompareRelation(t *testing.T) {
 	testInputOutput(t, `<?php var_dump(-2 < NULL);`, "bool(true)\n")
 	testInputOutput(t, `<?php var_dump(-2 <= NULL);`, "bool(true)\n")
 	testInputOutput(t, `<?php var_dump(-2 <=> NULL);`, "int(-1)\n")
+	// Integer - String
+	testInputOutput(t, `<?php var_dump('..9' > 0);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump('.9.' > 0);`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump('9..' > 0);`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump('9' > 0);`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump('9.9' > 0);`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump('9.9.9' > 0);`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump('9X' > 0);`, "bool(true)\n")
 
 	// Null
 	// Null - Array

@@ -645,7 +645,7 @@ func (interpreter *Interpreter) ProcessCoalesceExpr(expr *ast.CoalesceExpression
 func (interpreter *Interpreter) ProcessRelationalExpr(expr *ast.RelationalExpression, env any) (any, error) {
 	lhs := must(interpreter.processStmt(expr.Lhs, env))
 	rhs := must(interpreter.processStmt(expr.Rhs, env))
-	return compareRelation(lhs, expr.Operator, rhs)
+	return compareRelation(lhs, expr.Operator, rhs, true)
 }
 
 // ProcessEqualityExpr implements Visitor.
@@ -691,19 +691,19 @@ func (interpreter *Interpreter) ProcessCastExpr(expr *ast.CastExpression, env an
 		// Spec: https://phplang.org/spec/10-expressions.html#grammar-cast-type
 		// A cast-type of "binary" is reserved for future use in dealing with so-called binary strings. For now, it is fully equivalent to "string" cast.
 		// A cast-type of "string" results in a conversion to type "string".
-		return runtimeValueToValueType(values.StrValue, value)
+		return runtimeValueToValueType(values.StrValue, value, true)
 	case "bool", "boolean":
 		// Spec: https://phplang.org/spec/10-expressions.html#grammar-cast-type
 		// A cast-type of "bool" or "boolean" results in a conversion to type "bool".
-		return runtimeValueToValueType(values.BoolValue, value)
+		return runtimeValueToValueType(values.BoolValue, value, true)
 	case "double", "float", "real":
 		// Spec: https://phplang.org/spec/10-expressions.html#grammar-cast-type
 		// A cast-type of "float", "double", or "real" results in a conversion to type "float".
-		return runtimeValueToValueType(values.FloatValue, value)
+		return runtimeValueToValueType(values.FloatValue, value, true)
 	case "int", "integer":
 		// Spec: https://phplang.org/spec/10-expressions.html#grammar-cast-type
 		// A cast-type of "int" or "integer" results in a conversion to type "int".
-		return runtimeValueToValueType(values.IntValue, value)
+		return runtimeValueToValueType(values.IntValue, value, true)
 	default:
 		return values.NewVoid(), phpError.NewError("processCastExpr: Unsupported cast type %s", expr.Operator)
 	}

@@ -7,6 +7,13 @@ import (
 	"strings"
 )
 
+func addRegexEOL(str string, add bool) string {
+	if add {
+		return str + `$`
+	}
+	return str
+}
+
 // ------------------- MARK: Integer -------------------
 
 func IsDigit(char string) bool {
@@ -19,7 +26,9 @@ func IsDigit(char string) bool {
 	return match
 }
 
-func IsDecimalLiteral(str string) bool {
+const decimalLiteralPattern = `^[1-9]\d*(_\d+)*`
+
+func IsDecimalLiteral(str string, leadingNumeric bool) bool {
 	// Spec: https://phplang.org/spec/09-lexical-structure.html#grammar-decimal-literal
 
 	// decimal-literal::
@@ -32,16 +41,19 @@ func IsDecimalLiteral(str string) bool {
 	// digit:: one of
 	//    0   1   2   3   4   5   6   7   8   9
 
-	match, _ := regexp.MatchString(`^[1-9]\d*(_\d+)*$`, str)
+	match, _ := regexp.MatchString(addRegexEOL(decimalLiteralPattern, !leadingNumeric), str)
 	return match
 }
 
-func DecimalLiteralToInt64(str string) int64 {
-	integer, _ := strconv.ParseInt(ReplaceUnderscores(str), 10, 64)
+func DecimalLiteralToInt64(str string, leadingNumeric bool) int64 {
+	r, _ := regexp.Compile(addRegexEOL(decimalLiteralPattern, !leadingNumeric))
+	integer, _ := strconv.ParseInt(ReplaceUnderscores(r.FindString(str)), 10, 64)
 	return integer
 }
 
-func IsOctalLiteral(str string) bool {
+const octalLiteralPattern = `^[0-7]+(_[0-7]+)*`
+
+func IsOctalLiteral(str string, leadingNumeric bool) bool {
 	// Spec: https://phplang.org/spec/09-lexical-structure.html#grammar-octal-literal
 
 	// octal-literal::
@@ -51,12 +63,13 @@ func IsOctalLiteral(str string) bool {
 	// octal-digit:: one of
 	//    0   1   2   3   4   5   6   7
 
-	match, _ := regexp.MatchString("^[0-7]+(_[0-7]+)*$", str)
+	match, _ := regexp.MatchString(addRegexEOL(octalLiteralPattern, !leadingNumeric), str)
 	return match
 }
 
-func OctalLiteralToInt64(str string) int64 {
-	integer, _ := strconv.ParseInt(ReplaceUnderscores(str), 8, 64)
+func OctalLiteralToInt64(str string, leadingNumeric bool) int64 {
+	r, _ := regexp.Compile(addRegexEOL(octalLiteralPattern, !leadingNumeric))
+	integer, _ := strconv.ParseInt(ReplaceUnderscores(r.FindString(str)), 8, 64)
 	return integer
 }
 
@@ -72,7 +85,9 @@ func IsHexadecimalDigit(char string) bool {
 	return match
 }
 
-func IsHexadecimalLiteral(str string) bool {
+const hexadecimalLiteralPattern = `^0[xX][\da-fA-F]+(_[\da-fA-F]+)*`
+
+func IsHexadecimalLiteral(str string, leadingNumeric bool) bool {
 	// Spec: https://phplang.org/spec/09-lexical-structure.html#grammar-hexadecimal-literal
 
 	// hexadecimal-literal::
@@ -87,16 +102,19 @@ func IsHexadecimalLiteral(str string) bool {
 	//    a   b   c   d   e   f
 	//    A   B   C   D   E   F
 
-	match, _ := regexp.MatchString(`^0[xX][\da-fA-F]+(_[\da-fA-F]+)*$`, str)
+	match, _ := regexp.MatchString(addRegexEOL(hexadecimalLiteralPattern, !leadingNumeric), str)
 	return match
 }
 
-func HexadecimalLiteralToInt64(str string) int64 {
-	integer, _ := strconv.ParseInt(ReplaceUnderscores(str[2:]), 16, 64)
+func HexadecimalLiteralToInt64(str string, leadingNumeric bool) int64 {
+	r, _ := regexp.Compile(addRegexEOL(hexadecimalLiteralPattern, !leadingNumeric))
+	integer, _ := strconv.ParseInt(ReplaceUnderscores(r.FindString(str)[2:]), 16, 64)
 	return integer
 }
 
-func IsBinaryLiteral(str string) bool {
+const binaryLiteralPattern = `^0[bB][01]+(_[01]+)*`
+
+func IsBinaryLiteral(str string, leadingNumeric bool) bool {
 	// Spec: https://phplang.org/spec/09-lexical-structure.html#grammar-binary-literal
 
 	// binary-literal::
@@ -109,33 +127,37 @@ func IsBinaryLiteral(str string) bool {
 	// binary-digit:: one of
 	//    0   1
 
-	match, _ := regexp.MatchString("^0[bB][01]+(_[01]+)*$", str)
+	match, _ := regexp.MatchString(addRegexEOL(binaryLiteralPattern, !leadingNumeric), str)
 	return match
 }
 
-func BinaryLiteralToInt64(str string) int64 {
-	integer, _ := strconv.ParseInt(ReplaceUnderscores(str[2:]), 2, 64)
+func BinaryLiteralToInt64(str string, leadingNumeric bool) int64 {
+	r, _ := regexp.Compile(addRegexEOL(binaryLiteralPattern, !leadingNumeric))
+	integer, _ := strconv.ParseInt(ReplaceUnderscores(r.FindString(str)[2:]), 2, 64)
 	return integer
 }
 
-func IsIntegerLiteral(str string) bool {
-	return IsDecimalLiteral(str) || IsOctalLiteral(str) || IsHexadecimalLiteral(str) || IsBinaryLiteral(str)
+func IsIntegerLiteral(str string, leadingNumeric bool) bool {
+	return IsDecimalLiteral(str, leadingNumeric) ||
+		IsOctalLiteral(str, leadingNumeric) ||
+		IsHexadecimalLiteral(str, leadingNumeric) ||
+		IsBinaryLiteral(str, leadingNumeric)
 }
 
-func IsIntegerLiteralWithSign(str string) bool {
+func IsIntegerLiteralWithSign(str string, leadingNumeric bool) bool {
 	if strings.HasPrefix(str, "-") || strings.HasPrefix(str, "+") {
 		str = str[1:]
 	}
-	return IsIntegerLiteral(str)
+	return IsIntegerLiteral(str, leadingNumeric)
 }
 
-func IntegerLiteralToInt64WithSign(str string) (int64, error) {
+func IntegerLiteralToInt64WithSign(str string, leadingNumeric bool) (int64, error) {
 	isNegative := strings.HasPrefix(str, "-")
 	if strings.HasPrefix(str, "+") || strings.HasPrefix(str, "-") {
 		str = str[1:]
 	}
 
-	result, err := IntegerLiteralToInt64(str)
+	result, err := IntegerLiteralToInt64(str, leadingNumeric)
 	if err != nil {
 		return 0, err
 	}
@@ -145,25 +167,25 @@ func IntegerLiteralToInt64WithSign(str string) (int64, error) {
 	return result, nil
 }
 
-func IntegerLiteralToInt64(str string) (int64, error) {
+func IntegerLiteralToInt64(str string, leadingNumeric bool) (int64, error) {
 	// decimal-literal
-	if IsDecimalLiteral(str) {
-		return DecimalLiteralToInt64(str), nil
+	if IsDecimalLiteral(str, leadingNumeric) {
+		return DecimalLiteralToInt64(str, leadingNumeric), nil
 	}
 
 	// octal-literal
-	if IsOctalLiteral(str) {
-		return OctalLiteralToInt64(str), nil
+	if IsOctalLiteral(str, leadingNumeric) {
+		return OctalLiteralToInt64(str, leadingNumeric), nil
 	}
 
 	// hexadecimal-literal
-	if IsHexadecimalLiteral(str) {
-		return HexadecimalLiteralToInt64(str), nil
+	if IsHexadecimalLiteral(str, leadingNumeric) {
+		return HexadecimalLiteralToInt64(str, leadingNumeric), nil
 	}
 
 	// binary-literal
-	if IsBinaryLiteral(str) {
-		return BinaryLiteralToInt64(str), nil
+	if IsBinaryLiteral(str, leadingNumeric) {
+		return BinaryLiteralToInt64(str, leadingNumeric), nil
 	}
 
 	return 0, fmt.Errorf("Given string is not an integer literal")
@@ -171,7 +193,11 @@ func IntegerLiteralToInt64(str string) (int64, error) {
 
 // ------------------- MARK: Float -------------------
 
-func IsFloatingLiteral(str string) bool {
+const floatingFractLiteralPattern = `^(\d*(_\d+)*\.\d+(_\d+)*|\d+(_\d+)*\.)([eE][+-]?\d+(_\d+)*)?`
+
+const floatingDigitLiteralPattern = `^\d+(_\d+)*[eE][+-]?\d+(_\d+)*`
+
+func IsFloatingLiteral(str string, leadingNumeric bool) bool {
 	// Spec: https://phplang.org/spec/09-lexical-structure.html#grammar-floating-literal
 
 	// floating-literal::
@@ -194,35 +220,45 @@ func IsFloatingLiteral(str string) bool {
 	//    digit-sequence   digit
 
 	// fractional-literal   exponent-part(opt)
-	match, _ := regexp.MatchString(`^(\d*(_\d+)*\.\d+(_\d+)*|\d+(_\d+)*\.)([eE][+-]?\d+(_\d+)*)?$`, str)
+	match, _ := regexp.MatchString(addRegexEOL(floatingFractLiteralPattern, !leadingNumeric), str)
 	if match {
 		return true
 	}
 
 	// digit-sequence   exponent-part
-	match, _ = regexp.MatchString(`^\d+(_\d+)*[eE][+-]?\d+(_\d+)*$`, str)
+	match, _ = regexp.MatchString(addRegexEOL(floatingDigitLiteralPattern, !leadingNumeric), str)
 	return match
 }
 
-func IsFloatingLiteralWithSign(str string) bool {
+func IsFloatingLiteralWithSign(str string, leadingNumeric bool) bool {
 	if strings.HasPrefix(str, "-") || strings.HasPrefix(str, "+") {
 		str = str[1:]
 	}
-	return IsFloatingLiteral(str)
+	return IsFloatingLiteral(str, leadingNumeric)
 }
 
-func FloatingLiteralToFloat64(str string) float64 {
+func FloatingLiteralToFloat64(str string, leadingNumeric bool) float64 {
+	// fractional-literal   exponent-part(opt)
+	match, _ := regexp.MatchString(addRegexEOL(floatingFractLiteralPattern, !leadingNumeric), str)
+	if match {
+		r, _ := regexp.Compile(addRegexEOL(floatingFractLiteralPattern, !leadingNumeric))
+		str = r.FindString(str)
+	} else {
+		r, _ := regexp.Compile(addRegexEOL(floatingDigitLiteralPattern, !leadingNumeric))
+		str = r.FindString(str)
+	}
+
 	float, _ := strconv.ParseFloat(str, 64)
 	return float
 }
 
-func FloatingLiteralToFloat64WithSign(str string) float64 {
+func FloatingLiteralToFloat64WithSign(str string, leadingNumeric bool) float64 {
 	isNegative := strings.HasPrefix(str, "-")
 	if strings.HasPrefix(str, "+") || strings.HasPrefix(str, "-") {
 		str = str[1:]
 	}
 
-	result := FloatingLiteralToFloat64(str)
+	result := FloatingLiteralToFloat64(str, leadingNumeric)
 	if isNegative {
 		result = -result
 	}

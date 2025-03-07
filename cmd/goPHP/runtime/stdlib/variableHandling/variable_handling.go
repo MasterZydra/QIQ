@@ -136,11 +136,11 @@ func nativeFn_floatval(args []values.RuntimeValue, _ runtime.Context) (values.Ru
 		return values.NewVoid(), err
 	}
 
-	floating, err := FloatVal(args[0])
+	floating, err := FloatVal(args[0], true)
 	return values.NewFloat(floating), err
 }
 
-func FloatVal(runtimeValue values.RuntimeValue) (float64, phpError.Error) {
+func FloatVal(runtimeValue values.RuntimeValue, leadingNumeric bool) (float64, phpError.Error) {
 	// Spec: https://phplang.org/spec/08-conversions.html#converting-to-floating-point-type
 	// Spec: https://www.php.net/manual/en/function.floatval.php
 
@@ -162,26 +162,26 @@ func FloatVal(runtimeValue values.RuntimeValue) (float64, phpError.Error) {
 		// The trailing non-numeric characters in leading-numeric strings are ignored.
 		// For any other string, the result value is 0.
 		intStr := runtimeValue.(*values.Str).Value
-		if common.IsFloatingLiteralWithSign(intStr) {
-			return common.FloatingLiteralToFloat64WithSign(intStr), nil
+		if common.IsFloatingLiteralWithSign(intStr, leadingNumeric) {
+			return common.FloatingLiteralToFloat64WithSign(intStr, leadingNumeric), nil
 		}
-		if common.IsIntegerLiteralWithSign(intStr) {
-			intValue, err := common.IntegerLiteralToInt64WithSign(intStr)
+		if common.IsIntegerLiteralWithSign(intStr, leadingNumeric) {
+			intValue, err := common.IntegerLiteralToInt64WithSign(intStr, leadingNumeric)
 			if err != nil {
 				return 0, phpError.NewError(err.Error())
 			}
-			return FloatVal(values.NewInt(intValue))
+			return FloatVal(values.NewInt(intValue), leadingNumeric)
 		}
 		return 0, nil
 	default:
 		// Spec: https://phplang.org/spec/08-conversions.html#converting-to-floating-point-type
 		// For sources of all other types, the conversion result is obtained by first converting
 		// the source value to int and then to float.
-		intValue, err := IntVal(runtimeValue)
+		intValue, err := IntVal(runtimeValue, leadingNumeric)
 		if err != nil {
 			return 0, err
 		}
-		return FloatVal(values.NewInt(intValue))
+		return FloatVal(values.NewInt(intValue), leadingNumeric)
 	}
 
 	// TODO FloatVal - object
@@ -269,11 +269,11 @@ func nativeFn_intval(args []values.RuntimeValue, _ runtime.Context) (values.Runt
 		return values.NewVoid(), err
 	}
 
-	integer, err := IntVal(args[0])
+	integer, err := IntVal(args[0], true)
 	return values.NewInt(integer), err
 }
 
-func IntVal(runtimeValue values.RuntimeValue) (int64, phpError.Error) {
+func IntVal(runtimeValue values.RuntimeValue, leadingNumeric bool) (int64, phpError.Error) {
 	// Spec: https://phplang.org/spec/08-conversions.html#converting-to-integer-type
 
 	switch runtimeValue.GetType() {
@@ -313,11 +313,11 @@ func IntVal(runtimeValue values.RuntimeValue) (int64, phpError.Error) {
 		// The trailing non-numeric characters in leading-numeric strings are ignored.
 		// For any other string, the result value is 0.
 		intStr := runtimeValue.(*values.Str).Value
-		if common.IsFloatingLiteralWithSign(intStr) {
-			return IntVal(values.NewFloat(common.FloatingLiteralToFloat64WithSign(intStr)))
+		if common.IsFloatingLiteralWithSign(intStr, leadingNumeric) {
+			return IntVal(values.NewFloat(common.FloatingLiteralToFloat64WithSign(intStr, leadingNumeric)), leadingNumeric)
 		}
-		if common.IsIntegerLiteralWithSign(intStr) {
-			intValue, err := common.IntegerLiteralToInt64WithSign(intStr)
+		if common.IsIntegerLiteralWithSign(intStr, leadingNumeric) {
+			intValue, err := common.IntegerLiteralToInt64WithSign(intStr, leadingNumeric)
 			if err != nil {
 				return 0, phpError.NewError(err.Error())
 			}

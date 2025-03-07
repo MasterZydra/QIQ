@@ -157,8 +157,8 @@ func paramToArray(params [][]string, ini *ini.Ini) *values.Array {
 		if !strings.Contains(key, "]") {
 			var keyValue values.RuntimeValue
 			if hasKey {
-				if common.IsIntegerLiteral(key) {
-					intValue, _ := common.IntegerLiteralToInt64(key)
+				if common.IsIntegerLiteral(key, false) {
+					intValue, _ := common.IntegerLiteralToInt64(key, false)
 					keyValue = values.NewInt(intValue)
 				} else {
 					keyValue = values.NewStr(key)

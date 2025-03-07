@@ -2045,7 +2045,7 @@ func (parser *Parser) parseLiteral() (ast.IExpression, phpError.Error) {
 	// integer-literal
 	if parser.isTokenType(lexer.IntegerLiteralToken, false) {
 		PrintParserCallstack("integer-literal", parser)
-		intValue, err := common.IntegerLiteralToInt64(parser.at().Value)
+		intValue, err := common.IntegerLiteralToInt64(parser.at().Value, false)
 		if err != nil {
 			return ast.NewEmptyExpr(), phpError.NewParseError("Unsupported integer literal \"%s\"", parser.at().Value)
 		}
@@ -2056,8 +2056,8 @@ func (parser *Parser) parseLiteral() (ast.IExpression, phpError.Error) {
 	// floating-literal
 	if parser.isTokenType(lexer.FloatingLiteralToken, false) {
 		PrintParserCallstack("floating-literal", parser)
-		if common.IsFloatingLiteral(parser.at().Value) {
-			return ast.NewFloatingLiteralExpr(parser.nextId(), parser.at().Position, common.FloatingLiteralToFloat64(parser.eat().Value)), nil
+		if common.IsFloatingLiteral(parser.at().Value, false) {
+			return ast.NewFloatingLiteralExpr(parser.nextId(), parser.at().Position, common.FloatingLiteralToFloat64(parser.eat().Value, false)), nil
 		}
 
 		return ast.NewEmptyExpr(), phpError.NewParseError("Unsupported floating literal \"%s\"", parser.at().Value)
