@@ -1,4 +1,4 @@
-package stdlib
+package array
 
 import (
 	"GoPHP/cmd/goPHP/runtime/values"

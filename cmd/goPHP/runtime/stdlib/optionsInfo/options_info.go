@@ -10,6 +10,7 @@ import (
 )
 
 func Register(environment runtime.Environment) {
+	// Category: Options/Info Functions
 	environment.AddNativeFunction("getenv", nativeFn_getenv)
 	environment.AddNativeFunction("ini_get", nativeFn_ini_get)
 	environment.AddNativeFunction("ini_set", nativeFn_ini_set)

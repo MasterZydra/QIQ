@@ -13,6 +13,7 @@ import (
 )
 
 func Register(environment runtime.Environment) {
+	// Category: Date/Time Functions
 	environment.AddNativeFunction("checkdate", nativeFn_checkdate)
 	environment.AddNativeFunction("date", nativeFn_date)
 	environment.AddNativeFunction("getdate", nativeFn_getdate)

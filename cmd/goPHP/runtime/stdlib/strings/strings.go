@@ -10,6 +10,7 @@ import (
 )
 
 func Register(environment runtime.Environment) {
+	// Category: String Functions
 	environment.AddNativeFunction("bin2hex", nativeFn_bin2hex)
 	environment.AddNativeFunction("chr", nativeFn_chr)
 	environment.AddNativeFunction("lcfirst", nativeFn_lcfirst)

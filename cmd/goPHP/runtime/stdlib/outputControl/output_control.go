@@ -8,6 +8,7 @@ import (
 )
 
 func Register(environment runtime.Environment) {
+	// Category: Output Control Functions
 	environment.AddNativeFunction("ob_clean", nativeFn_ob_clean)
 	environment.AddNativeFunction("ob_flush", nativeFn_ob_flush)
 	environment.AddNativeFunction("ob_end_clean", nativeFn_ob_end_clean)

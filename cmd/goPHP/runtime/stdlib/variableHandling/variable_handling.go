@@ -13,6 +13,7 @@ import (
 )
 
 func Register(environment runtime.Environment) {
+	// Category: Variable Handling Functions
 	environment.AddNativeFunction("boolval", nativeFn_boolval)
 	environment.AddNativeFunction("doubleval", nativeFn_floatval)
 	environment.AddNativeFunction("floatval", nativeFn_floatval)

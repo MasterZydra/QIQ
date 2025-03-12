@@ -1,5 +1,7 @@
 # Supported syntax and features
 
+[StdLib Functions](./StdLib.md)
+
 ## Ini directives
 - arg_separator.input
 - arg_separator.output
@@ -146,83 +148,10 @@
 - \_\_FUNCTION\_\_
 - \_\_LINE\_\_
 
-## Standard library
-- array_key_exists
+## Intrinsics
 - die
-- error_reporting
+- empty
 - eval
 - exit
-- getenv
-- ini_get
-- key_exists
-
-### Date / Time
-- checkdate
-- date
-- getdate
-- localtime
-- microtime
-- mktime
-- time
-
-### Math
-- abs
-- acos
-- acosh
-- asin
-- asinh
-- pi
-
-### Misc
-- constant
-- defined
-
-### Output control
-- ob_clean
-- ob_flush
-- ob_end_clean
-- ob_end_flush
-- ob_get_clean
-- ob_get_flush
-- ob_get_contents
-- ob_get_level
-- ob_start
-
-### Strings
-- bin2hex
-- chr
-- lcfirst
-- quotemeta
-- str_contains
-- str_ends_with
-- str_repeat
-- str_starts_with
-- strlen
-- strtolower
-- strtoupper
-- ucfirst
-
-### Variable handling functions
-- boolval
-- doubleval
-- empty
-- floatval
-- get_debug_type
-- gettype
-- intval
-- is_array
-- is_bool
-- is_double
-- is_float
-- is_int
-- is_integer
-- is_long
-- is_null
-- is_scalar
-- is_string
 - isset
-- print_r
-- strval
 - unset
-- var_dump
-- var_export

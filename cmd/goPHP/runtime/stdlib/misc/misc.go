@@ -8,6 +8,7 @@ import (
 )
 
 func Register(environment runtime.Environment) {
+	// Category: Misc. Functions
 	environment.AddNativeFunction("constant", nativeFn_constant)
 	environment.AddNativeFunction("defined", nativeFn_defined)
 }

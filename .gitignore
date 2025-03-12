@@ -3,6 +3,8 @@
 /goPHP.exe
 /goPhpTester
 /goPhpTester.exe
+/std-lib-doc-gen
+/std-lib-doc-gen.exe
 
 # PHP files
 *.php

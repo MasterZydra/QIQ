@@ -9,6 +9,7 @@ import (
 )
 
 func Register(environment runtime.Environment) {
+	// Category: Math Functions
 	environment.AddNativeFunction("abs", nativeFn_abs)
 	environment.AddNativeFunction("acos", nativeFn_acos)
 	environment.AddNativeFunction("acosh", nativeFn_acosh)
