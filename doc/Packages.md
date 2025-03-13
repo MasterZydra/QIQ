@@ -1,67 +1,136 @@
 # Packages
 
 ```mermaid
-classDiagram
-runtime_funcParamValidator <|-- runtime_values
+flowchart LR
+    GoPHP_cmd_goPHP[GoPHP/cmd/goPHP] --> GoPHP_cmd_goPHP_common[GoPHP/cmd/goPHP/common]
+    GoPHP_cmd_goPHP[GoPHP/cmd/goPHP] --> GoPHP_cmd_goPHP_config[GoPHP/cmd/goPHP/config]
+    GoPHP_cmd_goPHP[GoPHP/cmd/goPHP] --> GoPHP_cmd_goPHP_ini[GoPHP/cmd/goPHP/ini]
+    GoPHP_cmd_goPHP[GoPHP/cmd/goPHP] --> GoPHP_cmd_goPHP_interpreter[GoPHP/cmd/goPHP/interpreter]
+    GoPHP_cmd_goPHP[GoPHP/cmd/goPHP] --> GoPHP_cmd_goPHP_request[GoPHP/cmd/goPHP/request]
+    GoPHP_cmd_goPHP[GoPHP/cmd/goPHP] --> GoPHP_cmd_goPHP_stats[GoPHP/cmd/goPHP/stats]
 
-runtime_stdlib <|-- runtime_values
-runtime_stdlib <|-- runtime
+    GoPHP_cmd_goPHP_ast[GoPHP/cmd/goPHP/ast] --> GoPHP_cmd_goPHP_config[GoPHP/cmd/goPHP/config]
+    GoPHP_cmd_goPHP_ast[GoPHP/cmd/goPHP/ast] --> GoPHP_cmd_goPHP_position[GoPHP/cmd/goPHP/position]
 
-runtime_stdlib_strings <|-- runtime
-runtime_stdlib_strings <|-- runtime_values
-runtime_stdlib <|-- runtime_stdlib_strings
+    GoPHP_cmd_goPHP_ini[GoPHP/cmd/goPHP/ini] --> GoPHP_cmd_goPHP_common[GoPHP/cmd/goPHP/common]
+    GoPHP_cmd_goPHP_ini[GoPHP/cmd/goPHP/ini] --> GoPHP_cmd_goPHP_config[GoPHP/cmd/goPHP/config]
+    GoPHP_cmd_goPHP_ini[GoPHP/cmd/goPHP/ini] --> GoPHP_cmd_goPHP_phpError[GoPHP/cmd/goPHP/phpError]
 
-runtime_stdlib_variableHandling <|-- runtime
-runtime_stdlib_variableHandling <|-- runtime_values
-runtime_stdlib <|-- runtime_stdlib_variableHandling
+    GoPHP_cmd_goPHP_interpreter[GoPHP/cmd/goPHP/interpreter] --> GoPHP_cmd_goPHP_ast[GoPHP/cmd/goPHP/ast]
+    GoPHP_cmd_goPHP_interpreter[GoPHP/cmd/goPHP/interpreter] --> GoPHP_cmd_goPHP_common[GoPHP/cmd/goPHP/common]
+    GoPHP_cmd_goPHP_interpreter[GoPHP/cmd/goPHP/interpreter] --> GoPHP_cmd_goPHP_config[GoPHP/cmd/goPHP/config]
+    GoPHP_cmd_goPHP_interpreter[GoPHP/cmd/goPHP/interpreter] --> GoPHP_cmd_goPHP_ini[GoPHP/cmd/goPHP/ini]
+    GoPHP_cmd_goPHP_interpreter[GoPHP/cmd/goPHP/interpreter] --> GoPHP_cmd_goPHP_parser[GoPHP/cmd/goPHP/parser]
+    GoPHP_cmd_goPHP_interpreter[GoPHP/cmd/goPHP/interpreter] --> GoPHP_cmd_goPHP_phpError[GoPHP/cmd/goPHP/phpError]
+    GoPHP_cmd_goPHP_interpreter[GoPHP/cmd/goPHP/interpreter] --> GoPHP_cmd_goPHP_request[GoPHP/cmd/goPHP/request]
+    GoPHP_cmd_goPHP_interpreter[GoPHP/cmd/goPHP/interpreter] --> GoPHP_cmd_goPHP_runtime[GoPHP/cmd/goPHP/runtime]
+    GoPHP_cmd_goPHP_interpreter[GoPHP/cmd/goPHP/interpreter] --> GoPHP_cmd_goPHP_runtime_outputBuffer[GoPHP/cmd/goPHP/runtime/outputBuffer]
+    GoPHP_cmd_goPHP_interpreter[GoPHP/cmd/goPHP/interpreter] --> GoPHP_cmd_goPHP_runtime_stdlib[GoPHP/cmd/goPHP/runtime/stdlib]
+    GoPHP_cmd_goPHP_interpreter[GoPHP/cmd/goPHP/interpreter] --> GoPHP_cmd_goPHP_runtime_stdlib_outputControl[GoPHP/cmd/goPHP/runtime/stdlib/outputControl]
+    GoPHP_cmd_goPHP_interpreter[GoPHP/cmd/goPHP/interpreter] --> GoPHP_cmd_goPHP_runtime_stdlib_variableHandling[GoPHP/cmd/goPHP/runtime/stdlib/variableHandling]
+    GoPHP_cmd_goPHP_interpreter[GoPHP/cmd/goPHP/interpreter] --> GoPHP_cmd_goPHP_runtime_values[GoPHP/cmd/goPHP/runtime/values]
+    GoPHP_cmd_goPHP_interpreter[GoPHP/cmd/goPHP/interpreter] --> GoPHP_cmd_goPHP_stats[GoPHP/cmd/goPHP/stats]
 
-runtime_stdlib_outputControl <|-- runtime
-runtime_stdlib_outputControl <|-- runtime_outputBuffer
-runtime_stdlib_outputControl <|-- runtime_values
-runtime_stdlib <|-- runtime_stdlib_outputControl
+    GoPHP_cmd_goPHP_lexer[GoPHP/cmd/goPHP/lexer] --> GoPHP_cmd_goPHP_common[GoPHP/cmd/goPHP/common]
+    GoPHP_cmd_goPHP_lexer[GoPHP/cmd/goPHP/lexer] --> GoPHP_cmd_goPHP_ini[GoPHP/cmd/goPHP/ini]
+    GoPHP_cmd_goPHP_lexer[GoPHP/cmd/goPHP/lexer] --> GoPHP_cmd_goPHP_position[GoPHP/cmd/goPHP/position]
+    GoPHP_cmd_goPHP_lexer[GoPHP/cmd/goPHP/lexer] --> GoPHP_cmd_goPHP_stats[GoPHP/cmd/goPHP/stats]
 
-ast <|-- config
+    GoPHP_cmd_goPHP_parser[GoPHP/cmd/goPHP/parser] --> GoPHP_cmd_goPHP_ast[GoPHP/cmd/goPHP/ast]
+    GoPHP_cmd_goPHP_parser[GoPHP/cmd/goPHP/parser] --> GoPHP_cmd_goPHP_common[GoPHP/cmd/goPHP/common]
+    GoPHP_cmd_goPHP_parser[GoPHP/cmd/goPHP/parser] --> GoPHP_cmd_goPHP_config[GoPHP/cmd/goPHP/config]
+    GoPHP_cmd_goPHP_parser[GoPHP/cmd/goPHP/parser] --> GoPHP_cmd_goPHP_ini[GoPHP/cmd/goPHP/ini]
+    GoPHP_cmd_goPHP_parser[GoPHP/cmd/goPHP/parser] --> GoPHP_cmd_goPHP_lexer[GoPHP/cmd/goPHP/lexer]
+    GoPHP_cmd_goPHP_parser[GoPHP/cmd/goPHP/parser] --> GoPHP_cmd_goPHP_phpError[GoPHP/cmd/goPHP/phpError]
+    GoPHP_cmd_goPHP_parser[GoPHP/cmd/goPHP/parser] --> GoPHP_cmd_goPHP_position[GoPHP/cmd/goPHP/position]
+    GoPHP_cmd_goPHP_parser[GoPHP/cmd/goPHP/parser] --> GoPHP_cmd_goPHP_stats[GoPHP/cmd/goPHP/stats]
 
-ini <|-- common
-ini <|-- phpError
+    GoPHP_cmd_goPHP_runtime[GoPHP/cmd/goPHP/runtime] --> GoPHP_cmd_goPHP_ini[GoPHP/cmd/goPHP/ini]
+    GoPHP_cmd_goPHP_runtime[GoPHP/cmd/goPHP/runtime] --> GoPHP_cmd_goPHP_phpError[GoPHP/cmd/goPHP/phpError]
+    GoPHP_cmd_goPHP_runtime[GoPHP/cmd/goPHP/runtime] --> GoPHP_cmd_goPHP_runtime_outputBuffer[GoPHP/cmd/goPHP/runtime/outputBuffer]
+    GoPHP_cmd_goPHP_runtime[GoPHP/cmd/goPHP/runtime] --> GoPHP_cmd_goPHP_runtime_values[GoPHP/cmd/goPHP/runtime/values]
 
-lexer <|-- common
-lexer <|-- ini
-lexer <|-- position
-lexer <|-- stats
+    GoPHP_cmd_goPHP_runtime_funcParamValidator[GoPHP/cmd/goPHP/runtime/funcParamValidator] --> GoPHP_cmd_goPHP_phpError[GoPHP/cmd/goPHP/phpError]
+    GoPHP_cmd_goPHP_runtime_funcParamValidator[GoPHP/cmd/goPHP/runtime/funcParamValidator] --> GoPHP_cmd_goPHP_runtime_values[GoPHP/cmd/goPHP/runtime/values]
 
-parser <|-- ast
-parser <|-- common
-parser <|-- config
-parser <|-- ini
-parser <|-- lexer
-parser <|-- phpError
-parser <|-- position
-parser <|-- stats
+    GoPHP_cmd_goPHP_runtime_stdlib[GoPHP/cmd/goPHP/runtime/stdlib] --> GoPHP_cmd_goPHP_runtime[GoPHP/cmd/goPHP/runtime]
+    GoPHP_cmd_goPHP_runtime_stdlib[GoPHP/cmd/goPHP/runtime/stdlib] --> GoPHP_cmd_goPHP_runtime_stdlib_array[GoPHP/cmd/goPHP/runtime/stdlib/array]
+    GoPHP_cmd_goPHP_runtime_stdlib[GoPHP/cmd/goPHP/runtime/stdlib] --> GoPHP_cmd_goPHP_runtime_stdlib_dateTime[GoPHP/cmd/goPHP/runtime/stdlib/dateTime]
+    GoPHP_cmd_goPHP_runtime_stdlib[GoPHP/cmd/goPHP/runtime/stdlib] --> GoPHP_cmd_goPHP_runtime_stdlib_errorHandling[GoPHP/cmd/goPHP/runtime/stdlib/errorHandling]
+    GoPHP_cmd_goPHP_runtime_stdlib[GoPHP/cmd/goPHP/runtime/stdlib] --> GoPHP_cmd_goPHP_runtime_stdlib_filesystem[GoPHP/cmd/goPHP/runtime/stdlib/filesystem]
+    GoPHP_cmd_goPHP_runtime_stdlib[GoPHP/cmd/goPHP/runtime/stdlib] --> GoPHP_cmd_goPHP_runtime_stdlib_math[GoPHP/cmd/goPHP/runtime/stdlib/math]
+    GoPHP_cmd_goPHP_runtime_stdlib[GoPHP/cmd/goPHP/runtime/stdlib] --> GoPHP_cmd_goPHP_runtime_stdlib_misc[GoPHP/cmd/goPHP/runtime/stdlib/misc]
+    GoPHP_cmd_goPHP_runtime_stdlib[GoPHP/cmd/goPHP/runtime/stdlib] --> GoPHP_cmd_goPHP_runtime_stdlib_optionsInfo[GoPHP/cmd/goPHP/runtime/stdlib/optionsInfo]
+    GoPHP_cmd_goPHP_runtime_stdlib[GoPHP/cmd/goPHP/runtime/stdlib] --> GoPHP_cmd_goPHP_runtime_stdlib_outputControl[GoPHP/cmd/goPHP/runtime/stdlib/outputControl]
+    GoPHP_cmd_goPHP_runtime_stdlib[GoPHP/cmd/goPHP/runtime/stdlib] --> GoPHP_cmd_goPHP_runtime_stdlib_strings[GoPHP/cmd/goPHP/runtime/stdlib/strings]
+    GoPHP_cmd_goPHP_runtime_stdlib[GoPHP/cmd/goPHP/runtime/stdlib] --> GoPHP_cmd_goPHP_runtime_stdlib_variableHandling[GoPHP/cmd/goPHP/runtime/stdlib/variableHandling]
 
-interpreter <|-- ini
-interpreter <|-- ast
-interpreter <|-- common
-interpreter <|-- config
-interpreter <|-- parser
-interpreter <|-- phpError
-interpreter <|-- position
-interpreter <|-- runtime
-interpreter <|-- runtime_funcParamValidator
-interpreter <|-- runtime_values
-interpreter <|-- runtime_stdlib
-interpreter <|-- stats
+    GoPHP_cmd_goPHP_runtime_stdlib_array[GoPHP/cmd/goPHP/runtime/stdlib/array] --> GoPHP_cmd_goPHP_phpError[GoPHP/cmd/goPHP/phpError]
+    GoPHP_cmd_goPHP_runtime_stdlib_array[GoPHP/cmd/goPHP/runtime/stdlib/array] --> GoPHP_cmd_goPHP_runtime[GoPHP/cmd/goPHP/runtime]
+    GoPHP_cmd_goPHP_runtime_stdlib_array[GoPHP/cmd/goPHP/runtime/stdlib/array] --> GoPHP_cmd_goPHP_runtime_funcParamValidator[GoPHP/cmd/goPHP/runtime/funcParamValidator]
+    GoPHP_cmd_goPHP_runtime_stdlib_array[GoPHP/cmd/goPHP/runtime/stdlib/array] --> GoPHP_cmd_goPHP_runtime_values[GoPHP/cmd/goPHP/runtime/values]
 
-goPHP <|-- common
-goPHP <|-- config
-goPHP <|-- ini
-goPHP <|-- interpreter
-goPHP <|-- stats
+    GoPHP_cmd_goPHP_runtime_stdlib_dateTime[GoPHP/cmd/goPHP/runtime/stdlib/dateTime] --> GoPHP_cmd_goPHP_common[GoPHP/cmd/goPHP/common]
+    GoPHP_cmd_goPHP_runtime_stdlib_dateTime[GoPHP/cmd/goPHP/runtime/stdlib/dateTime] --> GoPHP_cmd_goPHP_phpError[GoPHP/cmd/goPHP/phpError]
+    GoPHP_cmd_goPHP_runtime_stdlib_dateTime[GoPHP/cmd/goPHP/runtime/stdlib/dateTime] --> GoPHP_cmd_goPHP_runtime[GoPHP/cmd/goPHP/runtime]
+    GoPHP_cmd_goPHP_runtime_stdlib_dateTime[GoPHP/cmd/goPHP/runtime/stdlib/dateTime] --> GoPHP_cmd_goPHP_runtime_funcParamValidator[GoPHP/cmd/goPHP/runtime/funcParamValidator]
+    GoPHP_cmd_goPHP_runtime_stdlib_dateTime[GoPHP/cmd/goPHP/runtime/stdlib/dateTime] --> GoPHP_cmd_goPHP_runtime_values[GoPHP/cmd/goPHP/runtime/values]
 
-goPhpTester_phpt <|-- common
+    GoPHP_cmd_goPHP_runtime_stdlib_errorHandling[GoPHP/cmd/goPHP/runtime/stdlib/errorHandling] --> GoPHP_cmd_goPHP_ini[GoPHP/cmd/goPHP/ini]
+    GoPHP_cmd_goPHP_runtime_stdlib_errorHandling[GoPHP/cmd/goPHP/runtime/stdlib/errorHandling] --> GoPHP_cmd_goPHP_phpError[GoPHP/cmd/goPHP/phpError]
+    GoPHP_cmd_goPHP_runtime_stdlib_errorHandling[GoPHP/cmd/goPHP/runtime/stdlib/errorHandling] --> GoPHP_cmd_goPHP_runtime[GoPHP/cmd/goPHP/runtime]
+    GoPHP_cmd_goPHP_runtime_stdlib_errorHandling[GoPHP/cmd/goPHP/runtime/stdlib/errorHandling] --> GoPHP_cmd_goPHP_runtime_funcParamValidator[GoPHP/cmd/goPHP/runtime/funcParamValidator]
+    GoPHP_cmd_goPHP_runtime_stdlib_errorHandling[GoPHP/cmd/goPHP/runtime/stdlib/errorHandling] --> GoPHP_cmd_goPHP_runtime_values[GoPHP/cmd/goPHP/runtime/values]
 
-goPhpTester <|-- common
-goPhpTester <|-- ini
-goPhpTester <|-- interpreter
-goPhpTester <|-- goPhpTester_phpt
+    GoPHP_cmd_goPHP_runtime_stdlib_filesystem[GoPHP/cmd/goPHP/runtime/stdlib/filesystem] --> GoPHP_cmd_goPHP_phpError[GoPHP/cmd/goPHP/phpError]
+    GoPHP_cmd_goPHP_runtime_stdlib_filesystem[GoPHP/cmd/goPHP/runtime/stdlib/filesystem] --> GoPHP_cmd_goPHP_runtime[GoPHP/cmd/goPHP/runtime]
+    GoPHP_cmd_goPHP_runtime_stdlib_filesystem[GoPHP/cmd/goPHP/runtime/stdlib/filesystem] --> GoPHP_cmd_goPHP_runtime_values[GoPHP/cmd/goPHP/runtime/values]
+
+    GoPHP_cmd_goPHP_runtime_stdlib_math[GoPHP/cmd/goPHP/runtime/stdlib/math] --> GoPHP_cmd_goPHP_phpError[GoPHP/cmd/goPHP/phpError]
+    GoPHP_cmd_goPHP_runtime_stdlib_math[GoPHP/cmd/goPHP/runtime/stdlib/math] --> GoPHP_cmd_goPHP_runtime[GoPHP/cmd/goPHP/runtime]
+    GoPHP_cmd_goPHP_runtime_stdlib_math[GoPHP/cmd/goPHP/runtime/stdlib/math] --> GoPHP_cmd_goPHP_runtime_funcParamValidator[GoPHP/cmd/goPHP/runtime/funcParamValidator]
+    GoPHP_cmd_goPHP_runtime_stdlib_math[GoPHP/cmd/goPHP/runtime/stdlib/math] --> GoPHP_cmd_goPHP_runtime_values[GoPHP/cmd/goPHP/runtime/values]
+
+    GoPHP_cmd_goPHP_runtime_stdlib_misc[GoPHP/cmd/goPHP/runtime/stdlib/misc] --> GoPHP_cmd_goPHP_phpError[GoPHP/cmd/goPHP/phpError]
+    GoPHP_cmd_goPHP_runtime_stdlib_misc[GoPHP/cmd/goPHP/runtime/stdlib/misc] --> GoPHP_cmd_goPHP_runtime[GoPHP/cmd/goPHP/runtime]
+    GoPHP_cmd_goPHP_runtime_stdlib_misc[GoPHP/cmd/goPHP/runtime/stdlib/misc] --> GoPHP_cmd_goPHP_runtime_funcParamValidator[GoPHP/cmd/goPHP/runtime/funcParamValidator]
+    GoPHP_cmd_goPHP_runtime_stdlib_misc[GoPHP/cmd/goPHP/runtime/stdlib/misc] --> GoPHP_cmd_goPHP_runtime_values[GoPHP/cmd/goPHP/runtime/values]
+
+    GoPHP_cmd_goPHP_runtime_stdlib_optionsInfo[GoPHP/cmd/goPHP/runtime/stdlib/optionsInfo] --> GoPHP_cmd_goPHP_ini[GoPHP/cmd/goPHP/ini]
+    GoPHP_cmd_goPHP_runtime_stdlib_optionsInfo[GoPHP/cmd/goPHP/runtime/stdlib/optionsInfo] --> GoPHP_cmd_goPHP_phpError[GoPHP/cmd/goPHP/phpError]
+    GoPHP_cmd_goPHP_runtime_stdlib_optionsInfo[GoPHP/cmd/goPHP/runtime/stdlib/optionsInfo] --> GoPHP_cmd_goPHP_runtime[GoPHP/cmd/goPHP/runtime]
+    GoPHP_cmd_goPHP_runtime_stdlib_optionsInfo[GoPHP/cmd/goPHP/runtime/stdlib/optionsInfo] --> GoPHP_cmd_goPHP_runtime_funcParamValidator[GoPHP/cmd/goPHP/runtime/funcParamValidator]
+    GoPHP_cmd_goPHP_runtime_stdlib_optionsInfo[GoPHP/cmd/goPHP/runtime/stdlib/optionsInfo] --> GoPHP_cmd_goPHP_runtime_stdlib_variableHandling[GoPHP/cmd/goPHP/runtime/stdlib/variableHandling]
+    GoPHP_cmd_goPHP_runtime_stdlib_optionsInfo[GoPHP/cmd/goPHP/runtime/stdlib/optionsInfo] --> GoPHP_cmd_goPHP_runtime_values[GoPHP/cmd/goPHP/runtime/values]
+
+    GoPHP_cmd_goPHP_runtime_stdlib_outputControl[GoPHP/cmd/goPHP/runtime/stdlib/outputControl] --> GoPHP_cmd_goPHP_phpError[GoPHP/cmd/goPHP/phpError]
+    GoPHP_cmd_goPHP_runtime_stdlib_outputControl[GoPHP/cmd/goPHP/runtime/stdlib/outputControl] --> GoPHP_cmd_goPHP_runtime[GoPHP/cmd/goPHP/runtime]
+    GoPHP_cmd_goPHP_runtime_stdlib_outputControl[GoPHP/cmd/goPHP/runtime/stdlib/outputControl] --> GoPHP_cmd_goPHP_runtime_funcParamValidator[GoPHP/cmd/goPHP/runtime/funcParamValidator]
+    GoPHP_cmd_goPHP_runtime_stdlib_outputControl[GoPHP/cmd/goPHP/runtime/stdlib/outputControl] --> GoPHP_cmd_goPHP_runtime_values[GoPHP/cmd/goPHP/runtime/values]
+
+    GoPHP_cmd_goPHP_runtime_stdlib_strings[GoPHP/cmd/goPHP/runtime/stdlib/strings] --> GoPHP_cmd_goPHP_phpError[GoPHP/cmd/goPHP/phpError]
+    GoPHP_cmd_goPHP_runtime_stdlib_strings[GoPHP/cmd/goPHP/runtime/stdlib/strings] --> GoPHP_cmd_goPHP_runtime[GoPHP/cmd/goPHP/runtime]
+    GoPHP_cmd_goPHP_runtime_stdlib_strings[GoPHP/cmd/goPHP/runtime/stdlib/strings] --> GoPHP_cmd_goPHP_runtime_funcParamValidator[GoPHP/cmd/goPHP/runtime/funcParamValidator]
+    GoPHP_cmd_goPHP_runtime_stdlib_strings[GoPHP/cmd/goPHP/runtime/stdlib/strings] --> GoPHP_cmd_goPHP_runtime_values[GoPHP/cmd/goPHP/runtime/values]
+
+    GoPHP_cmd_goPHP_runtime_stdlib_variableHandling[GoPHP/cmd/goPHP/runtime/stdlib/variableHandling] --> GoPHP_cmd_goPHP_common[GoPHP/cmd/goPHP/common]
+    GoPHP_cmd_goPHP_runtime_stdlib_variableHandling[GoPHP/cmd/goPHP/runtime/stdlib/variableHandling] --> GoPHP_cmd_goPHP_phpError[GoPHP/cmd/goPHP/phpError]
+    GoPHP_cmd_goPHP_runtime_stdlib_variableHandling[GoPHP/cmd/goPHP/runtime/stdlib/variableHandling] --> GoPHP_cmd_goPHP_runtime[GoPHP/cmd/goPHP/runtime]
+    GoPHP_cmd_goPHP_runtime_stdlib_variableHandling[GoPHP/cmd/goPHP/runtime/stdlib/variableHandling] --> GoPHP_cmd_goPHP_runtime_funcParamValidator[GoPHP/cmd/goPHP/runtime/funcParamValidator]
+    GoPHP_cmd_goPHP_runtime_stdlib_variableHandling[GoPHP/cmd/goPHP/runtime/stdlib/variableHandling] --> GoPHP_cmd_goPHP_runtime_values[GoPHP/cmd/goPHP/runtime/values]
+
+    GoPHP_cmd_goPHP_runtime_values[GoPHP/cmd/goPHP/runtime/values] --> GoPHP_cmd_goPHP_common[GoPHP/cmd/goPHP/common]
+    GoPHP_cmd_goPHP_runtime_values[GoPHP/cmd/goPHP/runtime/values] --> GoPHP_cmd_goPHP_config[GoPHP/cmd/goPHP/config]
+    GoPHP_cmd_goPHP_runtime_values[GoPHP/cmd/goPHP/runtime/values] --> GoPHP_cmd_goPHP_phpError[GoPHP/cmd/goPHP/phpError]
+
+    GoPHP_cmd_goPHP_stats[GoPHP/cmd/goPHP/stats] --> GoPHP_cmd_goPHP_config[GoPHP/cmd/goPHP/config]
+
+    GoPHP_cmd_goPhpTester[GoPHP/cmd/goPhpTester] --> GoPHP_cmd_goPHP_common[GoPHP/cmd/goPHP/common]
+    GoPHP_cmd_goPhpTester[GoPHP/cmd/goPhpTester] --> GoPHP_cmd_goPHP_ini[GoPHP/cmd/goPHP/ini]
+    GoPHP_cmd_goPhpTester[GoPHP/cmd/goPhpTester] --> GoPHP_cmd_goPHP_interpreter[GoPHP/cmd/goPHP/interpreter]
+    GoPHP_cmd_goPhpTester[GoPHP/cmd/goPhpTester] --> GoPHP_cmd_goPHP_request[GoPHP/cmd/goPHP/request]
+    GoPHP_cmd_goPhpTester[GoPHP/cmd/goPhpTester] --> GoPHP_cmd_goPhpTester_phpt[GoPHP/cmd/goPhpTester/phpt]
+
+    GoPHP_cmd_goPhpTester_phpt[GoPHP/cmd/goPhpTester/phpt] --> GoPHP_cmd_goPHP_common[GoPHP/cmd/goPHP/common]
+
 ```

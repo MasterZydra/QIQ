@@ -3,6 +3,8 @@
 /goPHP.exe
 /goPhpTester
 /goPhpTester.exe
+/package-dep-gen
+/package-dep-gen.exe
 /std-lib-doc-gen
 /std-lib-doc-gen.exe
 
