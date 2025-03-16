@@ -157,8 +157,13 @@ func doTest(path string, info os.FileInfo, err error) error {
 	case "--EXPECT--":
 		equal = testFile.Expect == common.TrimLineBreaks(result)
 	default:
+		if verbosity1 || verbosity2 {
+			fmt.Println("FAIL ", path)
+		}
+		if verbosity2 {
+			fmt.Printf("      Unsupported expect section: %s\n", testFile.ExpectType)
+		}
 		failed++
-		fmt.Errorf("Unsupported expect section: %s", testFile.ExpectType)
 		return nil
 	}
 
