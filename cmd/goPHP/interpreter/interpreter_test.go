@@ -325,6 +325,14 @@ func TestIntrinsic(t *testing.T) {
 	testInputOutput(t, `<?php echo isset($a) ? "y" : "n";`, "n")
 	testInputOutput(t, `<?php $a = 1; echo isset($a, $b) ? "y" : "n";`, "n")
 	testInputOutput(t, `<?php echo isset($a, $b) ? "y" : "n";`, "n")
+	testInputOutput(t,
+		`<?php $a = ['foo' => 'bar'];
+			var_dump(isset($a));
+			var_dump(isset($a['foo']));
+			var_dump(isset($a['xyz']));
+			var_dump(isset($a['foo']['xyz']));`,
+		"bool(true)\nbool(true)\nbool(false)\nbool(false)\n",
+	)
 
 	// Unset
 	testInputOutput(t, `<?php $a = 1; echo isset($a) ? "y" : "n"; unset($a); echo isset($a) ? "y" : "n";`, "yn")

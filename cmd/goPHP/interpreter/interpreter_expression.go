@@ -490,12 +490,20 @@ func (interpreter *Interpreter) ProcessIssetIntrinsicExpr(expr *ast.IssetIntrins
 	// If that method returns TRUE, the value of the property is retrieved (which may call __get if defined)
 	// and if it is not NULL, the result is TRUE. Otherwise, the result is FALSE.
 
+	interpreter.suppressWarning = true
+	defer func() { interpreter.suppressWarning = false }()
+
 	for _, arg := range expr.Arguments {
-		interpreter.suppressWarning = true
+		if arg.GetKind() == ast.SubscriptExpr {
+			runtimeValue, err := interpreter.processStmt(arg, env)
+			if err != nil || runtimeValue.GetType() == values.NullValue {
+				return values.NewBool(false), nil
+			}
+		} else {
 		runtimeValue, _ := interpreter.lookupVariable(arg, env.(*Environment))
-		interpreter.suppressWarning = false
 		if runtimeValue.GetType() == values.NullValue {
 			return values.NewBool(false), nil
+			}
 		}
 	}
 	return values.NewBool(true), nil
