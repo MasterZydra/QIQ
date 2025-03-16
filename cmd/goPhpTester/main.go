@@ -119,17 +119,9 @@ func doTest(path string, info os.FileInfo, err error) error {
 	request.QueryString = testFile.Get
 	request.Post = testFile.Post
 
-	result, phpError := interpreter.NewInterpreter(ini.NewIniFromArray(testFile.Ini), request, testFile.Filename).Process(testFile.File)
+	result, phpError := interpreter.NewInterpreter(ini.NewDevIniFromArray(testFile.Ini), request, testFile.Filename).Process(testFile.File)
 	if phpError != nil {
-		if verbosity1 || verbosity2 {
-			fmt.Println("FAIL ", path)
-		}
-		if verbosity2 {
-			fmt.Println("     ", phpError)
-		}
-		// return err
-		failed++
-		return nil
+		result += phpError.GetMessage()
 	}
 
 	if runtime.GOOS == "windows" {
@@ -158,8 +150,11 @@ func doTest(path string, info os.FileInfo, err error) error {
 	case "--EXPECT--":
 		equal = testFile.Expect == common.TrimLineBreaks(result)
 
-	case "--EXPECTF--":
-		pattern := replaceExpectfTags(testFile.Expect)
+	case "--EXPECTF--", "--EXPECTREGEX--":
+		pattern := testFile.Expect
+		if testFile.ExpectType == "--EXPECTF--" {
+			pattern = replaceExpectfTags(testFile.Expect)
+		}
 		equal, err = regexp.MatchString(pattern, common.TrimLineBreaks(result))
 		if err != nil {
 			if verbosity1 || verbosity2 {

@@ -145,7 +145,7 @@ func (reader *Reader) GetTestFile() (*TestFile, error) {
 			continue
 		}
 
-		if reader.at() == "--EXPECT--" || reader.at() == "--EXPECTF--" {
+		if reader.at() == "--EXPECT--" || reader.at() == "--EXPECTF--" || reader.at() == "--EXPECTREGEX--" {
 			section := reader.eat()
 			expect := ""
 			for !reader.isEof() && !reader.isSection(reader.at()) {
