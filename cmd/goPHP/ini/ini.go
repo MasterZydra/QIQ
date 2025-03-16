@@ -20,16 +20,18 @@ const (
 )
 
 var allowedDirectives = map[string]int{
-	"arg_separator.input":  INI_SYSTEM,
-	"arg_separator.output": INI_ALL,
-	"default_charset":      INI_ALL,
-	"error_reporting":      INI_ALL,
-	"input_encoding":       INI_ALL,
-	"internal_encoding":    INI_ALL,
-	"output_encoding":      INI_ALL,
-	"register_argc_argv":   INI_PERDIR,
-	"short_open_tag":       INI_PERDIR,
-	"variables_order":      INI_PERDIR,
+	"arg_separator.input":     INI_SYSTEM,
+	"arg_separator.output":    INI_ALL,
+	"default_charset":         INI_ALL,
+	"error_reporting":         INI_ALL,
+	"input_encoding":          INI_ALL,
+	"internal_encoding":       INI_ALL,
+	"max_input_nesting_level": INI_PERDIR,
+	"open_basedir":            INI_ALL,
+	"output_encoding":         INI_ALL,
+	"register_argc_argv":      INI_PERDIR,
+	"short_open_tag":          INI_PERDIR,
+	"variables_order":         INI_PERDIR,
 }
 
 var boolDirectives = []string{
@@ -37,7 +39,7 @@ var boolDirectives = []string{
 }
 
 var intDirectives = []string{
-	"error_reporting",
+	"error_reporting", "max_input_nesting_level",
 }
 
 type Ini struct {
@@ -47,16 +49,18 @@ type Ini struct {
 func NewDefaultIni() *Ini {
 	return &Ini{
 		directives: map[string]string{
-			"arg_separator.input":  "&",
-			"arg_separator.output": "&",
-			"default_charset":      "UTF-8",
-			"error_reporting":      "0",
-			"input_encoding":       "",
-			"internal_encoding":    "",
-			"output_encoding":      "",
-			"register_argc_argv":   "",
-			"short_open_tag":       "",
-			"variables_order":      "EGPCS",
+			"arg_separator.input":     "&",
+			"arg_separator.output":    "&",
+			"default_charset":         "UTF-8",
+			"error_reporting":         "0",
+			"input_encoding":          "",
+			"internal_encoding":       "",
+			"max_input_nesting_level": "64",
+			"open_basedir":            "",
+			"output_encoding":         "",
+			"register_argc_argv":      "",
+			"short_open_tag":          "",
+			"variables_order":         "EGPCS",
 		},
 	}
 }

@@ -9,6 +9,8 @@
 - error_reporting
 - input_encoding
 - internal_encoding
+- max_input_nesting_level
+- open_basedir
 - output_encoding
 - register_argc_argv
 - short_open_tag

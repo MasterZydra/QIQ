@@ -92,7 +92,7 @@ func parseQuery(query string, ini *ini.Ini) (*values.Array, error) {
 			return result, err
 		}
 		if strings.Contains(key, "[") && strings.Contains(key, "]") {
-			result, err = parseQueryKey(key, value, result)
+			result, err = parseQueryKey(key, value, result, ini)
 			if err != nil {
 				return result, err
 			}
@@ -118,7 +118,7 @@ func parseQuery(query string, ini *ini.Ini) (*values.Array, error) {
 	return result, nil
 }
 
-func parseQueryKey(key string, value string, result *values.Array) (*values.Array, error) {
+func parseQueryKey(key string, value string, result *values.Array, curIni *ini.Ini) (*values.Array, error) {
 	// The parsing of a complex key with arrays is solved by using the interpreter itself:
 	// The key and value is transformed into valid PHP code and executed.
 	// Example:
@@ -129,6 +129,8 @@ func parseQueryKey(key string, value string, result *values.Array) (*values.Arra
 
 	firstKey, key, _ := strings.Cut(key, "[")
 	key = "[" + key
+
+	maxDepth := curIni.GetInt("max_input_nesting_level")
 
 	phpArrayKeys := []string{firstKey}
 
@@ -143,7 +145,10 @@ func parseQueryKey(key string, value string, result *values.Array) (*values.Arra
 	}
 
 	php := "<?php $array"
-	for _, phpArrayKey := range phpArrayKeys {
+	for depth, phpArrayKey := range phpArrayKeys {
+		if depth+1 >= int(maxDepth) {
+			return result, nil
+		}
 		if phpArrayKey == "" {
 			php += "[]"
 		} else if common.IsIntegerLiteral(phpArrayKey, false) {
