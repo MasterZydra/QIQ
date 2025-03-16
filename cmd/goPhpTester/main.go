@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strings"
 )
@@ -138,7 +139,7 @@ func doTest(path string, info os.FileInfo, err error) error {
 
 	if strings.HasPrefix(result, "skip for") || strings.HasPrefix(result, "skip Run") ||
 		strings.HasPrefix(result, "skip only") || strings.HasPrefix(result, "skip this") ||
-		strings.HasPrefix(result, "skip.. ") {
+		strings.HasPrefix(result, "skip.. ") || strings.HasPrefix(result, "skip ") {
 		if !onlyFailed && (verbosity1 || verbosity2) {
 			fmt.Println("SKIP ", path)
 		}
@@ -156,6 +157,21 @@ func doTest(path string, info os.FileInfo, err error) error {
 	switch testFile.ExpectType {
 	case "--EXPECT--":
 		equal = testFile.Expect == common.TrimLineBreaks(result)
+
+	case "--EXPECTF--":
+		pattern := replaceExpectfTags(testFile.Expect)
+		equal, err = regexp.MatchString(pattern, common.TrimLineBreaks(result))
+		if err != nil {
+			if verbosity1 || verbosity2 {
+				fmt.Println("FAIL ", path)
+			}
+			if verbosity2 {
+				fmt.Printf("      %s\n", err)
+			}
+			failed++
+			return nil
+		}
+
 	default:
 		if verbosity1 || verbosity2 {
 			fmt.Println("FAIL ", path)
@@ -187,4 +203,33 @@ func doTest(path string, info os.FileInfo, err error) error {
 		failed++
 		return nil
 	}
+}
+
+func replaceExpectfTags(value string) string {
+	// Spec: https://qa.php.net/phpt_details.php#expectf_section
+
+	replacements := map[string]string{
+		`%e`: interpreter.DIR_SEP,           // Directory separator
+		`%s`: `[^\n]+`,                      // One or more of anything except the end of line
+		`%S`: `[^\n]*`,                      // Zero or more of anything except the end of line
+		`%a`: `.+`,                          // One or more of anything including the end of line
+		`%A`: `.*`,                          // Zero or more of anything including the end of line
+		`%w`: `\s*`,                         // Zero or more white space characters
+		`%i`: `[+-]?\d+`,                    // A signed integer value
+		`%d`: `\d+`,                         // An unsigned integer value
+		`%x`: `[0-9a-fA-F]+`,                // One or more hexadecimal characters
+		`%f`: common.FloatingLiteralPattern, // A floating point number
+		`%c`: `.`,                           // A single character of any sort
+	}
+
+	value = regexp.QuoteMeta(value)
+	for key, replacement := range replacements {
+		value = strings.ReplaceAll(value, key, replacement)
+	}
+
+	// Handle %r...%r for regular expressions
+	re := regexp.MustCompile(`%r(.*?)%r`)
+	value = re.ReplaceAllString(value, `($1)`)
+
+	return value
 }

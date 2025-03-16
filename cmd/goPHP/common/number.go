@@ -197,6 +197,8 @@ const floatingFractLiteralPattern = `^(\d*(_\d+)*\.\d+(_\d+)*|\d+(_\d+)*\.)([eE]
 
 const floatingDigitLiteralPattern = `^\d+(_\d+)*[eE][+-]?\d+(_\d+)*`
 
+const FloatingLiteralPattern = `(([+-]?\d*(_\d+)*\.\d+(_\d+)*|\d+(_\d+)*\.)([eE][+-]?\d+(_\d+)*)?)|([+-]?\d+(_\d+)*[eE][+-]?\d+(_\d+)*)`
+
 func IsFloatingLiteral(str string, leadingNumeric bool) bool {
 	// Spec: https://phplang.org/spec/09-lexical-structure.html#grammar-floating-literal
 
