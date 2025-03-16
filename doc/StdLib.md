@@ -18,6 +18,8 @@
 
 ## Filesystem Functions
 - file_exists
+- is_dir
+- is_file
 
 ## Math Functions
 - abs
