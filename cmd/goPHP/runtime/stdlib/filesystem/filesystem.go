@@ -13,6 +13,7 @@ func Register(environment runtime.Environment) {
 	environment.AddNativeFunction("is_dir", nativeFn_is_dir)
 	environment.AddNativeFunction("is_file", nativeFn_is_file)
 	environment.AddNativeFunction("file_exists", nativeFn_file_exists)
+	environment.AddNativeFunction("rename", nativeFn_rename)
 }
 
 // ------------------- MARK: is_dir -------------------
@@ -67,6 +68,23 @@ func nativeFn_file_exists(args []values.RuntimeValue, _ runtime.Context) (values
 func Exists(filename string) bool {
 	_, err := os.Stat(filename)
 	return err == nil
+}
+
+// ------------------- MARK: rename -------------------
+
+func nativeFn_rename(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
+	// Spec: https://www.php.net/manual/en/function.rename.php
+
+	args, err := funcParamValidator.NewValidator("rename").
+		AddParam("$from", []string{"string"}, nil).
+		AddParam("$to", []string{"string"}, nil).
+		Validate(args)
+	if err != nil {
+		return values.NewVoid(), err
+	}
+
+	goErr := os.Rename(args[0].(*values.Str).Value, args[1].(*values.Str).Value)
+	return values.NewBool(goErr == nil), nil
 }
 
 // TODO basename
@@ -138,7 +156,6 @@ func Exists(filename string) bool {
 // TODO realpath
 // TODO realpath_​cache_​get
 // TODO realpath_​cache_​size
-// TODO rename
 // TODO rewind
 // TODO rmdir
 // TODO set_​file_​buffer

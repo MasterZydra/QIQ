@@ -20,6 +20,7 @@
 - file_exists
 - is_dir
 - is_file
+- rename
 
 ## Math Functions
 - abs
