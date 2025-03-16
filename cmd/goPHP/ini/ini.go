@@ -71,8 +71,8 @@ func NewDevIni() *Ini {
 	return defaultIni
 }
 
-func NewIniFromArray(ini []string) *Ini {
-	defaultIni := NewDefaultIni()
+func NewDevIniFromArray(ini []string) *Ini {
+	defaultIni := NewDevIni()
 
 	for _, setting := range ini {
 		parts := strings.SplitN(setting, "=", 2)

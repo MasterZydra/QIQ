@@ -754,6 +754,10 @@ func calculateInteger(operand1 *values.Int, operator string, operand2 *values.In
 	case "*":
 		return values.NewInt(operand1.Value * operand2.Value), nil
 	case "/":
+		if operand2.Value == 0 {
+			// TODO Add position in output: Fatal error: Uncaught DivisionByZeroError: Division by zero in /home/user/scripts/code.php:3
+			return values.NewInt(0), phpError.NewError("Uncaught DivisionByZeroError: Division by zero")
+		}
 		return values.NewInt(operand1.Value / operand2.Value), nil
 	case "%":
 		return values.NewInt(operand1.Value % operand2.Value), nil
