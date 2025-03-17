@@ -72,6 +72,7 @@
 ## Predefined variables
 - $_ENV
 - $_COOKIE
+- $_FILES
 - $_GET
 - $_POST
 - $_REQUEST

@@ -60,6 +60,8 @@ func registerPredefinedVariables(environment *Environment, request *request.Requ
 	mergeArrays(requestVar, environment.predefinedVariables["$_POST"].(*values.Array))
 	mergeArrays(requestVar, environment.predefinedVariables["$_COOKIE"].(*values.Array))
 	environment.predefinedVariables["$_REQUEST"] = requestVar
+
+	environment.predefinedVariables["$_FILES"] = values.NewArray()
 }
 
 // TODO Replace with std lib func array_merge
