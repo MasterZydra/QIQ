@@ -26,6 +26,7 @@ func (interpreter *Interpreter) Print(str string) {
 }
 
 func (interpreter *Interpreter) Println(str string) {
+	interpreter.lastPrintIsError = false
 	interpreter.Print(str + PHP_EOL)
 }
 
@@ -81,7 +82,7 @@ func (interpreter *Interpreter) lookupVariable(expr ast.IExpression, env *Enviro
 
 	runtimeValue, err := env.LookupVariable(variableName)
 	if !interpreter.suppressWarning && err != nil {
-		interpreter.printError(err)
+		interpreter.PrintError(phpError.NewWarning("%s in %s", strings.TrimPrefix(err.Error(), "Warning: "), expr.GetPosition().ToPosString()))
 	}
 	return runtimeValue, nil
 }
@@ -103,7 +104,7 @@ func (interpreter *Interpreter) varExprToVarName(expr ast.IExpression, env *Envi
 			}
 			runtimeValue, err := env.LookupVariable(variableName)
 			if err != nil {
-				interpreter.printError(err)
+				interpreter.PrintError(err)
 			}
 			valueStr, err := variableHandling.StrVal(runtimeValue)
 			if err != nil {
@@ -137,11 +138,15 @@ func (interpreter *Interpreter) ErrorToString(err phpError.Error) string {
 	return err.GetMessage()
 }
 
-func (interpreter *Interpreter) printError(err phpError.Error) {
+func (interpreter *Interpreter) PrintError(err phpError.Error) {
 	if errStr := interpreter.ErrorToString(err); errStr == "" {
 		return
 	} else {
+		if interpreter.lastPrintIsError {
+			interpreter.Println("")
+		}
 		interpreter.Println(errStr)
+		interpreter.lastPrintIsError = true
 	}
 }
 
@@ -295,7 +300,7 @@ func (interpreter *Interpreter) includeFile(filepathExpr ast.IExpression, env *E
 	}
 
 	if !common.PathExists(absFilename) {
-		interpreter.printError(phpError.NewWarning(
+		interpreter.PrintError(phpError.NewWarning(
 			"%s(%s): Failed to open stream: No such file or directory in %s",
 			functionName, filename, filepathExpr.GetPosition().ToPosString(),
 		))
@@ -372,9 +377,13 @@ func (interpreter *Interpreter) exprToRuntimeValue(expr ast.IExpression, env *En
 					varExpr = match[1 : len(match)-1]
 				}
 				exprStr := "<?= " + varExpr + ";"
-				result, err := NewInterpreter(interpreter.ini, interpreter.request, "").process(exprStr, env, true)
+				result, err := NewInterpreter(interpreter.ini, interpreter.request, "__file_name__").process(exprStr, env, true)
 				if err != nil {
 					return values.NewVoid(), err
+				}
+				if strings.Contains(result, "Warning: Undefined variable") {
+					filenameRegex := regexp.MustCompile(`__file_name__:\d+:\d+`)
+					result = filenameRegex.ReplaceAllString(result, expr.GetPosition().ToPosString())
 				}
 				str = strings.Replace(str, match, result, 1)
 			}

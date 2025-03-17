@@ -123,7 +123,7 @@ func TestOutput(t *testing.T) {
 	testInputOutput(t, `<?php $a = 42; $b = 'abc'; echo "a{$a}b{$b}";`, "a42babc")
 	testInputOutput(t, `<?php $a = 42; echo "$a";`, "42")
 	testInputOutput(t, `<?php $a = 42; $b = 'abc'; echo "$a $b";`, "42 abc")
-	testInputOutput(t, `<?php echo "$a";`, "Warning: Undefined variable $a\n")
+	testInputOutput(t, `<?php echo "$a";`, fmt.Sprintf("Warning: Undefined variable $a in %s:1:12\n", TEST_FILE_NAME))
 
 	// Unicode escape sequence
 	testInputOutput(t, `<?php var_dump("\u{61}");`, "string(1) \"a\"\n")
@@ -176,9 +176,9 @@ func TestFileIncludes(t *testing.T) {
 
 func TestVariable(t *testing.T) {
 	// Undefined variable
-	testInputOutput(t, `<?php echo is_null($a) ? "a" : "b";`, "Warning: Undefined variable $a\na")
-	testInputOutput(t, `<?php echo intval($a);`, "Warning: Undefined variable $a\n0")
-	testInputOutput(t, `<?php echo intval($$a);`, "Warning: Undefined variable $a\nWarning: Undefined variable $\n0")
+	testInputOutput(t, `<?php echo is_null($a) ? "a" : "b";`, fmt.Sprintf("Warning: Undefined variable $a in %s:1:20\na", TEST_FILE_NAME))
+	testInputOutput(t, `<?php echo intval($a);`, fmt.Sprintf("Warning: Undefined variable $a in %s:1:19\n0", TEST_FILE_NAME))
+	testInputOutput(t, `<?php echo intval($$a);`, fmt.Sprintf("Warning: Undefined variable $a\n\nWarning: Undefined variable $ in %s:1:20\n0", TEST_FILE_NAME))
 
 	// Simple variable
 	testInputOutput(t, `<?php $var = "hi"; $var = "hello"; echo $var, " world";`, "hello world")

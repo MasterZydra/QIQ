@@ -6,6 +6,7 @@ import (
 	"GoPHP/cmd/goPHP/ini"
 	"GoPHP/cmd/goPHP/phpError"
 	"GoPHP/cmd/goPHP/request"
+	"GoPHP/cmd/goPHP/runtime"
 	"GoPHP/cmd/goPHP/runtime/values"
 	"fmt"
 	"math"
@@ -13,29 +14,29 @@ import (
 	"strings"
 )
 
-func registerPredefinedVariables(environment *Environment, request *request.Request, ini *ini.Ini) {
-	if ini == nil {
+func registerPredefinedVariables(environment *Environment, request *request.Request, interpreter runtime.Interpreter) {
+	if interpreter == nil {
 		registerPredefinedVariableEnv(environment, request, true)
-		registerPredefinedVariableGet(environment, request, ini, true)
-		registerPredefinedVariablePost(environment, request, ini, true)
+		registerPredefinedVariableGet(environment, request, interpreter, true)
+		registerPredefinedVariablePost(environment, request, interpreter, true)
 		registerPredefinedVariableCookie(environment, request, true)
-		registerPredefinedVariableServer(environment, request, ini, true)
+		registerPredefinedVariableServer(environment, request, interpreter, true)
 		return
 	}
 
-	variables_order := ini.GetStr("variables_order")
+	variables_order := interpreter.GetIni().GetStr("variables_order")
 	for _, variable := range variables_order {
 		switch string(variable) {
 		case "E":
 			registerPredefinedVariableEnv(environment, request, true)
 		case "G":
-			registerPredefinedVariableGet(environment, request, ini, true)
+			registerPredefinedVariableGet(environment, request, interpreter, true)
 		case "P":
-			registerPredefinedVariablePost(environment, request, ini, true)
+			registerPredefinedVariablePost(environment, request, interpreter, true)
 		case "C":
 			registerPredefinedVariableCookie(environment, request, true)
 		case "S":
-			registerPredefinedVariableServer(environment, request, ini, true)
+			registerPredefinedVariableServer(environment, request, interpreter, true)
 		}
 	}
 
@@ -43,16 +44,16 @@ func registerPredefinedVariables(environment *Environment, request *request.Requ
 		registerPredefinedVariableEnv(environment, request, false)
 	}
 	if !strings.Contains(variables_order, "G") {
-		registerPredefinedVariableGet(environment, request, ini, false)
+		registerPredefinedVariableGet(environment, request, interpreter, false)
 	}
 	if !strings.Contains(variables_order, "P") {
-		registerPredefinedVariablePost(environment, request, ini, false)
+		registerPredefinedVariablePost(environment, request, interpreter, false)
 	}
 	if !strings.Contains(variables_order, "C") {
 		registerPredefinedVariableCookie(environment, request, false)
 	}
 	if !strings.Contains(variables_order, "S") {
-		registerPredefinedVariableServer(environment, request, ini, false)
+		registerPredefinedVariableServer(environment, request, interpreter, false)
 	}
 
 	requestVar := values.NewArray()
@@ -88,9 +89,9 @@ func registerPredefinedVariableCookie(environment *Environment, request *request
 	}
 }
 
-func registerPredefinedVariableGet(environment *Environment, request *request.Request, ini *ini.Ini, init bool) {
+func registerPredefinedVariableGet(environment *Environment, request *request.Request, interpreter runtime.Interpreter, init bool) {
 	if init {
-		array, err := parseQuery(request.QueryString, ini)
+		array, err := parseQuery(request.QueryString, interpreter)
 		if err != nil {
 			println(err.Error())
 		}
@@ -100,9 +101,9 @@ func registerPredefinedVariableGet(environment *Environment, request *request.Re
 	}
 }
 
-func registerPredefinedVariablePost(environment *Environment, request *request.Request, ini *ini.Ini, init bool) {
+func registerPredefinedVariablePost(environment *Environment, request *request.Request, interpreter runtime.Interpreter, init bool) {
 	if init {
-		array, err := parsePost(request.Post, ini)
+		array, err := parsePost(request.Post, interpreter)
 		if err != nil {
 			println(err.Error())
 		}
@@ -112,13 +113,13 @@ func registerPredefinedVariablePost(environment *Environment, request *request.R
 	}
 }
 
-func registerPredefinedVariableServer(environment *Environment, request *request.Request, ini *ini.Ini, init bool) {
+func registerPredefinedVariableServer(environment *Environment, request *request.Request, interpreter runtime.Interpreter, init bool) {
 	environment.predefinedVariables["$_SERVER"] = values.NewArray()
 	if init {
 		server := environment.predefinedVariables["$_SERVER"].(*values.Array)
 		if len(request.Args) > 0 {
 			server.SetElement(values.NewStr("argc"), values.NewInt(int64(len(request.Args))))
-			server.SetElement(values.NewStr("argv"), paramToArray(request.Args, ini))
+			server.SetElement(values.NewStr("argv"), paramToArray(request.Args, interpreter))
 		}
 		server.SetElement(values.NewStr("DOCUMENT_ROOT"), values.NewStr(request.DocumentRoot))
 		server.SetElement(values.NewStr("QUERY_STRING"), values.NewStr(request.QueryString))
@@ -145,7 +146,7 @@ func stringMapToArray(stringMap map[string]string) *values.Array {
 	return result
 }
 
-func paramToArray(params [][]string, ini *ini.Ini) *values.Array {
+func paramToArray(params [][]string, interpreter runtime.Interpreter) *values.Array {
 	result := values.NewArray()
 
 	for _, param := range params {
@@ -197,12 +198,11 @@ func paramToArray(params [][]string, ini *ini.Ini) *values.Array {
 		}
 
 		// Prepare environment
-		env := NewEnvironment(nil, request.NewRequest(), ini)
+		env := NewEnvironment(nil, request.NewRequest(), interpreter)
 		env.declareVariable("$"+paramName, arrayValue)
 
 		// Execute PHP to store new array values in env
-		interpreter := NewInterpreter(ini, request.NewRequest(), "")
-		interpreter.process(fmt.Sprintf(`<?php $%s = "%s";`, key, value), env, true)
+		NewInterpreter(interpreter.GetIni(), request.NewRequest(), "").process(fmt.Sprintf(`<?php $%s = "%s";`, key, value), env, true)
 
 		// Extract array from environment
 		arrayValue = env.variables["$"+paramName]

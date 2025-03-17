@@ -2,6 +2,7 @@ package interpreter
 
 import (
 	"GoPHP/cmd/goPHP/ini"
+	"GoPHP/cmd/goPHP/request"
 	"GoPHP/cmd/goPHP/runtime/values"
 	"testing"
 )
@@ -62,7 +63,7 @@ Content-Disposition: form-data; name="name\"15"
 
 testname
 -----------------------------20896060251896012921717172737--`,
-		ini.NewDevIni(),
+		NewInterpreter(ini.NewDevIni(), request.NewRequest(), TEST_FILE_NAME),
 	)
 	if err != nil {
 		t.Errorf("Parsing post data failed: %s", err)
@@ -103,7 +104,7 @@ Value: {StrValue: testname}
 
 func TestParseQuery(t *testing.T) {
 	runTest := func(t *testing.T, input string, expected *values.Array) {
-		actual, err := parseQuery(input, ini.NewDefaultIni())
+		actual, err := parseQuery(input, NewInterpreter(ini.NewDefaultIni(), request.NewRequest(), TEST_FILE_NAME))
 		if err != nil {
 			t.Errorf("Unexpected error: \"%s\"", err)
 			return

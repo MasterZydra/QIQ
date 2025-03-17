@@ -4,7 +4,9 @@ import (
 	"GoPHP/cmd/goPHP/common"
 	"GoPHP/cmd/goPHP/config"
 	"GoPHP/cmd/goPHP/ini"
+	"GoPHP/cmd/goPHP/phpError"
 	"GoPHP/cmd/goPHP/request"
+	"GoPHP/cmd/goPHP/runtime"
 	"GoPHP/cmd/goPHP/runtime/values"
 	"fmt"
 	"net/url"
@@ -56,7 +58,7 @@ func parseCookies(cookies string) *values.Array {
 	return result
 }
 
-func parsePost(query string, ini *ini.Ini) (*values.Array, error) {
+func parsePost(query string, interpreter runtime.Interpreter) (*values.Array, error) {
 	if strings.HasPrefix(query, "Content-Type: multipart/form-data;") {
 		// TODO Improve code
 		result := values.NewArray()
@@ -115,6 +117,14 @@ func parsePost(query string, ini *ini.Ini) (*values.Array, error) {
 						content += lines[lineNum]
 						lineNum++
 					}
+					if len(content) > getPostMaxSize(interpreter.GetIni()) {
+						interpreter.PrintError(phpError.NewWarning(
+							"PHP Request Startup: POST Content-Length of %d bytes exceeds the limit of %d bytes in Unknown on line 0",
+							len(content),
+							getPostMaxSize(interpreter.GetIni()),
+						))
+						continue
+					}
 					result.SetElement(values.NewStr(name), values.NewStr(content))
 					continue
 				}
@@ -126,15 +136,15 @@ func parsePost(query string, ini *ini.Ini) (*values.Array, error) {
 		return result, nil
 	}
 
-	return parseQuery(strings.ReplaceAll(query, "\n", ""), ini)
+	return parseQuery(strings.ReplaceAll(query, "\n", ""), interpreter)
 }
 
-func parseQuery(query string, ini *ini.Ini) (*values.Array, error) {
+func parseQuery(query string, interpreter runtime.Interpreter) (*values.Array, error) {
 	result := values.NewArray()
 
 	for query != "" {
 		var key string
-		key, query, _ = strings.Cut(query, ini.GetStr("arg_separator.input"))
+		key, query, _ = strings.Cut(query, interpreter.GetIni().GetStr("arg_separator.input"))
 		if key == "" {
 			continue
 		}
@@ -145,10 +155,27 @@ func parseQuery(query string, ini *ini.Ini) (*values.Array, error) {
 		if !strings.Contains(key, "=") && strings.Contains(key, "+") {
 			parts := strings.Split(key, "+")
 			for i := 0; i < len(parts); i++ {
+				if len(parts[i]) > getPostMaxSize(interpreter.GetIni()) {
+					interpreter.PrintError(phpError.NewWarning(
+						"PHP Request Startup: POST Content-Length of %d bytes exceeds the limit of %d bytes in Unknown on line 0",
+						len(parts[i]),
+						getPostMaxSize(interpreter.GetIni()),
+					))
+					continue
+				}
 				if err := result.SetElement(nil, values.NewStr(parts[i])); err != nil {
 					return result, err
 				}
 			}
+			continue
+		}
+
+		if len(key) > getPostMaxSize(interpreter.GetIni()) {
+			interpreter.PrintError(phpError.NewWarning(
+				"PHP Request Startup: POST Content-Length of %d bytes exceeds the limit of %d bytes in Unknown on line 0",
+				len(key),
+				getPostMaxSize(interpreter.GetIni()),
+			))
 			continue
 		}
 
@@ -165,7 +192,7 @@ func parseQuery(query string, ini *ini.Ini) (*values.Array, error) {
 			return result, err
 		}
 		if strings.Contains(key, "[") && strings.Contains(key, "]") {
-			result, err = parseQueryKey(key, value, result, ini)
+			result, err = parseQueryKey(key, value, result, interpreter.GetIni())
 			if err != nil {
 				return result, err
 			}
@@ -247,4 +274,25 @@ func fixPercentEscaping(key string) string {
 	return re.ReplaceAllStringFunc(key, func(match string) string {
 		return "%25" + match[1:]
 	})
+}
+
+func getPostMaxSize(ini *ini.Ini) int {
+	sizeStr := ini.GetStr("post_max_size")
+	if common.IsDecimalLiteral(sizeStr, false) {
+		size := int(common.DecimalLiteralToInt64(sizeStr, false))
+		if size == 0 {
+			return 8 * 1024 * 1024
+		}
+		return size
+	}
+	if strings.HasSuffix(sizeStr, "K") {
+		return int(common.DecimalLiteralToInt64(strings.Replace(sizeStr, "K", "", 1), false) * 1024)
+	}
+	if strings.HasSuffix(sizeStr, "M") {
+		return int(common.DecimalLiteralToInt64(strings.Replace(sizeStr, "M", "", 1), false) * 1024 * 1024)
+	}
+	if strings.HasSuffix(sizeStr, "G") {
+		return int(common.DecimalLiteralToInt64(strings.Replace(sizeStr, "G", "", 1), false) * 1024 * 1024 * 1024)
+	}
+	return 8 * 1024 * 1024
 }

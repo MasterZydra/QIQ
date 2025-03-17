@@ -153,6 +153,14 @@ func doTest(path string, info os.FileInfo, err error) error {
 	case "--EXPECTF--", "--EXPECTREGEX--":
 		pattern := testFile.Expect
 		if testFile.ExpectType == "--EXPECTF--" {
+			// Special case for goPHP:
+			// The location of the error is given with line and column:
+			// e.g. "... in tests/basic/025.phpt:2:18"
+			// PHP only returns the line:
+			// e.g. "... in tests/basic/025.phpt on line 2"
+			if strings.Contains(testFile.Expect, "in %s on line %d") {
+				testFile.Expect = strings.ReplaceAll(testFile.Expect, "in %s on line %d", "in %s")
+			}
 			pattern = replaceExpectfTags(testFile.Expect)
 		}
 		equal, err = regexp.MatchString(pattern, common.TrimLineBreaks(result))

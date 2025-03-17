@@ -24,16 +24,18 @@ type Interpreter struct {
 	resultRuntimeValue values.RuntimeValue
 	exitCode           int64
 	// Status
-	suppressWarning bool
+	suppressWarning  bool
+	lastPrintIsError bool
 }
 
 func NewInterpreter(ini *ini.Ini, request *request.Request, filename string) *Interpreter {
 	interpreter := &Interpreter{
 		filename: filename, includedFiles: []string{}, ini: ini, request: request, parser: parser.NewParser(ini),
-		env: NewEnvironment(nil, request, ini), cache: map[int64]values.RuntimeValue{},
+		cache:             map[int64]values.RuntimeValue{},
 		outputBufferStack: outputBuffer.NewStack(),
 		exitCode:          0,
 	}
+	interpreter.env = NewEnvironment(nil, request, interpreter)
 
 	if ini.GetBool("register_argc_argv") {
 		server := interpreter.env.predefinedVariables["$_SERVER"].(*values.Array)
@@ -59,7 +61,7 @@ func (interpreter *Interpreter) GetExitCode() int {
 }
 
 func (interpreter *Interpreter) Process(sourceCode string) (string, phpError.Error) {
-	return interpreter.process(sourceCode, interpreter.env, true)
+	return interpreter.process(sourceCode, interpreter.env, false)
 }
 
 func (interpreter *Interpreter) process(sourceCode string, env *Environment, resetResult bool) (string, phpError.Error) {

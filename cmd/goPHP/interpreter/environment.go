@@ -2,7 +2,6 @@ package interpreter
 
 import (
 	"GoPHP/cmd/goPHP/ast"
-	"GoPHP/cmd/goPHP/ini"
 	"GoPHP/cmd/goPHP/phpError"
 	"GoPHP/cmd/goPHP/request"
 	"GoPHP/cmd/goPHP/runtime"
@@ -26,7 +25,7 @@ type Environment struct {
 	CurrentFunction *ast.FunctionDefinitionStatement
 }
 
-func NewEnvironment(parentEnv *Environment, request *request.Request, ini *ini.Ini) *Environment {
+func NewEnvironment(parentEnv *Environment, request *request.Request, interpreter runtime.Interpreter) *Environment {
 	env := &Environment{
 		parent:    parentEnv,
 		variables: map[string]values.RuntimeValue{},
@@ -40,7 +39,7 @@ func NewEnvironment(parentEnv *Environment, request *request.Request, ini *ini.I
 
 	if parentEnv == nil {
 		stdlib.RegisterNativeFunctions(env)
-		registerPredefinedVariables(env, request, ini)
+		registerPredefinedVariables(env, request, interpreter)
 		registerPredefinedConstants(env)
 	}
 
