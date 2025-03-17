@@ -70,7 +70,21 @@ func parsePost(query string, ini *ini.Ini) (*values.Array, error) {
 
 			if lineNum == 0 {
 				boundary = strings.Replace(lines[lineNum], "Content-Type: multipart/form-data;", "", 1)
-				boundary = "--" + strings.Replace(strings.TrimSpace(boundary), "boundary=", "", 1)
+				boundary = strings.Replace(strings.TrimSpace(boundary), "boundary=", "", 1)
+				if strings.HasPrefix(boundary, "\"") {
+					boundary = boundary[1:]
+					if strings.Contains(boundary, "\"") {
+						boundary = boundary[:strings.Index(boundary, "\"")]
+					}
+				}
+				boundary = "--" + boundary
+				if strings.Contains(boundary, ";") {
+					// Content-Type: multipart/form-data; boundary=abc; charset=...
+					boundary = boundary[:strings.Index(boundary, ";")]
+				} else if strings.Contains(boundary, ",") {
+					// Content-Type: multipart/form-data; boundary=abc, charset=...
+					boundary = boundary[:strings.Index(boundary, ",")]
+				}
 				lineNum++
 				continue
 			}
@@ -104,6 +118,7 @@ func parsePost(query string, ini *ini.Ini) (*values.Array, error) {
 					result.SetElement(values.NewStr(name), values.NewStr(content))
 					continue
 				}
+				lineNum++
 				continue
 			}
 			return result, fmt.Errorf("parsePost - Unexpected line %d: %s", lineNum, lines[lineNum])
