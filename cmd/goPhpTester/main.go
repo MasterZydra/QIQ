@@ -193,7 +193,8 @@ func doTest(path string, info os.FileInfo, err error) error {
 			fmt.Println(testFile.Expect)
 			fmt.Println("---------------   Got    ---------------")
 			fmt.Println(result)
-			fmt.Println("----------------------------------------\n")
+			fmt.Println("----------------------------------------")
+			fmt.Println("")
 		}
 		failed++
 		return nil
