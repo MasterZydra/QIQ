@@ -72,14 +72,14 @@ func (reader *Reader) GetTestFile() (*TestFile, error) {
 			continue
 		}
 
-		if reader.at() == "--POST--" {
-			reader.eat()
+		if reader.at() == "--POST--" || reader.at() == "--POST_RAW--" {
+			section := reader.eat()
 			postData := ""
 			for !reader.isEof() && !reader.isSection(reader.at()) {
-				postData += reader.eat()
+				postData += reader.eat() + "\n"
 			}
 			reader.testFile.Post = postData
-			reader.sections = append(reader.sections, "--POST--")
+			reader.sections = append(reader.sections, section)
 			continue
 		}
 

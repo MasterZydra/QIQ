@@ -100,7 +100,7 @@ func registerPredefinedVariableGet(environment *Environment, request *request.Re
 
 func registerPredefinedVariablePost(environment *Environment, request *request.Request, ini *ini.Ini, init bool) {
 	if init {
-		array, err := parseQuery(request.Post, ini)
+		array, err := parsePost(request.Post, ini)
 		if err != nil {
 			println(err.Error())
 		}

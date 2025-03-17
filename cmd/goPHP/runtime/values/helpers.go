@@ -2,35 +2,36 @@ package values
 
 import "fmt"
 
-func Dump(value RuntimeValue) {
+func ToString(value RuntimeValue) string {
+	result := ""
 	switch value.GetType() {
 	case ArrayValue:
-		fmt.Printf("{ArrayValue: ")
+		result += "{ArrayValue: \n"
 		arrayValue := value.(*Array)
 		for _, key := range arrayValue.Keys {
-			fmt.Print("Key: ")
-			Dump(key)
-			fmt.Print("Value: ")
+			result += "Key: "
+			result += ToString(key)
+			result += "Value: "
 			value, _ := arrayValue.GetElement(key)
-			Dump(value)
-
+			result += ToString(value)
 		}
-		fmt.Printf("}\n")
+		result += "}\n"
 	case BoolValue:
 		valueStr := "true"
 		if value.(*Bool).Value {
 			valueStr = "false"
 		}
-		fmt.Printf("{BoolValue: %s}\n", valueStr)
+		result += fmt.Sprintf("{BoolValue: %s}\n", valueStr)
 	case IntValue:
-		fmt.Printf("{IntValue: %d}\n", value.(*Int).Value)
+		result += fmt.Sprintf("{IntValue: %d}\n", value.(*Int).Value)
 	case FloatValue:
-		fmt.Printf("{FloatValue: %f}\n", value.(*Float).Value)
+		result += fmt.Sprintf("{FloatValue: %f}\n", value.(*Float).Value)
 	case StrValue:
-		fmt.Printf("{StrValue: %s}\n", value.(*Str).Value)
+		result += fmt.Sprintf("{StrValue: %s}\n", value.(*Str).Value)
 	default:
-		fmt.Printf("Unsupported RuntimeValue type %s\n", value.GetType())
+		result += fmt.Sprintf("Unsupported RuntimeValue type %s\n", value.GetType())
 	}
+	return result
 }
 
 func ToPhpType(value RuntimeValue) string {

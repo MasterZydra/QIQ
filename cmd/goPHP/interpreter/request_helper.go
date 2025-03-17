@@ -56,6 +56,64 @@ func parseCookies(cookies string) *values.Array {
 	return result
 }
 
+func parsePost(query string, ini *ini.Ini) (*values.Array, error) {
+	if strings.HasPrefix(query, "Content-Type: multipart/form-data;") {
+		// TODO Improve code
+		result := values.NewArray()
+		var boundary string
+		lines := strings.Split(query, "\n")
+		lineNum := 0
+		for {
+			if lineNum >= len(lines) {
+				break
+			}
+
+			if lineNum == 0 {
+				boundary = strings.Replace(lines[lineNum], "Content-Type: multipart/form-data;", "", 1)
+				boundary = "--" + strings.Replace(strings.TrimSpace(boundary), "boundary=", "", 1)
+				lineNum++
+				continue
+			}
+
+			if lines[lineNum] == boundary+"--" {
+				return result, nil
+			}
+
+			if lines[lineNum] == boundary {
+				lineNum++
+				if strings.HasPrefix(lines[lineNum], "Content-Disposition: form-data;") {
+					name := strings.Replace(lines[lineNum], "Content-Disposition: form-data;", "", 1)
+					name = strings.Replace(strings.TrimSpace(name), "name=", "", 1)
+
+					if strings.HasPrefix(name, "'") {
+						name = name[1:strings.LastIndex(name, "'")]
+						name = strings.ReplaceAll(name, `\'`, "'")
+					}
+					if strings.HasPrefix(name, "\"") {
+						name = name[1:strings.LastIndex(name, "\"")]
+						name = strings.ReplaceAll(name, `\"`, `"`)
+					}
+					name = strings.ReplaceAll(name, `\\`, `\`)
+
+					lineNum += 2
+					content := ""
+					for lineNum < len(lines) && lines[lineNum] != boundary && lines[lineNum] != boundary+"--" {
+						content += lines[lineNum]
+						lineNum++
+					}
+					result.SetElement(values.NewStr(name), values.NewStr(content))
+					continue
+				}
+				continue
+			}
+			return result, fmt.Errorf("parsePost - Unexpected line %d: %s", lineNum, lines[lineNum])
+		}
+		return result, nil
+	}
+
+	return parseQuery(strings.ReplaceAll(query, "\n", ""), ini)
+}
+
 func parseQuery(query string, ini *ini.Ini) (*values.Array, error) {
 	result := values.NewArray()
 

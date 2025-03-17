@@ -6,6 +6,101 @@ import (
 	"testing"
 )
 
+func TestParsePost(t *testing.T) {
+	array, err := parsePost(
+		`Content-Type: multipart/form-data; boundary=---------------------------20896060251896012921717172737
+-----------------------------20896060251896012921717172737
+Content-Disposition: form-data; name=name1
+
+testname
+-----------------------------20896060251896012921717172737
+Content-Disposition: form-data; name=name\4
+
+testname
+-----------------------------20896060251896012921717172737
+Content-Disposition: form-data; name=name\\5
+
+testname
+-----------------------------20896060251896012921717172737
+Content-Disposition: form-data; name=name\'6
+
+testname
+-----------------------------20896060251896012921717172737
+Content-Disposition: form-data; name=name\"7
+
+testname
+-----------------------------20896060251896012921717172737
+Content-Disposition: form-data; name='name\8'
+
+testname
+-----------------------------20896060251896012921717172737
+Content-Disposition: form-data; name='name\\9'
+
+testname
+-----------------------------20896060251896012921717172737
+Content-Disposition: form-data; name='name\'10'
+
+testname
+-----------------------------20896060251896012921717172737
+Content-Disposition: form-data; name='name\"11'
+
+testname
+-----------------------------20896060251896012921717172737
+Content-Disposition: form-data; name="name\12"
+
+testname
+-----------------------------20896060251896012921717172737
+Content-Disposition: form-data; name="name\\13"
+
+testname
+-----------------------------20896060251896012921717172737
+Content-Disposition: form-data; name="name\'14"
+
+testname
+-----------------------------20896060251896012921717172737
+Content-Disposition: form-data; name="name\"15"
+
+testname
+-----------------------------20896060251896012921717172737--`,
+		ini.NewDevIni(),
+	)
+	if err != nil {
+		t.Errorf("Parsing post data failed: %s", err)
+	}
+	expected := `{ArrayValue: 
+Key: {StrValue: name1}
+Value: {StrValue: testname}
+Key: {StrValue: name\4}
+Value: {StrValue: testname}
+Key: {StrValue: name\5}
+Value: {StrValue: testname}
+Key: {StrValue: name\'6}
+Value: {StrValue: testname}
+Key: {StrValue: name\"7}
+Value: {StrValue: testname}
+Key: {StrValue: name\8}
+Value: {StrValue: testname}
+Key: {StrValue: name\9}
+Value: {StrValue: testname}
+Key: {StrValue: name'10}
+Value: {StrValue: testname}
+Key: {StrValue: name\"11}
+Value: {StrValue: testname}
+Key: {StrValue: name\12}
+Value: {StrValue: testname}
+Key: {StrValue: name\13}
+Value: {StrValue: testname}
+Key: {StrValue: name\'14}
+Value: {StrValue: testname}
+Key: {StrValue: name"15}
+Value: {StrValue: testname}
+}
+`
+	if expected != values.ToString(array) {
+		t.Errorf("Parsing post data failed.\nExpected:\n%s\nGot:\n%s", expected, values.ToString(array))
+	}
+}
+
 func TestParseQuery(t *testing.T) {
 	runTest := func(t *testing.T, input string, expected *values.Array) {
 		actual, err := parseQuery(input, ini.NewDefaultIni())
