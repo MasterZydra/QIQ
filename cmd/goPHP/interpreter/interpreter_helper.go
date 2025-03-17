@@ -26,7 +26,6 @@ func (interpreter *Interpreter) Print(str string) {
 }
 
 func (interpreter *Interpreter) Println(str string) {
-	interpreter.lastPrintIsError = false
 	interpreter.Print(str + PHP_EOL)
 }
 
@@ -142,11 +141,8 @@ func (interpreter *Interpreter) PrintError(err phpError.Error) {
 	if errStr := interpreter.ErrorToString(err); errStr == "" {
 		return
 	} else {
-		if interpreter.lastPrintIsError {
-			interpreter.Println("")
-		}
+		interpreter.Println("")
 		interpreter.Println(errStr)
-		interpreter.lastPrintIsError = true
 	}
 }
 
@@ -376,14 +372,22 @@ func (interpreter *Interpreter) exprToRuntimeValue(expr ast.IExpression, env *En
 					// Remove curly braces
 					varExpr = match[1 : len(match)-1]
 				}
+				// TODO Find better solution for code evaluation
 				exprStr := "<?= " + varExpr + ";"
 				result, err := NewInterpreter(interpreter.ini, interpreter.request, "__file_name__").process(exprStr, env, true)
 				if err != nil {
 					return values.NewVoid(), err
 				}
+				// TODO Improve bad fix so that the warning is above the possible string output
 				if strings.Contains(result, "Warning: Undefined variable") {
 					filenameRegex := regexp.MustCompile(`__file_name__:\d+:\d+`)
-					result = filenameRegex.ReplaceAllString(result, expr.GetPosition().ToPosString())
+					interpreter.PrintError(
+						phpError.NewWarning(
+							strings.TrimPrefix(
+								strings.TrimSpace(
+									filenameRegex.ReplaceAllString(result, expr.GetPosition().ToPosString())),
+								"Warning: ")))
+					result = ""
 				}
 				str = strings.Replace(str, match, result, 1)
 			}

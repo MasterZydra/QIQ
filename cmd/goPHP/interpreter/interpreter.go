@@ -24,8 +24,7 @@ type Interpreter struct {
 	resultRuntimeValue values.RuntimeValue
 	exitCode           int64
 	// Status
-	suppressWarning  bool
-	lastPrintIsError bool
+	suppressWarning bool
 }
 
 func NewInterpreter(ini *ini.Ini, request *request.Request, filename string) *Interpreter {
