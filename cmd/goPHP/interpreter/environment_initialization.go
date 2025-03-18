@@ -3,8 +3,6 @@ package interpreter
 import (
 	"GoPHP/cmd/goPHP/common"
 	"GoPHP/cmd/goPHP/config"
-	"GoPHP/cmd/goPHP/ini"
-	"GoPHP/cmd/goPHP/phpError"
 	"GoPHP/cmd/goPHP/request"
 	"GoPHP/cmd/goPHP/runtime"
 	"GoPHP/cmd/goPHP/runtime/values"
@@ -232,51 +230,4 @@ func registerPredefinedConstants(environment *Environment) {
 	environment.predefinedConstants["PHP_RELEASE_VERSION"] = values.NewInt(config.ReleaseVersion)
 	environment.predefinedConstants["PHP_EXTRA_VERSION"] = values.NewStr(config.ExtraVersion)
 	environment.predefinedConstants["PHP_VERSION_ID"] = values.NewInt(config.VersionId)
-
-	// Spec: https://www.php.net/manual/en/math.constants.php
-	environment.predefinedConstants["M_1_PI"] = values.NewFloat(1 / math.Pi)
-	environment.predefinedConstants["M_2_PI"] = values.NewFloat(2 / math.Pi)
-	environment.predefinedConstants["M_2_SQRTPI"] = values.NewFloat(2 / math.SqrtPi)
-	environment.predefinedConstants["M_E"] = values.NewFloat(math.E)
-	environment.predefinedConstants["M_EULER"] = values.NewFloat(math.E)
-	environment.predefinedConstants["M_LN10"] = values.NewFloat(math.Ln10)
-	environment.predefinedConstants["M_LN2"] = values.NewFloat(math.Ln2)
-	environment.predefinedConstants["M_LNPI"] = values.NewFloat(math.Log(math.Pi))
-	environment.predefinedConstants["M_LOG10E"] = values.NewFloat(math.Log10E)
-	environment.predefinedConstants["M_LOG2E"] = values.NewFloat(math.Log2E)
-	environment.predefinedConstants["M_PI"] = values.NewFloat(math.Pi)
-	environment.predefinedConstants["M_PI_2"] = values.NewFloat(math.Pi / 2)
-	environment.predefinedConstants["M_PI_4"] = values.NewFloat(math.Pi / 4)
-	environment.predefinedConstants["M_SQRT1_2"] = values.NewFloat(1 / math.Sqrt2)
-	environment.predefinedConstants["M_SQRT2"] = values.NewFloat(math.Sqrt2)
-	environment.predefinedConstants["M_SQRT3"] = values.NewFloat(math.Sqrt(3))
-	environment.predefinedConstants["M_SQRTPI"] = values.NewFloat(math.SqrtPi)
-	environment.predefinedConstants["PHP_ROUND_HALF_UP"] = values.NewInt(1)
-	environment.predefinedConstants["PHP_ROUND_HALF_DOWN"] = values.NewInt(2)
-	environment.predefinedConstants["PHP_ROUND_HALF_EVEN"] = values.NewInt(3)
-	environment.predefinedConstants["PHP_ROUND_HALF_ODD"] = values.NewInt(4)
-
-	// Spec: https://www.php.net/manual/en/errorfunc.constants.php
-	environment.predefinedConstants["E_ERROR"] = values.NewInt(phpError.E_ERROR)
-	environment.predefinedConstants["E_WARNING"] = values.NewInt(phpError.E_WARNING)
-	environment.predefinedConstants["E_PARSE"] = values.NewInt(phpError.E_PARSE)
-	environment.predefinedConstants["E_NOTICE"] = values.NewInt(phpError.E_NOTICE)
-	environment.predefinedConstants["E_CORE_ERROR"] = values.NewInt(phpError.E_CORE_ERROR)
-	environment.predefinedConstants["E_CORE_WARNING"] = values.NewInt(phpError.E_CORE_WARNING)
-	environment.predefinedConstants["E_COMPILE_ERROR"] = values.NewInt(phpError.E_COMPILE_ERROR)
-	environment.predefinedConstants["E_COMPILE_WARNING"] = values.NewInt(phpError.E_COMPILE_WARNING)
-	environment.predefinedConstants["E_USER_ERROR"] = values.NewInt(phpError.E_USER_ERROR)
-	environment.predefinedConstants["E_USER_WARNING"] = values.NewInt(phpError.E_USER_WARNING)
-	environment.predefinedConstants["E_USER_NOTICE"] = values.NewInt(phpError.E_USER_NOTICE)
-	environment.predefinedConstants["E_STRICT"] = values.NewInt(phpError.E_STRICT)
-	environment.predefinedConstants["E_RECOVERABLE_ERROR"] = values.NewInt(phpError.E_RECOVERABLE_ERROR)
-	environment.predefinedConstants["E_DEPRECATED"] = values.NewInt(phpError.E_DEPRECATED)
-	environment.predefinedConstants["E_USER_DEPRECATED"] = values.NewInt(phpError.E_USER_DEPRECATED)
-	environment.predefinedConstants["E_ALL"] = values.NewInt(phpError.E_ALL)
-
-	// Spec: https://www.php.net/manual/en/info.constants.php
-	environment.predefinedConstants["INI_USER"] = values.NewInt(int64(ini.INI_USER))
-	environment.predefinedConstants["INI_PERDIR"] = values.NewInt(int64(ini.INI_PERDIR))
-	environment.predefinedConstants["INI_SYSTEM"] = values.NewInt(int64(ini.INI_SYSTEM))
-	environment.predefinedConstants["INI_ALL"] = values.NewInt(int64(ini.INI_ALL))
 }

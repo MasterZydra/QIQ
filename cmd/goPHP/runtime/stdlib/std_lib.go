@@ -14,7 +14,7 @@ import (
 	"GoPHP/cmd/goPHP/runtime/stdlib/variableHandling"
 )
 
-func RegisterNativeFunctions(environment runtime.Environment) {
+func Register(environment runtime.Environment) {
 	array.Register(environment)
 	dateTime.Register(environment)
 	errorHandling.Register(environment)

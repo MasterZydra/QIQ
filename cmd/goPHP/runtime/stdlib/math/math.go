@@ -16,6 +16,29 @@ func Register(environment runtime.Environment) {
 	environment.AddNativeFunction("asin", nativeFn_asin)
 	environment.AddNativeFunction("asinh", nativeFn_asinh)
 	environment.AddNativeFunction("pi", nativeFn_pi)
+
+	// Spec: https://www.php.net/manual/en/math.constants.php
+	environment.AddPredefinedConstants("M_1_PI", values.NewFloat(1/goMath.Pi))
+	environment.AddPredefinedConstants("M_2_PI", values.NewFloat(2/goMath.Pi))
+	environment.AddPredefinedConstants("M_2_SQRTPI", values.NewFloat(2/goMath.SqrtPi))
+	environment.AddPredefinedConstants("M_E", values.NewFloat(goMath.E))
+	environment.AddPredefinedConstants("M_EULER", values.NewFloat(goMath.E))
+	environment.AddPredefinedConstants("M_LN10", values.NewFloat(goMath.Ln10))
+	environment.AddPredefinedConstants("M_LN2", values.NewFloat(goMath.Ln2))
+	environment.AddPredefinedConstants("M_LNPI", values.NewFloat(goMath.Log(goMath.Pi)))
+	environment.AddPredefinedConstants("M_LOG10E", values.NewFloat(goMath.Log10E))
+	environment.AddPredefinedConstants("M_LOG2E", values.NewFloat(goMath.Log2E))
+	environment.AddPredefinedConstants("M_PI", values.NewFloat(goMath.Pi))
+	environment.AddPredefinedConstants("M_PI_2", values.NewFloat(goMath.Pi/2))
+	environment.AddPredefinedConstants("M_PI_4", values.NewFloat(goMath.Pi/4))
+	environment.AddPredefinedConstants("M_SQRT1_2", values.NewFloat(1/goMath.Sqrt2))
+	environment.AddPredefinedConstants("M_SQRT2", values.NewFloat(goMath.Sqrt2))
+	environment.AddPredefinedConstants("M_SQRT3", values.NewFloat(goMath.Sqrt(3)))
+	environment.AddPredefinedConstants("M_SQRTPI", values.NewFloat(goMath.SqrtPi))
+	environment.AddPredefinedConstants("PHP_ROUND_HALF_UP", values.NewInt(1))
+	environment.AddPredefinedConstants("PHP_ROUND_HALF_DOWN", values.NewInt(2))
+	environment.AddPredefinedConstants("PHP_ROUND_HALF_EVEN", values.NewInt(3))
+	environment.AddPredefinedConstants("PHP_ROUND_HALF_ODD", values.NewInt(4))
 }
 
 // ------------------- MARK: abs -------------------

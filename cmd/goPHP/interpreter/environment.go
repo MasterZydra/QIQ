@@ -38,7 +38,7 @@ func NewEnvironment(parentEnv *Environment, request *request.Request, interprete
 	}
 
 	if parentEnv == nil {
-		stdlib.RegisterNativeFunctions(env)
+		stdlib.Register(env)
 		registerPredefinedVariables(env, request, interpreter)
 		registerPredefinedConstants(env)
 	}
@@ -130,6 +130,10 @@ func (env *Environment) addGlobalVariable(variableName string) {
 }
 
 // ------------------- MARK: Constants -------------------
+
+func (env *Environment) AddPredefinedConstants(name string, value values.RuntimeValue) {
+	env.predefinedConstants[name] = value
+}
 
 func (env *Environment) declareConstant(constantName string, value values.RuntimeValue) (values.RuntimeValue, phpError.Error) {
 	// Get "global" environment

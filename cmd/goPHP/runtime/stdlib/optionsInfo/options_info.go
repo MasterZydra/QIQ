@@ -14,6 +14,12 @@ func Register(environment runtime.Environment) {
 	environment.AddNativeFunction("getenv", nativeFn_getenv)
 	environment.AddNativeFunction("ini_get", nativeFn_ini_get)
 	environment.AddNativeFunction("ini_set", nativeFn_ini_set)
+
+	// Spec: https://www.php.net/manual/en/info.constants.php
+	environment.AddPredefinedConstants("INI_USER", values.NewInt(int64(ini.INI_USER)))
+	environment.AddPredefinedConstants("INI_PERDIR", values.NewInt(int64(ini.INI_PERDIR)))
+	environment.AddPredefinedConstants("INI_SYSTEM", values.NewInt(int64(ini.INI_SYSTEM)))
+	environment.AddPredefinedConstants("INI_ALL", values.NewInt(int64(ini.INI_ALL)))
 }
 
 // ------------------- MARK: getenv -------------------
