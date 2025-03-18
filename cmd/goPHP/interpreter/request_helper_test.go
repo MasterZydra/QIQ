@@ -8,7 +8,7 @@ import (
 )
 
 func TestParsePost(t *testing.T) {
-	array, err := parsePost(
+	array, _, err := parsePost(
 		`Content-Type: multipart/form-data; boundary=---------------------------20896060251896012921717172737
 -----------------------------20896060251896012921717172737
 Content-Disposition: form-data; name=name1

@@ -9,9 +9,14 @@ import (
 	"GoPHP/cmd/goPHP/runtime"
 	"GoPHP/cmd/goPHP/runtime/values"
 	"fmt"
+	"io"
 	"net/url"
 	"regexp"
 	"strings"
+
+	"golang.org/x/text/encoding/japanese"
+	"golang.org/x/text/encoding/unicode"
+	"golang.org/x/text/transform"
 )
 
 func parseCookies(cookies string) *values.Array {
@@ -58,10 +63,12 @@ func parseCookies(cookies string) *values.Array {
 	return result
 }
 
-func parsePost(query string, interpreter runtime.Interpreter) (*values.Array, error) {
+func parsePost(query string, interpreter runtime.Interpreter) (*values.Array, *values.Array, error) {
+	postArray := values.NewArray()
+	filesArray := values.NewArray()
+
 	if strings.HasPrefix(query, "Content-Type: multipart/form-data;") {
 		// TODO Improve code
-		result := values.NewArray()
 		var boundary string
 		lines := strings.Split(query, "\n")
 		lineNum := 0
@@ -92,15 +99,19 @@ func parsePost(query string, interpreter runtime.Interpreter) (*values.Array, er
 			}
 
 			if lines[lineNum] == boundary+"--" {
-				return result, nil
+				return postArray, filesArray, nil
 			}
 
 			if lines[lineNum] == boundary {
 				lineNum++
 				if strings.HasPrefix(lines[lineNum], "Content-Disposition: form-data;") {
-					name := strings.Replace(lines[lineNum], "Content-Disposition: form-data;", "", 1)
-					name = strings.Replace(strings.TrimSpace(name), "name=", "", 1)
+					isFile := strings.Contains(lines[lineNum], "filename=")
+					fullname := strings.Replace(lines[lineNum], "Content-Disposition: form-data;", "", 1)
 
+					name := strings.Replace(strings.TrimSpace(fullname), "name=", "", 1)
+					if strings.Contains(name, ";") {
+						name = name[:strings.Index(name, ";")]
+					}
 					if strings.HasPrefix(name, "'") {
 						name = name[1:strings.LastIndex(name, "'")]
 						name = strings.ReplaceAll(name, `\'`, "'")
@@ -110,13 +121,39 @@ func parsePost(query string, interpreter runtime.Interpreter) (*values.Array, er
 						name = strings.ReplaceAll(name, `\"`, `"`)
 					}
 					name = strings.ReplaceAll(name, `\\`, `\`)
+					name = recode(name, interpreter.GetIni())
+
+					filename := ""
+					contentType := ""
+					if isFile {
+						filename = fullname[strings.Index(fullname, "filename="):]
+						filename = strings.TrimPrefix(filename, "filename=")
+						if strings.HasPrefix(filename, "\"") {
+							filename = filename[1:strings.LastIndex(filename, "\"")]
+						}
+						filename = recode(filename, interpreter.GetIni())
+						lineNum++
+						if strings.HasPrefix(lines[lineNum], "Content-Type:") {
+							contentType = strings.TrimPrefix(lines[lineNum], "Content-Type:")
+							contentType = strings.TrimSpace(contentType)
+						} else {
+							lineNum--
+						}
+					}
 
 					lineNum += 2
 					content := ""
 					for lineNum < len(lines) && lines[lineNum] != boundary && lines[lineNum] != boundary+"--" {
 						content += lines[lineNum]
+						if isFile {
+							content += "\n"
+						}
 						lineNum++
 					}
+					if isFile && strings.HasSuffix(content, "\n\n") {
+						content = content[:len(content)-1]
+					}
+					content = recode(content, interpreter.GetIni())
 					if len(content) > getPostMaxSize(interpreter.GetIni()) {
 						interpreter.PrintError(phpError.NewWarning(
 							"PHP Request Startup: POST Content-Length of %d bytes exceeds the limit of %d bytes in Unknown on line 0",
@@ -125,18 +162,33 @@ func parsePost(query string, interpreter runtime.Interpreter) (*values.Array, er
 						))
 						continue
 					}
-					result.SetElement(values.NewStr(name), values.NewStr(content))
+
+					if !isFile {
+						postArray.SetElement(values.NewStr(name), values.NewStr(content))
+					} else {
+						data := values.NewArray()
+						data.SetElement(values.NewStr("name"), values.NewStr(filename))
+						data.SetElement(values.NewStr("full_path"), values.NewStr(filename))
+						data.SetElement(values.NewStr("type"), values.NewStr(contentType))
+						// TODO store to file
+						data.SetElement(values.NewStr("tmp_name"), values.NewStr("tmp.file"))
+						data.SetElement(values.NewStr("error"), values.NewInt(0))
+						data.SetElement(values.NewStr("size"), values.NewInt(int64(len(content))))
+
+						filesArray.SetElement(values.NewStr(name), data)
+					}
 					continue
 				}
 				lineNum++
 				continue
 			}
-			return result, fmt.Errorf("parsePost - Unexpected line %d: %s", lineNum, lines[lineNum])
+			return postArray, filesArray, fmt.Errorf("parsePost - Unexpected line %d: %s", lineNum, lines[lineNum])
 		}
-		return result, nil
+		return postArray, filesArray, nil
 	}
 
-	return parseQuery(strings.ReplaceAll(query, "\n", ""), interpreter)
+	postArray, err := parseQuery(strings.ReplaceAll(query, "\n", ""), interpreter)
+	return postArray, filesArray, err
 }
 
 func parseQuery(query string, interpreter runtime.Interpreter) (*values.Array, error) {
@@ -295,4 +347,51 @@ func getPostMaxSize(ini *ini.Ini) int {
 		return int(common.DecimalLiteralToInt64(strings.Replace(sizeStr, "G", "", 1), false) * 1024 * 1024 * 1024)
 	}
 	return 8 * 1024 * 1024
+}
+
+func recode(input string, ini *ini.Ini) string {
+	var decoder *transform.Reader
+	var encoder transform.Transformer
+
+	inputEncoding := ini.GetStr("input_encoding")
+	if inputEncoding == "" {
+		inputEncoding = ini.GetStr("default_charset")
+	}
+	switch inputEncoding {
+	case "Shift_JIS":
+		decoder = transform.NewReader(strings.NewReader(input), japanese.ShiftJIS.NewDecoder())
+	case "UTF-8":
+		decoder = transform.NewReader(strings.NewReader(input), unicode.UTF8.NewDecoder())
+	default:
+		fmt.Println("changeEncoding: Unsupported from encoding: ", inputEncoding)
+		return ""
+	}
+
+	decodedBytes, err := io.ReadAll(decoder)
+	if err != nil {
+		fmt.Println("changeEncoding: Error decoding input: ", err)
+		return ""
+	}
+
+	internalEncoding := ini.GetStr("internal_encoding")
+	if internalEncoding == "" {
+		internalEncoding = ini.GetStr("default_charset")
+	}
+	switch internalEncoding {
+	case "Shift_JIS":
+		encoder = japanese.ShiftJIS.NewEncoder()
+	case "UTF-8":
+		encoder = unicode.UTF8.NewEncoder()
+	default:
+		fmt.Println("changeEncoding: Unsupported from encoding: ", internalEncoding)
+		return ""
+	}
+
+	encodedBytes, err := io.ReadAll(transform.NewReader(strings.NewReader(string(decodedBytes)), encoder))
+	if err != nil {
+		fmt.Println("changeEncoding: Error encoding output: ", err)
+		return ""
+	}
+
+	return string(encodedBytes)
 }
