@@ -307,7 +307,7 @@ func (interpreter *Interpreter) includeFile(filepathExpr ast.IExpression, env *E
 	if fileErr != nil {
 		return getError()
 	}
-	program, parserErr := interpreter.parser.ProduceAST(string(content), filename)
+	program, parserErr := interpreter.parser.ProduceAST(string(content), absFilename)
 
 	if goRuntime.GOOS != "windows" {
 		interpreter.includedFiles = append(interpreter.includedFiles, absFilename)
