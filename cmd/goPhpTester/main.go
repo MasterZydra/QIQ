@@ -2,13 +2,14 @@ package main
 
 import (
 	"GoPHP/cmd/goPHP/common"
+	"GoPHP/cmd/goPHP/common/os"
 	"GoPHP/cmd/goPHP/ini"
 	"GoPHP/cmd/goPHP/interpreter"
 	"GoPHP/cmd/goPHP/request"
 	"GoPHP/cmd/goPhpTester/phpt"
 	"flag"
 	"fmt"
-	"os"
+	goOs "os"
 	"path/filepath"
 	"regexp"
 	"runtime"
@@ -32,11 +33,11 @@ func main() {
 	verbosity2 = *verbosity2Flag
 	onlyFailed = *onlyFailedFlag
 
-	args := os.Args[1:]
+	args := goOs.Args[1:]
 
 	if len(args) == 0 {
 		fmt.Println("Usage: goPhpTester [-v(1|2)] [-only-failed] [list of folders or files]")
-		os.Exit(1)
+		goOs.Exit(1)
 	}
 
 	failed = 0
@@ -53,7 +54,7 @@ func main() {
 
 		if err := process(arg); err != nil {
 			fmt.Println(err)
-			os.Exit(1)
+			goOs.Exit(1)
 		}
 	}
 
@@ -61,7 +62,7 @@ func main() {
 }
 
 func process(path string) error {
-	file, err := os.Open(path)
+	file, err := goOs.Open(path)
 	if err != nil {
 		return err
 	}
@@ -82,7 +83,7 @@ func process(path string) error {
 	}
 }
 
-func doTest(path string, info os.FileInfo, err error) error {
+func doTest(path string, info goOs.FileInfo, err error) error {
 	if info.IsDir() || !strings.HasSuffix(strings.ToLower(info.Name()), ".phpt") {
 		return nil
 	}
@@ -216,7 +217,7 @@ func replaceExpectfTags(value string) string {
 	// Spec: https://qa.php.net/phpt_details.php#expectf_section
 
 	replacements := map[string]string{
-		`%e`: interpreter.DIR_SEP,           // Directory separator
+		`%e`: os.DIR_SEP,                    // Directory separator
 		`%s`: `[^\n]+`,                      // One or more of anything except the end of line
 		`%S`: `[^\n]*`,                      // Zero or more of anything except the end of line
 		`%a`: `.+`,                          // One or more of anything including the end of line

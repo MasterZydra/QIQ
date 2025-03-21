@@ -137,7 +137,7 @@ func (interpreter *Interpreter) ProcessSimpleAssignmentExpr(expr *ast.SimpleAssi
 
 			if i == 0 {
 				value = must(interpreter.processStmt(expr.Value, env))
-				if err := array.SetElement(keyValue, deepCopy(value)); err != nil {
+				if err := array.SetElement(keyValue, values.DeepCopy(value)); err != nil {
 					return values.NewVoid(), err
 				}
 				break
@@ -187,11 +187,6 @@ func (interpreter *Interpreter) ProcessSubscriptExpr(expr *ast.SubscriptExpressi
 		}
 
 		return values.NewStr(str[key : key+1]), nil
-		// str = common.ExtendWithSpaces(str, int(key+1))
-		// str = common.ReplaceAtPos(str, valueStr, int(key))
-
-		// _, err = env.(*Environment).declareVariable(variableName, NewStr(str))
-		// return value, err
 	}
 
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-subscript-expression
@@ -326,7 +321,7 @@ func (interpreter *Interpreter) ProcessFunctionCallExpr(expr *ast.FunctionCallEx
 		functionArguments := make([]values.RuntimeValue, len(expr.Arguments))
 		for index, arg := range expr.Arguments {
 			runtimeValue := must(interpreter.processStmt(arg, env))
-			functionArguments[index] = deepCopy(runtimeValue)
+			functionArguments[index] = values.DeepCopy(runtimeValue)
 		}
 		return nativeFunction(functionArguments, runtime.NewContext(interpreter, env.(*Environment)))
 	}
@@ -359,7 +354,7 @@ func (interpreter *Interpreter) ProcessFunctionCallExpr(expr *ast.FunctionCallEx
 			)
 		}
 		// Declare parameter in function environment
-		functionEnv.declareVariable(param.Name, deepCopy(runtimeValue))
+		functionEnv.declareVariable(param.Name, values.DeepCopy(runtimeValue))
 	}
 
 	runtimeValue, err := interpreter.processStmt(userFunction.Body, functionEnv)

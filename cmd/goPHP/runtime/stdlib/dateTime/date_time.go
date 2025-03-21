@@ -1,7 +1,6 @@
 package dateTime
 
 import (
-	"GoPHP/cmd/goPHP/common"
 	"GoPHP/cmd/goPHP/phpError"
 	"GoPHP/cmd/goPHP/runtime"
 	"GoPHP/cmd/goPHP/runtime/funcParamValidator"
@@ -52,7 +51,7 @@ func nativeFn_checkdate(args []values.RuntimeValue, _ runtime.Context) (values.R
 
 	// Spec: https://www.php.net/manual/en/function.checkdate.php
 	// The day is within the allowed number of days for the given month. Leap years are taken into consideration.
-	return values.NewBool(day >= 1 && day <= int64(common.DaysIn(time.Month(month), int(year)))), nil
+	return values.NewBool(day >= 1 && day <= int64(DaysIn(time.Month(month), int(year)))), nil
 }
 
 // ------------------- MARK: date -------------------
@@ -92,7 +91,7 @@ func nativeFn_date(args []values.RuntimeValue, _ runtime.Context) (values.Runtim
 	}
 	if strings.Contains(format, "N") {
 		// N 	ISO 8601 numeric representation of the day of the week 	1 (for Monday) through 7 (for Sunday)
-		format = strings.ReplaceAll(format, "N", fmt.Sprintf("%d", common.Iso8601Weekday(timestamp.Weekday())))
+		format = strings.ReplaceAll(format, "N", fmt.Sprintf("%d", Iso8601Weekday(timestamp.Weekday())))
 	}
 
 	// Spec: https://www.php.net/manual/en/datetime.format.php
@@ -115,7 +114,7 @@ func nativeFn_date(args []values.RuntimeValue, _ runtime.Context) (values.Runtim
 	}
 	if strings.Contains(format, "t") {
 		// t 	Number of days in the given month 	28 through 31
-		format = strings.ReplaceAll(format, "t", fmt.Sprintf("%d", common.DaysIn(timestamp.Month(), timestamp.Year())))
+		format = strings.ReplaceAll(format, "t", fmt.Sprintf("%d", DaysIn(timestamp.Month(), timestamp.Year())))
 	}
 
 	// Spec: https://www.php.net/manual/en/datetime.format.php
@@ -123,7 +122,7 @@ func nativeFn_date(args []values.RuntimeValue, _ runtime.Context) (values.Runtim
 	if strings.Contains(format, "L") {
 		// L 	Whether it's a leap year 	1 if it is a leap year, 0 otherwise.
 		leap := "0"
-		if common.IsLeapYear(timestamp.Year()) {
+		if IsLeapYear(timestamp.Year()) {
 			leap = "1"
 		}
 		format = strings.ReplaceAll(format, "L", leap)

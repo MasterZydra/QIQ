@@ -2,6 +2,7 @@ package interpreter
 
 import (
 	"GoPHP/cmd/goPHP/ast"
+	"GoPHP/cmd/goPHP/common/os"
 	"GoPHP/cmd/goPHP/ini"
 	"GoPHP/cmd/goPHP/phpError"
 	"GoPHP/cmd/goPHP/request"
@@ -14,7 +15,7 @@ var TEST_FILE_NAME string = getTestFileName()
 var TEST_FILE_PATH string = getTestFilePath()
 
 func getTestFileName() string {
-	if getPhpOs() == "Windows" {
+	if os.IS_WIN {
 		return `C:\Users\admin\test.php`
 	} else {
 		return "/home/admin/test.php"
@@ -22,7 +23,7 @@ func getTestFileName() string {
 }
 
 func getTestFilePath() string {
-	if getPhpOs() == "Windows" {
+	if os.IS_WIN {
 		return `C:\Users\admin`
 	} else {
 		return "/home/admin"
@@ -94,7 +95,7 @@ func testForError(t *testing.T, php string, expected phpError.Error) {
 
 func testInputOutput(t *testing.T, php string, output string) *Interpreter {
 	// Always use "\n" for tests so that they also pass on Windows
-	PHP_EOL = "\n"
+	os.EOL = "\n"
 	interpreter := NewInterpreter(ini.NewDevIni(), &request.Request{}, TEST_FILE_NAME)
 	actual, err := interpreter.Process(php)
 	if err != nil {

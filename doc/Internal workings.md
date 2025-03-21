@@ -18,13 +18,13 @@ The interpreter creates new instances for each new runtime value of type `Boolea
 This results in "pass by value" behavior.
 
 The above behavior results in a "pass by ref" for runtime values of type `Array`.
-To solve this problem, a `deepCopy` function is used.
+To solve this problem, a `DeepCopy` function is used.
 It creates a deep copy for a given array runtime value.
 
-There are two places in the interpreter logic where a deepCopy must be created:
-- array assignments: `array.SetElement(keyValue, deepCopy(value))`
-- function calls: `argument = deepCopy(argument)`
-- variable assignments: `variable = deepCopy(value)`
+There are two places in the interpreter logic where a DeepCopy must be created:
+- array assignments: `array.SetElement(keyValue, DeepCopy(value))`
+- function calls: `argument = DeepCopy(argument)`
+- variable assignments: `variable = DeepCopy(value)`
 
 ## Performant runtime array
 In the first iteration, the array implementation was very slow.  

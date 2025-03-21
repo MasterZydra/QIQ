@@ -53,7 +53,7 @@ func (env *Environment) declareVariable(variableName string, value values.Runtim
 		return env.parent.declareVariable(variableName, value)
 	}
 
-	env.variables[variableName] = deepCopy(value)
+	env.variables[variableName] = values.DeepCopy(value)
 	return value, nil
 }
 

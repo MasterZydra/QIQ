@@ -3,15 +3,15 @@ package interpreter
 import (
 	"GoPHP/cmd/goPHP/ast"
 	"GoPHP/cmd/goPHP/common"
+	"GoPHP/cmd/goPHP/common/os"
 	"GoPHP/cmd/goPHP/phpError"
 	"GoPHP/cmd/goPHP/runtime"
 	"GoPHP/cmd/goPHP/runtime/stdlib/outputControl"
 	"GoPHP/cmd/goPHP/runtime/stdlib/variableHandling"
 	"GoPHP/cmd/goPHP/runtime/values"
 	"math"
-	"os"
+	GoOs "os"
 	"regexp"
-	goRuntime "runtime"
 	"slices"
 	"strconv"
 	"strings"
@@ -26,7 +26,7 @@ func (interpreter *Interpreter) Print(str string) {
 }
 
 func (interpreter *Interpreter) Println(str string) {
-	interpreter.Print(str + PHP_EOL)
+	interpreter.Print(str + os.EOL)
 }
 
 func (interpreter *Interpreter) WriteResult(str string) {
@@ -40,26 +40,6 @@ func (interpreter *Interpreter) flushOutputBuffers() {
 
 	for interpreter.outputBufferStack.Len() > 0 {
 		outputControl.ObEndFlush(runtime.NewContext(interpreter, nil))
-	}
-}
-
-var PHP_EOL string = getPhpEol()
-
-func getPhpEol() string {
-	if getPhpOs() == "Windows" {
-		return "\r\n"
-	} else {
-		return "\n"
-	}
-}
-
-var DIR_SEP = getPhpDirectorySeparator()
-
-func getPhpDirectorySeparator() string {
-	if getPhpOs() == "Windows" {
-		return `\`
-	} else {
-		return "/"
 	}
 }
 
@@ -146,50 +126,6 @@ func (interpreter *Interpreter) PrintError(err phpError.Error) {
 	}
 }
 
-func getPhpOs() string {
-	switch goRuntime.GOOS {
-	case "android":
-		return "Android"
-	case "darwin":
-		return "Darwin"
-	case "dragonfly":
-		return "DragonFly"
-	case "freebsd":
-		return "FreeBSD"
-	case "illumos":
-		return "IllumOS"
-	case "linux":
-		return "Linux"
-	case "netbsd":
-		return "NetBSD"
-	case "openbsd":
-		return "OpenBSD"
-	case "solaris":
-		return "Solaris"
-	case "windows":
-		return "Windows"
-	default:
-		return "Unkown"
-	}
-}
-
-func getPhpOsFamily() string {
-	switch goRuntime.GOOS {
-	case "android", "linux":
-		return "Linux"
-	case "darwin":
-		return "Darwin"
-	case "dragonfly", "freebsd", "netbsd", "openbsd":
-		return "BSD"
-	case "solaris":
-		return "Solaris"
-	case "windows":
-		return "Windows"
-	default:
-		return "Unkown"
-	}
-}
-
 // Scan and process program for function definitions on root level and in compound statements
 func (interpreter *Interpreter) scanForFunctionDefinition(statements []ast.IStatement, env *Environment) phpError.Error {
 	for _, stmt := range statements {
@@ -259,10 +195,10 @@ func (interpreter *Interpreter) includeFile(filepathExpr ast.IExpression, env *E
 	// Spec: https://phplang.org/spec/10-expressions.html#the-require-operator
 	// Once an include file has been included, a subsequent use of require_once on that include file
 	// results in a return value of TRUE but nothing else happens.
-	if once && slices.Contains(interpreter.includedFiles, filename) && goRuntime.GOOS != "windows" {
+	if once && slices.Contains(interpreter.includedFiles, filename) && !os.IS_WIN {
 		return values.NewBool(true), nil
 	}
-	if once && slices.Contains(interpreter.includedFiles, strings.ToLower(filename)) && goRuntime.GOOS == "windows" {
+	if once && slices.Contains(interpreter.includedFiles, strings.ToLower(filename)) && os.IS_WIN {
 		return values.NewBool(true), nil
 	}
 
@@ -303,13 +239,13 @@ func (interpreter *Interpreter) includeFile(filepathExpr ast.IExpression, env *E
 		return getError()
 	}
 
-	content, fileErr := os.ReadFile(absFilename)
+	content, fileErr := GoOs.ReadFile(absFilename)
 	if fileErr != nil {
 		return getError()
 	}
 	program, parserErr := interpreter.parser.ProduceAST(string(content), absFilename)
 
-	if goRuntime.GOOS != "windows" {
+	if !os.IS_WIN {
 		interpreter.includedFiles = append(interpreter.includedFiles, absFilename)
 	} else {
 		interpreter.includedFiles = append(interpreter.includedFiles, strings.ToLower(absFilename))
@@ -364,6 +300,9 @@ func (interpreter *Interpreter) exprToRuntimeValue(expr ast.IExpression, env *En
 		str := expr.(*ast.StringLiteralExpression).Value
 		if expr.(*ast.StringLiteralExpression).StringType == ast.DoubleQuotedString {
 			// variable substitution
+			// TODO improve variable substitution: Regex and replace will not work for every case here. A parser is required that searches for variables, subscriptExpr, ... and resolves them.
+			// TODO improve variable substitution to detect if a $ is escaped. E.g. "\$i"
+			// TODO improve variable substitution to accept nested arrays "$a[$b['c']][0]"
 			r, _ := regexp.Compile(`({\$[A-Za-z_][A-Za-z0-9_]*['A-Za-z0-9\[\]]*[^}]*})|(\$[A-Za-z_][A-Za-z0-9_]*['A-Za-z0-9\[\]]*)`)
 			matches := r.FindAllString(str, -1)
 			for _, match := range matches {
@@ -426,20 +365,6 @@ func runtimeValueToValueType(valueType values.ValueType, runtimeValue values.Run
 	default:
 		return values.NewVoid(), phpError.NewError("runtimeValueToValueType: Unsupported runtime value: %s", valueType)
 	}
-}
-
-func deepCopy(value values.RuntimeValue) values.RuntimeValue {
-	if value.GetType() != values.ArrayValue {
-		return value
-	}
-
-	copy := values.NewArray()
-	array := value.(*values.Array)
-	for _, key := range array.Keys {
-		value, _ := array.GetElement(key)
-		copy.SetElement(key, deepCopy(value))
-	}
-	return copy
 }
 
 // ------------------- MARK: inc-dec-calculation -------------------

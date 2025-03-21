@@ -54,3 +54,17 @@ func ToPhpType(value RuntimeValue) string {
 		return ""
 	}
 }
+
+func DeepCopy(value RuntimeValue) RuntimeValue {
+	if value.GetType() != ArrayValue {
+		return value
+	}
+
+	array := value.(*Array)
+	copy := NewArray()
+	for _, key := range array.Keys {
+		value, _ := array.GetElement(key)
+		copy.SetElement(key, DeepCopy(value))
+	}
+	return copy
+}
