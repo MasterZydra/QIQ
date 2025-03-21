@@ -235,7 +235,7 @@ func (interpreter *Interpreter) ProcessSubscriptExpr(expr *ast.SubscriptExpressi
 				array = element.(*values.Array)
 				continue
 			}
-			return values.NewNull(), phpError.NewError("ProcessSubscriptExpr: Array does not contain key: %s", keyValue.GetType())
+			return values.NewNull(), phpError.NewError("ProcessSubscriptExpr: Array does not contain key: %s", values.ToString(keyValue))
 
 			// TODO processSubscriptExpr
 			// If the usage context is as the left-hand side of a simple-assignment-expression, the value of the new element is the value of the right-hand side of that simple-assignment-expression.

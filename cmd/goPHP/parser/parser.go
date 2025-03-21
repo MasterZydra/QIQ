@@ -192,11 +192,11 @@ func (parser *Parser) parseStmt() (ast.IStatement, phpError.Error) {
 			if parser.isToken(lexer.OpOrPuncToken, ";", true) {
 				break
 			}
-			return ast.NewEmptyStmt(), phpError.NewParseError("Invalid echo statement detected")
+			return ast.NewEmptyStmt(), phpError.NewParseError("Invalid echo statement detected. Got: %s", parser.at())
 		}
 
 		if len(expressions) == 0 {
-			return ast.NewEmptyStmt(), phpError.NewParseError("Invalid echo statement detected")
+			return ast.NewEmptyStmt(), phpError.NewParseError("Invalid echo statement detected. Got: %s", parser.at())
 		}
 
 		return ast.NewEchoStmt(parser.nextId(), pos, expressions), nil
