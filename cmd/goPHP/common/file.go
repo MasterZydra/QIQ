@@ -76,3 +76,18 @@ func ReadFile(filename string) (string, error) {
 	content, err := os.ReadFile(filename)
 	return string(content), err
 }
+
+func DeleteFile(filename string) error {
+	return os.Remove(filename)
+}
+
+func DeleteFiles(files []string) error {
+	var result error = nil
+	for _, file := range files {
+		err := DeleteFile(file)
+		if err != nil {
+			result = fmt.Errorf("%s, %s", result, err)
+		}
+	}
+	return result
+}

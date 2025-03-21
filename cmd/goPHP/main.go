@@ -207,6 +207,9 @@ func processContent(r *http.Request, content string, filename string) (output st
 	request := request.NewRequestFromGoRequest(r, documentRoot, serverAddr, filename)
 	interpreter := interpreter.NewInterpreter(initIni, request, filename)
 	result, err := interpreter.Process(content)
+	if err := common.DeleteFiles(request.UploadedFiles); err != nil {
+		fmt.Printf("Cleanup failed: %s\n", err)
+	}
 	if err != nil {
 		result += interpreter.ErrorToString(err)
 		return result, 500

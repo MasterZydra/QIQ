@@ -123,6 +123,9 @@ func doTest(path string, info os.FileInfo, err error) error {
 	if phpError != nil {
 		result += phpError.GetMessage()
 	}
+	if err := common.DeleteFiles(request.UploadedFiles); err != nil {
+		fmt.Printf("Cleanup failed: %s\n", err)
+	}
 
 	if runtime.GOOS == "windows" {
 		testFile.Expect = strings.ReplaceAll(testFile.Expect, "\r", "")
