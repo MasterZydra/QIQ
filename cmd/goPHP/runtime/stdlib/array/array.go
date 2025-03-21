@@ -10,11 +10,11 @@ import (
 
 func Register(environment runtime.Environment) {
 	// Category: Array Functions
-	environment.AddNativeFunction("array_key_exits", nativeFn_array_key_exists)
+	environment.AddNativeFunction("array_key_exists", nativeFn_array_key_exists)
 	environment.AddNativeFunction("key_exits", nativeFn_array_key_exists)
 }
 
-// ------------------- MARK: array_key_exits -------------------
+// ------------------- MARK: array_key_exists -------------------
 
 func nativeFn_array_key_exists(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	args, err := funcParamValidator.NewValidator("array_key_exists").

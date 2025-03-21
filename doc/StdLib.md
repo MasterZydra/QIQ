@@ -1,7 +1,7 @@
 # StdLib Functions
 
 ## Array Functions
-- array_key_exits
+- array_key_exists
 - key_exits
 
 ## Date/Time Functions
