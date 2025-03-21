@@ -70,11 +70,24 @@ func parsePost(query string, interpreter runtime.Interpreter) (*values.Array, *v
 	postArray := values.NewArray()
 	filesArray := values.NewArray()
 
+	query = strings.TrimSuffix(query, "\n")
+
 	if strings.HasPrefix(query, "Content-Type: multipart/form-data;") {
 		// TODO Improve code
 		var boundary string
 		lines := strings.Split(query, "\n")
 		lineNum := 0
+
+		contentLen := len(query) - len(lines[lineNum]) - 1
+		if contentLen > getPostMaxSize(interpreter.GetIni()) {
+			interpreter.PrintError(phpError.NewWarning(
+				"PHP Request Startup: POST Content-Length of %d bytes exceeds the limit of %d bytes in Unknown on line 0",
+				contentLen,
+				getPostMaxSize(interpreter.GetIni()),
+			))
+			return postArray, filesArray, nil
+		}
+
 		for {
 			if lineNum >= len(lines) {
 				break
@@ -155,14 +168,6 @@ func parsePost(query string, interpreter runtime.Interpreter) (*values.Array, *v
 					}
 					content = strings.TrimSuffix(content, "\n")
 					content = recode(content, interpreter.GetIni())
-					if len(content) > getPostMaxSize(interpreter.GetIni()) {
-						interpreter.PrintError(phpError.NewWarning(
-							"PHP Request Startup: POST Content-Length of %d bytes exceeds the limit of %d bytes in Unknown on line 0",
-							len(content),
-							getPostMaxSize(interpreter.GetIni()),
-						))
-						continue
-					}
 
 					if !isFile {
 						postArray.SetElement(values.NewStr(name), values.NewStr(content))
