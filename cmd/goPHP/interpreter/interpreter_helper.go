@@ -731,7 +731,7 @@ func calculate(operand1 values.RuntimeValue, operator string, operand2 values.Ru
 	}
 }
 
-func calculateFloating(operand1 *values.Float, operator string, operand2 *values.Float) (*values.Float, phpError.Error) {
+func calculateFloating(operand1 *values.Float, operator string, operand2 *values.Float) (values.RuntimeValue, phpError.Error) {
 	switch operator {
 	case "+":
 		return values.NewFloat(operand1.Value + operand2.Value), nil
@@ -743,6 +743,16 @@ func calculateFloating(operand1 *values.Float, operator string, operand2 *values
 		return values.NewFloat(operand1.Value / operand2.Value), nil
 	case "**":
 		return values.NewFloat(math.Pow(operand1.Value, operand2.Value)), nil
+	case "%":
+		op1, err := variableHandling.IntVal(operand1, false)
+		if err != nil {
+			return values.NewFloat(0), err
+		}
+		op2, err := variableHandling.IntVal(operand2, false)
+		if err != nil {
+			return values.NewFloat(0), err
+		}
+		return values.NewInt(op1 % op2), nil
 	default:
 		return values.NewFloat(0), phpError.NewError("calculateFloating: Operator \"%s\" not implemented", operator)
 	}
