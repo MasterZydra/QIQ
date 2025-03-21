@@ -10,4 +10,5 @@ type Environment interface {
 	LookupVariable(variableName string) (values.RuntimeValue, phpError.Error)
 	AddNativeFunction(functionName string, function NativeFunction)
 	AddPredefinedConstants(name string, value values.RuntimeValue)
+	FunctionExists(functionName string) bool
 }

@@ -438,6 +438,11 @@ func TestUserFunctions(t *testing.T) {
 		`,
 		"func called: abc",
 	)
+
+	// function_exists
+	testInputOutput(t, "<?php var_dump(function_exists('intval'));", "bool(true)\n")
+	testInputOutput(t, "<?php var_dump(function_exists('someUndefinedFunc'));", "bool(false)\n")
+	testInputOutput(t, "<?php function myUserFunc() {} var_dump(function_exists('myUserFunc'));", "bool(true)\n")
 }
 
 func TestString(t *testing.T) {

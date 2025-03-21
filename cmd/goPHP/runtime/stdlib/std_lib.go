@@ -6,6 +6,7 @@ import (
 	"GoPHP/cmd/goPHP/runtime/stdlib/dateTime"
 	"GoPHP/cmd/goPHP/runtime/stdlib/errorHandling"
 	"GoPHP/cmd/goPHP/runtime/stdlib/filesystem"
+	"GoPHP/cmd/goPHP/runtime/stdlib/functionHandling"
 	"GoPHP/cmd/goPHP/runtime/stdlib/math"
 	"GoPHP/cmd/goPHP/runtime/stdlib/misc"
 	"GoPHP/cmd/goPHP/runtime/stdlib/optionsInfo"
@@ -19,6 +20,7 @@ func Register(environment runtime.Environment) {
 	dateTime.Register(environment)
 	errorHandling.Register(environment)
 	filesystem.Register(environment)
+	functionHandling.Register(environment)
 	math.Register(environment)
 	misc.Register(environment)
 	optionsInfo.Register(environment)

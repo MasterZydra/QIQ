@@ -24,6 +24,9 @@
 - is_uploaded_file
 - rename
 
+## Function Handling Functions
+- function_exists
+
 ## Math Functions
 - abs
 - acos

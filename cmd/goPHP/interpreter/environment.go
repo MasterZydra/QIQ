@@ -167,6 +167,17 @@ func (env *Environment) LookupConstant(constantName string) (values.RuntimeValue
 	return values.NewVoid(), phpError.NewError("Undefined constant \"%s\"", constantName)
 }
 
+// ------------------- MARK: Functions -------------------
+
+func (env *Environment) FunctionExists(functionName string) bool {
+	if _, err := env.resolveNativeFunction(functionName); err == nil {
+		return true
+	}
+
+	_, err := env.resolveUserFunction(strings.ToLower(functionName))
+	return err == nil
+}
+
 // ------------------- MARK: Native functions -------------------
 
 func (env *Environment) AddNativeFunction(functionName string, function runtime.NativeFunction) {
