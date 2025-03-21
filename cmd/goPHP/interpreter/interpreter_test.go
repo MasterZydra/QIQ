@@ -537,6 +537,11 @@ func TestArray(t *testing.T) {
 		`<?php $array = [-5 => 1, 2]; var_dump($array);`,
 		"array(2) {\n  [-5]=>\n  int(1)\n  [-4]=>\n  int(2)\n}\n",
 	)
+
+	// Implode
+	testInputOutput(t, `<?php $a = [1, 2, 3]; var_dump(implode($a));`, "string(5) \"1 2 3\"\n")
+	testInputOutput(t, `<?php $a = [1, 2, 3]; var_dump(implode(' ', $a));`, "string(5) \"1 2 3\"\n")
+	testInputOutput(t, `<?php $a = ["1", 2, 3.4]; var_dump(implode('-', $a));`, "string(7) \"1-2-3.4\"\n")
 }
 
 func TestCastExpression(t *testing.T) {

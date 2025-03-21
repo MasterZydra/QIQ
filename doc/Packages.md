@@ -114,6 +114,7 @@ flowchart LR
     GoPHP_cmd_goPHP_runtime_stdlib_strings[GoPHP/cmd/goPHP/runtime/stdlib/strings] --> GoPHP_cmd_goPHP_phpError[GoPHP/cmd/goPHP/phpError]
     GoPHP_cmd_goPHP_runtime_stdlib_strings[GoPHP/cmd/goPHP/runtime/stdlib/strings] --> GoPHP_cmd_goPHP_runtime[GoPHP/cmd/goPHP/runtime]
     GoPHP_cmd_goPHP_runtime_stdlib_strings[GoPHP/cmd/goPHP/runtime/stdlib/strings] --> GoPHP_cmd_goPHP_runtime_funcParamValidator[GoPHP/cmd/goPHP/runtime/funcParamValidator]
+    GoPHP_cmd_goPHP_runtime_stdlib_strings[GoPHP/cmd/goPHP/runtime/stdlib/strings] --> GoPHP_cmd_goPHP_runtime_stdlib_variableHandling[GoPHP/cmd/goPHP/runtime/stdlib/variableHandling]
     GoPHP_cmd_goPHP_runtime_stdlib_strings[GoPHP/cmd/goPHP/runtime/stdlib/strings] --> GoPHP_cmd_goPHP_runtime_values[GoPHP/cmd/goPHP/runtime/values]
 
     GoPHP_cmd_goPHP_runtime_stdlib_variableHandling[GoPHP/cmd/goPHP/runtime/stdlib/variableHandling] --> GoPHP_cmd_goPHP_common[GoPHP/cmd/goPHP/common]

@@ -4,6 +4,7 @@ import (
 	"GoPHP/cmd/goPHP/phpError"
 	"GoPHP/cmd/goPHP/runtime"
 	"GoPHP/cmd/goPHP/runtime/funcParamValidator"
+	"GoPHP/cmd/goPHP/runtime/stdlib/variableHandling"
 	"GoPHP/cmd/goPHP/runtime/values"
 	"encoding/hex"
 	goStrings "strings"
@@ -13,6 +14,8 @@ func Register(environment runtime.Environment) {
 	// Category: String Functions
 	environment.AddNativeFunction("bin2hex", nativeFn_bin2hex)
 	environment.AddNativeFunction("chr", nativeFn_chr)
+	environment.AddNativeFunction("implode", nativeFn_implode)
+	environment.AddNativeFunction("join", nativeFn_implode)
 	environment.AddNativeFunction("lcfirst", nativeFn_lcfirst)
 	environment.AddNativeFunction("quotemeta", nativeFn_quotemeta)
 	environment.AddNativeFunction("str_contains", nativeFn_str_contains)
@@ -65,6 +68,68 @@ func nativeFn_chr(args []values.RuntimeValue, _ runtime.Context) (values.Runtime
 	codepoint %= 256
 
 	return values.NewStr(string(rune(codepoint))), nil
+}
+
+// ------------------- MARK: implode -------------------
+
+func nativeFn_implode(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
+	// Spec: https://www.php.net/manual/en/function.implode.php
+
+	isAlternative := false
+	var valArgs []values.RuntimeValue
+	var err phpError.Error
+
+	// Spec: https://www.php.net/manual/en/function.implode.php
+	// implode(array $array): string
+	if len(args) == 1 {
+		valArgs, err = funcParamValidator.NewValidator("implode").
+			AddParam("$array", []string{"array"}, nil).
+			Validate(args)
+
+		isAlternative = err == nil
+	}
+
+	// Spec: https://www.php.net/manual/en/function.implode.php
+	//  implode(string $separator, array $array): string
+	if !isAlternative {
+		valArgs, err = funcParamValidator.NewValidator("implode").
+			AddParam("$separator", []string{"string"}, nil).
+			AddParam("$array", []string{"array"}, nil).
+			Validate(args)
+	}
+
+	if err != nil {
+		return values.NewVoid(), err
+	}
+
+	// Spec: https://www.php.net/manual/en/function.implode.php
+	// separator [...] Defaults to an empty string.
+	var separator = " "
+	if !isAlternative {
+		separator = valArgs[0].(*values.Str).Value
+	}
+
+	var array *values.Array
+	if isAlternative {
+		array = args[0].(*values.Array)
+	} else {
+		array = args[1].(*values.Array)
+	}
+
+	var result goStrings.Builder
+	for i, key := range array.Keys {
+		value, _ := array.GetElement(key)
+		strValue, err := variableHandling.StrVal(value)
+		if err != nil {
+			return values.NewStr(result.String()), err
+		}
+		result.WriteString(strValue)
+		if i < len(array.Keys)-1 {
+			result.WriteString(separator)
+		}
+	}
+
+	return values.NewStr(result.String()), nil
 }
 
 // ------------------- MARK: lcfirst -------------------

@@ -55,6 +55,8 @@
 ## String Functions
 - bin2hex
 - chr
+- implode
+- join
 - lcfirst
 - quotemeta
 - str_contains
