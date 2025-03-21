@@ -3,6 +3,7 @@ package ini
 import (
 	"GoPHP/cmd/goPHP/common"
 	"GoPHP/cmd/goPHP/phpError"
+	"fmt"
 	"slices"
 	"strings"
 )
@@ -24,6 +25,7 @@ var allowedDirectives = map[string]int{
 	"arg_separator.output":    INI_ALL,
 	"default_charset":         INI_ALL,
 	"error_reporting":         INI_ALL,
+	"file_uploads":            INI_SYSTEM,
 	"input_encoding":          INI_ALL,
 	"internal_encoding":       INI_ALL,
 	"max_input_nesting_level": INI_PERDIR,
@@ -32,11 +34,13 @@ var allowedDirectives = map[string]int{
 	"post_max_size":           INI_PERDIR,
 	"register_argc_argv":      INI_PERDIR,
 	"short_open_tag":          INI_PERDIR,
+	"upload_max_filesize":     INI_PERDIR,
+	"upload_tmp_dir":          INI_SYSTEM,
 	"variables_order":         INI_PERDIR,
 }
 
 var boolDirectives = []string{
-	"register_argc_argv", "short_open_tag",
+	"file_uploads", "register_argc_argv", "short_open_tag",
 }
 
 var intDirectives = []string{
@@ -54,6 +58,7 @@ func NewDefaultIni() *Ini {
 			"arg_separator.output":    "&",
 			"default_charset":         "UTF-8",
 			"error_reporting":         "0",
+			"file_uploads":            "1",
 			"input_encoding":          "",
 			"internal_encoding":       "",
 			"max_input_nesting_level": "64",
@@ -62,6 +67,8 @@ func NewDefaultIni() *Ini {
 			"post_max_size":           "8M",
 			"register_argc_argv":      "",
 			"short_open_tag":          "",
+			"upload_max_filesize":     "2M",
+			"upload_tmp_dir":          "",
 			"variables_order":         "EGPCS",
 		},
 	}
@@ -78,7 +85,10 @@ func NewDevIniFromArray(ini []string) *Ini {
 
 	for _, setting := range ini {
 		parts := strings.SplitN(setting, "=", 2)
-		defaultIni.Set(parts[0], parts[1], INI_ALL)
+		err := defaultIni.Set(parts[0], parts[1], INI_ALL)
+		if err != nil {
+			fmt.Println(err)
+		}
 	}
 
 	return defaultIni
@@ -87,7 +97,7 @@ func NewDevIniFromArray(ini []string) *Ini {
 func (ini *Ini) Set(directive string, value string, source int) phpError.Error {
 	changeable, found := allowedDirectives[directive]
 	if !found {
-		return phpError.NewError("Directive not found")
+		return phpError.NewError("Directive %s not found", directive)
 	}
 
 	if changeable&source == 0 {

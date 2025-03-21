@@ -18,8 +18,10 @@
 
 ## Filesystem Functions
 - file_exists
+- file_get_contents
 - is_dir
 - is_file
+- is_uploaded_file
 - rename
 
 ## Math Functions

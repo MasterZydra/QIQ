@@ -10,7 +10,10 @@ import (
 	"GoPHP/cmd/goPHP/runtime/values"
 	"fmt"
 	"io"
+	"math/rand"
 	"net/url"
+	"os"
+	"path"
 	"regexp"
 	"strings"
 
@@ -150,9 +153,7 @@ func parsePost(query string, interpreter runtime.Interpreter) (*values.Array, *v
 						}
 						lineNum++
 					}
-					if isFile && strings.HasSuffix(content, "\n\n") {
-						content = content[:len(content)-1]
-					}
+					content = strings.TrimSuffix(content, "\n")
 					content = recode(content, interpreter.GetIni())
 					if len(content) > getPostMaxSize(interpreter.GetIni()) {
 						interpreter.PrintError(phpError.NewWarning(
@@ -165,14 +166,36 @@ func parsePost(query string, interpreter runtime.Interpreter) (*values.Array, *v
 
 					if !isFile {
 						postArray.SetElement(values.NewStr(name), values.NewStr(content))
-					} else {
+						continue
+					}
+					if isFile && interpreter.GetIni().GetBool("file_uploads") {
+						var fileError int64 = 0
+						if len(content) > getMaxFilesize(interpreter.GetIni()) {
+							content = ""
+							fileError = 1
+							contentType = ""
+						}
+
+						tmpFile := ""
+						if fileError == 0 {
+							tmpDir := interpreter.GetIni().GetStr("upload_tmp_dir")
+							if tmpDir == "" {
+								tmpDir = path.Join(os.TempDir(), "gophp", "uploads")
+							}
+							tmpFile = path.Join(tmpDir, randomFilename())
+							interpreter.GetRequest().UploadedFiles = append(interpreter.GetRequest().UploadedFiles, tmpFile)
+							err := common.WriteFile(tmpFile, content)
+							if err != nil {
+								return postArray, filesArray, fmt.Errorf("parsePost - Failed to write file content: %s", err)
+							}
+						}
+
 						data := values.NewArray()
 						data.SetElement(values.NewStr("name"), values.NewStr(filename))
 						data.SetElement(values.NewStr("full_path"), values.NewStr(filename))
 						data.SetElement(values.NewStr("type"), values.NewStr(contentType))
-						// TODO store to file
-						data.SetElement(values.NewStr("tmp_name"), values.NewStr("tmp.file"))
-						data.SetElement(values.NewStr("error"), values.NewInt(0))
+						data.SetElement(values.NewStr("tmp_name"), values.NewStr(tmpFile))
+						data.SetElement(values.NewStr("error"), values.NewInt(fileError))
 						data.SetElement(values.NewStr("size"), values.NewInt(int64(len(content))))
 
 						filesArray.SetElement(values.NewStr(name), data)
@@ -189,6 +212,15 @@ func parsePost(query string, interpreter runtime.Interpreter) (*values.Array, *v
 
 	postArray, err := parseQuery(strings.ReplaceAll(query, "\n", ""), interpreter)
 	return postArray, filesArray, err
+}
+
+func randomFilename() string {
+	const letterBytes = "abcdefghijklmnopqrstuvwxyz0123456789_-"
+	b := make([]byte, 30)
+	for i := range b {
+		b[i] = letterBytes[rand.Intn(len(letterBytes))]
+	}
+	return string(b)
 }
 
 func parseQuery(query string, interpreter runtime.Interpreter) (*values.Array, error) {
@@ -328,6 +360,18 @@ func fixPercentEscaping(key string) string {
 	})
 }
 
+func getMaxFilesize(ini *ini.Ini) int {
+	sizeStr := ini.GetStr("upload_max_filesize")
+	if common.IsDecimalLiteral(sizeStr, false) {
+		size := int(common.DecimalLiteralToInt64(sizeStr, false))
+		if size == 0 {
+			return 2 * 1024 * 1024
+		}
+		return size
+	}
+	return resolveSiPrefix(sizeStr, 2*1024*1024)
+}
+
 func getPostMaxSize(ini *ini.Ini) int {
 	sizeStr := ini.GetStr("post_max_size")
 	if common.IsDecimalLiteral(sizeStr, false) {
@@ -337,16 +381,20 @@ func getPostMaxSize(ini *ini.Ini) int {
 		}
 		return size
 	}
-	if strings.HasSuffix(sizeStr, "K") {
-		return int(common.DecimalLiteralToInt64(strings.Replace(sizeStr, "K", "", 1), false) * 1024)
+	return resolveSiPrefix(sizeStr, 8*1024*1024)
+}
+
+func resolveSiPrefix(number string, defaultResult int) int {
+	if strings.HasSuffix(number, "K") {
+		return int(common.DecimalLiteralToInt64(strings.Replace(number, "K", "", 1), false) * 1024)
 	}
-	if strings.HasSuffix(sizeStr, "M") {
-		return int(common.DecimalLiteralToInt64(strings.Replace(sizeStr, "M", "", 1), false) * 1024 * 1024)
+	if strings.HasSuffix(number, "M") {
+		return int(common.DecimalLiteralToInt64(strings.Replace(number, "M", "", 1), false) * 1024 * 1024)
 	}
-	if strings.HasSuffix(sizeStr, "G") {
-		return int(common.DecimalLiteralToInt64(strings.Replace(sizeStr, "G", "", 1), false) * 1024 * 1024 * 1024)
+	if strings.HasSuffix(number, "G") {
+		return int(common.DecimalLiteralToInt64(strings.Replace(number, "G", "", 1), false) * 1024 * 1024 * 1024)
 	}
-	return 8 * 1024 * 1024
+	return defaultResult
 }
 
 func recode(input string, ini *ini.Ini) string {

@@ -51,6 +51,10 @@ func (interpreter *Interpreter) GetIni() *ini.Ini {
 	return interpreter.ini
 }
 
+func (interpreter *Interpreter) GetRequest() *request.Request {
+	return interpreter.request
+}
+
 func (interpreter *Interpreter) GetOutputBufferStack() *outputBuffer.Stack {
 	return interpreter.outputBufferStack
 }

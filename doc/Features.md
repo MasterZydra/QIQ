@@ -7,6 +7,7 @@
 - arg_separator.output
 - default_charset
 - error_reporting
+- file_uploads
 - input_encoding
 - internal_encoding
 - max_input_nesting_level
@@ -15,6 +16,8 @@
 - post_max_size
 - register_argc_argv
 - short_open_tag
+- upload_max_filesize
+- upload_tmp_dir
 - variables_order
 
 ## Expressions and statements

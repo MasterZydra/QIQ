@@ -22,12 +22,15 @@ type Request struct {
 	Args           [][]string
 	Post           string
 	Cookie         string
+	// Internal use
+	UploadedFiles []string
 }
 
 func NewRequest() *Request {
 	return &Request{
-		RequestTime: time.Now(),
-		Args:        [][]string{},
+		RequestTime:   time.Now(),
+		Args:          [][]string{},
+		UploadedFiles: []string{},
 	}
 }
 

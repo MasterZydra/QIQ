@@ -1,19 +1,55 @@
 package filesystem
 
 import (
+	"GoPHP/cmd/goPHP/common"
 	"GoPHP/cmd/goPHP/phpError"
 	"GoPHP/cmd/goPHP/runtime"
 	"GoPHP/cmd/goPHP/runtime/funcParamValidator"
 	"GoPHP/cmd/goPHP/runtime/values"
 	"os"
+	"slices"
 )
 
 func Register(environment runtime.Environment) {
 	// Category: Filesystem Functions
+	environment.AddNativeFunction("file_get_contents", nativeFn_file_get_contents)
 	environment.AddNativeFunction("is_dir", nativeFn_is_dir)
 	environment.AddNativeFunction("is_file", nativeFn_is_file)
+	environment.AddNativeFunction("is_uploaded_file", nativeFn_is_uploaded_file)
 	environment.AddNativeFunction("file_exists", nativeFn_file_exists)
 	environment.AddNativeFunction("rename", nativeFn_rename)
+}
+
+// ------------------- MARK: file_get_contents -------------------
+
+func nativeFn_file_get_contents(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
+	// Spec: https://www.php.net/manual/function.file-get-contents.php
+
+	args, err := funcParamValidator.NewValidator("file_get_contents").AddParam("$filename", []string{"string"}, nil).Validate(args)
+	if err != nil {
+		return values.NewVoid(), err
+	}
+
+	// TODO file_get_contents: Add support for other params
+	//  file_get_contents(
+	// string $filename,
+	// bool $use_include_path = false,
+	// ?resource $context = null,
+	// int $offset = 0,
+	// ?int $length = null
+	// ): string|false
+
+	filename := args[0].(*values.Str).Value
+
+	if !common.PathExists(filename) {
+		return values.NewBool(false), phpError.NewWarning("could not find file %s", filename)
+	}
+
+	content, goErr := common.ReadFile(filename)
+	if goErr != nil {
+		return values.NewBool(false), phpError.NewError("%s", goErr)
+	}
+	return values.NewStr(content), nil
 }
 
 // ------------------- MARK: is_dir -------------------
@@ -50,6 +86,19 @@ func nativeFn_is_file(args []values.RuntimeValue, _ runtime.Context) (values.Run
 	}
 
 	return values.NewBool(!info.IsDir()), nil
+}
+
+// ------------------- MARK: is_uploaded_file -------------------
+
+func nativeFn_is_uploaded_file(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
+	// Spec: https://www.php.net/manual/en/function.is-uploaded-file.php
+
+	args, err := funcParamValidator.NewValidator("is_uploaded_file").AddParam("$filename", []string{"string"}, nil).Validate(args)
+	if err != nil {
+		return values.NewVoid(), err
+	}
+
+	return values.NewBool(slices.Contains(context.Interpreter.GetRequest().UploadedFiles, args[0].(*values.Str).Value)), nil
 }
 
 // ------------------- MARK: file_exists -------------------
@@ -136,7 +185,6 @@ func nativeFn_rename(args []values.RuntimeValue, _ runtime.Context) (values.Runt
 // TODO is_​executable
 // TODO is_​link
 // TODO is_​readable
-// TODO is_​uploaded_​file
 // TODO is_​writable
 // TODO is_​writeable
 // TODO lchgrp
