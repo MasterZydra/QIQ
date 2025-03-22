@@ -120,9 +120,11 @@ func parsePost(query string, interpreter runtime.Interpreter) (*values.Array, *v
 
 			if lines[lineNum] == boundary {
 				lineNum++
-				if strings.HasPrefix(lines[lineNum], "Content-Disposition: form-data;") {
+				if strings.HasPrefix(lines[lineNum], "Content-Disposition: form-data") ||
+					strings.HasPrefix(lines[lineNum], "Content-Disposition: form-data;") {
 					isFile := strings.Contains(lines[lineNum], "filename=")
-					fullname := strings.Replace(lines[lineNum], "Content-Disposition: form-data;", "", 1)
+					fullname := strings.TrimPrefix(lines[lineNum], "Content-Disposition: form-data;")
+					fullname = strings.TrimPrefix(fullname, "Content-Disposition: form-data")
 
 					name := strings.Replace(strings.TrimSpace(fullname), "name=", "", 1)
 					if strings.Contains(name, ";") {
@@ -152,8 +154,6 @@ func parsePost(query string, interpreter runtime.Interpreter) (*values.Array, *v
 						if strings.HasPrefix(lines[lineNum], "Content-Type:") {
 							contentType = strings.TrimPrefix(lines[lineNum], "Content-Type:")
 							contentType = strings.TrimSpace(contentType)
-						} else {
-							lineNum--
 						}
 					}
 
@@ -349,9 +349,12 @@ func parseQueryKey(key string, value string, result *values.Array, curIni *ini.I
 	}
 	php += " = '" + value + "';"
 
-	interpreter := NewInterpreter(ini.NewDefaultIni(), &request.Request{}, "")
+	interpreter, err := NewInterpreter(ini.NewDefaultIni(), &request.Request{}, "")
+	if err != nil {
+		return nil, err
+	}
 	interpreter.env.declareVariable("$array", result)
-	_, err := interpreter.Process(php)
+	_, err = interpreter.Process(php)
 
 	return interpreter.env.variables["$array"].(*values.Array), err
 }

@@ -8,6 +8,11 @@ import (
 )
 
 func TestParsePost(t *testing.T) {
+	interp, phpErr := NewInterpreter(ini.NewDevIni(), request.NewRequest(), TEST_FILE_NAME)
+	if phpErr != nil {
+		t.Errorf("Unexpected error: %s", phpErr)
+		return
+	}
 	array, _, err := parsePost(
 		`Content-Type: multipart/form-data; boundary=---------------------------20896060251896012921717172737
 -----------------------------20896060251896012921717172737
@@ -63,7 +68,7 @@ Content-Disposition: form-data; name="name\"15"
 
 testname
 -----------------------------20896060251896012921717172737--`,
-		NewInterpreter(ini.NewDevIni(), request.NewRequest(), TEST_FILE_NAME),
+		interp,
 	)
 	if err != nil {
 		t.Errorf("Parsing post data failed: %s", err)
@@ -104,11 +109,18 @@ Value: {StrValue: testname}
 
 func TestParseQuery(t *testing.T) {
 	runTest := func(t *testing.T, input string, expected *values.Array) {
-		actual, err := parseQuery(input, NewInterpreter(ini.NewDefaultIni(), request.NewRequest(), TEST_FILE_NAME))
+		interp, phpErr := NewInterpreter(ini.NewDefaultIni(), request.NewRequest(), TEST_FILE_NAME)
+		if phpErr != nil {
+			t.Errorf("Unexpected error: \"%s\"", phpErr)
+			return
+		}
+
+		actual, err := parseQuery(input, interp)
 		if err != nil {
 			t.Errorf("Unexpected error: \"%s\"", err)
 			return
 		}
+
 		equal, err := compare(actual, "===", expected)
 		if err != nil {
 			t.Errorf("Unexpected error while comparing: \"%s\"", err)

@@ -25,7 +25,7 @@ type Environment struct {
 	CurrentFunction *ast.FunctionDefinitionStatement
 }
 
-func NewEnvironment(parentEnv *Environment, request *request.Request, interpreter runtime.Interpreter) *Environment {
+func NewEnvironment(parentEnv *Environment, request *request.Request, interpreter runtime.Interpreter) (*Environment, phpError.Error) {
 	env := &Environment{
 		parent:    parentEnv,
 		variables: map[string]values.RuntimeValue{},
@@ -39,11 +39,13 @@ func NewEnvironment(parentEnv *Environment, request *request.Request, interprete
 
 	if parentEnv == nil {
 		stdlib.Register(env)
-		registerPredefinedVariables(env, request, interpreter)
+		if err := registerPredefinedVariables(env, request, interpreter); err != nil {
+			return env, err
+		}
 		registerPredefinedConstants(env)
 	}
 
-	return env
+	return env, nil
 }
 
 // ------------------- MARK: Variables -------------------

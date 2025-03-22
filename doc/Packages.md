@@ -60,6 +60,7 @@ flowchart LR
     GoPHP_cmd_goPHP_runtime_stdlib[GoPHP/cmd/goPHP/runtime/stdlib] --> GoPHP_cmd_goPHP_runtime_stdlib_dateTime[GoPHP/cmd/goPHP/runtime/stdlib/dateTime]
     GoPHP_cmd_goPHP_runtime_stdlib[GoPHP/cmd/goPHP/runtime/stdlib] --> GoPHP_cmd_goPHP_runtime_stdlib_errorHandling[GoPHP/cmd/goPHP/runtime/stdlib/errorHandling]
     GoPHP_cmd_goPHP_runtime_stdlib[GoPHP/cmd/goPHP/runtime/stdlib] --> GoPHP_cmd_goPHP_runtime_stdlib_filesystem[GoPHP/cmd/goPHP/runtime/stdlib/filesystem]
+    GoPHP_cmd_goPHP_runtime_stdlib[GoPHP/cmd/goPHP/runtime/stdlib] --> GoPHP_cmd_goPHP_runtime_stdlib_functionHandling[GoPHP/cmd/goPHP/runtime/stdlib/functionHandling]
     GoPHP_cmd_goPHP_runtime_stdlib[GoPHP/cmd/goPHP/runtime/stdlib] --> GoPHP_cmd_goPHP_runtime_stdlib_math[GoPHP/cmd/goPHP/runtime/stdlib/math]
     GoPHP_cmd_goPHP_runtime_stdlib[GoPHP/cmd/goPHP/runtime/stdlib] --> GoPHP_cmd_goPHP_runtime_stdlib_misc[GoPHP/cmd/goPHP/runtime/stdlib/misc]
     GoPHP_cmd_goPHP_runtime_stdlib[GoPHP/cmd/goPHP/runtime/stdlib] --> GoPHP_cmd_goPHP_runtime_stdlib_optionsInfo[GoPHP/cmd/goPHP/runtime/stdlib/optionsInfo]
@@ -88,6 +89,11 @@ flowchart LR
     GoPHP_cmd_goPHP_runtime_stdlib_filesystem[GoPHP/cmd/goPHP/runtime/stdlib/filesystem] --> GoPHP_cmd_goPHP_runtime[GoPHP/cmd/goPHP/runtime]
     GoPHP_cmd_goPHP_runtime_stdlib_filesystem[GoPHP/cmd/goPHP/runtime/stdlib/filesystem] --> GoPHP_cmd_goPHP_runtime_funcParamValidator[GoPHP/cmd/goPHP/runtime/funcParamValidator]
     GoPHP_cmd_goPHP_runtime_stdlib_filesystem[GoPHP/cmd/goPHP/runtime/stdlib/filesystem] --> GoPHP_cmd_goPHP_runtime_values[GoPHP/cmd/goPHP/runtime/values]
+
+    GoPHP_cmd_goPHP_runtime_stdlib_functionHandling[GoPHP/cmd/goPHP/runtime/stdlib/functionHandling] --> GoPHP_cmd_goPHP_phpError[GoPHP/cmd/goPHP/phpError]
+    GoPHP_cmd_goPHP_runtime_stdlib_functionHandling[GoPHP/cmd/goPHP/runtime/stdlib/functionHandling] --> GoPHP_cmd_goPHP_runtime[GoPHP/cmd/goPHP/runtime]
+    GoPHP_cmd_goPHP_runtime_stdlib_functionHandling[GoPHP/cmd/goPHP/runtime/stdlib/functionHandling] --> GoPHP_cmd_goPHP_runtime_funcParamValidator[GoPHP/cmd/goPHP/runtime/funcParamValidator]
+    GoPHP_cmd_goPHP_runtime_stdlib_functionHandling[GoPHP/cmd/goPHP/runtime/stdlib/functionHandling] --> GoPHP_cmd_goPHP_runtime_values[GoPHP/cmd/goPHP/runtime/values]
 
     GoPHP_cmd_goPHP_runtime_stdlib_math[GoPHP/cmd/goPHP/runtime/stdlib/math] --> GoPHP_cmd_goPHP_phpError[GoPHP/cmd/goPHP/phpError]
     GoPHP_cmd_goPHP_runtime_stdlib_math[GoPHP/cmd/goPHP/runtime/stdlib/math] --> GoPHP_cmd_goPHP_runtime[GoPHP/cmd/goPHP/runtime]

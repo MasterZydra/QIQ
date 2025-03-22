@@ -120,12 +120,23 @@ func doTest(path string, info goOs.FileInfo, err error) error {
 	request.QueryString = testFile.Get
 	request.Post = testFile.Post
 
-	result, phpError := interpreter.NewInterpreter(ini.NewDevIniFromArray(testFile.Ini), request, testFile.Filename).Process(testFile.File)
-	if phpError != nil {
-		result += phpError.GetMessage()
-	}
-	if err := common.DeleteFiles(request.UploadedFiles); err != nil {
-		fmt.Printf("Cleanup failed: %s\n", err)
+	result := ""
+	devIni, phpErr := ini.NewDevIniFromArray(testFile.Ini)
+	if phpErr != nil {
+		result = phpErr.GetMessage()
+	} else {
+		interpr, phpErr := interpreter.NewInterpreter(devIni, request, testFile.Filename)
+		if phpErr != nil {
+			result = phpErr.GetMessage()
+		} else {
+			result, phpErr = interpr.Process(testFile.File)
+			if phpErr != nil {
+				result += phpErr.GetMessage()
+			}
+		}
+		if err := common.DeleteFiles(request.UploadedFiles); err != nil {
+			fmt.Printf("Cleanup failed: %s\n", err)
+		}
 	}
 
 	if runtime.GOOS == "windows" {

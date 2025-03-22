@@ -27,14 +27,18 @@ type Interpreter struct {
 	suppressWarning bool
 }
 
-func NewInterpreter(ini *ini.Ini, request *request.Request, filename string) *Interpreter {
+func NewInterpreter(ini *ini.Ini, request *request.Request, filename string) (*Interpreter, phpError.Error) {
 	interpreter := &Interpreter{
 		filename: filename, includedFiles: []string{}, ini: ini, request: request, parser: parser.NewParser(ini),
 		cache:             map[int64]values.RuntimeValue{},
 		outputBufferStack: outputBuffer.NewStack(),
 		exitCode:          0,
 	}
-	interpreter.env = NewEnvironment(nil, request, interpreter)
+	var err phpError.Error
+	interpreter.env, err = NewEnvironment(nil, request, interpreter)
+	if err != nil {
+		return interpreter, err
+	}
 
 	if ini.GetBool("register_argc_argv") {
 		server := interpreter.env.predefinedVariables["$_SERVER"].(*values.Array)
@@ -44,7 +48,7 @@ func NewInterpreter(ini *ini.Ini, request *request.Request, filename string) *In
 		}
 	}
 
-	return interpreter
+	return interpreter, nil
 }
 
 func (interpreter *Interpreter) GetIni() *ini.Ini {

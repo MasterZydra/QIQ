@@ -313,7 +313,11 @@ func (interpreter *Interpreter) exprToRuntimeValue(expr ast.IExpression, env *En
 				}
 				// TODO Find better solution for code evaluation
 				exprStr := "<?= " + varExpr + ";"
-				result, err := NewInterpreter(interpreter.ini, interpreter.request, "__file_name__").process(exprStr, env, true)
+				interp, err := NewInterpreter(interpreter.ini, interpreter.request, "__file_name__")
+				if err != nil {
+					return values.NewVoid(), err
+				}
+				result, err := interp.process(exprStr, env, true)
 				if err != nil {
 					return values.NewVoid(), err
 				}

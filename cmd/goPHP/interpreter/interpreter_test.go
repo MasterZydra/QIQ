@@ -36,7 +36,11 @@ func TestVariableExprToVariableName(t *testing.T) {
 	// simple-variable-expression
 
 	// $var
-	interpreter := NewInterpreter(ini.NewDevIni(), &request.Request{}, "test.php")
+	interpreter, err := NewInterpreter(ini.NewDevIni(), &request.Request{}, "test.php")
+	if err != nil {
+		t.Errorf("Unexpected error: \"%s\"", err)
+		return
+	}
 	actual, err := interpreter.varExprToVarName(ast.NewSimpleVariableExpr(0, ast.NewVariableNameExpr(0, nil, "$var")), interpreter.env)
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
@@ -48,7 +52,11 @@ func TestVariableExprToVariableName(t *testing.T) {
 	}
 
 	// $$var
-	interpreter = NewInterpreter(ini.NewDevIni(), &request.Request{}, "test.php")
+	interpreter, err = NewInterpreter(ini.NewDevIni(), &request.Request{}, "test.php")
+	if err != nil {
+		t.Errorf("Unexpected error: \"%s\"", err)
+		return
+	}
 	interpreter.env.declareVariable("$var", values.NewStr("hi"))
 	actual, err = interpreter.varExprToVarName(
 		ast.NewSimpleVariableExpr(0,
@@ -63,7 +71,11 @@ func TestVariableExprToVariableName(t *testing.T) {
 	}
 
 	// $$$var
-	interpreter = NewInterpreter(ini.NewDevIni(), &request.Request{}, "test.php")
+	interpreter, err = NewInterpreter(ini.NewDevIni(), &request.Request{}, "test.php")
+	if err != nil {
+		t.Errorf("Unexpected error: \"%s\"", err)
+		return
+	}
 	interpreter.env.declareVariable("$var1", values.NewStr("hi"))
 	interpreter.env.declareVariable("$var", values.NewStr("var1"))
 	actual, err = interpreter.varExprToVarName(
@@ -87,7 +99,12 @@ func TestVariableExprToVariableName(t *testing.T) {
 // ------------------- MARK: input output tests -------------------
 
 func testForError(t *testing.T, php string, expected phpError.Error) {
-	_, err := NewInterpreter(ini.NewDevIni(), &request.Request{}, TEST_FILE_NAME).Process(php)
+	interpreter, err := NewInterpreter(ini.NewDevIni(), &request.Request{}, TEST_FILE_NAME)
+	if err != nil {
+		t.Errorf("\nCode: \"%s\"\nUnexpected error: \"%s\"", php, err)
+		return
+	}
+	_, err = interpreter.Process(php)
 	if err.GetErrorType() != expected.GetErrorType() || err.GetMessage() != expected.GetMessage() {
 		t.Errorf("\nCode: \"%s\"\nExpected: %s\nGot:      %s", php, expected, err)
 	}
@@ -96,7 +113,11 @@ func testForError(t *testing.T, php string, expected phpError.Error) {
 func testInputOutput(t *testing.T, php string, output string) *Interpreter {
 	// Always use "\n" for tests so that they also pass on Windows
 	os.EOL = "\n"
-	interpreter := NewInterpreter(ini.NewDevIni(), &request.Request{}, TEST_FILE_NAME)
+	interpreter, err := NewInterpreter(ini.NewDevIni(), &request.Request{}, TEST_FILE_NAME)
+	if err != nil {
+		t.Errorf("\nCode: \"%s\"\nUnexpected error: \"%s\"", php, err)
+		return interpreter
+	}
 	actual, err := interpreter.Process(php)
 	if err != nil {
 		t.Errorf("\nCode: \"%s\"\nUnexpected error: \"%s\"", php, err)

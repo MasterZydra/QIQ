@@ -3,7 +3,6 @@ package ini
 import (
 	"GoPHP/cmd/goPHP/common"
 	"GoPHP/cmd/goPHP/phpError"
-	"fmt"
 	"slices"
 	"strings"
 )
@@ -80,18 +79,23 @@ func NewDevIni() *Ini {
 	return defaultIni
 }
 
-func NewDevIniFromArray(ini []string) *Ini {
+func NewDevIniFromArray(ini []string) (*Ini, phpError.Error) {
 	defaultIni := NewDevIni()
+	var resultErr phpError.Error = nil
 
 	for _, setting := range ini {
 		parts := strings.SplitN(setting, "=", 2)
 		err := defaultIni.Set(parts[0], parts[1], INI_ALL)
 		if err != nil {
-			fmt.Println(err)
+			if resultErr == nil {
+				resultErr = phpError.NewError("%s", err)
+			} else {
+				resultErr = phpError.NewError("%s\n%s", resultErr, err)
+			}
 		}
 	}
 
-	return defaultIni
+	return defaultIni, resultErr
 }
 
 func (ini *Ini) Set(directive string, value string, source int) phpError.Error {
