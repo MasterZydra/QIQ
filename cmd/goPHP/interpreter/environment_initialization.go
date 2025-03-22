@@ -21,7 +21,7 @@ func registerPredefinedVariables(environment *Environment, request *request.Requ
 		if err := registerPredefinedVariablePost(environment, request, interpreter, true); err != nil {
 			return err
 		}
-		registerPredefinedVariableCookie(environment, request, true)
+		registerPredefinedVariableCookie(environment, request, interpreter, true)
 		if err := registerPredefinedVariableServer(environment, request, interpreter, true); err != nil {
 			return err
 		}
@@ -40,7 +40,7 @@ func registerPredefinedVariables(environment *Environment, request *request.Requ
 				return err
 			}
 		case "C":
-			registerPredefinedVariableCookie(environment, request, true)
+			registerPredefinedVariableCookie(environment, request, interpreter, true)
 		case "S":
 			if err := registerPredefinedVariableServer(environment, request, interpreter, true); err != nil {
 				return err
@@ -60,7 +60,7 @@ func registerPredefinedVariables(environment *Environment, request *request.Requ
 		}
 	}
 	if !strings.Contains(variables_order, "C") {
-		registerPredefinedVariableCookie(environment, request, false)
+		registerPredefinedVariableCookie(environment, request, interpreter, false)
 	}
 	if !strings.Contains(variables_order, "S") {
 		if err := registerPredefinedVariableServer(environment, request, interpreter, false); err != nil {
@@ -93,9 +93,9 @@ func registerPredefinedVariableEnv(environment *Environment, request *request.Re
 	}
 }
 
-func registerPredefinedVariableCookie(environment *Environment, request *request.Request, init bool) {
+func registerPredefinedVariableCookie(environment *Environment, request *request.Request, interpreter runtime.Interpreter, init bool) {
 	if init {
-		environment.predefinedVariables["$_COOKIE"] = parseCookies(request.Cookie)
+		environment.predefinedVariables["$_COOKIE"] = parseCookies(request.Cookie, interpreter)
 	} else {
 		environment.predefinedVariables["$_COOKIE"] = values.NewArray()
 	}

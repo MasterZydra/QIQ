@@ -22,10 +22,14 @@ import (
 	"golang.org/x/text/transform"
 )
 
-func parseCookies(cookies string) *values.Array {
+func parseCookies(cookies string, interpreter runtime.Interpreter) *values.Array {
 	result := values.NewArray()
 
 	for cookies != "" {
+		if int64(len(result.Keys)) >= interpreter.GetIni().GetInt("max_input_vars") {
+			break
+		}
+
 		var cookie string
 		cookie, cookies, _ = strings.Cut(cookies, ";")
 		if cookie == "" {
@@ -232,6 +236,10 @@ func parseQuery(query string, interpreter runtime.Interpreter) (*values.Array, e
 	result := values.NewArray()
 
 	for query != "" {
+		if int64(len(result.Keys)) >= interpreter.GetIni().GetInt("max_input_vars") {
+			break
+		}
+
 		var key string
 		key, query, _ = strings.Cut(query, interpreter.GetIni().GetStr("arg_separator.input"))
 		if key == "" {
@@ -406,6 +414,10 @@ func resolveSiPrefix(number string, defaultResult int) int {
 }
 
 func recode(input string, ini *ini.Ini) string {
+	if !ini.GetBool("mbstring.encoding_translation") {
+		return input
+	}
+
 	var decoder *transform.Reader
 	var encoder transform.Transformer
 

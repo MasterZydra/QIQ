@@ -115,6 +115,8 @@ func doTest(path string, info goOs.FileInfo, err error) error {
 
 	request := request.NewRequest()
 	request.Env = testFile.Env
+	// TODO Add path to TEST_PHP_CGI_EXECUTABLE
+	// request.Env["TEST_PHP_CGI_EXECUTABLE"] = "1"
 	request.Args = testFile.Args
 	request.Cookie = testFile.Cookie
 	request.QueryString = testFile.Get

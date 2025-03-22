@@ -76,7 +76,7 @@ func processStdin() {
 		fmt.Println("Error:", err)
 	}
 
-	output, exitCode := processContent(nil, string(content), "main.php")
+	output, exitCode := processContent(nil, nil, string(content), "main.php")
 	fmt.Print(output)
 	os.Exit(exitCode)
 }
@@ -90,7 +90,7 @@ func processFile(filename string) {
 		os.Exit(1)
 	}
 
-	output, exitCode := processContent(nil, string(content), filename)
+	output, exitCode := processContent(nil, nil, string(content), filename)
 	fmt.Print(output)
 	if exitCode == 500 {
 		exitCode = 1
@@ -179,9 +179,8 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	// TODO content-type returned from interpreter?
-	w.Header().Set("Content-Type", "text/html")
-	output, exitCode := processContent(r, string(content), absFilePath)
+
+	output, exitCode := processContent(w, r, string(content), absFilePath)
 	if exitCode == 500 {
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Printf("%d %s\n", 500, absFilePath)
@@ -193,7 +192,7 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 
 // ------------------- MARK: core logic -------------------
 
-func processContent(r *http.Request, content string, filename string) (output string, exitCode int) {
+func processContent(w http.ResponseWriter, r *http.Request, content string, filename string) (output string, exitCode int) {
 	stat := stats.Start()
 	defer stats.StopAndPrint(stat, "Total")
 
@@ -206,6 +205,16 @@ func processContent(r *http.Request, content string, filename string) (output st
 
 	request := request.NewRequestFromGoRequest(r, documentRoot, serverAddr, filename)
 	interpreter, err := interpreter.NewInterpreter(initIni, request, filename)
+
+	fmt.Println(interpreter.GetIni().GetBool("expose_php"))
+	if w != nil {
+		// TODO content-type returned from interpreter?
+		w.Header().Set("Content-Type", "text/html")
+		if initIni.GetBool("expose_php") {
+			w.Header().Add("X-Powered-By", config.SoftwareVersion)
+		}
+	}
+
 	if err != nil {
 		return interpreter.ErrorToString(err), 500
 	}

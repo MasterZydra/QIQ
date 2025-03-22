@@ -15,5 +15,5 @@ type TestFile struct {
 }
 
 func NewTestFile(filename string) *TestFile {
-	return &TestFile{Filename: filename}
+	return &TestFile{Filename: filename, Env: map[string]string{}}
 }
