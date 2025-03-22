@@ -17,6 +17,7 @@ func Register(environment runtime.Environment) {
 	environment.AddNativeFunction("asinh", nativeFn_asinh)
 	environment.AddNativeFunction("pi", nativeFn_pi)
 
+	// Const Category: Mathematical Constants
 	// Spec: https://www.php.net/manual/en/math.constants.php
 	environment.AddPredefinedConstants("M_1_PI", values.NewFloat(1/goMath.Pi))
 	environment.AddPredefinedConstants("M_2_PI", values.NewFloat(2/goMath.Pi))

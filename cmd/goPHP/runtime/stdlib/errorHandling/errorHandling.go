@@ -13,6 +13,7 @@ func Register(environment runtime.Environment) {
 	// Category: Error Handling Functions
 	environment.AddNativeFunction("error_reporting", nativeFn_error_reporting)
 
+	// Const Category: Error Handling Constants
 	// Spec: https://www.php.net/manual/en/errorfunc.constants.php
 	environment.AddPredefinedConstants("E_ERROR", values.NewInt(phpError.E_ERROR))
 	environment.AddPredefinedConstants("E_WARNING", values.NewInt(phpError.E_WARNING))

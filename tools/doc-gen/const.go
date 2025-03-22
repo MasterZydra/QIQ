@@ -9,50 +9,37 @@ import (
 	"strings"
 )
 
-var stdLibFunctions = map[string][]string{}
+var constants = map[string][]string{}
 
-func main() {
-	if err := searchDirectory("./cmd/goPHP/runtime/stdlib"); err != nil {
+func docConst() {
+	if err := searchDirectoryConstants("./cmd/goPHP"); err != nil {
 		fmt.Println(err)
 		return
 	}
 
 	// Get and sort categories
 	categories := []string{}
-	for category := range stdLibFunctions {
+	for category := range constants {
 		categories = append(categories, category)
 	}
 	sort.Slice(categories, func(i, j int) bool {
 		return categories[i] < categories[j]
 	})
 
-	writeToFile("./doc/StdLib.md", generateMarkdown(categories))
+	writeToFile("./doc/Constants.md", generateMarkdownConstants(categories))
 }
 
-func writeToFile(path, content string) error {
-	file, err := os.Create(path)
-	if err != nil {
-		return fmt.Errorf("failed to create file %s: %s", path, err)
-	}
-
-	_, err = file.WriteString(content)
-	if err != nil {
-		return fmt.Errorf("failed to write to file %s: %s", path, err)
-	}
-	return nil
-}
-
-func generateMarkdown(categories []string) string {
+func generateMarkdownConstants(categories []string) string {
 	var markdown strings.Builder
 
-	markdown.WriteString("# StdLib Functions\n")
+	markdown.WriteString("# Constants\n")
 
 	for _, category := range categories {
 		markdown.WriteString("\n## ")
 		markdown.WriteString(category)
 		markdown.WriteString("\n")
 
-		functions := stdLibFunctions[category]
+		functions := constants[category]
 		sort.Slice(functions, func(i, j int) bool {
 			return functions[i] < functions[j]
 		})
@@ -67,7 +54,7 @@ func generateMarkdown(categories []string) string {
 	return markdown.String()
 }
 
-func searchDirectory(path string) error {
+func searchDirectoryConstants(path string) error {
 	files, err := os.ReadDir(path)
 	if err != nil {
 		return fmt.Errorf("failed reading dir %s: %s", path, err)
@@ -76,7 +63,7 @@ func searchDirectory(path string) error {
 	for _, file := range files {
 		// Iterate sub directories
 		if file.IsDir() {
-			err := searchDirectory(filepath.Join(path, file.Name()))
+			err := searchDirectoryConstants(filepath.Join(path, file.Name()))
 			if err != nil {
 				return err
 			}
@@ -87,7 +74,7 @@ func searchDirectory(path string) error {
 			continue
 		}
 		// Read all .go files
-		err = readGoFile(filepath.Join(path, file.Name()))
+		err = readGoFileConstants(filepath.Join(path, file.Name()))
 		if err != nil {
 			return err
 		}
@@ -95,7 +82,7 @@ func searchDirectory(path string) error {
 	return nil
 }
 
-func readGoFile(path string) error {
+func readGoFileConstants(path string) error {
 	file, err := os.Open(path)
 	if err != nil {
 		return fmt.Errorf("failed to open file %s: %s", path, err)
@@ -109,25 +96,24 @@ func readGoFile(path string) error {
 		if line == "" {
 			continue
 		}
-
-		if strings.HasPrefix(line, "// Category: ") {
-			category = strings.Replace(line, "// Category: ", "", 1)
+		if strings.HasPrefix(line, "// Const Category: ") {
+			category = strings.Replace(line, "// Const Category: ", "", 1)
 			continue
 		}
 
-		if strings.HasPrefix(line, "environment.AddNativeFunction(") {
+		if strings.HasPrefix(line, "environment.AddPredefinedConstants(") {
 			if category == "" {
-				return fmt.Errorf("category is not set before adding native functions in file %s", path)
+				return fmt.Errorf("category is not set before adding predefined constants in file %s", path)
 			}
 
-			if _, found := stdLibFunctions[category]; !found {
-				stdLibFunctions[category] = []string{}
+			if _, found := constants[category]; !found {
+				constants[category] = []string{}
 			}
 
-			functionName := strings.Replace(line, "environment.AddNativeFunction(\"", "", 1)
+			functionName := strings.Replace(line, "environment.AddPredefinedConstants(\"", "", 1)
 			functionName = functionName[:strings.Index(functionName, "\"")]
 
-			stdLibFunctions[category] = append(stdLibFunctions[category], functionName)
+			constants[category] = append(constants[category], functionName)
 		}
 	}
 	return nil

@@ -1,6 +1,7 @@
 # Supported syntax and features
 
-[StdLib Functions](./StdLib.md)
+[StdLib Functions](./StdLib.md)  
+[Constants](./Constants.md)
 
 ## Ini directives
 - arg_separator.input
@@ -81,73 +82,6 @@
 - $_POST
 - $_REQUEST
 - $_SERVER
-
-## Predefined constants
-- DIRECTORY_SEPARATOR
-- FALSE
-- NULL
-- PHP_EOL
-- PHP_EXTRA_VERSION
-- PHP_INT_MAX
-- PHP_INT_MIN
-- PHP_INT_SIZE
-- PHP_MAJOR_VERSION
-- PHP_MINOR_VERSION
-- PHP_OS
-- PHP_OS_FAMILY
-- PHP_RELEASE_VERSION
-- PHP_VERSION
-- PHP_VERSION_ID
-- TRUE
-
-### Error Handling
-- E_ALL
-- E_COMPILE_ERROR
-- E_COMPILE_WARNING
-- E_CORE_ERROR
-- E_CORE_WARNING
-- E_DEPRECATED
-- E_ERROR
-- E_NOTICE
-- E_PARSE
-- E_RECOVERABLE_ERROR
-- E_STRICT
-- E_USER_DEPRECATED
-- E_USER_ERROR
-- E_USER_NOTICE
-- E_USER_WARNING
-- E_WARNING
-
-### INI mode constants
-- INI_ALL
-- INI_PERDIR
-- INI_SYSTEM
-- INI_USER
-
-### Mathematical Constants
-- M_1_PI
-- M_2_PI
-- M_2_SQRTPI
-- M_E
-- M_EULER
-- M_LN10
-- M_LN2
-- M_LNPI
-- M_LOG10E
-- M_LOG2E
-- M_PI
-- M_PI_2
-- M_PI_4
-- M_SQRT1_2
-- M_SQRT2
-- M_SQRT3
-- M_SQRTPI
-
-### Math - Rounding constants
-- PHP_ROUND_HALF_DOWN
-- PHP_ROUND_HALF_EVEN
-- PHP_ROUND_HALF_ODD
-- PHP_ROUND_HALF_UP
 
 ## Magic constants
 - \_\_DIR\_\_

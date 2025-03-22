@@ -241,22 +241,23 @@ func paramToArray(params [][]string, interpreter runtime.Interpreter) (*values.A
 }
 
 func registerPredefinedConstants(environment *Environment) {
+	// Const Category: Core Constants
 	// Spec: https://phplang.org/spec/06-constants.html#core-predefined-constants
 	// Spec: https://www.php.net/manual/en/reserved.constants.php
-	environment.predefinedConstants["DIRECTORY_SEPARATOR"] = values.NewStr(os.DIR_SEP)
-	environment.predefinedConstants["FALSE"] = values.NewBool(false)
-	environment.predefinedConstants["TRUE"] = values.NewBool(true)
-	environment.predefinedConstants["NULL"] = values.NewNull()
-	environment.predefinedConstants["PHP_INT_MAX"] = values.NewInt(math.MaxInt64)
-	environment.predefinedConstants["PHP_INT_MIN"] = values.NewInt(math.MinInt64)
-	environment.predefinedConstants["PHP_INT_SIZE"] = values.NewInt(64 / 8)
-	environment.predefinedConstants["PHP_OS"] = values.NewStr(os.Os())
-	environment.predefinedConstants["PHP_OS_FAMILY"] = values.NewStr(os.OS_FAMILY)
-	environment.predefinedConstants["PHP_EOL"] = values.NewStr(os.EOL)
-	environment.predefinedConstants["PHP_VERSION"] = values.NewStr(config.Version)
-	environment.predefinedConstants["PHP_MAJOR_VERSION"] = values.NewInt(config.MajorVersion)
-	environment.predefinedConstants["PHP_MINOR_VERSION"] = values.NewInt(config.MinorVersion)
-	environment.predefinedConstants["PHP_RELEASE_VERSION"] = values.NewInt(config.ReleaseVersion)
-	environment.predefinedConstants["PHP_EXTRA_VERSION"] = values.NewStr(config.ExtraVersion)
-	environment.predefinedConstants["PHP_VERSION_ID"] = values.NewInt(config.VersionId)
+	environment.AddPredefinedConstants("DIRECTORY_SEPARATOR", values.NewStr(os.DIR_SEP))
+	environment.AddPredefinedConstants("FALSE", values.NewBool(false))
+	environment.AddPredefinedConstants("TRUE", values.NewBool(true))
+	environment.AddPredefinedConstants("NULL", values.NewNull())
+	environment.AddPredefinedConstants("PHP_INT_MAX", values.NewInt(math.MaxInt64))
+	environment.AddPredefinedConstants("PHP_INT_MIN", values.NewInt(math.MinInt64))
+	environment.AddPredefinedConstants("PHP_INT_SIZE", values.NewInt(64/8))
+	environment.AddPredefinedConstants("PHP_OS", values.NewStr(os.Os()))
+	environment.AddPredefinedConstants("PHP_OS_FAMILY", values.NewStr(os.OS_FAMILY))
+	environment.AddPredefinedConstants("PHP_EOL", values.NewStr(os.EOL))
+	environment.AddPredefinedConstants("PHP_VERSION", values.NewStr(config.Version))
+	environment.AddPredefinedConstants("PHP_MAJOR_VERSION", values.NewInt(config.MajorVersion))
+	environment.AddPredefinedConstants("PHP_MINOR_VERSION", values.NewInt(config.MinorVersion))
+	environment.AddPredefinedConstants("PHP_RELEASE_VERSION", values.NewInt(config.ReleaseVersion))
+	environment.AddPredefinedConstants("PHP_EXTRA_VERSION", values.NewStr(config.ExtraVersion))
+	environment.AddPredefinedConstants("PHP_VERSION_ID", values.NewInt(config.VersionId))
 }

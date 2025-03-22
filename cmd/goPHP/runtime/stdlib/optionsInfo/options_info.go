@@ -15,6 +15,7 @@ func Register(environment runtime.Environment) {
 	environment.AddNativeFunction("ini_get", nativeFn_ini_get)
 	environment.AddNativeFunction("ini_set", nativeFn_ini_set)
 
+	// Const Category: Options/Info Constants
 	// Spec: https://www.php.net/manual/en/info.constants.php
 	environment.AddPredefinedConstants("INI_USER", values.NewInt(int64(ini.INI_USER)))
 	environment.AddPredefinedConstants("INI_PERDIR", values.NewInt(int64(ini.INI_PERDIR)))
