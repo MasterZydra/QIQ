@@ -5,8 +5,6 @@
 /goPHP.exe
 /goPhpTester
 /goPhpTester.exe
-/package-dep-gen
-/package-dep-gen.exe
 
 # PHP files
 *.php

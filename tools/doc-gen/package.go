@@ -15,8 +15,8 @@ var skipGoPackages = true
 
 var imports = map[string][]string{}
 
-func main() {
-	if err := searchDirectory("./cmd/"); err != nil {
+func docPackage() {
+	if err := searchDirectoryPackage("./cmd/"); err != nil {
 		fmt.Println(err)
 		return
 	}
@@ -30,23 +30,10 @@ func main() {
 		return packages[i] < packages[j]
 	})
 
-	writeToFile("./doc/Packages.md", generateMermaid(packages))
+	writeToFile("./doc/Packages.md", generateMermaidPackage(packages))
 }
 
-func writeToFile(path, content string) error {
-	file, err := os.Create(path)
-	if err != nil {
-		return fmt.Errorf("failed to create file %s: %s", path, err)
-	}
-
-	_, err = file.WriteString(content)
-	if err != nil {
-		return fmt.Errorf("failed to write to file %s: %s", path, err)
-	}
-	return nil
-}
-
-func generateMermaid(packages []string) string {
+func generateMermaidPackage(packages []string) string {
 	var markdown strings.Builder
 
 	markdown.WriteString("# Packages\n\n")
@@ -79,7 +66,7 @@ func generateMermaid(packages []string) string {
 	return markdown.String()
 }
 
-func searchDirectory(path string) error {
+func searchDirectoryPackage(path string) error {
 	files, err := os.ReadDir(path)
 	if err != nil {
 		return fmt.Errorf("failed reading dir %s: %s", path, err)
@@ -88,7 +75,7 @@ func searchDirectory(path string) error {
 	for _, file := range files {
 		// Iterate sub directories
 		if file.IsDir() {
-			err := searchDirectory(filepath.Join(path, file.Name()))
+			err := searchDirectoryPackage(filepath.Join(path, file.Name()))
 			if err != nil {
 				return err
 			}
@@ -99,7 +86,7 @@ func searchDirectory(path string) error {
 			continue
 		}
 		// Read all .go files
-		err = readGoFile(path, file.Name())
+		err = readGoFilePackage(path, file.Name())
 		if err != nil {
 			return err
 		}
@@ -107,7 +94,7 @@ func searchDirectory(path string) error {
 	return nil
 }
 
-func readGoFile(path, filename string) error {
+func readGoFilePackage(path, filename string) error {
 	file, err := os.Open(filepath.Join(path, filename))
 	if err != nil {
 		return fmt.Errorf("failed to open file %s: %s", path, err)
@@ -131,7 +118,7 @@ func readGoFile(path, filename string) error {
 				line = line[strings.Index(line, "\""):]
 			}
 			line = strings.TrimPrefix(line, "\"")
-			addImport(path, line[:strings.Index(line, "\"")])
+			addImportPackage(path, line[:strings.Index(line, "\"")])
 			continue
 		}
 
@@ -142,14 +129,14 @@ func readGoFile(path, filename string) error {
 
 		if strings.HasPrefix(line, "import \"") {
 			line = strings.Replace(line, "import \"", "", 1)
-			addImport(path, line[:strings.Index(line, "\"")])
+			addImportPackage(path, line[:strings.Index(line, "\"")])
 			return nil
 		}
 	}
 	return nil
 }
 
-func addImport(curPackage, usedPackage string) {
+func addImportPackage(curPackage, usedPackage string) {
 	if skipGoPackages && !strings.HasPrefix(usedPackage, "GoPHP/cmd/") {
 		return
 	}
@@ -166,5 +153,4 @@ func addImport(curPackage, usedPackage string) {
 		}
 	}
 	imports[curPackage] = append(imports[curPackage], usedPackage)
-
 }

@@ -8,6 +8,7 @@ import (
 func main() {
 	docStdLib()
 	docConst()
+	docPackage()
 }
 
 func writeToFile(path, content string) error {
