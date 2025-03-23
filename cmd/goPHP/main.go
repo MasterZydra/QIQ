@@ -226,5 +226,5 @@ func processContent(w http.ResponseWriter, r *http.Request, content string, file
 	if err := common.DeleteFiles(request.UploadedFiles); err != nil {
 		fmt.Printf("Cleanup failed: %s\n", err)
 	}
-	return result, interpreter.GetExitCode()
+	return result, interpreter.GetResponse().ExitCode
 }

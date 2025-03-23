@@ -9,6 +9,7 @@ import (
 
 type Interpreter interface {
 	GetRequest() *request.Request
+	GetResponse() *request.Response
 	GetIni() *ini.Ini
 	GetOutputBufferStack() *outputBuffer.Stack
 	Print(str string)

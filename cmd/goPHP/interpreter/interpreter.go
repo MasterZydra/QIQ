@@ -16,26 +16,30 @@ type Interpreter struct {
 	includedFiles      []string
 	ini                *ini.Ini
 	request            *request.Request
+	response           *request.Response
 	parser             *parser.Parser
 	env                *Environment
 	cache              map[int64]values.RuntimeValue
 	outputBufferStack  *outputBuffer.Stack
 	result             string
 	resultRuntimeValue values.RuntimeValue
-	exitCode           int64
 	// Status
 	suppressWarning bool
 }
 
-func NewInterpreter(ini *ini.Ini, request *request.Request, filename string) (*Interpreter, phpError.Error) {
+func NewInterpreter(ini *ini.Ini, r *request.Request, filename string) (*Interpreter, phpError.Error) {
 	interpreter := &Interpreter{
-		filename: filename, includedFiles: []string{}, ini: ini, request: request, parser: parser.NewParser(ini),
+		filename:          filename,
+		includedFiles:     []string{},
+		ini:               ini,
+		request:           r,
+		response:          request.NewResponse(),
+		parser:            parser.NewParser(ini),
 		cache:             map[int64]values.RuntimeValue{},
 		outputBufferStack: outputBuffer.NewStack(),
-		exitCode:          0,
 	}
 	var err phpError.Error
-	interpreter.env, err = NewEnvironment(nil, request, interpreter)
+	interpreter.env, err = NewEnvironment(nil, r, interpreter)
 	if err != nil {
 		return interpreter, err
 	}
@@ -59,12 +63,12 @@ func (interpreter *Interpreter) GetRequest() *request.Request {
 	return interpreter.request
 }
 
-func (interpreter *Interpreter) GetOutputBufferStack() *outputBuffer.Stack {
-	return interpreter.outputBufferStack
+func (interpreter *Interpreter) GetResponse() *request.Response {
+	return interpreter.response
 }
 
-func (interpreter *Interpreter) GetExitCode() int {
-	return int(interpreter.exitCode)
+func (interpreter *Interpreter) GetOutputBufferStack() *outputBuffer.Stack {
+	return interpreter.outputBufferStack
 }
 
 func (interpreter *Interpreter) Process(sourceCode string) (string, phpError.Error) {

@@ -465,7 +465,7 @@ func (interpreter *Interpreter) ProcessExitIntrinsicExpr(expr *ast.ExitIntrinsic
 		if exprValue.GetType() == values.IntValue {
 			exitCode := exprValue.(*values.Int).Value
 			if exitCode >= 0 && exitCode < 255 {
-				interpreter.exitCode = exitCode
+				interpreter.response.ExitCode = int(exitCode)
 			}
 		}
 	}

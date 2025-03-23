@@ -96,7 +96,6 @@ func doTest(path string, info goOs.FileInfo, err error) error {
 		if verbosity2 {
 			fmt.Println("     ", err)
 		}
-		// return err
 		failed++
 		return nil
 	}
@@ -108,7 +107,6 @@ func doTest(path string, info goOs.FileInfo, err error) error {
 		if verbosity2 {
 			fmt.Println("     ", err)
 		}
-		// return err
 		failed++
 		return nil
 	}

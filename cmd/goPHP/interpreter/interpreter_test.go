@@ -311,16 +311,16 @@ func TestConditionals(t *testing.T) {
 func TestIntrinsic(t *testing.T) {
 	// Exit
 	interpreter := testInputOutput(t, `Hello <?php exit("world");`, "Hello world")
-	if interpreter.GetExitCode() != 0 {
-		t.Errorf("Expected: \"%d\", Got \"%d\"", 0, interpreter.GetExitCode())
+	if interpreter.GetResponse().ExitCode != 0 {
+		t.Errorf("Expected: \"%d\", Got \"%d\"", 0, interpreter.GetResponse().ExitCode)
 	}
 	interpreter = testInputOutput(t, `Hello<?php exit;`, "Hello")
-	if interpreter.GetExitCode() != 0 {
-		t.Errorf("Expected: \"%d\", Got \"%d\"", 0, interpreter.GetExitCode())
+	if interpreter.GetResponse().ExitCode != 0 {
+		t.Errorf("Expected: \"%d\", Got \"%d\"", 0, interpreter.GetResponse().ExitCode)
 	}
 	interpreter = testInputOutput(t, `Hello<?php exit(42);`, "Hello")
-	if interpreter.GetExitCode() != 42 {
-		t.Errorf("Expected: \"%d\", Got \"%d\"", 42, interpreter.GetExitCode())
+	if interpreter.GetResponse().ExitCode != 42 {
+		t.Errorf("Expected: \"%d\", Got \"%d\"", 42, interpreter.GetResponse().ExitCode)
 	}
 
 	// Empty
