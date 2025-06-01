@@ -5,6 +5,7 @@
 - array_key_first
 - array_key_last
 - array_pop
+- array_push
 - key_exists
 
 ## Date/Time Functions

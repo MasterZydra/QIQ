@@ -110,3 +110,44 @@ func TestArrayPop(t *testing.T) {
 		t.Error("Expected array to contain one element with key 0 after pop")
 	}
 }
+
+// ------------------- MARK: array_push -------------------
+
+func TestArrayPush(t *testing.T) {
+	context := runtime.NewContext(nil, nil)
+
+	array := values.NewArray()
+	actual, err := nativeFn_array_push([]values.RuntimeValue{array, values.NewInt(42)}, context)
+	if err != nil {
+		t.Errorf("Unexpected error: %s", err)
+	} else if actual.(*values.Int).Value != 1 {
+		t.Errorf("Expected: 1, Got %d", actual.(*values.Int).Value)
+	}
+	if array.IsEmpty() {
+		t.Error("Expected array not to be empty after push")
+	}
+	if len(array.Keys) != 1 || array.Keys[0].(*values.Int).Value != 0 {
+		t.Error("Expected array to contain one element with key 0 after push")
+	}
+
+	actual, err = nativeFn_array_push([]values.RuntimeValue{array, values.NewInt(43)}, context)
+	if err != nil {
+		t.Errorf("Unexpected error: %s", err)
+	} else if actual.(*values.Int).Value != 2 {
+		t.Errorf("Expected: 2, Got %d", actual.(*values.Int).Value)
+	}
+	if len(array.Keys) != 2 || array.Keys[1].(*values.Int).Value != 1 {
+		t.Error("Expected array to contain one element with key 0 after push")
+	}
+
+	array = values.NewArray()
+	actual, err = nativeFn_array_push([]values.RuntimeValue{array, values.NewInt(42), values.NewInt(43)}, context)
+	if err != nil {
+		t.Errorf("Unexpected error: %s", err)
+	} else if actual.(*values.Int).Value != 2 {
+		t.Errorf("Expected: 2, Got %d", actual.(*values.Int).Value)
+	}
+	if len(array.Keys) != 2 || array.Keys[0].(*values.Int).Value != 0 || array.Keys[1].(*values.Int).Value != 1 {
+		t.Error("Expected array to contain two elements with keys 0 and 1 after push")
+	}
+}

@@ -14,6 +14,7 @@ func Register(environment runtime.Environment) {
 	environment.AddNativeFunction("array_key_first", nativeFn_array_key_first)
 	environment.AddNativeFunction("array_key_last", nativeFn_array_key_last)
 	environment.AddNativeFunction("array_pop", nativeFn_array_pop)
+	environment.AddNativeFunction("array_push", nativeFn_array_push)
 	environment.AddNativeFunction("key_exists", nativeFn_array_key_exists)
 }
 
@@ -114,6 +115,30 @@ func nativeFn_array_pop(args []values.RuntimeValue, _ runtime.Context) (values.R
 	return value, nil
 }
 
+// ------------------- MARK: array_push -------------------
+
+func nativeFn_array_push(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
+	// Spec: https://www.php.net/manual/en/function.array-push.php
+	args, err := funcParamValidator.NewValidator("array_push").
+		AddParam("$array", []string{"array"}, nil).
+		AddVariableLenParam("$values", []string{"mixed"}).
+		Validate(args)
+	if err != nil {
+		return values.NewVoid(), err
+	}
+
+	array := args[0].(*values.Array)
+	arrayValues := args[1].(*values.Array)
+	for _, key := range arrayValues.Keys {
+		argValue, _ := arrayValues.GetElement(key)
+		if err := array.SetElement(nil, argValue); err != nil {
+			return values.NewVoid(), err
+		}
+	}
+
+	return values.NewInt(int64(len(array.Keys))), nil
+}
+
 // TODO array
 // TODO array_all
 // TODO array_any
@@ -146,7 +171,6 @@ func nativeFn_array_pop(args []values.RuntimeValue, _ runtime.Context) (values.R
 // TODO array_multisort
 // TODO array_pad
 // TODO array_product
-// TODO array_push
 // TODO array_rand
 // TODO array_reduce
 // TODO array_replace
