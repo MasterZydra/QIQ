@@ -13,7 +13,7 @@ func Register(environment runtime.Environment) {
 	environment.AddNativeFunction("defined", nativeFn_defined)
 }
 
-// ------------------- MARK: constant -------------------
+// -------------------------------------- constant -------------------------------------- MARK: constant
 
 func nativeFn_constant(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.constant.php
@@ -31,7 +31,7 @@ func nativeFn_constant(args []values.RuntimeValue, context runtime.Context) (val
 	return constantValue, nil
 }
 
-// ------------------- MARK: defined -------------------
+// -------------------------------------- defined -------------------------------------- MARK: defined
 
 func nativeFn_defined(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.defined.php

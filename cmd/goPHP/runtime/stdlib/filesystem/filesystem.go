@@ -20,7 +20,7 @@ func Register(environment runtime.Environment) {
 	environment.AddNativeFunction("rename", nativeFn_rename)
 }
 
-// ------------------- MARK: file_get_contents -------------------
+// -------------------------------------- file_get_contents -------------------------------------- MARK: file_get_contents
 
 func nativeFn_file_get_contents(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/function.file-get-contents.php
@@ -52,7 +52,7 @@ func nativeFn_file_get_contents(args []values.RuntimeValue, _ runtime.Context) (
 	return values.NewStr(content), nil
 }
 
-// ------------------- MARK: is_dir -------------------
+// -------------------------------------- is_dir -------------------------------------- MARK: is_dir
 
 func nativeFn_is_dir(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.is-dir.php
@@ -70,7 +70,7 @@ func nativeFn_is_dir(args []values.RuntimeValue, _ runtime.Context) (values.Runt
 	return values.NewBool(info.IsDir()), nil
 }
 
-// ------------------- MARK: is_file -------------------
+// -------------------------------------- is_file -------------------------------------- MARK: is_file
 
 func nativeFn_is_file(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.is-file.php
@@ -88,7 +88,7 @@ func nativeFn_is_file(args []values.RuntimeValue, _ runtime.Context) (values.Run
 	return values.NewBool(!info.IsDir()), nil
 }
 
-// ------------------- MARK: is_uploaded_file -------------------
+// -------------------------------------- is_uploaded_file -------------------------------------- MARK: is_uploaded_file
 
 func nativeFn_is_uploaded_file(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.is-uploaded-file.php
@@ -101,7 +101,7 @@ func nativeFn_is_uploaded_file(args []values.RuntimeValue, context runtime.Conte
 	return values.NewBool(slices.Contains(context.Interpreter.GetRequest().UploadedFiles, args[0].(*values.Str).Value)), nil
 }
 
-// ------------------- MARK: file_exists -------------------
+// -------------------------------------- file_exists -------------------------------------- MARK: file_exists
 
 func nativeFn_file_exists(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.file-exists.php
@@ -119,7 +119,7 @@ func Exists(filename string) bool {
 	return err == nil
 }
 
-// ------------------- MARK: rename -------------------
+// -------------------------------------- rename -------------------------------------- MARK: rename
 
 func nativeFn_rename(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.rename.php

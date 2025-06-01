@@ -36,7 +36,7 @@ func Register(environment runtime.Environment) {
 	environment.AddNativeFunction("var_export", nativeFn_var_export)
 }
 
-// ------------------- MARK: arrayval -------------------
+// -------------------------------------- arrayval -------------------------------------- MARK: arrayval
 
 // This is not an official function. But converting different types to array is needed in several places
 func ArrayVal(runtimeValue values.RuntimeValue) (*values.Array, phpError.Error) {
@@ -74,7 +74,7 @@ func ArrayVal(runtimeValue values.RuntimeValue) (*values.Array, phpError.Error) 
 	return values.NewArray(), phpError.NewError("ArrayVal: Unsupported type %s", runtimeValue.GetType())
 }
 
-// ------------------- MARK: boolval -------------------
+// -------------------------------------- boolval -------------------------------------- MARK: boolval
 
 func nativeFn_boolval(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	args, err := funcParamValidator.NewValidator("boolval").AddParam("$value", []string{"mixed"}, nil).Validate(args)
@@ -129,7 +129,7 @@ func BoolVal(runtimeValue values.RuntimeValue) (bool, phpError.Error) {
 	// If the source is a resource, the result value is TRUE.
 }
 
-// ------------------- MARK: floatval -------------------
+// -------------------------------------- floatval -------------------------------------- MARK: floatval
 
 func nativeFn_floatval(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	args, err := funcParamValidator.NewValidator("floatval").AddParam("$value", []string{"mixed"}, nil).Validate(args)
@@ -190,7 +190,7 @@ func FloatVal(runtimeValue values.RuntimeValue, leadingNumeric bool) (float64, p
 	// If the source is an object, if the class defines a conversion function, the result is determined by that function (this is currently available only to internal classes). If not, the conversion is invalid, the result is assumed to be 1.0 and a non-fatal error is produced.
 }
 
-// ------------------- MARK: get_debug_type -------------------
+// -------------------------------------- get_debug_type -------------------------------------- MARK: get_debug_type
 
 func nativeFn_get_debug_type(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	args, err := funcParamValidator.NewValidator("get_debug_type").AddParam("$value", []string{"mixed"}, nil).Validate(args)
@@ -226,7 +226,7 @@ func lib_get_debug_type(runtimeValue values.RuntimeValue) (string, phpError.Erro
 	}
 }
 
-// ------------------- MARK: gettype -------------------
+// -------------------------------------- gettype -------------------------------------- MARK: gettype
 
 func nativeFn_gettype(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	args, err := funcParamValidator.NewValidator("gettype").AddParam("$value", []string{"mixed"}, nil).Validate(args)
@@ -262,7 +262,7 @@ func GetType(runtimeValue values.RuntimeValue) (string, phpError.Error) {
 	}
 }
 
-// ------------------- MARK: intval -------------------
+// -------------------------------------- intval -------------------------------------- MARK: intval
 
 func nativeFn_intval(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	args, err := funcParamValidator.NewValidator("intval").AddParam("$value", []string{"mixed"}, nil).Validate(args)
@@ -338,7 +338,7 @@ func IntVal(runtimeValue values.RuntimeValue, leadingNumeric bool) (int64, phpEr
 	// If the source is a resource, the result is the resource’s unique ID.
 }
 
-// ------------------- MARK: is_array -------------------
+// -------------------------------------- is_array -------------------------------------- MARK: is_array
 
 func nativeFn_is_array(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	args, err := funcParamValidator.NewValidator("is_array").AddParam("$value", []string{"mixed"}, nil).Validate(args)
@@ -354,7 +354,7 @@ func lib_is_array(runtimeValue values.RuntimeValue) bool {
 	return runtimeValue.GetType() == values.ArrayValue
 }
 
-// ------------------- MARK: is_bool -------------------
+// -------------------------------------- is_bool -------------------------------------- MARK: is_bool
 
 func nativeFn_is_bool(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	args, err := funcParamValidator.NewValidator("is_bool").AddParam("$value", []string{"mixed"}, nil).Validate(args)
@@ -370,7 +370,7 @@ func lib_is_bool(runtimeValue values.RuntimeValue) bool {
 	return runtimeValue.GetType() == values.BoolValue
 }
 
-// ------------------- MARK: is_float -------------------
+// -------------------------------------- is_float -------------------------------------- MARK: is_float
 
 func nativeFn_is_float(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	args, err := funcParamValidator.NewValidator("is_float").AddParam("$value", []string{"mixed"}, nil).Validate(args)
@@ -386,7 +386,7 @@ func lib_is_float(runtimeValue values.RuntimeValue) bool {
 	return runtimeValue.GetType() == values.FloatValue
 }
 
-// ------------------- MARK: is_int -------------------
+// -------------------------------------- is_int -------------------------------------- MARK: is_int
 
 func nativeFn_is_int(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	args, err := funcParamValidator.NewValidator("is_int").AddParam("$value", []string{"mixed"}, nil).Validate(args)
@@ -402,7 +402,7 @@ func lib_is_int(runtimeValue values.RuntimeValue) bool {
 	return runtimeValue.GetType() == values.IntValue
 }
 
-// ------------------- MARK: is_null -------------------
+// -------------------------------------- is_null -------------------------------------- MARK: is_null
 
 func nativeFn_is_null(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	args, err := funcParamValidator.NewValidator("is_null").AddParam("$value", []string{"mixed"}, nil).Validate(args)
@@ -418,7 +418,7 @@ func lib_is_null(runtimeValue values.RuntimeValue) bool {
 	return runtimeValue.GetType() == values.NullValue
 }
 
-// ------------------- MARK: is_scalar -------------------
+// -------------------------------------- is_scalar -------------------------------------- MARK: is_scalar
 
 func nativeFn_is_scalar(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	args, err := funcParamValidator.NewValidator("is_scalar").AddParam("$value", []string{"mixed"}, nil).Validate(args)
@@ -434,7 +434,7 @@ func IsScalar(runtimeValue values.RuntimeValue) bool {
 	return slices.Contains([]values.ValueType{values.BoolValue, values.IntValue, values.FloatValue, values.StrValue}, runtimeValue.GetType())
 }
 
-// ------------------- MARK: is_string -------------------
+// -------------------------------------- is_string -------------------------------------- MARK: is_string
 
 func nativeFn_is_string(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	args, err := funcParamValidator.NewValidator("is_string").AddParam("$value", []string{"mixed"}, nil).Validate(args)
@@ -450,7 +450,7 @@ func lib_is_string(runtimeValue values.RuntimeValue) bool {
 	return runtimeValue.GetType() == values.StrValue
 }
 
-// ------------------- MARK: print_r -------------------
+// -------------------------------------- print_r -------------------------------------- MARK: print_r
 
 func nativeFn_print_r(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
 	args, err := funcParamValidator.NewValidator("print_r").
@@ -520,7 +520,7 @@ func lib_print_r_var(value values.RuntimeValue, depth int) (string, phpError.Err
 	return result, nil
 }
 
-// ------------------- MARK: strval -------------------
+// -------------------------------------- strval -------------------------------------- MARK: strval
 
 func nativeFn_strval(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	args, err := funcParamValidator.NewValidator("strval").AddParam("$value", []string{"mixed"}, nil).Validate(args)
@@ -578,7 +578,7 @@ func StrVal(runtimeValue values.RuntimeValue) (string, phpError.Error) {
 	// If the source is a resource, the result value is an implementation-defined string.
 }
 
-// ------------------- MARK: var_dump -------------------
+// -------------------------------------- var_dump -------------------------------------- MARK: var_dump
 
 func nativeFn_var_dump(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.var-dump
@@ -659,7 +659,7 @@ func lib_var_dump_var(context runtime.Context, value values.RuntimeValue, depth 
 	return nil
 }
 
-// ------------------- MARK: var_export -------------------
+// -------------------------------------- var_export -------------------------------------- MARK: var_export
 
 func nativeFn_var_export(args []values.RuntimeValue, interpreter runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.var-export

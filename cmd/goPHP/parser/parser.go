@@ -112,7 +112,7 @@ func (parser *Parser) parseStmt() (ast.IStatement, phpError.Error) {
 		return ast.NewExpressionStmt(parser.nextId(), ast.NewTextExpr(parser.nextId(), parser.eat().Value)), nil
 	}
 
-	// ------------------- MARK: compound-statement -------------------
+	// -------------------------------------- compound-statement -------------------------------------- MARK: compound-statement
 
 	// Spec: https://phplang.org/spec/11-statements.html#grammar-compound-statement
 
@@ -163,7 +163,7 @@ func (parser *Parser) parseStmt() (ast.IStatement, phpError.Error) {
 	// TODO try-statement
 	// TODO declare-statement
 
-	// ------------------- MARK: echo-statement -------------------
+	// -------------------------------------- echo-statement -------------------------------------- MARK: echo-statement
 
 	// Spec https://phplang.org/spec/11-statements.html#the-echo-statement
 
@@ -202,7 +202,7 @@ func (parser *Parser) parseStmt() (ast.IStatement, phpError.Error) {
 		return ast.NewEchoStmt(parser.nextId(), pos, expressions), nil
 	}
 
-	// ------------------- MARK: unset-statement -------------------
+	// -------------------------------------- unset-statement -------------------------------------- MARK: unset-statement
 
 	// Spec: https://phplang.org/spec/11-statements.html#grammar-unset-statement
 
@@ -246,7 +246,7 @@ func (parser *Parser) parseStmt() (ast.IStatement, phpError.Error) {
 		return ast.NewExpressionStmt(parser.nextId(), ast.NewUnsetIntrinsic(parser.nextId(), pos, args)), nil
 	}
 
-	// ------------------- MARK: const-declaration -------------------
+	// -------------------------------------- const-declaration -------------------------------------- MARK: const-declaration
 
 	// Spec: https://phplang.org/spec/14-classes.html#grammar-const-declaration
 
@@ -300,7 +300,7 @@ func (parser *Parser) parseStmt() (ast.IStatement, phpError.Error) {
 	// TODO namespace-definition
 	// TODO namespace-use-declaration
 
-	// ------------------- MARK: global-declaration -------------------
+	// -------------------------------------- global-declaration -------------------------------------- MARK: global-declaration
 
 	// Spec: https://phplang.org/spec/07-variables.html#grammar-global-declaration
 
@@ -346,7 +346,7 @@ func (parser *Parser) parseStmt() (ast.IStatement, phpError.Error) {
 
 	// TODO function-static-declaration
 
-	// ------------------- MARK: expression-statement -------------------
+	// -------------------------------------- expression-statement -------------------------------------- MARK: expression-statement
 
 	// Spec: https://phplang.org/spec/11-statements.html#grammar-expression-statement
 
@@ -370,7 +370,7 @@ func (parser *Parser) parseStmt() (ast.IStatement, phpError.Error) {
 }
 
 func (parser *Parser) parseSelectionStmt() (ast.IStatement, phpError.Error) {
-	// ------------------- MARK: selection-statement -------------------
+	// -------------------------------------- selection-statement -------------------------------------- MARK: selection-statement
 
 	// Spec: https://phplang.org/spec/11-statements.html#grammar-selection-statement
 
@@ -529,7 +529,7 @@ func (parser *Parser) parseSelectionStmt() (ast.IStatement, phpError.Error) {
 }
 
 func (parser *Parser) parseIterationStmt() (ast.IStatement, phpError.Error) {
-	// ------------------- MARK: iteration-statement -------------------
+	// -------------------------------------- iteration-statement -------------------------------------- MARK: iteration-statement
 
 	// Spec: https://phplang.org/spec/11-statements.html#grammar-iteration-statement
 
@@ -754,7 +754,7 @@ func (parser *Parser) parseIterationStmt() (ast.IStatement, phpError.Error) {
 }
 
 func (parser *Parser) parseJumpStmt() (ast.IStatement, phpError.Error) {
-	// ------------------- MARK: jump-statement -------------------
+	// -------------------------------------- jump-statement -------------------------------------- MARK: jump-statement
 
 	// Spec: https://phplang.org/spec/11-statements.html#grammar-jump-statement
 
@@ -849,7 +849,7 @@ func (parser *Parser) parseJumpStmt() (ast.IStatement, phpError.Error) {
 		return ast.NewBreakStmt(parser.nextId(), pos, expr), nil
 	}
 
-	// ------------------- MARK: return-statement -------------------
+	// -------------------------------------- return-statement -------------------------------------- MARK: return-statement
 
 	// Spec: https://phplang.org/spec/11-statements.html#grammar-return-statement
 
@@ -880,7 +880,7 @@ func (parser *Parser) parseJumpStmt() (ast.IStatement, phpError.Error) {
 }
 
 func (parser *Parser) parseFunctionDefinition() (ast.IStatement, phpError.Error) {
-	// ------------------- MARK: function-definition -------------------
+	// -------------------------------------- function-definition -------------------------------------- MARK: function-definition
 	// Spec: https://phplang.org/spec/13-functions.html#grammar-function-definition
 
 	// function-definition:
@@ -1032,7 +1032,7 @@ func (parser *Parser) parseExpr() (ast.IExpression, phpError.Error) {
 	//    require-expression
 	//    require-once-expression
 
-	// ------------------- MARK: include-expression -------------------
+	// -------------------------------------- include-expression -------------------------------------- MARK: include-expression
 
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-include-expression
 
@@ -1051,7 +1051,7 @@ func (parser *Parser) parseExpr() (ast.IExpression, phpError.Error) {
 		return ast.NewIncludeExpr(parser.nextId(), pos, expr), nil
 	}
 
-	// ------------------- MARK: include-once-expression -------------------
+	// -------------------------------------- include-once-expression -------------------------------------- MARK: include-once-expression
 
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-include-once-expression
 
@@ -1070,7 +1070,7 @@ func (parser *Parser) parseExpr() (ast.IExpression, phpError.Error) {
 		return ast.NewIncludeOnceExpr(parser.nextId(), pos, expr), nil
 	}
 
-	// ------------------- MARK: require-expression -------------------
+	// -------------------------------------- require-expression -------------------------------------- MARK: require-expression
 
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-require-expression
 
@@ -1089,7 +1089,7 @@ func (parser *Parser) parseExpr() (ast.IExpression, phpError.Error) {
 		return ast.NewRequireExpr(parser.nextId(), pos, expr), nil
 	}
 
-	// ------------------- MARK: require-once-expression -------------------
+	// -------------------------------------- require-once-expression -------------------------------------- MARK: require-once-expression
 
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-require-once-expression
 
@@ -1634,7 +1634,7 @@ func (parser *Parser) parseUnaryExpr() (ast.IExpression, phpError.Error) {
 		return ast.NewUnaryOpExpr(parser.nextId(), pos, operator, expr), nil
 	}
 
-	// ------------------- MARK: error-control-expression -------------------
+	// -------------------------------------- error-control-expression -------------------------------------- MARK: error-control-expression
 
 	// Spec: https://phplang.org/spec/10-expressions.html#error-control-operator
 
@@ -1731,7 +1731,7 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, phpError.Error) {
 	//    shell-command-expression
 	//    (   expression   )
 
-	// ------------------- MARK: variable -------------------
+	// -------------------------------------- variable -------------------------------------- MARK: variable
 
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-variable
 
@@ -1742,7 +1742,7 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, phpError.Error) {
 
 	var variable ast.IExpression
 
-	// ------------------- MARK: callable-variable -------------------
+	// -------------------------------------- callable-variable -------------------------------------- MARK: callable-variable
 
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-callable-variable
 
@@ -1753,7 +1753,7 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, phpError.Error) {
 	//    scoped-call-expression
 	//    function-call-expression
 
-	// ------------------- MARK: simple-variable -------------------
+	// -------------------------------------- simple-variable -------------------------------------- MARK: simple-variable
 
 	// Spec: https://phplang.org/spec/10-expressions.html#simple-variable
 
@@ -1811,7 +1811,7 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, phpError.Error) {
 
 	// TODO The following expressions can occur multiple times: $a[0]()["abc"]()()...
 
-	// ------------------- MARK: subscript-expression -------------------
+	// -------------------------------------- subscript-expression -------------------------------------- MARK: subscript-expression
 
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-subscript-expression
 
@@ -1847,7 +1847,7 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, phpError.Error) {
 	// TODO member-call-expression
 	// TODO scoped-call-expression
 
-	// ------------------- MARK: function-call-expression -------------------
+	// -------------------------------------- function-call-expression -------------------------------------- MARK: function-call-expression
 
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-function-call-expression
 
@@ -1910,7 +1910,7 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, phpError.Error) {
 
 	// TODO class-constant-access-expression
 
-	// ------------------- MARK: constant-access-expression -------------------
+	// -------------------------------------- constant-access-expression -------------------------------------- MARK: constant-access-expression
 
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-constant-access-expression
 
@@ -1955,7 +1955,7 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, phpError.Error) {
 	// TODO anonymous-function-creation-expression
 	// TODO object-creation-expression
 
-	// ------------------- MARK: postfix-increment-expression -------------------
+	// -------------------------------------- postfix-increment-expression -------------------------------------- MARK: postfix-increment-expression
 
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-postfix-increment-expression
 
@@ -1973,7 +1973,7 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, phpError.Error) {
 		return ast.NewPostfixIncExpr(parser.nextId(), parser.at().Position, variable, parser.eat().Value), nil
 	}
 
-	// ------------------- MARK: prefix-increment-expression -------------------
+	// -------------------------------------- prefix-increment-expression -------------------------------------- MARK: prefix-increment-expression
 
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-prefix-increment-expression
 
@@ -2002,7 +2002,7 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, phpError.Error) {
 	// TODO byref-assignment-expression
 	// TODO shell-command-expression
 
-	// ------------------- MARK: (   expression   ) -------------------
+	// -------------------------------------- (   expression   ) -------------------------------------- MARK: (   expression   )
 
 	if parser.isToken(lexer.OpOrPuncToken, "(", false) {
 		PrintParserCallstack("parenthesized-expression", parser)
@@ -2031,7 +2031,7 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, phpError.Error) {
 }
 
 func (parser *Parser) parseLiteral() (ast.IExpression, phpError.Error) {
-	// ------------------- MARK: literal -------------------
+	// -------------------------------------- literal -------------------------------------- MARK: literal
 
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-literal
 
@@ -2088,7 +2088,7 @@ func (parser *Parser) parseLiteral() (ast.IExpression, phpError.Error) {
 }
 
 func (parser *Parser) parseArrayCreationExpr() (ast.IExpression, phpError.Error) {
-	// ------------------- MARK: array-creation-expression -------------------
+	// -------------------------------------- array-creation-expression -------------------------------------- MARK: array-creation-expression
 
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-array-creation-expression
 
@@ -2173,7 +2173,7 @@ func (parser *Parser) parseArrayCreationExpr() (ast.IExpression, phpError.Error)
 }
 
 func (parser *Parser) parseIntrinsic() (ast.IExpression, phpError.Error) {
-	// ------------------- MARK: intrinsic -------------------
+	// -------------------------------------- intrinsic -------------------------------------- MARK: intrinsic
 
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-intrinsic
 
@@ -2183,7 +2183,7 @@ func (parser *Parser) parseIntrinsic() (ast.IExpression, phpError.Error) {
 	//    exit-intrinsic
 	//    isset-intrinsic
 
-	// ------------------- MARK: empty-intrinsic -------------------
+	// -------------------------------------- empty-intrinsic -------------------------------------- MARK: empty-intrinsic
 
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-empty-intrinsic
 
@@ -2206,7 +2206,7 @@ func (parser *Parser) parseIntrinsic() (ast.IExpression, phpError.Error) {
 		return ast.NewEmptyIntrinsic(parser.nextId(), pos, expr), nil
 	}
 
-	// ------------------- MARK: eval-intrinsic -------------------
+	// -------------------------------------- eval-intrinsic -------------------------------------- MARK: eval-intrinsic
 
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-eval-intrinsic
 
@@ -2229,7 +2229,7 @@ func (parser *Parser) parseIntrinsic() (ast.IExpression, phpError.Error) {
 		return ast.NewEvalIntrinsic(parser.nextId(), pos, expr), nil
 	}
 
-	// ------------------- MARK: exit-intrinsic -------------------
+	// -------------------------------------- exit-intrinsic -------------------------------------- MARK: exit-intrinsic
 
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-exit-intrinsic
 
@@ -2258,7 +2258,7 @@ func (parser *Parser) parseIntrinsic() (ast.IExpression, phpError.Error) {
 		return ast.NewExitIntrinsic(parser.nextId(), pos, expr), nil
 	}
 
-	// ------------------- MARK: isset-intrinsic -------------------
+	// -------------------------------------- isset-intrinsic -------------------------------------- MARK: isset-intrinsic
 
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-isset-intrinsic
 

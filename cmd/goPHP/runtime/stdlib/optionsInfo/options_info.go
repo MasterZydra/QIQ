@@ -23,7 +23,7 @@ func Register(environment runtime.Environment) {
 	environment.AddPredefinedConstants("INI_ALL", values.NewInt(int64(ini.INI_ALL)))
 }
 
-// ------------------- MARK: getenv -------------------
+// -------------------------------------- getenv -------------------------------------- MARK: getenv
 
 func nativeFn_getenv(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.getenv.php
@@ -55,7 +55,7 @@ func nativeFn_getenv(args []values.RuntimeValue, context runtime.Context) (value
 	return value, nil
 }
 
-// ------------------- MARK: ini_get -------------------
+// -------------------------------------- ini_get -------------------------------------- MARK: ini_get
 
 func nativeFn_ini_get(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.ini-get
@@ -72,7 +72,7 @@ func nativeFn_ini_get(args []values.RuntimeValue, context runtime.Context) (valu
 	return values.NewStr(value), nil
 }
 
-// ------------------- MARK: ini_set -------------------
+// -------------------------------------- ini_set -------------------------------------- MARK: ini_set
 
 func nativeFn_ini_set(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.ini-set

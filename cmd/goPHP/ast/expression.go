@@ -4,7 +4,7 @@ import (
 	"GoPHP/cmd/goPHP/position"
 )
 
-// ------------------- MARK: Expression -------------------
+// -------------------------------------- Expression -------------------------------------- MARK: Expression
 
 type IExpression interface {
 	IStatement
@@ -43,7 +43,7 @@ func (stmt *Expression) Process(visitor Visitor, context any) (any, error) {
 	return visitor.ProcessExpr(stmt, context)
 }
 
-// ------------------- MARK: ParenthesizedExpression -------------------
+// -------------------------------------- ParenthesizedExpression -------------------------------------- MARK: ParenthesizedExpression
 
 type ParenthesizedExpression struct {
 	*Expression
@@ -58,7 +58,7 @@ func (stmt *ParenthesizedExpression) Process(visitor Visitor, context any) (any,
 	return visitor.ProcessParenthesizedExpr(stmt, context)
 }
 
-// ------------------- MARK: ErrorControlExpression -------------------
+// -------------------------------------- ErrorControlExpression -------------------------------------- MARK: ErrorControlExpression
 
 type ErrorControlExpression struct {
 	*Expression
@@ -73,7 +73,7 @@ func (stmt *ErrorControlExpression) Process(visitor Visitor, context any) (any, 
 	return visitor.ProcessErrorControlExpr(stmt, context)
 }
 
-// ------------------- MARK: PrintExpression -------------------
+// -------------------------------------- PrintExpression -------------------------------------- MARK: PrintExpression
 
 type PrintExpression struct {
 	*ParenthesizedExpression
@@ -87,7 +87,7 @@ func (stmt *PrintExpression) Process(visitor Visitor, context any) (any, error) 
 	return visitor.ProcessPrintExpr(stmt, context)
 }
 
-// ------------------- MARK: TextExpression -------------------
+// -------------------------------------- TextExpression -------------------------------------- MARK: TextExpression
 
 type TextExpression struct {
 	*Expression
@@ -102,7 +102,7 @@ func (stmt *TextExpression) Process(visitor Visitor, context any) (any, error) {
 	return visitor.ProcessTextExpr(stmt, context)
 }
 
-// ------------------- MARK: VariableNameExpression -------------------
+// -------------------------------------- VariableNameExpression -------------------------------------- MARK: VariableNameExpression
 
 type VariableNameExpression struct {
 	*Expression
@@ -117,7 +117,7 @@ func (stmt *VariableNameExpression) Process(visitor Visitor, context any) (any, 
 	return visitor.ProcessVariableNameExpr(stmt, context)
 }
 
-// ------------------- MARK: SimpleVariableExpression -------------------
+// -------------------------------------- SimpleVariableExpression -------------------------------------- MARK: SimpleVariableExpression
 
 type SimpleVariableExpression struct {
 	*Expression
@@ -132,7 +132,7 @@ func (stmt *SimpleVariableExpression) Process(visitor Visitor, context any) (any
 	return visitor.ProcessSimpleVariableExpr(stmt, context)
 }
 
-// ------------------- MARK: SubscriptExpression -------------------
+// -------------------------------------- SubscriptExpression -------------------------------------- MARK: SubscriptExpression
 
 type SubscriptExpression struct {
 	*Expression
@@ -148,7 +148,7 @@ func (stmt *SubscriptExpression) Process(visitor Visitor, context any) (any, err
 	return visitor.ProcessSubscriptExpr(stmt, context)
 }
 
-// ------------------- MARK: FunctionCallExpression -------------------
+// -------------------------------------- FunctionCallExpression -------------------------------------- MARK: FunctionCallExpression
 
 type FunctionCallExpression struct {
 	*Expression
@@ -164,7 +164,7 @@ func (stmt *FunctionCallExpression) Process(visitor Visitor, context any) (any, 
 	return visitor.ProcessFunctionCallExpr(stmt, context)
 }
 
-// ------------------- MARK: ExitIntrinsic -------------------
+// -------------------------------------- ExitIntrinsic -------------------------------------- MARK: ExitIntrinsic
 
 type ExitIntrinsicExpression struct {
 	*FunctionCallExpression
@@ -182,7 +182,7 @@ func (stmt *ExitIntrinsicExpression) Process(visitor Visitor, context any) (any,
 	return visitor.ProcessExitIntrinsicExpr(stmt, context)
 }
 
-// ------------------- MARK: EmptyIntrinsic -------------------
+// -------------------------------------- EmptyIntrinsic -------------------------------------- MARK: EmptyIntrinsic
 
 type EmptyIntrinsicExpression struct {
 	*FunctionCallExpression
@@ -200,7 +200,7 @@ func (stmt *EmptyIntrinsicExpression) Process(visitor Visitor, context any) (any
 	return visitor.ProcessEmptyIntrinsicExpr(stmt, context)
 }
 
-// ------------------- MARK: EvalIntrinsic -------------------
+// -------------------------------------- EvalIntrinsic -------------------------------------- MARK: EvalIntrinsic
 
 type EvalIntrinsicExpression struct {
 	*FunctionCallExpression
@@ -218,7 +218,7 @@ func (stmt *EvalIntrinsicExpression) Process(visitor Visitor, context any) (any,
 	return visitor.ProcessEvalIntrinsicExpr(stmt, context)
 }
 
-// ------------------- MARK: IssetIntrinsic -------------------
+// -------------------------------------- IssetIntrinsic -------------------------------------- MARK: IssetIntrinsic
 
 type IssetIntrinsicExpression struct {
 	*FunctionCallExpression
@@ -236,7 +236,7 @@ func (stmt *IssetIntrinsicExpression) Process(visitor Visitor, context any) (any
 	return visitor.ProcessIssetIntrinsicExpr(stmt, context)
 }
 
-// ------------------- MARK: UnsetIntrinsic -------------------
+// -------------------------------------- UnsetIntrinsic -------------------------------------- MARK: UnsetIntrinsic
 
 type UnsetIntrinsicExpression struct {
 	*FunctionCallExpression
@@ -254,7 +254,7 @@ func (stmt *UnsetIntrinsicExpression) Process(visitor Visitor, context any) (any
 	return visitor.ProcessUnsetIntrinsicExpr(stmt, context)
 }
 
-// ------------------- MARK: ConstantAccessExpression -------------------
+// -------------------------------------- ConstantAccessExpression -------------------------------------- MARK: ConstantAccessExpression
 
 type ConstantAccessExpression struct {
 	*Expression
@@ -269,7 +269,7 @@ func (stmt *ConstantAccessExpression) Process(visitor Visitor, context any) (any
 	return visitor.ProcessConstantAccessExpr(stmt, context)
 }
 
-// ------------------- MARK: ArrayLiteralExpression -------------------
+// -------------------------------------- ArrayLiteralExpression -------------------------------------- MARK: ArrayLiteralExpression
 
 type ArrayLiteralExpression struct {
 	*Expression
@@ -327,7 +327,7 @@ func (expr *ArrayNextKeyExpression) Process(visitor Visitor, context any) (any, 
 	return visitor.ProcessArrayNextKeyExpr(expr, context)
 }
 
-// ------------------- MARK: BooleanLiteralExpression -------------------
+// -------------------------------------- BooleanLiteralExpression -------------------------------------- MARK: BooleanLiteralExpression
 
 func NewBooleanLiteralExpr(id int64, pos *position.Position, value bool) *ConstantAccessExpression {
 	if value {
@@ -336,7 +336,7 @@ func NewBooleanLiteralExpr(id int64, pos *position.Position, value bool) *Consta
 	return NewConstantAccessExpr(id, pos, "FALSE")
 }
 
-// ------------------- MARK: IntegerLiteralExpression -------------------
+// -------------------------------------- IntegerLiteralExpression -------------------------------------- MARK: IntegerLiteralExpression
 
 type IntegerLiteralExpression struct {
 	*Expression
@@ -351,7 +351,7 @@ func (stmt *IntegerLiteralExpression) Process(visitor Visitor, context any) (any
 	return visitor.ProcessIntegerLiteralExpr(stmt, context)
 }
 
-// ------------------- MARK: FloatingLiteralExpression -------------------
+// -------------------------------------- FloatingLiteralExpression -------------------------------------- MARK: FloatingLiteralExpression
 
 type FloatingLiteralExpression struct {
 	*Expression
@@ -366,7 +366,7 @@ func (stmt *FloatingLiteralExpression) Process(visitor Visitor, context any) (an
 	return visitor.ProcessFloatingLiteralExpr(stmt, context)
 }
 
-// ------------------- MARK: StringLiteralExpression -------------------
+// -------------------------------------- StringLiteralExpression -------------------------------------- MARK: StringLiteralExpression
 
 type StringType string
 
@@ -389,13 +389,13 @@ func (stmt *StringLiteralExpression) Process(visitor Visitor, context any) (any,
 	return visitor.ProcessStringLiteralExpr(stmt, context)
 }
 
-// ------------------- MARK: NullLiteralExpression -------------------
+// -------------------------------------- NullLiteralExpression -------------------------------------- MARK: NullLiteralExpression
 
 func NewNullLiteralExpr(id int64, pos *position.Position) *ConstantAccessExpression {
 	return NewConstantAccessExpr(id, pos, "NULL")
 }
 
-// ------------------- MARK: SimpleAssignmentExpression -------------------
+// -------------------------------------- SimpleAssignmentExpression -------------------------------------- MARK: SimpleAssignmentExpression
 
 type SimpleAssignmentExpression struct {
 	*Expression
@@ -411,7 +411,7 @@ func (stmt *SimpleAssignmentExpression) Process(visitor Visitor, context any) (a
 	return visitor.ProcessSimpleAssignmentExpr(stmt, context)
 }
 
-// ------------------- MARK: CompoundAssignmentExpression -------------------
+// -------------------------------------- CompoundAssignmentExpression -------------------------------------- MARK: CompoundAssignmentExpression
 
 type CompoundAssignmentExpression struct {
 	*Expression
@@ -430,7 +430,7 @@ func (stmt *CompoundAssignmentExpression) Process(visitor Visitor, context any) 
 	return visitor.ProcessCompoundAssignmentExpr(stmt, context)
 }
 
-// ------------------- MARK: ConditionalExpression -------------------
+// -------------------------------------- ConditionalExpression -------------------------------------- MARK: ConditionalExpression
 
 type ConditionalExpression struct {
 	*Expression
@@ -447,7 +447,7 @@ func (stmt *ConditionalExpression) Process(visitor Visitor, context any) (any, e
 	return visitor.ProcessConditionalExpr(stmt, context)
 }
 
-// ------------------- MARK: CoalesceExpression -------------------
+// -------------------------------------- CoalesceExpression -------------------------------------- MARK: CoalesceExpression
 
 type CoalesceExpression struct {
 	*Expression
@@ -463,7 +463,7 @@ func (stmt *CoalesceExpression) Process(visitor Visitor, context any) (any, erro
 	return visitor.ProcessCoalesceExpr(stmt, context)
 }
 
-// ------------------- MARK: BinaryOpExpression -------------------
+// -------------------------------------- BinaryOpExpression -------------------------------------- MARK: BinaryOpExpression
 
 type BinaryOpExpression struct {
 	*Expression
@@ -480,7 +480,7 @@ func (stmt *BinaryOpExpression) Process(visitor Visitor, context any) (any, erro
 	return visitor.ProcessBinaryOpExpr(stmt, context)
 }
 
-// ------------------- MARK: LogicalExpression -------------------
+// -------------------------------------- LogicalExpression -------------------------------------- MARK: LogicalExpression
 
 type LogicalExpression struct {
 	*BinaryOpExpression
@@ -494,7 +494,7 @@ func (stmt *LogicalExpression) Process(visitor Visitor, context any) (any, error
 	return visitor.ProcessLogicalExpr(stmt, context)
 }
 
-// ------------------- MARK: RelationalExpression -------------------
+// -------------------------------------- RelationalExpression -------------------------------------- MARK: RelationalExpression
 
 type RelationalExpression struct {
 	*BinaryOpExpression
@@ -508,7 +508,7 @@ func (stmt *RelationalExpression) Process(visitor Visitor, context any) (any, er
 	return visitor.ProcessRelationalExpr(stmt, context)
 }
 
-// ------------------- MARK: EqualityExpression -------------------
+// -------------------------------------- EqualityExpression -------------------------------------- MARK: EqualityExpression
 
 type EqualityExpression struct {
 	*BinaryOpExpression
@@ -522,7 +522,7 @@ func (stmt *EqualityExpression) Process(visitor Visitor, context any) (any, erro
 	return visitor.ProcessEqualityExpr(stmt, context)
 }
 
-// ------------------- MARK: UnaryOpExpression -------------------
+// -------------------------------------- UnaryOpExpression -------------------------------------- MARK: UnaryOpExpression
 
 type UnaryOpExpression struct {
 	*Expression
@@ -538,7 +538,7 @@ func (stmt *UnaryOpExpression) Process(visitor Visitor, context any) (any, error
 	return visitor.ProcessUnaryExpr(stmt, context)
 }
 
-// ------------------- MARK: PrefixIncExpression -------------------
+// -------------------------------------- PrefixIncExpression -------------------------------------- MARK: PrefixIncExpression
 
 type PrefixIncExpression struct {
 	*UnaryOpExpression
@@ -552,7 +552,7 @@ func (stmt *PrefixIncExpression) Process(visitor Visitor, context any) (any, err
 	return visitor.ProcessPrefixIncExpr(stmt, context)
 }
 
-// ------------------- MARK: PostfixIncExpression -------------------
+// -------------------------------------- PostfixIncExpression -------------------------------------- MARK: PostfixIncExpression
 
 type PostfixIncExpression struct {
 	*UnaryOpExpression
@@ -566,7 +566,7 @@ func (stmt *PostfixIncExpression) Process(visitor Visitor, context any) (any, er
 	return visitor.ProcessPostfixIncExpr(stmt, context)
 }
 
-// ------------------- MARK: LogicalNotExpression -------------------
+// -------------------------------------- LogicalNotExpression -------------------------------------- MARK: LogicalNotExpression
 
 type LogicalNotExpression struct {
 	*UnaryOpExpression
@@ -580,7 +580,7 @@ func (stmt *LogicalNotExpression) Process(visitor Visitor, context any) (any, er
 	return visitor.ProcessLogicalNotExpr(stmt, context)
 }
 
-// ------------------- MARK: CastExpression -------------------
+// -------------------------------------- CastExpression -------------------------------------- MARK: CastExpression
 
 type CastExpression struct {
 	*UnaryOpExpression
@@ -594,7 +594,7 @@ func (stmt *CastExpression) Process(visitor Visitor, context any) (any, error) {
 	return visitor.ProcessCastExpr(stmt, context)
 }
 
-// ------------------- MARK: IncludeExpression -------------------
+// -------------------------------------- IncludeExpression -------------------------------------- MARK: IncludeExpression
 
 type IncludeExpression struct {
 	*Expression
@@ -609,7 +609,7 @@ func (stmt *IncludeExpression) Process(visitor Visitor, context any) (any, error
 	return visitor.ProcessIncludeExpr(stmt, context)
 }
 
-// ------------------- MARK: IncludeOnceExpression -------------------
+// -------------------------------------- IncludeOnceExpression -------------------------------------- MARK: IncludeOnceExpression
 
 type IncludeOnceExpression struct {
 	*IncludeExpression
@@ -623,7 +623,7 @@ func (stmt *IncludeOnceExpression) Process(visitor Visitor, context any) (any, e
 	return visitor.ProcessIncludeOnceExpr(stmt, context)
 }
 
-// ------------------- MARK: RequireExpression -------------------
+// -------------------------------------- RequireExpression -------------------------------------- MARK: RequireExpression
 
 type RequireExpression struct {
 	*IncludeExpression
@@ -637,7 +637,7 @@ func (stmt *RequireExpression) Process(visitor Visitor, context any) (any, error
 	return visitor.ProcessRequireExpr(stmt, context)
 }
 
-// ------------------- MARK: RequireOnceExpression -------------------
+// -------------------------------------- RequireOnceExpression -------------------------------------- MARK: RequireOnceExpression
 
 type RequireOnceExpression struct {
 	*IncludeExpression

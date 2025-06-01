@@ -48,7 +48,7 @@ func NewEnvironment(parentEnv *Environment, request *request.Request, interprete
 	return env, nil
 }
 
-// ------------------- MARK: Variables -------------------
+// -------------------------------------- Variables -------------------------------------- MARK: Variables
 
 func (env *Environment) declareVariable(variableName string, value values.RuntimeValue) (values.RuntimeValue, phpError.Error) {
 	if slices.Contains(env.globalVariables, variableName) {
@@ -131,7 +131,7 @@ func (env *Environment) addGlobalVariable(variableName string) {
 	env.globalVariables = append(env.globalVariables, variableName)
 }
 
-// ------------------- MARK: Constants -------------------
+// -------------------------------------- Constants -------------------------------------- MARK: Constants
 
 func (env *Environment) AddPredefinedConstants(name string, value values.RuntimeValue) {
 	env.predefinedConstants[name] = value
@@ -169,7 +169,7 @@ func (env *Environment) LookupConstant(constantName string) (values.RuntimeValue
 	return values.NewVoid(), phpError.NewError("Undefined constant \"%s\"", constantName)
 }
 
-// ------------------- MARK: Functions -------------------
+// -------------------------------------- Functions -------------------------------------- MARK: Functions
 
 func (env *Environment) FunctionExists(functionName string) bool {
 	if _, err := env.resolveNativeFunction(functionName); err == nil {
@@ -180,7 +180,7 @@ func (env *Environment) FunctionExists(functionName string) bool {
 	return err == nil
 }
 
-// ------------------- MARK: Native functions -------------------
+// -------------------------------------- Native functions -------------------------------------- MARK: Native functions
 
 func (env *Environment) AddNativeFunction(functionName string, function runtime.NativeFunction) {
 	env.nativeFunctions[functionName] = function
@@ -213,7 +213,7 @@ func (env *Environment) lookupNativeFunction(functionName string) (runtime.Nativ
 	return value, nil
 }
 
-// ------------------- MARK: User functions -------------------
+// -------------------------------------- User functions -------------------------------------- MARK: User functions
 
 func (env *Environment) defineUserFunction(function *ast.FunctionDefinitionStatement) phpError.Error {
 	_, err := env.lookupNativeFunction(function.FunctionName)

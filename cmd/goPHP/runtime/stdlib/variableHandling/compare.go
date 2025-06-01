@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-// ------------------- MARK: CompareRelation -------------------
+// -------------------------------------- CompareRelation -------------------------------------- MARK: CompareRelation
 
 func CompareRelation(lhs values.RuntimeValue, operator string, rhs values.RuntimeValue, leadingNumeric bool) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-relational-expression
@@ -609,7 +609,7 @@ func compareRelationString(lhs *values.Str, operator string, rhs values.RuntimeV
 //           NULL  bool  int  float  string  array  object  resource
 // resource   >     ->    ->   ->     2       <      3       2
 
-// ------------------- MARK: comparison -------------------
+// -------------------------------------- comparison -------------------------------------- MARK: comparison
 
 func Compare(lhs values.RuntimeValue, operator string, rhs values.RuntimeValue) (*values.Bool, phpError.Error) {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-equality-expression

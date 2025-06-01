@@ -42,7 +42,7 @@ func Register(environment runtime.Environment) {
 	environment.AddPredefinedConstants("PHP_ROUND_HALF_ODD", values.NewInt(4))
 }
 
-// ------------------- MARK: abs -------------------
+// -------------------------------------- abs -------------------------------------- MARK: abs
 
 func nativeFn_abs(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	args, err := funcParamValidator.NewValidator("abs").AddParam("$num", []string{"int", "float"}, nil).Validate(args)
@@ -72,7 +72,7 @@ func nativeFn_abs(args []values.RuntimeValue, _ runtime.Context) (values.Runtime
 	return values.NewVoid(), phpError.NewError("Unsupported value type %s", numType)
 }
 
-// ------------------- MARK: acos -------------------
+// -------------------------------------- acos -------------------------------------- MARK: acos
 
 func nativeFn_acos(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	args, err := funcParamValidator.NewValidator("acos").AddParam("$num", []string{"float"}, nil).Validate(args)
@@ -84,7 +84,7 @@ func nativeFn_acos(args []values.RuntimeValue, _ runtime.Context) (values.Runtim
 	return values.NewFloat(goMath.Acos(args[0].(*values.Float).Value)), nil
 }
 
-// ------------------- MARK: acosh -------------------
+// -------------------------------------- acosh -------------------------------------- MARK: acosh
 
 func nativeFn_acosh(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	args, err := funcParamValidator.NewValidator("acosh").AddParam("$num", []string{"float"}, nil).Validate(args)
@@ -96,7 +96,7 @@ func nativeFn_acosh(args []values.RuntimeValue, _ runtime.Context) (values.Runti
 	return values.NewFloat(goMath.Acosh(args[0].(*values.Float).Value)), nil
 }
 
-// ------------------- MARK: asin -------------------
+// -------------------------------------- asin -------------------------------------- MARK: asin
 
 func nativeFn_asin(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	args, err := funcParamValidator.NewValidator("asin").AddParam("$num", []string{"float"}, nil).Validate(args)
@@ -108,7 +108,7 @@ func nativeFn_asin(args []values.RuntimeValue, _ runtime.Context) (values.Runtim
 	return values.NewFloat(goMath.Asin(args[0].(*values.Float).Value)), nil
 }
 
-// ------------------- MARK: asinh -------------------
+// -------------------------------------- asinh -------------------------------------- MARK: asinh
 
 func nativeFn_asinh(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	args, err := funcParamValidator.NewValidator("asinh").AddParam("$num", []string{"float"}, nil).Validate(args)
@@ -120,7 +120,7 @@ func nativeFn_asinh(args []values.RuntimeValue, _ runtime.Context) (values.Runti
 	return values.NewFloat(goMath.Asinh(args[0].(*values.Float).Value)), nil
 }
 
-// ------------------- MARK: pi -------------------
+// -------------------------------------- pi -------------------------------------- MARK: pi
 
 func nativeFn_pi(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
 	_, err := funcParamValidator.NewValidator("pi").Validate(args)

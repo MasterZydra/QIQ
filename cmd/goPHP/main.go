@@ -61,7 +61,7 @@ func main() {
 	processStdin()
 }
 
-// ------------------- MARK: stdin -------------------
+// -------------------------------------- stdin -------------------------------------- MARK: stdin
 
 func processStdin() {
 	content := ""
@@ -81,7 +81,7 @@ func processStdin() {
 	os.Exit(exitCode)
 }
 
-// ------------------- MARK: given file -------------------
+// -------------------------------------- given file -------------------------------------- MARK: given file
 
 func processFile(filename string) {
 	content, err := os.ReadFile(filename)
@@ -98,7 +98,7 @@ func processFile(filename string) {
 	os.Exit(exitCode)
 }
 
-// ------------------- MARK: web server -------------------
+// -------------------------------------- web server -------------------------------------- MARK: web server
 
 func webServer() {
 	if documentRoot == "" {
@@ -190,7 +190,7 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, output)
 }
 
-// ------------------- MARK: core logic -------------------
+// -------------------------------------- core logic -------------------------------------- MARK: core logic
 
 func processContent(w http.ResponseWriter, r *http.Request, content string, filename string) (output string, exitCode int) {
 	stat := stats.Start()

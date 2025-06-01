@@ -20,7 +20,7 @@ func Register(environment runtime.Environment) {
 	environment.AddNativeFunction("ob_start", nativeFn_ob_start)
 }
 
-// ------------------- MARK: ob_clean -------------------
+// -------------------------------------- ob_clean -------------------------------------- MARK: ob_clean
 
 func nativeFn_ob_clean(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.ob-clean.php
@@ -45,7 +45,7 @@ func nativeFn_ob_clean(args []values.RuntimeValue, context runtime.Context) (val
 	return values.NewBool(true), nil
 }
 
-// ------------------- MARK: ob_flush -------------------
+// -------------------------------------- ob_flush -------------------------------------- MARK: ob_flush
 
 func nativeFn_ob_flush(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.ob-flush.php
@@ -76,7 +76,7 @@ func nativeFn_ob_flush(args []values.RuntimeValue, context runtime.Context) (val
 	return values.NewBool(true), nil
 }
 
-// ------------------- MARK: ob_end_clean -------------------
+// -------------------------------------- ob_end_clean -------------------------------------- MARK: ob_end_clean
 
 func nativeFn_ob_end_clean(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.ob-end-clean.php
@@ -101,7 +101,7 @@ func nativeFn_ob_end_clean(args []values.RuntimeValue, context runtime.Context) 
 	return values.NewBool(true), nil
 }
 
-// ------------------- MARK: ob_end_flush -------------------
+// -------------------------------------- ob_end_flush -------------------------------------- MARK: ob_end_flush
 
 func nativeFn_ob_end_flush(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.ob-end-flush.php
@@ -131,7 +131,7 @@ func ObEndFlush(context runtime.Context) (values.RuntimeValue, phpError.Error) {
 	return values.NewBool(true), nil
 }
 
-// ------------------- MARK: ob_get_clean -------------------
+// -------------------------------------- ob_get_clean -------------------------------------- MARK: ob_get_clean
 
 func nativeFn_ob_get_clean(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.ob-get-clean.php
@@ -157,7 +157,7 @@ func nativeFn_ob_get_clean(args []values.RuntimeValue, context runtime.Context) 
 	return values.NewStr(content), nil
 }
 
-// ------------------- MARK: ob_get_flush -------------------
+// -------------------------------------- ob_get_flush -------------------------------------- MARK: ob_get_flush
 
 func nativeFn_ob_get_flush(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.ob-get-flush.php
@@ -183,7 +183,7 @@ func nativeFn_ob_get_flush(args []values.RuntimeValue, context runtime.Context) 
 	return values.NewStr(content), nil
 }
 
-// ------------------- MARK: ob_get_contents -------------------
+// -------------------------------------- ob_get_contents -------------------------------------- MARK: ob_get_contents
 
 func nativeFn_ob_get_contents(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.ob-get-contents.php
@@ -200,7 +200,7 @@ func nativeFn_ob_get_contents(args []values.RuntimeValue, context runtime.Contex
 	return values.NewStr(context.Interpreter.GetOutputBufferStack().GetLast().Content), nil
 }
 
-// ------------------- MARK: ob_get_level -------------------
+// -------------------------------------- ob_get_level -------------------------------------- MARK: ob_get_level
 
 func nativeFn_ob_get_level(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.ob-get-level.php
@@ -213,7 +213,7 @@ func nativeFn_ob_get_level(args []values.RuntimeValue, context runtime.Context) 
 	return values.NewInt(int64(context.Interpreter.GetOutputBufferStack().Len())), nil
 }
 
-// ------------------- MARK: ob_start -------------------
+// -------------------------------------- ob_start -------------------------------------- MARK: ob_start
 
 func nativeFn_ob_start(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.ob-start

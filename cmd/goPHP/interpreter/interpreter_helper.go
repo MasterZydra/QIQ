@@ -19,6 +19,8 @@ import (
 	"time"
 )
 
+// -------------------------------------- Common -------------------------------------- MARK: Common
+
 func (interpreter *Interpreter) Print(str string) {
 	if interpreter.outputBufferStack.Len() > 0 {
 		interpreter.outputBufferStack.Get(interpreter.outputBufferStack.Len() - 1).Content += str
@@ -272,7 +274,7 @@ func GetExecutableCreationDate() time.Time {
 	return info.ModTime()
 }
 
-// ------------------- MARK: Caching -------------------
+// -------------------------------------- Caching -------------------------------------- MARK: Caching
 
 func (interpreter *Interpreter) isCached(stmt ast.IStatement) bool {
 	_, found := interpreter.cache[stmt.GetId()]
@@ -284,7 +286,7 @@ func (interpreter *Interpreter) writeCache(stmt ast.IStatement, value values.Run
 	return value
 }
 
-// ------------------- MARK: RuntimeValue -------------------
+// -------------------------------------- RuntimeValue -------------------------------------- MARK: RuntimeValue
 
 func (interpreter *Interpreter) exprToRuntimeValue(expr ast.IExpression, env *Environment) (values.RuntimeValue, phpError.Error) {
 	switch expr.GetKind() {
@@ -368,7 +370,7 @@ func (interpreter *Interpreter) exprToRuntimeValue(expr ast.IExpression, env *En
 	}
 }
 
-// ------------------- MARK: inc-dec-calculation -------------------
+// -------------------------------------- inc-dec-calculation -------------------------------------- MARK: inc-dec-calculation
 
 func calculateIncDec(operator string, operand values.RuntimeValue) (values.RuntimeValue, phpError.Error) {
 	switch operand.GetType() {
@@ -507,7 +509,7 @@ func calculateIncDecString(operator string, operand *values.Str) (values.Runtime
 	*/
 }
 
-// ------------------- MARK: unary-op-calculation -------------------
+// -------------------------------------- unary-op-calculation -------------------------------------- MARK: unary-op-calculation
 
 func calculateUnary(operator string, operand values.RuntimeValue) (values.RuntimeValue, phpError.Error) {
 	switch operand.GetType() {
@@ -612,7 +614,7 @@ func calculateUnaryInteger(operator string, operand *values.Int) (*values.Int, p
 	}
 }
 
-// ------------------- MARK: binary-op-calculation -------------------
+// -------------------------------------- binary-op-calculation -------------------------------------- MARK: binary-op-calculation
 
 func calculate(operand1 values.RuntimeValue, operator string, operand2 values.RuntimeValue) (values.RuntimeValue, phpError.Error) {
 	resultType := values.VoidValue

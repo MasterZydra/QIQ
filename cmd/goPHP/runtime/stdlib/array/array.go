@@ -18,7 +18,7 @@ func Register(environment runtime.Environment) {
 	environment.AddNativeFunction("key_exists", nativeFn_array_key_exists)
 }
 
-// ------------------- MARK: array_key_exists -------------------
+// -------------------------------------- array_key_exists -------------------------------------- MARK: array_key_exists
 
 func nativeFn_array_key_exists(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	args, err := funcParamValidator.NewValidator("array_key_exists").
@@ -46,7 +46,7 @@ func lib_array_key_exists(key values.RuntimeValue, array *values.Array) (bool, p
 	return array.Contains(key), nil
 }
 
-// ------------------- MARK: array_key_first -------------------
+// -------------------------------------- array_key_first -------------------------------------- MARK: array_key_first
 
 func nativeFn_array_key_first(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.array-key-first.php
@@ -68,7 +68,7 @@ func FirstKey(array *values.Array) values.RuntimeValue {
 	return array.Keys[0]
 }
 
-// ------------------- MARK: array_key_last -------------------
+// -------------------------------------- array_key_last -------------------------------------- MARK: array_key_last
 
 func nativeFn_array_key_last(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.array-key-last.php
@@ -90,7 +90,7 @@ func LastKey(array *values.Array) values.RuntimeValue {
 	return array.Keys[len(array.Keys)-1]
 }
 
-// ------------------- MARK: array_pop -------------------
+// -------------------------------------- array_pop -------------------------------------- MARK: array_pop
 
 func nativeFn_array_pop(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.array-pop.php
@@ -115,7 +115,7 @@ func nativeFn_array_pop(args []values.RuntimeValue, _ runtime.Context) (values.R
 	return value, nil
 }
 
-// ------------------- MARK: array_push -------------------
+// -------------------------------------- array_push -------------------------------------- MARK: array_push
 
 func nativeFn_array_push(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.array-push.php

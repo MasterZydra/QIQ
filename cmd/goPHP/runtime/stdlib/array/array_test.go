@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-// ------------------- MARK: array_key_exists -------------------
+// -------------------------------------- array_key_exists -------------------------------------- MARK: array_key_exists
 
 func TestArrayKeyExists(t *testing.T) {
 	array := values.NewArray()
@@ -19,7 +19,7 @@ func TestArrayKeyExists(t *testing.T) {
 	}
 }
 
-// ------------------- MARK: array_key_first -------------------
+// -------------------------------------- array_key_first -------------------------------------- MARK: array_key_first
 
 func TestArrayKeyFirst(t *testing.T) {
 	array := values.NewArray()
@@ -45,7 +45,7 @@ func TestArrayKeyFirst(t *testing.T) {
 	}
 }
 
-// ------------------- MARK: array_key_last -------------------
+// -------------------------------------- array_key_last -------------------------------------- MARK: array_key_last
 
 func TestArrayKeyLast(t *testing.T) {
 	array := values.NewArray()
@@ -73,7 +73,7 @@ func TestArrayKeyLast(t *testing.T) {
 	}
 }
 
-// ------------------- MARK: array_pop -------------------
+// -------------------------------------- array_pop -------------------------------------- MARK: array_pop
 
 func TestArrayPop(t *testing.T) {
 	context := runtime.NewContext(nil, nil)
@@ -111,7 +111,7 @@ func TestArrayPop(t *testing.T) {
 	}
 }
 
-// ------------------- MARK: array_push -------------------
+// -------------------------------------- array_push -------------------------------------- MARK: array_push
 
 func TestArrayPush(t *testing.T) {
 	context := runtime.NewContext(nil, nil)

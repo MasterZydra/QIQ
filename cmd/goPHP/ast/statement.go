@@ -4,7 +4,7 @@ import (
 	"GoPHP/cmd/goPHP/position"
 )
 
-// ------------------- MARK: Statement -------------------
+// -------------------------------------- Statement -------------------------------------- MARK: Statement
 
 type IStatement interface {
 	GetId() int64
@@ -46,7 +46,7 @@ func (stmt *Statement) Process(visitor Visitor, context any) (any, error) {
 	return visitor.ProcessStmt(stmt, context)
 }
 
-// ------------------- MARK: FunctionDefinitionStatement -------------------
+// -------------------------------------- FunctionDefinitionStatement -------------------------------------- MARK: FunctionDefinitionStatement
 
 type FunctionParameter struct {
 	Type []string
@@ -71,7 +71,7 @@ func (stmt *FunctionDefinitionStatement) Process(visitor Visitor, context any) (
 	return visitor.ProcessFunctionDefinitionStmt(stmt, context)
 }
 
-// ------------------- MARK: ForStatement -------------------
+// -------------------------------------- ForStatement -------------------------------------- MARK: ForStatement
 
 type ForStatement struct {
 	*Statement
@@ -89,7 +89,7 @@ func (stmt *ForStatement) Process(visitor Visitor, context any) (any, error) {
 	return visitor.ProcessForStmt(stmt, context)
 }
 
-// ------------------- MARK: WhileStatement -------------------
+// -------------------------------------- WhileStatement -------------------------------------- MARK: WhileStatement
 
 type WhileStatement struct {
 	*Statement
@@ -105,7 +105,7 @@ func (stmt *WhileStatement) Process(visitor Visitor, context any) (any, error) {
 	return visitor.ProcessWhileStmt(stmt, context)
 }
 
-// ------------------- MARK: DoStatement -------------------
+// -------------------------------------- DoStatement -------------------------------------- MARK: DoStatement
 
 type DoStatement struct {
 	*WhileStatement
@@ -119,7 +119,7 @@ func (stmt *DoStatement) Process(visitor Visitor, context any) (any, error) {
 	return visitor.ProcessDoStmt(stmt, context)
 }
 
-// ------------------- MARK: IfStatement -------------------
+// -------------------------------------- IfStatement -------------------------------------- MARK: IfStatement
 
 type IfStatement struct {
 	*Statement
@@ -137,7 +137,7 @@ func (stmt *IfStatement) Process(visitor Visitor, context any) (any, error) {
 	return visitor.ProcessIfStmt(stmt, context)
 }
 
-// ------------------- MARK: CompoundStatement -------------------
+// -------------------------------------- CompoundStatement -------------------------------------- MARK: CompoundStatement
 
 type CompoundStatement struct {
 	*Statement
@@ -152,7 +152,7 @@ func (stmt *CompoundStatement) Process(visitor Visitor, context any) (any, error
 	return visitor.ProcessCompoundStmt(stmt, context)
 }
 
-// ------------------- MARK: EchoStatement -------------------
+// -------------------------------------- EchoStatement -------------------------------------- MARK: EchoStatement
 
 type EchoStatement struct {
 	*Statement
@@ -167,7 +167,7 @@ func (stmt *EchoStatement) Process(visitor Visitor, context any) (any, error) {
 	return visitor.ProcessEchoStmt(stmt, context)
 }
 
-// ------------------- MARK: ConstDeclarationStatement -------------------
+// -------------------------------------- ConstDeclarationStatement -------------------------------------- MARK: ConstDeclarationStatement
 
 type ConstDeclarationStatement struct {
 	*Statement
@@ -183,7 +183,7 @@ func (stmt *ConstDeclarationStatement) Process(visitor Visitor, context any) (an
 	return visitor.ProcessConstDeclarationStmt(stmt, context)
 }
 
-// ------------------- MARK: ExpressionStatement -------------------
+// -------------------------------------- ExpressionStatement -------------------------------------- MARK: ExpressionStatement
 
 type ExpressionStatement struct {
 	*Statement
@@ -198,7 +198,7 @@ func (stmt *ExpressionStatement) Process(visitor Visitor, context any) (any, err
 	return visitor.ProcessExpressionStmt(stmt, context)
 }
 
-// ------------------- MARK: BreakStatement -------------------
+// -------------------------------------- BreakStatement -------------------------------------- MARK: BreakStatement
 
 type BreakStatement struct {
 	*ExpressionStatement
@@ -212,7 +212,7 @@ func (stmt *BreakStatement) Process(visitor Visitor, context any) (any, error) {
 	return visitor.ProcessBreakStmt(stmt, context)
 }
 
-// ------------------- MARK: ContinueStatement -------------------
+// -------------------------------------- ContinueStatement -------------------------------------- MARK: ContinueStatement
 
 type ContinueStatement struct {
 	*ExpressionStatement
@@ -226,7 +226,7 @@ func (stmt *ContinueStatement) Process(visitor Visitor, context any) (any, error
 	return visitor.ProcessContinueStmt(stmt, context)
 }
 
-// ------------------- MARK: ReturnStatement -------------------
+// -------------------------------------- ReturnStatement -------------------------------------- MARK: ReturnStatement
 
 type ReturnStatement struct {
 	*ExpressionStatement
@@ -240,7 +240,7 @@ func (stmt *ReturnStatement) Process(visitor Visitor, context any) (any, error) 
 	return visitor.ProcessReturnStmt(stmt, context)
 }
 
-// ------------------- MARK: GlobalDeclarationStatement -------------------
+// -------------------------------------- GlobalDeclarationStatement -------------------------------------- MARK: GlobalDeclarationStatement
 
 type GlobalDeclarationStatement struct {
 	*Statement

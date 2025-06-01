@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-// ------------------- MARK: math -------------------
+// -------------------------------------- math -------------------------------------- MARK: math
 
 func TestLibMath(t *testing.T) {
 	// abs
@@ -30,7 +30,7 @@ func TestLibMath(t *testing.T) {
 	testInputOutput(t, `<?php var_dump(M_PI === pi());`, "bool(true)\n")
 }
 
-// ------------------- MARK: constant -------------------
+// -------------------------------------- constant -------------------------------------- MARK: constant
 
 func TestLibConstant(t *testing.T) {
 	testInputOutput(t, `<?php var_dump(constant('E_ALL'));`, "int(32767)\n")
@@ -38,7 +38,7 @@ func TestLibConstant(t *testing.T) {
 	// TODO Add test cases for user defined constants
 }
 
-// ------------------- MARK: defined -------------------
+// -------------------------------------- defined -------------------------------------- MARK: defined
 
 func TestLibDefined(t *testing.T) {
 	testInputOutput(t, `<?php var_dump(defined('PHP_VERSION'));`, "bool(true)\n")
@@ -46,7 +46,7 @@ func TestLibDefined(t *testing.T) {
 	// TODO Add test cases for user defined constants
 }
 
-// ------------------- MARK: ob_ functions -------------------
+// -------------------------------------- ob_ functions -------------------------------------- MARK: ob_ functions
 
 func TestObFunctions(t *testing.T) {
 	// Implicit flush
@@ -89,7 +89,7 @@ func TestObFunctions(t *testing.T) {
 		"034-12")
 }
 
-// ------------------- MARK: date -------------------
+// -------------------------------------- date -------------------------------------- MARK: date
 
 func TestLibDate(t *testing.T) {
 	// checkdate
@@ -139,7 +139,7 @@ func TestLibDate(t *testing.T) {
 	)
 }
 
-// ------------------- MARK: strings -------------------
+// -------------------------------------- strings -------------------------------------- MARK: strings
 
 func TestLibStrings(t *testing.T) {
 	// bin2hex
@@ -206,7 +206,7 @@ func TestLibStrings(t *testing.T) {
 	testInputOutput(t, `<?php var_dump(ucfirst(''));`, "string(0) \"\"\n")
 }
 
-// ------------------- MARK: get_debug_type -------------------
+// -------------------------------------- get_debug_type -------------------------------------- MARK: get_debug_type
 
 func TestLibGetDebugType(t *testing.T) {
 	testInputOutput(t, `<?php echo get_debug_type(false);`, "bool")
@@ -224,7 +224,7 @@ func TestLibGetDebugType(t *testing.T) {
 	testInputOutput(t, `<?php echo get_debug_type(null);`, "null")
 }
 
-// ------------------- MARK: gettype -------------------
+// -------------------------------------- gettype -------------------------------------- MARK: gettype
 
 func TestLibGettype(t *testing.T) {
 	testInputOutput(t, `<?php echo gettype(false);`, "boolean")
@@ -242,7 +242,7 @@ func TestLibGettype(t *testing.T) {
 	testInputOutput(t, `<?php echo gettype(null);`, "NULL")
 }
 
-// ------------------- MARK: is_XXX -------------------
+// -------------------------------------- is_XXX -------------------------------------- MARK: is_XXX
 
 func TestLibIsType(t *testing.T) {
 	// is_array
@@ -279,7 +279,7 @@ func TestLibIsType(t *testing.T) {
 	testInputOutput(t, `<?php $a = 42; var_dump(is_string($a));`, "bool(false)\n")
 }
 
-// ------------------- MARK: print_r -------------------
+// -------------------------------------- print_r -------------------------------------- MARK: print_r
 
 func TestLibPrintR(t *testing.T) {
 	testInputOutput(t, `<?php print_r(3.5);`, "3.5")
@@ -293,7 +293,7 @@ func TestLibPrintR(t *testing.T) {
 	testInputOutput(t, `<?php print_r([1, [1]]);`, "Array\n(\n    [0] => 1\n    [1] => Array\n        (\n            [0] => 1\n        )\n\n)\n")
 }
 
-// ------------------- MARK: var_dump -------------------
+// -------------------------------------- var_dump -------------------------------------- MARK: var_dump
 
 func TestLibVarDump(t *testing.T) {
 	testInputOutput(t, `<?php var_dump(3.5);`, "float(3.5)\n")
@@ -303,7 +303,7 @@ func TestLibVarDump(t *testing.T) {
 	testInputOutput(t, `<?php var_dump([1, [1]]);`, "array(2) {\n  [0]=>\n  int(1)\n  [1]=>\n  array(1) {\n    [0]=>\n    int(1)\n  }\n}\n")
 }
 
-// ------------------- MARK: var_export -------------------
+// -------------------------------------- var_export -------------------------------------- MARK: var_export
 
 func TestLibVarExport(t *testing.T) {
 	testInputOutput(t, `<?php var_export(3.5);`, "3.5")
@@ -317,7 +317,7 @@ func TestLibVarExport(t *testing.T) {
 	testInputOutput(t, `<?php var_export([1, [1]]);`, "array (\n  0 => 1,\n  1 => \n  array (\n    0 => 1,\n  ),\n)")
 }
 
-// ------------------- MARK: optionInfo -------------------
+// -------------------------------------- optionInfo -------------------------------------- MARK: optionInfo
 
 func TestLibOptionInfo(t *testing.T) {
 	// ini_get
@@ -331,7 +331,7 @@ func TestLibOptionInfo(t *testing.T) {
 	testInputOutput(t, `<?php var_dump(ini_set('error_reporting', E_ERROR)); var_dump(ini_set('error_reporting', E_ERROR));`, "string(5) \"32767\"\nstring(1) \"1\"\n")
 }
 
-// ------------------- MARK: error_reporting -------------------
+// -------------------------------------- error_reporting -------------------------------------- MARK: error_reporting
 
 func TestLibErrorReporting(t *testing.T) {
 	// Spec: https://www.php.net/manual/en/function.error-reporting.php - Example #1

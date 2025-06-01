@@ -28,7 +28,7 @@ func Register(environment runtime.Environment) {
 	environment.AddNativeFunction("ucfirst", nativeFn_ucfirst)
 }
 
-// ------------------- MARK: bin2hex -------------------
+// -------------------------------------- bin2hex -------------------------------------- MARK: bin2hex
 
 func nativeFn_bin2hex(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.bin2hex.php
@@ -48,7 +48,7 @@ func nativeFn_bin2hex(args []values.RuntimeValue, _ runtime.Context) (values.Run
 	return values.NewStr(output.String()), nil
 }
 
-// ------------------- MARK: chr -------------------
+// -------------------------------------- chr -------------------------------------- MARK: chr
 
 func nativeFn_chr(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.chr.php
@@ -70,7 +70,7 @@ func nativeFn_chr(args []values.RuntimeValue, _ runtime.Context) (values.Runtime
 	return values.NewStr(string(rune(codepoint))), nil
 }
 
-// ------------------- MARK: implode -------------------
+// -------------------------------------- implode -------------------------------------- MARK: implode
 
 func nativeFn_implode(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.implode.php
@@ -132,7 +132,7 @@ func nativeFn_implode(args []values.RuntimeValue, _ runtime.Context) (values.Run
 	return values.NewStr(result.String()), nil
 }
 
-// ------------------- MARK: lcfirst -------------------
+// -------------------------------------- lcfirst -------------------------------------- MARK: lcfirst
 
 func nativeFn_lcfirst(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.lcfirst.php
@@ -158,7 +158,7 @@ func nativeFn_lcfirst(args []values.RuntimeValue, _ runtime.Context) (values.Run
 	return values.NewStr(input), nil
 }
 
-// ------------------- MARK: quotemeta -------------------
+// -------------------------------------- quotemeta -------------------------------------- MARK: quotemeta
 
 func nativeFn_quotemeta(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.quotemeta.php
@@ -185,7 +185,7 @@ func nativeFn_quotemeta(args []values.RuntimeValue, _ runtime.Context) (values.R
 	return values.NewStr(output.String()), nil
 }
 
-// ------------------- MARK: str_contains -------------------
+// -------------------------------------- str_contains -------------------------------------- MARK: str_contains
 
 func nativeFn_str_contains(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.str-contains.php
@@ -204,7 +204,7 @@ func nativeFn_str_contains(args []values.RuntimeValue, _ runtime.Context) (value
 	return values.NewBool(goStrings.Contains(haystack, needle)), nil
 }
 
-// ------------------- MARK: str_ends_with -------------------
+// -------------------------------------- str_ends_with -------------------------------------- MARK: str_ends_with
 
 func nativeFn_str_ends_with(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.str-ends-with.php
@@ -223,7 +223,7 @@ func nativeFn_str_ends_with(args []values.RuntimeValue, _ runtime.Context) (valu
 	return values.NewBool(goStrings.HasSuffix(haystack, needle)), nil
 }
 
-// ------------------- MARK: str_repeat -------------------
+// -------------------------------------- str_repeat -------------------------------------- MARK: str_repeat
 
 func nativeFn_str_repeat(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.str-repeat.php
@@ -249,7 +249,7 @@ func nativeFn_str_repeat(args []values.RuntimeValue, _ runtime.Context) (values.
 	return values.NewStr(goStrings.Repeat(input, int(times))), nil
 }
 
-// ------------------- MARK: str_starts_with -------------------
+// -------------------------------------- str_starts_with -------------------------------------- MARK: str_starts_with
 
 func nativeFn_str_starts_with(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.str-starts-with.php
@@ -268,7 +268,7 @@ func nativeFn_str_starts_with(args []values.RuntimeValue, _ runtime.Context) (va
 	return values.NewBool(goStrings.HasPrefix(haystack, needle)), nil
 }
 
-// ------------------- MARK: strlen -------------------
+// -------------------------------------- strlen -------------------------------------- MARK: strlen
 
 func nativeFn_strlen(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.strlen.php
@@ -281,7 +281,7 @@ func nativeFn_strlen(args []values.RuntimeValue, _ runtime.Context) (values.Runt
 	return values.NewInt(int64(len(args[0].(*values.Str).Value))), nil
 }
 
-// ------------------- MARK: strtolower -------------------
+// -------------------------------------- strtolower -------------------------------------- MARK: strtolower
 
 func nativeFn_strtolower(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.strtolower.php
@@ -305,7 +305,7 @@ func nativeFn_strtolower(args []values.RuntimeValue, _ runtime.Context) (values.
 	return values.NewStr(input), nil
 }
 
-// ------------------- MARK: strtoupper -------------------
+// -------------------------------------- strtoupper -------------------------------------- MARK: strtoupper
 
 func nativeFn_strtoupper(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.strtoupper.php
@@ -329,7 +329,7 @@ func nativeFn_strtoupper(args []values.RuntimeValue, _ runtime.Context) (values.
 	return values.NewStr(input), nil
 }
 
-// ------------------- MARK: ucfirst -------------------
+// -------------------------------------- ucfirst -------------------------------------- MARK: ucfirst
 
 func nativeFn_ucfirst(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.ucfirst.php

@@ -30,7 +30,7 @@ func getTestFilePath() string {
 	}
 }
 
-// ------------------- MARK: function tests -------------------
+// -------------------------------------- function tests -------------------------------------- MARK: function tests
 
 func TestVariableExprToVariableName(t *testing.T) {
 	// simple-variable-expression
@@ -96,7 +96,7 @@ func TestVariableExprToVariableName(t *testing.T) {
 	testInputOutput(t, `<?php $b = "bb";$a = "aa";$bb = "baa";$c = ${$a=$b};var_dump($c);`, "string(3) \"baa\"\n")
 }
 
-// ------------------- MARK: input output tests -------------------
+// -------------------------------------- input output tests -------------------------------------- MARK: input output tests
 
 func testForError(t *testing.T, php string, expected phpError.Error) {
 	interpreter, err := NewInterpreter(ini.NewDevIni(), &request.Request{}, TEST_FILE_NAME)
@@ -788,7 +788,7 @@ func TestOperators(t *testing.T) {
 	testInputOutput(t, `<?php echo 2 + 3 * 4 + 5 * 6;`, "44")
 }
 
-// ------------------- MARK: comparison -------------------
+// -------------------------------------- comparison -------------------------------------- MARK: comparison
 
 func TestStrictComparison(t *testing.T) {
 	// Table from https://www.php.net/manual/en/types.comparisons.php

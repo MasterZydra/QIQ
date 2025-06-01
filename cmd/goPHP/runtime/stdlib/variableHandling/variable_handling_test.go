@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-// ------------------- MARK: boolval -------------------
+// -------------------------------------- boolval -------------------------------------- MARK: boolval
 
 func TestLibBoolval(t *testing.T) {
 	doTest := func(runtimeValue values.RuntimeValue, expected bool) {
@@ -51,7 +51,7 @@ func TestLibBoolval(t *testing.T) {
 	doTest(values.NewNull(), false)
 }
 
-// ------------------- MARK: floatval -------------------
+// -------------------------------------- floatval -------------------------------------- MARK: floatval
 
 func TestLibFloatval(t *testing.T) {
 	doTest := func(runtimeValue values.RuntimeValue, expected float64) {
@@ -94,7 +94,7 @@ func TestLibFloatval(t *testing.T) {
 	doTest(values.NewNull(), 0)
 }
 
-// ------------------- MARK: intval -------------------
+// -------------------------------------- intval -------------------------------------- MARK: intval
 
 func TestLibIntval(t *testing.T) {
 	doTest := func(runtimeValue values.RuntimeValue, expected int64) {
@@ -144,7 +144,7 @@ func TestLibIntval(t *testing.T) {
 	doTest(values.NewNull(), 0)
 }
 
-// ------------------- MARK: strval -------------------
+// -------------------------------------- strval -------------------------------------- MARK: strval
 
 func TestLibStrval(t *testing.T) {
 	doTest := func(runtimeValue values.RuntimeValue, expected string) {

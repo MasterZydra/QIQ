@@ -33,7 +33,7 @@ func Register(environment runtime.Environment) {
 	environment.AddPredefinedConstants("E_ALL", values.NewInt(phpError.E_ALL))
 }
 
-// ------------------- MARK: error_reporting -------------------
+// -------------------------------------- error_reporting -------------------------------------- MARK: error_reporting
 
 func nativeFn_error_reporting(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.error-reporting.php

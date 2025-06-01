@@ -12,7 +12,7 @@ func Register(environment runtime.Environment) {
 	environment.AddNativeFunction("function_exists", nativeFn_function_exists)
 }
 
-// ------------------- MARK: function_exists -------------------
+// -------------------------------------- function_exists -------------------------------------- MARK: function_exists
 
 func nativeFn_function_exists(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/function.function-exists.php

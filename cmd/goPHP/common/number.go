@@ -14,7 +14,7 @@ func addRegexEOL(str string, add bool) string {
 	return str
 }
 
-// ------------------- MARK: Integer -------------------
+// -------------------------------------- Integer -------------------------------------- MARK: Integer
 
 func IsDigit(char string) bool {
 	// Spec: https://phplang.org/spec/19-grammar.html#grammar-digit
@@ -191,7 +191,7 @@ func IntegerLiteralToInt64(str string, leadingNumeric bool) (int64, error) {
 	return 0, fmt.Errorf("Given string is not an integer literal")
 }
 
-// ------------------- MARK: Float -------------------
+// -------------------------------------- Float -------------------------------------- MARK: Float
 
 const floatingFractLiteralPattern = `^(\d*(_\d+)*\.\d+(_\d+)*|\d+(_\d+)*\.)([eE][+-]?\d+(_\d+)*)?`
 
