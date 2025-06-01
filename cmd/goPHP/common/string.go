@@ -5,6 +5,48 @@ import (
 	"strings"
 )
 
+func IsQualifiedName(name string) bool {
+	// Spec: https://phplang.org/spec/09-lexical-structure.html#grammar-qualified-name
+
+	// qualified-name::
+	//    namespace-name-as-a-prefixopt   name
+
+	// namespace-name-as-a-prefix::
+	//    \
+	//    \opt   namespace-name   \
+	//    namespace   \
+	//    namespace   \   namespace-name
+
+	match, _ := regexp.MatchString(`^\\?([_a-zA-Z\x80-\xff][_a-zA-Z0-9\x80-\xff]*\\)*[_a-zA-Z\x80-\xff][_a-zA-Z0-9\x80-\xff]*$`, name)
+	return match
+}
+
+func IsName(name string) bool {
+	// Spec: https://phplang.org/spec/09-lexical-structure.html#grammar-name
+
+	// name::
+	//    name-nondigit
+	//    name   name-nondigit
+	//    name   digit
+
+	// name-nondigit::
+	//    nondigit
+	//    one of the characters 0x80–0xff
+
+	// nondigit:: one of
+	//    _
+	//    a   b   c   d   e   f   g   h   i   j   k   l   m
+	//    n   o   p   q   r   s   t   u   v   w   x   y   z
+	//    A   B   C   D   E   F   G   H   I   J   K   L   M
+	//    N   O   P   Q   R   S   T   U   V   W   X   Y   Z
+
+	// digit:: one of
+	//    0   1   2   3   4   5   6   7   8   9
+
+	match, _ := regexp.MatchString(`^[_a-zA-Z\x80-\xff][_a-zA-Z0-9\x80-\xff]*$`, name)
+	return match
+}
+
 func IsNondigit(char string) bool {
 	// Spec: https://phplang.org/spec/19-grammar.html#grammar-nondigit
 
@@ -27,7 +69,7 @@ func IsNameNondigit(char string) bool {
 	//    one of the characters 0x80–0xff
 
 	b := []byte(char)[0]
-	return IsNondigit(char) || (b >= 128 && b <= 255)
+	return IsNondigit(char) || b >= 0x80
 }
 
 func IsSingleQuotedStringLiteral(str string) bool {

@@ -290,3 +290,47 @@ func TestGlobalDeclaration(t *testing.T) {
 		}),
 	)
 }
+
+func TestClassDeclaration(t *testing.T) {
+	// Simple class
+	class := ast.NewClassDeclarationStmt(0, nil, false, false)
+	class.Name = "c"
+	testStmt(t, `<?php class c { }`, class)
+
+	// Simple abstract class
+	class = ast.NewClassDeclarationStmt(0, nil, true, false)
+	class.Name = "c"
+	testStmt(t, `<?php abstract class c { }`, class)
+
+	// Simple final class
+	class = ast.NewClassDeclarationStmt(0, nil, false, true)
+	class.Name = "c"
+	testStmt(t, `<?php final class c { }`, class)
+
+	// Simple abstract and extended class
+	class = ast.NewClassDeclarationStmt(0, nil, true, false)
+	class.Name = "c"
+	class.BaseClass = "b"
+	testStmt(t, `<?php abstract class c extends b { }`, class)
+
+	// Simple final class with interfaces
+	class = ast.NewClassDeclarationStmt(0, nil, false, true)
+	class.Name = "c"
+	class.Interfaces = append(class.Interfaces, "i")
+	testStmt(t, `<?php final class c implements i { }`, class)
+
+	// Simple final class with multiple interfaces
+	class = ast.NewClassDeclarationStmt(0, nil, false, true)
+	class.Name = "c"
+	class.Interfaces = append(class.Interfaces, "i")
+	class.Interfaces = append(class.Interfaces, "j")
+	testStmt(t, `<?php final class c implements i, j { }`, class)
+
+	// Simple class with constants
+	class = ast.NewClassDeclarationStmt(0, nil, false, true)
+	class.Name = "c"
+	class.Constants["a"] = ast.NewClassConstDeclarationStmt(0, nil, "a", ast.NewStringLiteralExpr(0, nil, "a", ast.DoubleQuotedString), "public")
+	class.Constants["b"] = ast.NewClassConstDeclarationStmt(0, nil, "b", ast.NewStringLiteralExpr(0, nil, "b", ast.DoubleQuotedString), "private")
+	class.Constants["c"] = ast.NewClassConstDeclarationStmt(0, nil, "c", ast.NewIntegerLiteralExpr(0, nil, 3), "private")
+	testStmt(t, `<?php final class c { const a="a"; private const b="b", c=3; }`, class)
+}

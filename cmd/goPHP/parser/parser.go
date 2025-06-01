@@ -246,47 +246,9 @@ func (parser *Parser) parseStmt() (ast.IStatement, phpError.Error) {
 		return ast.NewExpressionStmt(parser.nextId(), ast.NewUnsetIntrinsic(parser.nextId(), pos, args)), nil
 	}
 
-	// -------------------------------------- const-declaration -------------------------------------- MARK: const-declaration
-
-	// Spec: https://phplang.org/spec/14-classes.html#grammar-const-declaration
-
-	// const-declaration:
-	//    const   const-elements   ;
-
-	// const-elements:
-	//    const-element
-	//    const-elements   ,   const-element
-
-	// const-element:
-	//    name   =   constant-expression
-
+	// const-declaration
 	if parser.isToken(lexer.KeywordToken, "const", false) {
-		PrintParserCallstack("const-statement", parser)
-		pos := parser.eat().Position
-		if err := parser.expectTokenType(lexer.NameToken, false); err != nil {
-			return ast.NewEmptyStmt(), err
-		}
-		for {
-			name := parser.eat().Value
-			if err := parser.expect(lexer.OpOrPuncToken, "=", true); err != nil {
-				return ast.NewEmptyStmt(), err
-			}
-			// TODO parse constant-expression
-			value, err := parser.parseExpr()
-			if err != nil {
-				return ast.NewEmptyStmt(), err
-			}
-
-			stmt := ast.NewConstDeclarationStmt(parser.nextId(), pos, name, value)
-			if parser.isToken(lexer.OpOrPuncToken, ",", true) {
-				parser.program.Append(stmt)
-				continue
-			}
-			if parser.isToken(lexer.OpOrPuncToken, ";", true) {
-				return stmt, nil
-			}
-			return ast.NewEmptyStmt(), phpError.NewParseError("Const declaration - unexpected token %s", parser.at())
-		}
+		return parser.parseConstDeclaration()
 	}
 
 	// function-definition
@@ -294,7 +256,13 @@ func (parser *Parser) parseStmt() (ast.IStatement, phpError.Error) {
 		return parser.parseFunctionDefinition()
 	}
 
-	// TODO class-declaration
+	// class-declaration
+	if ((parser.isToken(lexer.KeywordToken, "abstract", false) || parser.isToken(lexer.KeywordToken, "final", false)) &&
+		parser.next(0).TokenType == lexer.KeywordToken && parser.next(0).Value == "class") ||
+		parser.isToken(lexer.KeywordToken, "class", false) {
+		return parser.parseClassDeclaration()
+	}
+
 	// TODO interface-declaration
 	// TODO trait-declaration
 	// TODO namespace-definition
@@ -366,6 +334,49 @@ func (parser *Parser) parseStmt() (ast.IStatement, phpError.Error) {
 		}
 		return ast.NewEmptyExpr(),
 			phpError.NewParseError(`Statement must end with a semicolon. Got: "%s" at %s`, parser.at().Value, parser.at().Position.ToPosString())
+	}
+}
+
+func (parser *Parser) parseConstDeclaration() (ast.IStatement, phpError.Error) {
+	// -------------------------------------- const-declaration -------------------------------------- MARK: const-declaration
+
+	// Spec: https://phplang.org/spec/14-classes.html#grammar-const-declaration
+
+	// const-declaration:
+	//    const   const-elements   ;
+
+	// const-elements:
+	//    const-element
+	//    const-elements   ,   const-element
+
+	// const-element:
+	//    name   =   constant-expression
+
+	PrintParserCallstack("const-statement", parser)
+	pos := parser.eat().Position
+	if err := parser.expectTokenType(lexer.NameToken, false); err != nil {
+		return ast.NewEmptyStmt(), err
+	}
+	for {
+		name := parser.eat().Value
+		if err := parser.expect(lexer.OpOrPuncToken, "=", true); err != nil {
+			return ast.NewEmptyStmt(), err
+		}
+		// TODO parse constant-expression
+		value, err := parser.parseExpr()
+		if err != nil {
+			return ast.NewEmptyStmt(), err
+		}
+
+		stmt := ast.NewConstDeclarationStmt(parser.nextId(), pos, name, value)
+		if parser.isToken(lexer.OpOrPuncToken, ",", true) {
+			parser.program.Append(stmt)
+			continue
+		}
+		if parser.isToken(lexer.OpOrPuncToken, ";", true) {
+			return stmt, nil
+		}
+		return ast.NewEmptyStmt(), phpError.NewParseError("Const declaration - unexpected token %s", parser.at())
 	}
 }
 
@@ -943,7 +954,11 @@ func (parser *Parser) parseFunctionDefinition() (ast.IStatement, phpError.Error)
 		return ast.NewEmptyStmt(), phpError.NewParseError("Function name expected. Got %s", parser.at().TokenType)
 	}
 
-	functionName := parser.eat().Value
+	functionName := parser.at().Value
+	functionNamePos := parser.eat().Position
+	if !common.IsName(functionName) {
+		return ast.NewEmptyExpr(), phpError.NewParseError("\"%s\" is not a valid function name at %s", functionName, functionNamePos.ToPosString())
+	}
 
 	if !parser.isToken(lexer.OpOrPuncToken, "(", true) {
 		return ast.NewEmptyStmt(), phpError.NewParseError("Expected \"(\". Got %s", parser.at())

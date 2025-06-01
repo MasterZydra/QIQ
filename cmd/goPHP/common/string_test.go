@@ -62,3 +62,38 @@ func TestExtendWithSpaces(t *testing.T) {
 	doTest(t, "abc", 4, "abc ")
 	doTest(t, "abc", 10, "abc       ")
 }
+
+func TestIsName(t *testing.T) {
+	doTest := func(t *testing.T, input string, output bool) {
+		if got := IsName(input); got != output {
+			t.Errorf("\nExpected: \"%v\" Got: \"%v\"", output, got)
+		}
+	}
+
+	doTest(t, "abc", true)
+	doTest(t, "abc123", true)
+	doTest(t, "_abc", true)
+	doTest(t, "__abc", true)
+	doTest(t, "_a1", true)
+	doTest(t, "_1", true)
+
+	doTest(t, " ", false)
+	doTest(t, "1", false)
+	doTest(t, "1abc", false)
+	doTest(t, "$abc", false)
+}
+
+func TestIsQualifiedName(t *testing.T) {
+	doTest := func(t *testing.T, input string, output bool) {
+		if got := IsQualifiedName(input); got != output {
+			t.Errorf("\nExpected: \"%v\" Got: \"%v\"", output, got)
+		}
+	}
+
+	doTest(t, "abc", true)
+	doTest(t, `a\b\c\d`, true)
+	doTest(t, `\a\b\c`, true)
+
+	doTest(t, `a\b\`, false)
+	doTest(t, `a/b`, false)
+}

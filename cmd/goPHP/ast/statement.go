@@ -167,6 +167,23 @@ func (stmt *EchoStatement) Process(visitor Visitor, context any) (any, error) {
 	return visitor.ProcessEchoStmt(stmt, context)
 }
 
+// -------------------------------------- ClassConstDeclarationStatement -------------------------------------- MARK: ClassConstDeclarationStatement
+
+type ClassConstDeclarationStatement struct {
+	*Statement
+	Name      string
+	Value     IExpression
+	Visiblity string
+}
+
+func NewClassConstDeclarationStmt(id int64, pos *position.Position, name string, value IExpression, visibility string) *ClassConstDeclarationStatement {
+	return &ClassConstDeclarationStatement{Statement: NewStmt(id, ClassConstDeclarationStmt, pos), Name: name, Value: value, Visiblity: visibility}
+}
+
+func (stmt *ClassConstDeclarationStatement) Process(visitor Visitor, context any) (any, error) {
+	panic("ClassConstDeclarationStatement.Process should not be called")
+}
+
 // -------------------------------------- ConstDeclarationStatement -------------------------------------- MARK: ConstDeclarationStatement
 
 type ConstDeclarationStatement struct {
@@ -253,4 +270,34 @@ func NewGlobalDeclarationStmt(id int64, pos *position.Position, variables []IExp
 
 func (stmt *GlobalDeclarationStatement) Process(visitor Visitor, context any) (any, error) {
 	return visitor.ProcessGlobalDeclarationStmt(stmt, context)
+}
+
+// -------------------------------------- ClassDeclaration -------------------------------------- MARK: ClassDeclaration
+
+type ClassDeclarationStatement struct {
+	*Statement
+	IsAbstract bool
+	IsFinal    bool
+	Name       string
+	BaseClass  string
+	Interfaces []string
+	Constants  map[string]*ClassConstDeclarationStatement
+}
+
+func NewClassDeclarationStmt(id int64, pos *position.Position, isAbstract, isFinal bool) *ClassDeclarationStatement {
+	return &ClassDeclarationStatement{
+		Statement:  NewStmt(id, ClassDeclarationStmt, pos),
+		IsAbstract: isAbstract,
+		IsFinal:    isFinal,
+		Interfaces: []string{},
+		Constants:  map[string]*ClassConstDeclarationStatement{},
+	}
+}
+
+func (stmt *ClassDeclarationStatement) Process(visitor Visitor, context any) (any, error) {
+	return visitor.ProcessClassDeclarationStmt(stmt, context)
+}
+
+func (stmt *ClassDeclarationStatement) AddConst(constStmt *ClassConstDeclarationStatement) {
+	stmt.Constants[constStmt.Name] = constStmt
 }

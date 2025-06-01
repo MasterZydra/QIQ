@@ -17,6 +17,8 @@ func PrintInterpreterCallstack(stmt IStatement) {
 	println(result.(string))
 }
 
+var _ Visitor = &InterpreterCallStackVisitor{}
+
 type InterpreterCallStackVisitor struct {
 }
 
@@ -72,6 +74,11 @@ func (visitor InterpreterCallStackVisitor) ProcessCastExpr(stmt *CastExpression,
 		"{%s - operator: \"%s\" expr: %s, pos: %s }",
 		stmt.GetKind(), stmt.Operator, ToString(stmt.Expr), stmt.GetPosition().ToPosString(),
 	), nil
+}
+
+// ProcessClassDeclarationStmt implements Visitor.
+func (visitor InterpreterCallStackVisitor) ProcessClassDeclarationStmt(stmt *ClassDeclarationStatement, context any) (any, error) {
+	panic("InterpreterCallStackVisitor.ProcessClassDeclarationStmt is not implemented")
 }
 
 // ProcessCoalesceExpr implements Visitor.

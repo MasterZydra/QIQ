@@ -5,6 +5,8 @@ import (
 	"strings"
 )
 
+// MARK: Keywords
+
 // Spec: https://phplang.org/spec/19-grammar.html#grammar-keyword
 var keywords = []string{
 	"abstract", "and", "array", "as", "break", "callable", "case", "catch", "class", "clone",
@@ -79,6 +81,21 @@ func IsReturnTypeKeyword(token string) bool {
 
 	return token == "void" || slices.Contains(paramTypeKeywords, token)
 }
+
+// Spec: https://phplang.org/spec/14-classes.html#grammar-visibility-modifier
+var visibilityModifierKeywords = []string{"public", "protected", "private"}
+
+func IsVisibilitModifierKeyword(token string) bool {
+	// Spec: https://phplang.org/spec/14-classes.html#grammar-visibility-modifier
+
+	// Spec: https://phplang.org/spec/09-lexical-structure.html#keywords
+	// Keywords are not case-sensitive.
+	token = strings.ToLower(token)
+
+	return slices.Contains(visibilityModifierKeywords, token)
+}
+
+// MARK: Constants
 
 // Spec: https://phplang.org/spec/06-constants.html#context-dependent-constants
 var contextDependentConstants = []string{

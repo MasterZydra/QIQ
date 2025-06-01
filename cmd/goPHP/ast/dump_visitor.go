@@ -10,6 +10,8 @@ func ToString(stmt IStatement) string {
 	return result.(string)
 }
 
+var _ Visitor = &DumpVisitor{}
+
 type DumpVisitor struct {
 }
 
@@ -64,6 +66,22 @@ func (visitor DumpVisitor) ProcessCastExpr(stmt *CastExpression, _ any) (any, er
 	return fmt.Sprintf(
 		"{%s - operator: \"%s\" expr: %s }",
 		stmt.GetKind(), stmt.Operator, ToString(stmt.Expr),
+	), nil
+}
+
+// ProcessClassDeclarationStmt implements Visitor.
+func (visitor DumpVisitor) ProcessClassDeclarationStmt(stmt *ClassDeclarationStatement, context any) (any, error) {
+	constants := ""
+	for _, constant := range stmt.Constants {
+		constants += "{visibility: \"" + constant.Visiblity + "\", name: \"" + constant.Name + "\", " + ToString(constant.Value) + "}, "
+	}
+	interfaces := ""
+	for _, classInterface := range stmt.Interfaces {
+		interfaces += "\"" + classInterface + "\", "
+	}
+	return fmt.Sprintf(
+		"{%s - name: \"%s\", isAbstract: %v, isFinal: %v, extends: \"%s\" , implements: %s, constants: {%s} }",
+		stmt.GetKind(), stmt.Name, stmt.IsAbstract, stmt.IsFinal, stmt.BaseClass, interfaces, constants,
 	), nil
 }
 

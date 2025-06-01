@@ -11,9 +11,12 @@ import (
 	"GoPHP/cmd/goPHP/stats"
 )
 
+var _ ast.Visitor = &Interpreter{}
+
 type Interpreter struct {
 	filename           string
 	includedFiles      []string
+	classDeclarations  map[string]*ast.ClassDeclarationStatement
 	ini                *ini.Ini
 	request            *request.Request
 	response           *request.Response
@@ -31,6 +34,7 @@ func NewInterpreter(ini *ini.Ini, r *request.Request, filename string) (*Interpr
 	interpreter := &Interpreter{
 		filename:          filename,
 		includedFiles:     []string{},
+		classDeclarations: map[string]*ast.ClassDeclarationStatement{},
 		ini:               ini,
 		request:           r,
 		response:          request.NewResponse(),

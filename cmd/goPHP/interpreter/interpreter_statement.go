@@ -12,6 +12,12 @@ func (interpreter *Interpreter) ProcessStmt(stmt *ast.Statement, _ any) (any, er
 	panic("ProcessStmt should never be called")
 }
 
+// ProcessClassDeclarationStmt implements Visitor.
+func (visitor *Interpreter) ProcessClassDeclarationStmt(stmt *ast.ClassDeclarationStatement, _ any) (any, error) {
+	visitor.classDeclarations[stmt.Name] = stmt
+	return values.NewVoid(), nil
+}
+
 // ProcessConstDeclarationStmt implements Visitor.
 func (interpreter *Interpreter) ProcessConstDeclarationStmt(stmt *ast.ConstDeclarationStatement, env any) (any, error) {
 	value := must(interpreter.processStmt(stmt.Value, env))

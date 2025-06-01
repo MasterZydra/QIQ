@@ -3,6 +3,7 @@ package ast
 type Visitor interface {
 	// Statements
 	ProcessBreakStmt(stmt *BreakStatement, context any) (any, error)
+	ProcessClassDeclarationStmt(stmt *ClassDeclarationStatement, context any) (any, error)
 	ProcessCompoundStmt(stmt *CompoundStatement, context any) (any, error)
 	ProcessConstDeclarationStmt(stmt *ConstDeclarationStatement, context any) (any, error)
 	ProcessContinueStmt(stmt *ContinueStatement, context any) (any, error)
