@@ -260,4 +260,5 @@ func registerPredefinedConstants(environment *Environment) {
 	environment.AddPredefinedConstants("PHP_RELEASE_VERSION", values.NewInt(config.ReleaseVersion))
 	environment.AddPredefinedConstants("PHP_EXTRA_VERSION", values.NewStr(config.ExtraVersion))
 	environment.AddPredefinedConstants("PHP_VERSION_ID", values.NewInt(config.VersionId))
+	environment.AddPredefinedConstants("PHP_BUILD_DATE", values.NewStr(""))
 }

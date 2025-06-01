@@ -206,7 +206,6 @@ func processContent(w http.ResponseWriter, r *http.Request, content string, file
 	request := request.NewRequestFromGoRequest(r, documentRoot, serverAddr, filename)
 	interpreter, err := interpreter.NewInterpreter(initIni, request, filename)
 
-	fmt.Println(interpreter.GetIni().GetBool("expose_php"))
 	if w != nil {
 		// TODO content-type returned from interpreter?
 		w.Header().Set("Content-Type", "text/html")

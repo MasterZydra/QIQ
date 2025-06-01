@@ -555,6 +555,10 @@ func (interpreter *Interpreter) ProcessConstantAccessExpr(expr *ast.ConstantAcce
 		return values.NewInt(int64(expr.GetPosition().Line)), nil
 	}
 
+	if expr.ConstantName == "PHP_BUILD_DATE" {
+		return values.NewStr(GetExecutableCreationDate().Format("Jan 02 2006 15:04:05")), nil
+	}
+
 	// TODO __CLASS__ 	The class name. The class name includes the namespace it was declared in (e.g. Foo\Bar). When used inside a trait method, __CLASS__ is the name of the class the trait is used in.
 	// TODO __TRAIT__ 	The trait name. The trait name includes the namespace it was declared in (e.g. Foo\Bar).
 	// TODO __METHOD__ 	The class method name.

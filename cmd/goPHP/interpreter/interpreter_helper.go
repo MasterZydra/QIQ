@@ -11,10 +11,12 @@ import (
 	"GoPHP/cmd/goPHP/runtime/values"
 	"math"
 	GoOs "os"
+	"path/filepath"
 	"regexp"
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func (interpreter *Interpreter) Print(str string) {
@@ -254,6 +256,20 @@ func (interpreter *Interpreter) includeFile(filepathExpr ast.IExpression, env *E
 		return runtimeValue, parserErr
 	}
 	return interpreter.processProgram(program, env)
+}
+
+func GetExecutableCreationDate() time.Time {
+	exePath, err := GoOs.Executable()
+	if err != nil {
+		return time.Now()
+	}
+	info, err := GoOs.Stat(filepath.Clean(exePath))
+	if err != nil {
+		// println(err.Error())
+
+		return time.Now()
+	}
+	return info.ModTime()
 }
 
 // ------------------- MARK: Caching -------------------
