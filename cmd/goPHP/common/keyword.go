@@ -95,6 +95,19 @@ func IsVisibilitModifierKeyword(token string) bool {
 	return slices.Contains(visibilityModifierKeywords, token)
 }
 
+// Spec: https://phplang.org/spec/14-classes.html#grammar-class-modifier
+var classModifierKeywords = []string{"abstract", "final"}
+
+func IsClassModifierKeyword(token string) bool {
+	// Spec: https://phplang.org/spec/14-classes.html#grammar-class-modifier
+
+	// Spec: https://phplang.org/spec/09-lexical-structure.html#keywords
+	// Keywords are not case-sensitive.
+	token = strings.ToLower(token)
+
+	return slices.Contains(classModifierKeywords, token)
+}
+
 // MARK: Constants
 
 // Spec: https://phplang.org/spec/06-constants.html#context-dependent-constants

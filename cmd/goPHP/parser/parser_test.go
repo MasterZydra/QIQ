@@ -19,7 +19,7 @@ func testExprs(t *testing.T, php string, expected []ast.IExpression) {
 	for index, expect := range expected {
 		actual := program.GetStatements()[index].(*ast.ExpressionStatement).Expr
 		if ast.ToString(expect) != ast.ToString(actual) {
-			t.Errorf("\nExpected: \"%s\"\nGot       \"%s\"", ast.ToString(expect), ast.ToString(actual))
+			t.Errorf("\nExpected: \"%s\"\nGot:      \"%s\"", ast.ToString(expect), ast.ToString(actual))
 			return
 		}
 	}
@@ -38,7 +38,7 @@ func testStmts(t *testing.T, php string, expected []ast.IStatement) {
 	for index, expect := range expected {
 		actual := program.GetStatements()[index]
 		if ast.ToString(expect) != ast.ToString(actual) {
-			t.Errorf("\nExpected: \"%s\"\nGot       \"%s\"", ast.ToString(expect), ast.ToString(actual))
+			t.Errorf("\nExpected: \"%s\"\nGot:      \"%s\"", ast.ToString(expect), ast.ToString(actual))
 			return
 		}
 	}
@@ -329,8 +329,21 @@ func TestClassDeclaration(t *testing.T) {
 	// Simple class with constants
 	class = ast.NewClassDeclarationStmt(0, nil, false, true)
 	class.Name = "c"
-	class.Constants["a"] = ast.NewClassConstDeclarationStmt(0, nil, "a", ast.NewStringLiteralExpr(0, nil, "a", ast.DoubleQuotedString), "public")
-	class.Constants["b"] = ast.NewClassConstDeclarationStmt(0, nil, "b", ast.NewStringLiteralExpr(0, nil, "b", ast.DoubleQuotedString), "private")
-	class.Constants["c"] = ast.NewClassConstDeclarationStmt(0, nil, "c", ast.NewIntegerLiteralExpr(0, nil, 3), "private")
+	class.AddConst(ast.NewClassConstDeclarationStmt(0, nil, "a", ast.NewStringLiteralExpr(0, nil, "a", ast.DoubleQuotedString), "public"))
+	class.AddConst(ast.NewClassConstDeclarationStmt(0, nil, "b", ast.NewStringLiteralExpr(0, nil, "b", ast.DoubleQuotedString), "private"))
+	class.AddConst(ast.NewClassConstDeclarationStmt(0, nil, "c", ast.NewIntegerLiteralExpr(0, nil, 3), "private"))
 	testStmt(t, `<?php final class c { const a="a"; private const b="b", c=3; }`, class)
+
+	// Simple class with trait
+	class = ast.NewClassDeclarationStmt(0, nil, false, false)
+	class.Name = "c"
+	class.AddTrait(ast.NewTraitUseStmt(0, nil, "MyTrait"))
+	testStmt(t, `<?php class c { use MyTrait; }`, class)
+
+	// Simple class with multiple traits
+	class = ast.NewClassDeclarationStmt(0, nil, false, false)
+	class.Name = "c"
+	class.AddTrait(ast.NewTraitUseStmt(0, nil, "MyTrait"))
+	class.AddTrait(ast.NewTraitUseStmt(0, nil, "MySecondTrait"))
+	testStmt(t, `<?php class c { use MyTrait, MySecondTrait; }`, class)
 }

@@ -97,3 +97,19 @@ func TestIsQualifiedName(t *testing.T) {
 	doTest(t, `a\b\`, false)
 	doTest(t, `a/b`, false)
 }
+
+func TestIsVariableName(t *testing.T) {
+	doTest := func(t *testing.T, input string, output bool) {
+		if got := IsVariableName(input); got != output {
+			t.Errorf("\nExpected: \"%v\" Got: \"%v\"", output, got)
+		}
+	}
+
+	doTest(t, "$_", true)
+	doTest(t, "$var", true)
+	doTest(t, "$var123", true)
+
+	doTest(t, "$", false)
+	doTest(t, "$0", false)
+	doTest(t, "var", false)
+}

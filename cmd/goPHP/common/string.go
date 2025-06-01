@@ -5,6 +5,16 @@ import (
 	"strings"
 )
 
+func IsVariableName(name string) bool {
+	// Spec: https://phplang.org/spec/09-lexical-structure.html#grammar-variable-name
+
+	// variable-name::
+	//    $   name
+
+	match, _ := regexp.MatchString(`^\$[_a-zA-Z\x80-\xff][_a-zA-Z0-9\x80-\xff]*$`, name)
+	return match
+}
+
 func IsQualifiedName(name string) bool {
 	// Spec: https://phplang.org/spec/09-lexical-structure.html#grammar-qualified-name
 

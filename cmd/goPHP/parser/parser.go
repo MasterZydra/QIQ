@@ -257,7 +257,7 @@ func (parser *Parser) parseStmt() (ast.IStatement, phpError.Error) {
 	}
 
 	// class-declaration
-	if ((parser.isToken(lexer.KeywordToken, "abstract", false) || parser.isToken(lexer.KeywordToken, "final", false)) &&
+	if ((parser.isTokenType(lexer.KeywordToken, false) && common.IsClassModifierKeyword(parser.at().Value)) &&
 		parser.next(0).TokenType == lexer.KeywordToken && parser.next(0).Value == "class") ||
 		parser.isToken(lexer.KeywordToken, "class", false) {
 		return parser.parseClassDeclaration()

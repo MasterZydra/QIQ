@@ -184,6 +184,21 @@ func (stmt *ClassConstDeclarationStatement) Process(visitor Visitor, context any
 	panic("ClassConstDeclarationStatement.Process should not be called")
 }
 
+// -------------------------------------- TraitUseStatement -------------------------------------- MARK: TraitUseStatement
+
+type TraitUseStatement struct {
+	*Statement
+	Name string
+}
+
+func NewTraitUseStmt(id int64, pos *position.Position, name string) *TraitUseStatement {
+	return &TraitUseStatement{Statement: NewStmt(id, ClassConstDeclarationStmt, pos), Name: name}
+}
+
+func (stmt *TraitUseStatement) Process(visitor Visitor, context any) (any, error) {
+	panic("TraitUseStatement.Process should not be called")
+}
+
 // -------------------------------------- ConstDeclarationStatement -------------------------------------- MARK: ConstDeclarationStatement
 
 type ConstDeclarationStatement struct {
@@ -282,6 +297,7 @@ type ClassDeclarationStatement struct {
 	BaseClass  string
 	Interfaces []string
 	Constants  map[string]*ClassConstDeclarationStatement
+	Traits     []*TraitUseStatement
 }
 
 func NewClassDeclarationStmt(id int64, pos *position.Position, isAbstract, isFinal bool) *ClassDeclarationStatement {
@@ -291,6 +307,7 @@ func NewClassDeclarationStmt(id int64, pos *position.Position, isAbstract, isFin
 		IsFinal:    isFinal,
 		Interfaces: []string{},
 		Constants:  map[string]*ClassConstDeclarationStatement{},
+		Traits:     []*TraitUseStatement{},
 	}
 }
 
@@ -300,4 +317,8 @@ func (stmt *ClassDeclarationStatement) Process(visitor Visitor, context any) (an
 
 func (stmt *ClassDeclarationStatement) AddConst(constStmt *ClassConstDeclarationStatement) {
 	stmt.Constants[constStmt.Name] = constStmt
+}
+
+func (stmt *ClassDeclarationStatement) AddTrait(trait *TraitUseStatement) {
+	stmt.Traits = append(stmt.Traits, trait)
 }

@@ -53,6 +53,7 @@ const (
 	FunctionDefinitionStmt    NodeType = "FunctionDefinitionStatement"
 	GlobalDeclarationStmt     NodeType = "GlobalDeclarationStatement"
 	IfStmt                    NodeType = "IfStatement"
+	TraitUseStmt              NodeType = "TraitUseStatement"
 	WhileStmt                 NodeType = "WhileStatement"
 	DoStmt                    NodeType = "DoStatement"
 	ReturnStmt                NodeType = "ReturnStatement"

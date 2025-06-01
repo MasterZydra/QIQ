@@ -1,6 +1,10 @@
 package ast
 
-import "fmt"
+import (
+	"fmt"
+	"maps"
+	"slices"
+)
 
 func ToString(stmt IStatement) string {
 	if stmt == nil {
@@ -72,16 +76,22 @@ func (visitor DumpVisitor) ProcessCastExpr(stmt *CastExpression, _ any) (any, er
 // ProcessClassDeclarationStmt implements Visitor.
 func (visitor DumpVisitor) ProcessClassDeclarationStmt(stmt *ClassDeclarationStatement, context any) (any, error) {
 	constants := ""
-	for _, constant := range stmt.Constants {
+	constantsKeys := slices.Sorted(maps.Keys(stmt.Constants))
+	for _, key := range constantsKeys {
+		constant := stmt.Constants[key]
 		constants += "{visibility: \"" + constant.Visiblity + "\", name: \"" + constant.Name + "\", " + ToString(constant.Value) + "}, "
 	}
 	interfaces := ""
 	for _, classInterface := range stmt.Interfaces {
 		interfaces += "\"" + classInterface + "\", "
 	}
+	traits := ""
+	for _, trait := range stmt.Traits {
+		traits += "{" + trait.Name + "}"
+	}
 	return fmt.Sprintf(
-		"{%s - name: \"%s\", isAbstract: %v, isFinal: %v, extends: \"%s\" , implements: %s, constants: {%s} }",
-		stmt.GetKind(), stmt.Name, stmt.IsAbstract, stmt.IsFinal, stmt.BaseClass, interfaces, constants,
+		"{%s - name: \"%s\", isAbstract: %v, isFinal: %v, extends: \"%s\" , implements: %s, constants: {%s}, traits: {%s} }",
+		stmt.GetKind(), stmt.Name, stmt.IsAbstract, stmt.IsFinal, stmt.BaseClass, interfaces, constants, traits,
 	), nil
 }
 

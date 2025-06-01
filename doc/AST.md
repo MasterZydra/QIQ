@@ -92,4 +92,9 @@ classDiagram
   CallableVariable <|-- MemberCallExpression
   CallableVariable <|-- ScopedCallExpression
   CallableVariable <|-- FunctionCallExpression
+
+  ClassDeclaration <|-- ClassMemberDeclaration
+  ClassMemberDeclaration <|-- TraitUseClause
+  ClassMemberDeclaration <|-- ClassConstDeclaration
+  ClassConstDeclaration <|-- Expression
 ```

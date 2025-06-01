@@ -72,6 +72,7 @@
 - require(_once), include(_once): `require 'lib.php';`
 - error control expression: `@fn();`
 - global declaration: `global $var;`
+- class declaration: `class MyClass extends ParentC implements I, J {}`
 
 ## Data types
 - array

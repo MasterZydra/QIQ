@@ -98,7 +98,15 @@ func (parser *Parser) parseClassMemberDeclaration(class *ast.ClassDeclarationSta
 	//    destructor-declaration
 	//    trait-use-clause
 
+	PrintParserCallstack("class-member-declarations", parser)
+
 	for {
+		// trait-use-clause
+		if parser.isToken(lexer.KeywordToken, "use", false) {
+			parser.parserTraitUseClause(class)
+			continue
+		}
+
 		// class-const-declaration
 		if (parser.isTokenType(lexer.KeywordToken, false) && common.IsVisibilitModifierKeyword(parser.at().Value) &&
 			parser.next(0).TokenType == lexer.KeywordToken && parser.next(0).Value == "const") ||
@@ -115,8 +123,7 @@ func (parser *Parser) parseClassMemberDeclaration(class *ast.ClassDeclarationSta
 
 		// TODO destructor-declaration
 
-		// TODO trait-use-clause
-
+		// End of class-member-declarations
 		if parser.isToken(lexer.OpOrPuncToken, "}", false) {
 			return nil
 		}
@@ -170,5 +177,61 @@ func (parser *Parser) parseClassConstDeclaration(class *ast.ClassDeclarationStat
 			return nil
 		}
 		return phpError.NewParseError("Class const declaration - unexpected token %s", parser.at())
+	}
+}
+
+func (parser *Parser) parserTraitUseClause(class *ast.ClassDeclarationStatement) phpError.Error {
+	// Spec: https://phplang.org/spec/16-traits.html#grammar-trait-use-clause
+
+	// trait-use-clause:
+	//    use   trait-name-list   trait-use-specification
+
+	// trait-name-list:
+	//    qualified-name
+	//    trait-name-list   ,   qualified-name
+
+	// trait-use-specification:
+	//    ;
+	//    {   trait-select-and-alias-clauses(opt)   }
+
+	// trait-select-and-alias-clauses:
+	//    trait-select-and-alias-clause
+	//    trait-select-and-alias-clauses   trait-select-and-alias-clause
+
+	// trait-select-and-alias-clause:
+	//    trait-select-insteadof-clause   ;
+	//    trait-alias-as-clause   ;
+
+	// trait-select-insteadof-clause:
+	//    qualified-name   ::   name   insteadof   trait-name-list
+
+	// trait-alias-as-clause:
+	//    name   as   visibility-modifier(opt)   name
+	//    name   as   visibility-modifier   name(opt)
+
+	PrintParserCallstack("trait-use-clause", parser)
+
+	// Eat "use"
+	parser.eat()
+
+	for {
+		// trait-name-list
+		traitName := parser.at().Value
+		traitNamePos := parser.eat().Position
+		if !common.IsQualifiedName(traitName) {
+			return phpError.NewParseError("\"%s\" is not a valid trait name at %s", traitName, traitNamePos.ToPosString())
+		}
+		class.AddTrait(ast.NewTraitUseStmt(parser.nextId(), traitNamePos, traitName))
+
+		if parser.isToken(lexer.OpOrPuncToken, ",", true) {
+			continue
+		}
+
+		// trait-use-specification
+		if !parser.isToken(lexer.OpOrPuncToken, ";", true) {
+			return phpError.NewParseError("parserTraitUseClause: Expected \";\". Got: %s", parser.at())
+		}
+		// TODO trait-select-and-alias-clauses(opt)
+		return nil
 	}
 }
