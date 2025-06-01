@@ -147,7 +147,7 @@ func (array *Array) SetElement(key RuntimeValue, value RuntimeValue) phpError.Er
 		return err
 	}
 
-	mapKey, found, err := array.getMapKey(key, false)
+	mapKey, found, err := array.GetMapKey(key, false)
 	if err != nil {
 		return err
 	}
@@ -160,7 +160,7 @@ func (array *Array) SetElement(key RuntimeValue, value RuntimeValue) phpError.Er
 	return nil
 }
 
-func (array *Array) getMapKey(key RuntimeValue, shouldConvertKey bool) (string, bool, phpError.Error) {
+func (array *Array) GetMapKey(key RuntimeValue, shouldConvertKey bool) (string, bool, phpError.Error) {
 	if shouldConvertKey {
 		var err phpError.Error
 		key, err = convertKey(key)
@@ -179,8 +179,12 @@ func (array *Array) getMapKey(key RuntimeValue, shouldConvertKey bool) (string, 
 	return mapKey, found, nil
 }
 
+func (array *Array) IsEmpty() bool {
+	return len(array.Elements) == 0
+}
+
 func (array *Array) Contains(key RuntimeValue) bool {
-	_, found, err := array.getMapKey(key, true)
+	_, found, err := array.GetMapKey(key, true)
 	if err != nil && config.IsDevMode {
 		fmt.Println("Array.Contains: " + err.Error())
 		return false
@@ -189,7 +193,7 @@ func (array *Array) Contains(key RuntimeValue) bool {
 }
 
 func (array *Array) GetElement(key RuntimeValue) (RuntimeValue, bool) {
-	mapKey, found, err := array.getMapKey(key, true)
+	mapKey, found, err := array.GetMapKey(key, true)
 	if err != nil {
 		return NewVoid(), false
 	}

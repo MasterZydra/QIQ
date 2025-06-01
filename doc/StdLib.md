@@ -2,7 +2,10 @@
 
 ## Array Functions
 - array_key_exists
-- key_exits
+- array_key_first
+- array_key_last
+- array_pop
+- key_exists
 
 ## Date/Time Functions
 - checkdate

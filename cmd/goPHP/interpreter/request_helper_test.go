@@ -3,6 +3,7 @@ package interpreter
 import (
 	"GoPHP/cmd/goPHP/ini"
 	"GoPHP/cmd/goPHP/request"
+	"GoPHP/cmd/goPHP/runtime/stdlib/variableHandling"
 	"GoPHP/cmd/goPHP/runtime/values"
 	"testing"
 )
@@ -121,7 +122,7 @@ func TestParseQuery(t *testing.T) {
 			return
 		}
 
-		equal, err := compare(actual, "===", expected)
+		equal, err := variableHandling.Compare(actual, "===", expected)
 		if err != nil {
 			t.Errorf("Unexpected error while comparing: \"%s\"", err)
 			return
