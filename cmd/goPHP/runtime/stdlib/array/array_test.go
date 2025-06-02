@@ -6,6 +6,38 @@ import (
 	"testing"
 )
 
+// -------------------------------------- array_first -------------------------------------- MARK: array_first
+
+func TestArrayFirst(t *testing.T) {
+	context := runtime.NewContext(nil, nil)
+
+	array := values.NewArray()
+	actual, err := nativeFn_array_first([]values.RuntimeValue{array}, context)
+	if err != nil {
+		t.Errorf("Unexpected error: %s", err)
+	} else if actual.GetType() != values.NullValue {
+		t.Errorf("Expected: \"null\", Got \"%s\"", actual)
+	}
+
+	array.SetElement(nil, values.NewInt(42))
+	actual, err = nativeFn_array_first([]values.RuntimeValue{array}, context)
+	if err != nil {
+		t.Errorf("Unexpected error: %s", err)
+	} else if actual.(*values.Int).Value != 42 {
+		t.Errorf("Expected: 42, Got %d", actual.(*values.Int).Value)
+	}
+
+	array = values.NewArray()
+	array.SetElement(values.NewInt(10), values.NewInt(20))
+	array.SetElement(values.NewInt(11), values.NewInt(21))
+	actual, err = nativeFn_array_first([]values.RuntimeValue{array}, context)
+	if err != nil {
+		t.Errorf("Unexpected error: %s", err)
+	} else if actual.(*values.Int).Value != 20 {
+		t.Errorf("Expected: 20, Got %d", actual.(*values.Int).Value)
+	}
+}
+
 // -------------------------------------- array_key_exists -------------------------------------- MARK: array_key_exists
 
 func TestArrayKeyExists(t *testing.T) {
@@ -70,6 +102,38 @@ func TestArrayKeyLast(t *testing.T) {
 	array.SetElement(values.NewStr("str"), values.NewInt(43))
 	if actual := LastKey(array); actual.(*values.Str).Value != "str" {
 		t.Errorf("Expected: \"str\", Got \"%s\"", actual.(*values.Str).Value)
+	}
+}
+
+// -------------------------------------- array_last -------------------------------------- MARK: array_last
+
+func TestArrayLast(t *testing.T) {
+	context := runtime.NewContext(nil, nil)
+
+	array := values.NewArray()
+	actual, err := nativeFn_array_last([]values.RuntimeValue{array}, context)
+	if err != nil {
+		t.Errorf("Unexpected error: %s", err)
+	} else if actual.GetType() != values.NullValue {
+		t.Errorf("Expected: \"null\", Got \"%s\"", actual)
+	}
+
+	array.SetElement(nil, values.NewInt(42))
+	actual, err = nativeFn_array_last([]values.RuntimeValue{array}, context)
+	if err != nil {
+		t.Errorf("Unexpected error: %s", err)
+	} else if actual.(*values.Int).Value != 42 {
+		t.Errorf("Expected: 42, Got %d", actual.(*values.Int).Value)
+	}
+
+	array = values.NewArray()
+	array.SetElement(values.NewInt(10), values.NewInt(20))
+	array.SetElement(values.NewInt(11), values.NewInt(21))
+	actual, err = nativeFn_array_last([]values.RuntimeValue{array}, context)
+	if err != nil {
+		t.Errorf("Unexpected error: %s", err)
+	} else if actual.(*values.Int).Value != 21 {
+		t.Errorf("Expected: 21, Got %d", actual.(*values.Int).Value)
 	}
 }
 

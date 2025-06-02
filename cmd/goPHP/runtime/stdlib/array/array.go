@@ -10,12 +10,34 @@ import (
 
 func Register(environment runtime.Environment) {
 	// Category: Array Functions
+	environment.AddNativeFunction("array_first", nativeFn_array_first)
 	environment.AddNativeFunction("array_key_exists", nativeFn_array_key_exists)
 	environment.AddNativeFunction("array_key_first", nativeFn_array_key_first)
 	environment.AddNativeFunction("array_key_last", nativeFn_array_key_last)
+	environment.AddNativeFunction("array_last", nativeFn_array_last)
 	environment.AddNativeFunction("array_pop", nativeFn_array_pop)
 	environment.AddNativeFunction("array_push", nativeFn_array_push)
 	environment.AddNativeFunction("key_exists", nativeFn_array_key_exists)
+}
+
+// -------------------------------------- array_first -------------------------------------- MARK: array_first
+
+func nativeFn_array_first(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
+	// Spec: https://php.watch/versions/8.5/array_first-array_last
+	args, err := funcParamValidator.NewValidator("array_first").
+		AddParam("$array", []string{"array"}, nil).
+		Validate(args)
+	if err != nil {
+		return values.NewVoid(), err
+	}
+
+	array := args[0].(*values.Array)
+	if array.IsEmpty() {
+		return values.NewNull(), nil
+	}
+
+	value, _ := array.GetElement(FirstKey(array))
+	return value, nil
 }
 
 // -------------------------------------- array_key_exists -------------------------------------- MARK: array_key_exists
@@ -88,6 +110,26 @@ func LastKey(array *values.Array) values.RuntimeValue {
 		return values.NewNull()
 	}
 	return array.Keys[len(array.Keys)-1]
+}
+
+// -------------------------------------- array_last -------------------------------------- MARK: array_last
+
+func nativeFn_array_last(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
+	// Spec: https://php.watch/versions/8.5/array_first-array_last
+	args, err := funcParamValidator.NewValidator("array_last").
+		AddParam("$array", []string{"array"}, nil).
+		Validate(args)
+	if err != nil {
+		return values.NewVoid(), err
+	}
+
+	array := args[0].(*values.Array)
+	if array.IsEmpty() {
+		return values.NewNull(), nil
+	}
+
+	value, _ := array.GetElement(LastKey(array))
+	return value, nil
 }
 
 // -------------------------------------- array_pop -------------------------------------- MARK: array_pop

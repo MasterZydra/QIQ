@@ -1,9 +1,11 @@
 # StdLib Functions
 
 ## Array Functions
+- array_first
 - array_key_exists
 - array_key_first
 - array_key_last
+- array_last
 - array_pop
 - array_push
 - key_exists
