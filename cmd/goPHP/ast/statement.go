@@ -46,6 +46,31 @@ func (stmt *Statement) Process(visitor Visitor, context any) (any, error) {
 	return visitor.ProcessStmt(stmt, context)
 }
 
+// -------------------------------------- MethodDefinitionStatement -------------------------------------- MARK: MethodDefinitionStatement
+
+type MethodDefinitionStatement struct {
+	*Statement
+	Modifiers  []string
+	Name       string
+	Params     []FunctionParameter
+	Body       *CompoundStatement
+	ReturnType []string
+}
+
+func NewMethodDefinitionStmt(id int64, pos *position.Position, name string, modifiers []string, params []FunctionParameter, body *CompoundStatement, returnType []string) *MethodDefinitionStatement {
+	return &MethodDefinitionStatement{Statement: NewStmt(id, FunctionDefinitionStmt, pos),
+		Name:       name,
+		Modifiers:  modifiers,
+		Params:     params,
+		Body:       body,
+		ReturnType: returnType,
+	}
+}
+
+func (stmt *MethodDefinitionStatement) Process(visitor Visitor, context any) (any, error) {
+	panic("MethodDefinitionStatement.Process should not be called")
+}
+
 // -------------------------------------- FunctionDefinitionStatement -------------------------------------- MARK: FunctionDefinitionStatement
 
 type FunctionParameter struct {
@@ -297,6 +322,7 @@ type ClassDeclarationStatement struct {
 	BaseClass  string
 	Interfaces []string
 	Constants  map[string]*ClassConstDeclarationStatement
+	Methods    map[string]*MethodDefinitionStatement
 	Traits     []*TraitUseStatement
 }
 
@@ -307,6 +333,7 @@ func NewClassDeclarationStmt(id int64, pos *position.Position, isAbstract, isFin
 		IsFinal:    isFinal,
 		Interfaces: []string{},
 		Constants:  map[string]*ClassConstDeclarationStatement{},
+		Methods:    map[string]*MethodDefinitionStatement{},
 		Traits:     []*TraitUseStatement{},
 	}
 }
@@ -321,4 +348,9 @@ func (stmt *ClassDeclarationStatement) AddConst(constStmt *ClassConstDeclaration
 
 func (stmt *ClassDeclarationStatement) AddTrait(trait *TraitUseStatement) {
 	stmt.Traits = append(stmt.Traits, trait)
+}
+
+func (stmt *ClassDeclarationStatement) AddMethod(method *MethodDefinitionStatement) {
+	stmt.Methods[method.Name] = method
+
 }

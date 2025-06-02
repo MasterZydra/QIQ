@@ -1,6 +1,7 @@
 package ast
 
 import (
+	"GoPHP/cmd/goPHP/common"
 	"fmt"
 	"maps"
 	"slices"
@@ -81,17 +82,24 @@ func (visitor DumpVisitor) ProcessClassDeclarationStmt(stmt *ClassDeclarationSta
 		constant := stmt.Constants[key]
 		constants += "{visibility: \"" + constant.Visiblity + "\", name: \"" + constant.Name + "\", " + ToString(constant.Value) + "}, "
 	}
-	interfaces := ""
-	for _, classInterface := range stmt.Interfaces {
-		interfaces += "\"" + classInterface + "\", "
+
+	methods := ""
+	methodsKeys := slices.Sorted(maps.Keys(stmt.Methods))
+	for _, key := range methodsKeys {
+		method := stmt.Methods[key]
+		methods += fmt.Sprintf("{name: %s, modifiers: %s, return type: %s, parameters: %s, body: %s}",
+			method.Name, common.ImplodeStrSlice(method.Modifiers), common.ImplodeStrSlice(method.ReturnType), method.Params, ToString(method.Body),
+		)
 	}
+
 	traits := ""
 	for _, trait := range stmt.Traits {
 		traits += "{" + trait.Name + "}"
 	}
+
 	return fmt.Sprintf(
-		"{%s - name: \"%s\", isAbstract: %v, isFinal: %v, extends: \"%s\" , implements: %s, constants: {%s}, traits: {%s} }",
-		stmt.GetKind(), stmt.Name, stmt.IsAbstract, stmt.IsFinal, stmt.BaseClass, interfaces, constants, traits,
+		"{%s - name: \"%s\", isAbstract: %v, isFinal: %v, extends: \"%s\" , implements: %s, constants: {%s}, methods: {%s} traits: {%s} }",
+		stmt.GetKind(), stmt.Name, stmt.IsAbstract, stmt.IsFinal, stmt.BaseClass, common.ImplodeStrSlice(stmt.Interfaces), constants, methods, traits,
 	), nil
 }
 

@@ -964,48 +964,9 @@ func (parser *Parser) parseFunctionDefinition() (ast.IStatement, phpError.Error)
 		return ast.NewEmptyStmt(), phpError.NewParseError("Expected \"(\". Got %s", parser.at())
 	}
 
-	parameters := []ast.FunctionParameter{}
-	if !parser.isToken(lexer.OpOrPuncToken, ")", false) {
-		for {
-			// Allow trailing comma
-			if parser.isToken(lexer.OpOrPuncToken, ")", false) {
-				break
-			}
-
-			// TODO function-definition - parameter-declaration - type-declaration - ?(opt)
-
-			paramTypes := []string{}
-			for parser.at().TokenType == lexer.KeywordToken && common.IsParamTypeKeyword(parser.at().Value) {
-				paramTypes = append(paramTypes, strings.ToLower(parser.eat().Value))
-				if parser.isToken(lexer.OpOrPuncToken, "|", true) {
-					continue
-				}
-				break
-			}
-
-			if len(paramTypes) == 0 {
-				paramTypes = append(paramTypes, "mixed")
-			}
-
-			// TODO function-definition - parameter-declaration - &(opt)
-
-			if parser.at().TokenType != lexer.VariableNameToken {
-				return ast.NewEmptyExpr(), phpError.NewParseError("Expected variable. Got %s", parser.at().TokenType)
-			}
-			parameters = append(parameters, ast.FunctionParameter{Name: parser.eat().Value, Type: paramTypes})
-
-			if parser.isToken(lexer.OpOrPuncToken, ",", true) {
-				continue
-			}
-			if parser.isToken(lexer.OpOrPuncToken, ")", false) {
-				break
-			}
-			return ast.NewEmptyExpr(), phpError.NewParseError("Expected \",\" or \")\". Got %s", parser.at())
-		}
-
-		// TODO function-definition - parameter-declaration - default-argument-specifier(opt)
-
-		// TODO function-definition - variadic-parameter
+	parameters, err := parser.parseFunctionParameters()
+	if err != nil {
+		return ast.NewEmptyStmt(), err
 	}
 
 	if !parser.isToken(lexer.OpOrPuncToken, ")", true) {
@@ -1035,6 +996,54 @@ func (parser *Parser) parseFunctionDefinition() (ast.IStatement, phpError.Error)
 	}
 
 	return ast.NewFunctionDefinitionStmt(parser.nextId(), pos, functionName, parameters, body.(*ast.CompoundStatement), returnTypes), nil
+}
+
+func (parser *Parser) parseFunctionParameters() ([]ast.FunctionParameter, phpError.Error) {
+	parameters := []ast.FunctionParameter{}
+	if !parser.isToken(lexer.OpOrPuncToken, ")", false) {
+		for {
+			// Allow trailing comma
+			if parser.isToken(lexer.OpOrPuncToken, ")", false) {
+				break
+			}
+
+			// TODO function-definition - parameter-declaration - type-declaration - ?(opt)
+
+			paramTypes := []string{}
+			for parser.at().TokenType == lexer.KeywordToken && common.IsParamTypeKeyword(parser.at().Value) {
+				paramTypes = append(paramTypes, strings.ToLower(parser.eat().Value))
+				if parser.isToken(lexer.OpOrPuncToken, "|", true) {
+					continue
+				}
+				break
+			}
+
+			if len(paramTypes) == 0 {
+				paramTypes = append(paramTypes, "mixed")
+			}
+
+			// TODO function-definition - parameter-declaration - &(opt)
+
+			if parser.at().TokenType != lexer.VariableNameToken {
+				return parameters, phpError.NewParseError("Expected variable. Got %s", parser.at().TokenType)
+			}
+			parameters = append(parameters, ast.FunctionParameter{Name: parser.eat().Value, Type: paramTypes})
+
+			if parser.isToken(lexer.OpOrPuncToken, ",", true) {
+				continue
+			}
+			if parser.isToken(lexer.OpOrPuncToken, ")", false) {
+				break
+			}
+			return parameters, phpError.NewParseError("Expected \",\" or \")\". Got %s", parser.at())
+		}
+
+		// TODO function-definition - parameter-declaration - default-argument-specifier(opt)
+
+		// TODO function-definition - variadic-parameter
+	}
+
+	return parameters, nil
 }
 
 func (parser *Parser) parseExpr() (ast.IExpression, phpError.Error) {
