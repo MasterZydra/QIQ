@@ -400,4 +400,22 @@ func TestClassDeclaration(t *testing.T) {
 	class.Name = "c"
 	class.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "__destruct", []string{"public"}, []ast.FunctionParameter{}, ast.NewCompoundStmt(0, []ast.IStatement{ast.NewExpressionStmt(0, ast.NewExitIntrinsic(0, nil, nil))}), []string{"void"}))
 	testStmt(t, `<?php class c { function __destruct() { exit(); } }`, class)
+
+	// Simple class with private static method
+	class = ast.NewClassDeclarationStmt(0, nil, false, false)
+	class.Name = "c"
+	class.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "myFunction", []string{"private", "static"}, []ast.FunctionParameter{}, ast.NewCompoundStmt(0, []ast.IStatement{}), []string{"mixed"}))
+	testStmt(t, `<?php class c { private static function myFunction() {} }`, class)
+
+	// Simple class with method with parameters
+	class = ast.NewClassDeclarationStmt(0, nil, false, false)
+	class.Name = "c"
+	class.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "myFunction", []string{"public"}, []ast.FunctionParameter{{Name: "$name", Type: []string{"string"}}}, ast.NewCompoundStmt(0, []ast.IStatement{}), []string{"void"}))
+	testStmt(t, `<?php class c { function myFunction(string $name): void {} }`, class)
+
+	// Simple class with method with body
+	class = ast.NewClassDeclarationStmt(0, nil, false, false)
+	class.Name = "c"
+	class.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "myFunction", []string{"public"}, []ast.FunctionParameter{}, ast.NewCompoundStmt(0, []ast.IStatement{ast.NewExpressionStmt(0, ast.NewExitIntrinsic(0, nil, nil))}), []string{"int", "float"}))
+	testStmt(t, `<?php class c { function myFunction(): int|float { exit(); } }`, class)
 }

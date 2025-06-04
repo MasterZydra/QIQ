@@ -6,6 +6,7 @@ import (
 	"GoPHP/cmd/goPHP/lexer"
 	"GoPHP/cmd/goPHP/phpError"
 	"GoPHP/cmd/goPHP/position"
+	"strings"
 )
 
 func (parser *Parser) parseClassDeclaration() (ast.IStatement, phpError.Error) {
@@ -104,6 +105,11 @@ func (parser *Parser) parseClassMemberDeclaration(class *ast.ClassDeclarationSta
 	PrintParserCallstack("class-member-declarations", parser)
 
 	for {
+		// End of class-member-declarations
+		if parser.isToken(lexer.OpOrPuncToken, "}", false) {
+			return nil
+		}
+
 		// trait-use-clause
 		if parser.isToken(lexer.KeywordToken, "use", false) {
 			if err := parser.parserTraitUseClause(class); err != nil {
@@ -124,8 +130,6 @@ func (parser *Parser) parseClassMemberDeclaration(class *ast.ClassDeclarationSta
 
 		// TODO property-declaration
 
-		// TODO method-declaration
-
 		// constructor-declaration
 		isConstructorDeclaration, err := parser.parseClassConstrutorDeclaration(class)
 		if isConstructorDeclaration && err != nil {
@@ -144,9 +148,13 @@ func (parser *Parser) parseClassMemberDeclaration(class *ast.ClassDeclarationSta
 			continue
 		}
 
-		// End of class-member-declarations
-		if parser.isToken(lexer.OpOrPuncToken, "}", false) {
-			return nil
+		// method-declaration
+		isMethodDeclaration, err := parser.parseClassMethodDeclaration(class)
+		if isMethodDeclaration && err != nil {
+			return err
+		}
+		if isMethodDeclaration {
+			continue
 		}
 
 		return phpError.NewParseError("parseClassMemberDeclaration: Unexpected token: %s", parser.at())
@@ -272,7 +280,7 @@ func (parser *Parser) parseClassConstrutorDeclaration(class *ast.ClassDeclaratio
 	// Check if the following tokens result in a valid constructor definition
 	isConstructor, offset, visibilityModifierKeyword, classModifierKeyword, staticModifierKeyword, staticModifierKeywordPos := parser.isMethod("__construct")
 
-	// Return if itis not a constructor declaration
+	// Return if it is not a constructor declaration
 	if !isConstructor {
 		return isConstructor, nil
 	}
@@ -342,19 +350,19 @@ func (parser *Parser) parseClassDestrutorDeclaration(class *ast.ClassDeclaration
 	// destructor-declaration:
 	//    method-modifiers   function   &(opt)   __destruct   (   )   compound-statement
 
-	// Check if the following tokens result in a valid constructor definition
-	isConstructor, offset, visibilityModifierKeyword, classModifierKeyword, staticModifierKeyword, staticModifierKeywordPos := parser.isMethod("__destruct")
+	// Check if the following tokens result in a valid destructor definition
+	isDestructor, offset, visibilityModifierKeyword, classModifierKeyword, staticModifierKeyword, staticModifierKeywordPos := parser.isMethod("__destruct")
 
-	// Return if itis not a constructor declaration
-	if !isConstructor {
-		return isConstructor, nil
+	// Return if it is not a destructor declaration
+	if !isDestructor {
+		return isDestructor, nil
 	}
 
 	PrintParserCallstack("destructor-declaration", parser)
 
-	// Static modifier is not allowed for constructor
+	// Static modifier is not allowed for destructor
 	if staticModifierKeyword != "" {
-		return isConstructor, phpError.NewError(
+		return isDestructor, phpError.NewError(
 			"Method %s::__destruct cannot be static in %s",
 			class.Name, staticModifierKeywordPos.ToPosString(),
 		)
@@ -379,19 +387,19 @@ func (parser *Parser) parseClassDestrutorDeclaration(class *ast.ClassDeclaration
 
 	// (   )
 	if !parser.isToken(lexer.OpOrPuncToken, "(", true) {
-		return isConstructor, phpError.NewParseError("Expected \"(\". Got %s", parser.at())
+		return isDestructor, phpError.NewParseError("Expected \"(\". Got %s", parser.at())
 	}
 	if !parser.isToken(lexer.OpOrPuncToken, ")", true) {
-		return isConstructor, phpError.NewParseError("Expected \")\". Got %s", parser.at())
+		return isDestructor, phpError.NewParseError("Expected \")\". Got %s", parser.at())
 	}
 
 	// compound-statement
 	body, err := parser.parseStmt()
 	if err != nil {
-		return isConstructor, err
+		return isDestructor, err
 	}
 	if body.GetKind() != ast.CompoundStmt {
-		return isConstructor, phpError.NewParseError("Expected compound statement. Got %s", body.GetKind())
+		return isDestructor, phpError.NewParseError("Expected compound statement. Got %s", body.GetKind())
 	}
 
 	class.AddMethod(ast.NewMethodDefinitionStmt(
@@ -399,7 +407,108 @@ func (parser *Parser) parseClassDestrutorDeclaration(class *ast.ClassDeclaration
 		"__destruct", modifiers, []ast.FunctionParameter{}, body.(*ast.CompoundStatement), []string{"void"},
 	))
 
-	return isConstructor, nil
+	return isDestructor, nil
+}
+
+func (parser *Parser) parseClassMethodDeclaration(class *ast.ClassDeclarationStatement) (bool, phpError.Error) {
+	// -------------------------------------- method-declaration -------------------------------------- MARK: method-declaration
+
+	// Spec: https://phplang.org/spec/14-classes.html#grammar-method-declaration
+
+	// method-declaration:
+	//    method-modifiers(opt)   function-definition
+	//    method-modifiers   function-definition-header   ;
+
+	// method-modifiers:
+	//    method-modifier
+	//    method-modifiers   method-modifier
+
+	// method-modifier:
+	//    visibility-modifier
+	//    static-modifier
+	//    class-modifier
+
+	// 	function-definition:
+	//    function-definition-header   compound-statement
+
+	// function-definition-header:
+	//    function   &(opt)   name   (   parameter-declaration-list(opt)   )   return-type(opt)
+
+	// Check if the following tokens result in a valid constructor definition
+	isMethod, offset, visibilityModifierKeyword, classModifierKeyword, staticModifierKeyword, _ := parser.isMethod("")
+
+	// Return if it is not a method declaration
+	if !isMethod {
+		return isMethod, nil
+	}
+
+	PrintParserCallstack("method-declaration", parser)
+
+	// Eat all tokens to get the name token
+	parser.eatN(offset + 1)
+
+	// Store position of name token
+	name := parser.at().Value
+	pos := parser.eat().Position
+
+	// Fallback to visibility modifier "public"
+	if visibilityModifierKeyword == "" {
+		visibilityModifierKeyword = "public"
+	}
+
+	// Build modifiers list
+	modifiers := []string{visibilityModifierKeyword}
+	if classModifierKeyword != "" {
+		modifiers = append(modifiers, classModifierKeyword)
+	}
+	if staticModifierKeyword != "" {
+		modifiers = append(modifiers, staticModifierKeyword)
+	}
+
+	// (   parameter-declaration-list(opt)   )
+	if !parser.isToken(lexer.OpOrPuncToken, "(", true) {
+		return isMethod, phpError.NewParseError("Expected \"(\". Got %s", parser.at())
+	}
+	parameters, err := parser.parseFunctionParameters()
+	if err != nil {
+		return isMethod, err
+	}
+
+	if !parser.isToken(lexer.OpOrPuncToken, ")", true) {
+		return isMethod, phpError.NewParseError("Expected \")\". Got %s", parser.at())
+	}
+
+	// return-type
+	// TODO support "?int"
+	returnTypes := []string{}
+	if parser.isToken(lexer.OpOrPuncToken, ":", true) {
+		for parser.at().TokenType == lexer.KeywordToken && common.IsReturnTypeKeyword(parser.at().Value) {
+			returnTypes = append(returnTypes, strings.ToLower(parser.eat().Value))
+			if parser.isToken(lexer.OpOrPuncToken, "|", true) {
+				continue
+			}
+			break
+		}
+	}
+	if len(returnTypes) == 0 {
+		returnTypes = append(returnTypes, "mixed")
+	}
+
+	// compound-statement
+	body, err := parser.parseStmt()
+	if err != nil {
+		return isMethod, err
+	}
+	if body.GetKind() != ast.CompoundStmt {
+		return isMethod, phpError.NewParseError("Expected compound statement. Got %s", body.GetKind())
+	}
+
+	class.AddMethod(ast.NewMethodDefinitionStmt(
+		parser.nextId(), pos,
+		name, modifiers, parameters, body.(*ast.CompoundStatement), returnTypes,
+	))
+
+	return isMethod, nil
 }
 
 func (parser *Parser) isMethod(name string) (
@@ -440,10 +549,10 @@ func (parser *Parser) isMethod(name string) (
 
 		// TODO &(opt)
 		// Check if it is a function with the given name
-		if token.TokenType == lexer.KeywordToken &&
-			token.Value == "function" &&
-			parser.next(offset+1).TokenType == lexer.NameToken &&
-			parser.next(offset+1).Value == name {
+		if token.TokenType == lexer.KeywordToken && token.Value == "function" &&
+			((name == "" && parser.next(offset+1).TokenType == lexer.NameToken) ||
+				(parser.next(offset+1).TokenType == lexer.NameToken &&
+					parser.next(offset+1).Value == name)) {
 			isFunction = true
 			offset++
 			return
