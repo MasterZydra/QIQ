@@ -350,30 +350,54 @@ func TestClassDeclaration(t *testing.T) {
 	// Simple class with constructor
 	class = ast.NewClassDeclarationStmt(0, nil, false, false)
 	class.Name = "c"
-	class.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "__construct", []string{"public"}, []ast.FunctionParameter{}, ast.NewCompoundStmt(0, []ast.IStatement{}), []string{"self"}))
+	class.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "__construct", []string{"public"}, []ast.FunctionParameter{}, ast.NewCompoundStmt(0, []ast.IStatement{}), []string{"void"}))
 	testStmt(t, `<?php class c { function __construct() {} }`, class)
 
 	// Simple class with private constructor
 	class = ast.NewClassDeclarationStmt(0, nil, false, false)
 	class.Name = "c"
-	class.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "__construct", []string{"private"}, []ast.FunctionParameter{}, ast.NewCompoundStmt(0, []ast.IStatement{}), []string{"self"}))
+	class.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "__construct", []string{"private"}, []ast.FunctionParameter{}, ast.NewCompoundStmt(0, []ast.IStatement{}), []string{"void"}))
 	testStmt(t, `<?php class c { private function __construct() {} }`, class)
 
 	// Simple class with final private constructor
 	class = ast.NewClassDeclarationStmt(0, nil, false, false)
 	class.Name = "c"
-	class.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "__construct", []string{"private", "final"}, []ast.FunctionParameter{}, ast.NewCompoundStmt(0, []ast.IStatement{}), []string{"self"}))
+	class.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "__construct", []string{"private", "final"}, []ast.FunctionParameter{}, ast.NewCompoundStmt(0, []ast.IStatement{}), []string{"void"}))
 	testStmt(t, `<?php class c { final private function __construct() {} }`, class)
 
 	// Simple class with constructor with parameters
 	class = ast.NewClassDeclarationStmt(0, nil, false, false)
 	class.Name = "c"
-	class.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "__construct", []string{"public"}, []ast.FunctionParameter{{Name: "$name", Type: []string{"string"}}}, ast.NewCompoundStmt(0, []ast.IStatement{}), []string{"self"}))
+	class.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "__construct", []string{"public"}, []ast.FunctionParameter{{Name: "$name", Type: []string{"string"}}}, ast.NewCompoundStmt(0, []ast.IStatement{}), []string{"void"}))
 	testStmt(t, `<?php class c { function __construct(string $name) {} }`, class)
 
 	// Simple class with constructor with body
 	class = ast.NewClassDeclarationStmt(0, nil, false, false)
 	class.Name = "c"
-	class.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "__construct", []string{"public"}, []ast.FunctionParameter{}, ast.NewCompoundStmt(0, []ast.IStatement{ast.NewExpressionStmt(0, ast.NewExitIntrinsic(0, nil, nil))}), []string{"self"}))
+	class.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "__construct", []string{"public"}, []ast.FunctionParameter{}, ast.NewCompoundStmt(0, []ast.IStatement{ast.NewExpressionStmt(0, ast.NewExitIntrinsic(0, nil, nil))}), []string{"void"}))
 	testStmt(t, `<?php class c { function __construct() { exit(); } }`, class)
+
+	// Simple class with destructor
+	class = ast.NewClassDeclarationStmt(0, nil, false, false)
+	class.Name = "c"
+	class.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "__destruct", []string{"public"}, []ast.FunctionParameter{}, ast.NewCompoundStmt(0, []ast.IStatement{}), []string{"void"}))
+	testStmt(t, `<?php class c { function __destruct() {} }`, class)
+
+	// Simple class with private destructor
+	class = ast.NewClassDeclarationStmt(0, nil, false, false)
+	class.Name = "c"
+	class.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "__destruct", []string{"private"}, []ast.FunctionParameter{}, ast.NewCompoundStmt(0, []ast.IStatement{}), []string{"void"}))
+	testStmt(t, `<?php class c { private function __destruct() {} }`, class)
+
+	// Simple class with final private destructor
+	class = ast.NewClassDeclarationStmt(0, nil, false, false)
+	class.Name = "c"
+	class.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "__destruct", []string{"private", "final"}, []ast.FunctionParameter{}, ast.NewCompoundStmt(0, []ast.IStatement{}), []string{"void"}))
+	testStmt(t, `<?php class c { final private function __destruct() {} }`, class)
+
+	// Simple class with destructor with body
+	class = ast.NewClassDeclarationStmt(0, nil, false, false)
+	class.Name = "c"
+	class.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "__destruct", []string{"public"}, []ast.FunctionParameter{}, ast.NewCompoundStmt(0, []ast.IStatement{ast.NewExpressionStmt(0, ast.NewExitIntrinsic(0, nil, nil))}), []string{"void"}))
+	testStmt(t, `<?php class c { function __destruct() { exit(); } }`, class)
 }
