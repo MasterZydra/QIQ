@@ -1007,19 +1007,14 @@ func (parser *Parser) parseFunctionParameters() ([]ast.FunctionParameter, phpErr
 				break
 			}
 
-			// TODO function-definition - parameter-declaration - type-declaration - ?(opt)
-
-			paramTypes := []string{}
-			for parser.at().TokenType == lexer.KeywordToken && common.IsParamTypeKeyword(parser.at().Value) {
-				paramTypes = append(paramTypes, strings.ToLower(parser.eat().Value))
-				if parser.isToken(lexer.OpOrPuncToken, "|", true) {
-					continue
+			// type-declaration
+			paramTypes := []string{"mixed"}
+			if parser.isPhpType(parser.at()) {
+				var err phpError.Error
+				paramTypes, err = parser.getTypes(true)
+				if err != nil {
+					return parameters, err
 				}
-				break
-			}
-
-			if len(paramTypes) == 0 {
-				paramTypes = append(paramTypes, "mixed")
 			}
 
 			// TODO function-definition - parameter-declaration - &(opt)

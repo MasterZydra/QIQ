@@ -87,7 +87,7 @@ func (visitor DumpVisitor) ProcessClassDeclarationStmt(stmt *ClassDeclarationSta
 	methodsKeys := slices.Sorted(maps.Keys(stmt.Methods))
 	for _, key := range methodsKeys {
 		method := stmt.Methods[key]
-		methods += fmt.Sprintf("{name: %s, modifiers: %s, return type: %s, parameters: %s, body: %s}",
+		methods += fmt.Sprintf("{name: %s, modifiers: %s, return type: {%s}, parameters: %s, body: %s}",
 			method.Name, common.ImplodeStrSlice(method.Modifiers), common.ImplodeStrSlice(method.ReturnType), method.Params, ToString(method.Body),
 		)
 	}
@@ -97,9 +97,18 @@ func (visitor DumpVisitor) ProcessClassDeclarationStmt(stmt *ClassDeclarationSta
 		traits += "{" + trait.Name + "}"
 	}
 
+	properties := ""
+	propertiesKeys := slices.Sorted(maps.Keys(stmt.Properties))
+	for _, key := range propertiesKeys {
+		property := stmt.Properties[key]
+		properties += fmt.Sprintf("{name: %s, isStatic: %v, visibility: %s, type: {%s}, initialValue: %s}",
+			property.Name, property.IsStatic, property.Visibility, common.ImplodeStrSlice(property.Type), ToString(property.InitialValue),
+		)
+	}
+
 	return fmt.Sprintf(
-		"{%s - name: \"%s\", isAbstract: %v, isFinal: %v, extends: \"%s\" , implements: %s, constants: {%s}, methods: {%s} traits: {%s} }",
-		stmt.GetKind(), stmt.Name, stmt.IsAbstract, stmt.IsFinal, stmt.BaseClass, common.ImplodeStrSlice(stmt.Interfaces), constants, methods, traits,
+		"{%s - name: \"%s\", isAbstract: %v, isFinal: %v, extends: \"%s\" , implements: %s, constants: {%s}, methods: {%s}, traits: {%s}, properties: {%s} }",
+		stmt.GetKind(), stmt.Name, stmt.IsAbstract, stmt.IsFinal, stmt.BaseClass, common.ImplodeStrSlice(stmt.Interfaces), constants, methods, traits, properties,
 	), nil
 }
 

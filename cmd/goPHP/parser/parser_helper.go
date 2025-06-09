@@ -1,11 +1,13 @@
 package parser
 
 import (
+	"GoPHP/cmd/goPHP/common"
 	"GoPHP/cmd/goPHP/config"
 	"GoPHP/cmd/goPHP/lexer"
 	"GoPHP/cmd/goPHP/phpError"
 	"GoPHP/cmd/goPHP/position"
 	"fmt"
+	"strings"
 )
 
 func PrintParserCallstack(function string, parser *Parser) {
@@ -17,6 +19,8 @@ func PrintParserCallstack(function string, parser *Parser) {
 		}
 	}
 }
+
+// -------------------------------------- Common -------------------------------------- MARK: Common
 
 func (parser *Parser) isEof() bool {
 	return parser.currPos > len(parser.tokens)-1
@@ -89,6 +93,8 @@ func (parser *Parser) expect(tokenType lexer.TokenType, value string, eat bool) 
 	return phpError.NewParseError("Unexpected token %s. Expected: %s", parser.at(), lexer.NewToken(tokenType, value, nil))
 }
 
+// -------------------------------------- Tokens -------------------------------------- MARK: Tokens
+
 func (parser *Parser) isTextExpression(eat bool) bool {
 	isTextExpression := (parser.isToken(lexer.OpOrPuncToken, ";", false) &&
 		parser.next(0).TokenType == lexer.EndTagToken &&
@@ -101,4 +107,53 @@ func (parser *Parser) isTextExpression(eat bool) bool {
 	}
 
 	return isTextExpression
+}
+
+func (parser *Parser) isPhpType(token *lexer.Token) bool {
+	return token.TokenType == lexer.OpOrPuncToken && token.Value == "?" ||
+		token.TokenType == lexer.KeywordToken && common.IsReturnTypeKeyword(token.Value)
+}
+
+func (parser *Parser) getTypes(eat bool) ([]string, phpError.Error) {
+	types, _, err := parser.getTypesWithOffset(eat, -1)
+	return types, err
+}
+
+func (parser *Parser) getTypesWithOffset(eat bool, offset int) ([]string, int, phpError.Error) {
+	types := []string{}
+
+	token := func() *lexer.Token {
+		return parser.next(offset)
+	}
+
+	if token().TokenType == lexer.OpOrPuncToken && token().Value == "?" {
+		types = append(types, "null")
+		offset++
+	}
+
+	if !parser.isPhpType(token()) {
+		return types, offset, phpError.NewParseError("Expected a type. Got \"%s\"s at %s", token().Value, token().Position.ToPosString())
+	}
+
+	for parser.isPhpType(token()) {
+		types = append(types, strings.ToLower(token().Value))
+		offset++
+
+		if token().TokenType == lexer.OpOrPuncToken && token().Value == "|" {
+			offset++
+			continue
+		}
+
+		break
+	}
+
+	if eat {
+		parser.eatN(offset + 1)
+	}
+
+	if len(types) == 0 {
+		types = append(types, "mixed")
+	}
+
+	return types, offset, nil
 }

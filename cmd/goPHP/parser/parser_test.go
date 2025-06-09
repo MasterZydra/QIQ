@@ -32,7 +32,7 @@ func testStmt(t *testing.T, php string, expected ast.IStatement) {
 func testStmts(t *testing.T, php string, expected []ast.IStatement) {
 	program, err := NewParser(ini.NewDevIni()).ProduceAST(php, "test.php")
 	if err != nil {
-		t.Errorf("Unexpected error: \"%s\"", err)
+		t.Errorf("Code: \"%s\"\nUnexpected error: \"%s\"", php, err)
 		return
 	}
 	for index, expect := range expected {
@@ -413,9 +413,35 @@ func TestClassDeclaration(t *testing.T) {
 	class.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "myFunction", []string{"public"}, []ast.FunctionParameter{{Name: "$name", Type: []string{"string"}}}, ast.NewCompoundStmt(0, []ast.IStatement{}), []string{"void"}))
 	testStmt(t, `<?php class c { function myFunction(string $name): void {} }`, class)
 
+	// Simple class with method with return type
+	class = ast.NewClassDeclarationStmt(0, nil, false, false)
+	class.Name = "c"
+	class.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "myFunction", []string{"public"}, []ast.FunctionParameter{}, ast.NewCompoundStmt(0, []ast.IStatement{ast.NewExpressionStmt(0, ast.NewExitIntrinsic(0, nil, nil))}), []string{"null", "int"}))
+	testStmt(t, `<?php class c { function myFunction(): ?int { exit(); } }`, class)
+
 	// Simple class with method with body
 	class = ast.NewClassDeclarationStmt(0, nil, false, false)
 	class.Name = "c"
 	class.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "myFunction", []string{"public"}, []ast.FunctionParameter{}, ast.NewCompoundStmt(0, []ast.IStatement{ast.NewExpressionStmt(0, ast.NewExitIntrinsic(0, nil, nil))}), []string{"int", "float"}))
 	testStmt(t, `<?php class c { function myFunction(): int|float { exit(); } }`, class)
+
+	// Simple class with property
+	class = ast.NewClassDeclarationStmt(0, nil, false, false)
+	class.Name = "c"
+	class.AddProperty(ast.NewPropertyDeclarationStmt(0, nil, "$member", "public", false, []string{"mixed"}, nil))
+	testStmt(t, `<?php class c { public $member; }`, class)
+
+	// Simple class with protected property and initial value
+	class = ast.NewClassDeclarationStmt(0, nil, false, false)
+	class.Name = "c"
+	class.AddProperty(ast.NewPropertyDeclarationStmt(0, nil, "$member", "protected", false, []string{"mixed"}, ast.NewIntegerLiteralExpr(0, nil, 42)))
+	testStmt(t, `<?php class c { protected $member = 42; }`, class)
+
+	// Simple class with multiple properties
+	class = ast.NewClassDeclarationStmt(0, nil, false, false)
+	class.Name = "c"
+	class.AddProperty(ast.NewPropertyDeclarationStmt(0, nil, "$a", "private", false, []string{"mixed"}, nil))
+	class.AddProperty(ast.NewPropertyDeclarationStmt(0, nil, "$b", "protected", false, []string{"mixed"}, nil))
+	class.AddProperty(ast.NewPropertyDeclarationStmt(0, nil, "$c", "public", false, []string{"null", "int"}, ast.NewIntegerLiteralExpr(0, nil, 42)))
+	testStmt(t, `<?php class c { private $a; protected $b; public ?int $c = 42; }`, class)
 }

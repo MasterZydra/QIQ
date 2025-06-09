@@ -6,7 +6,6 @@ import (
 	"GoPHP/cmd/goPHP/lexer"
 	"GoPHP/cmd/goPHP/phpError"
 	"GoPHP/cmd/goPHP/position"
-	"strings"
 )
 
 func (parser *Parser) parseClassDeclaration() (ast.IStatement, phpError.Error) {
@@ -128,8 +127,6 @@ func (parser *Parser) parseClassMemberDeclaration(class *ast.ClassDeclarationSta
 			continue
 		}
 
-		// TODO property-declaration
-
 		// constructor-declaration
 		isConstructorDeclaration, err := parser.parseClassConstrutorDeclaration(class)
 		if isConstructorDeclaration && err != nil {
@@ -154,6 +151,15 @@ func (parser *Parser) parseClassMemberDeclaration(class *ast.ClassDeclarationSta
 			return err
 		}
 		if isMethodDeclaration {
+			continue
+		}
+
+		// property-declaration
+		isPropertyDeclaration, err := parser.parseClassPropertyDeclaration(class)
+		if isPropertyDeclaration && err != nil {
+			return err
+		}
+		if isPropertyDeclaration {
 			continue
 		}
 
@@ -479,19 +485,12 @@ func (parser *Parser) parseClassMethodDeclaration(class *ast.ClassDeclarationSta
 	}
 
 	// return-type
-	// TODO support "?int"
-	returnTypes := []string{}
+	var returnTypes []string = []string{"mixed"}
 	if parser.isToken(lexer.OpOrPuncToken, ":", true) {
-		for parser.at().TokenType == lexer.KeywordToken && common.IsReturnTypeKeyword(parser.at().Value) {
-			returnTypes = append(returnTypes, strings.ToLower(parser.eat().Value))
-			if parser.isToken(lexer.OpOrPuncToken, "|", true) {
-				continue
-			}
-			break
+		returnTypes, err = parser.getTypes(true)
+		if err != nil {
+			return isMethod, err
 		}
-	}
-	if len(returnTypes) == 0 {
-		returnTypes = append(returnTypes, "mixed")
 	}
 
 	// compound-statement
@@ -509,6 +508,115 @@ func (parser *Parser) parseClassMethodDeclaration(class *ast.ClassDeclarationSta
 	))
 
 	return isMethod, nil
+}
+
+func (parser *Parser) parseClassPropertyDeclaration(class *ast.ClassDeclarationStatement) (bool, phpError.Error) {
+	// -------------------------------------- property-declaration -------------------------------------- MARK: property-declaration
+
+	// Spec: https://phplang.org/spec/14-classes.html#grammar-property-declaration
+
+	// property-declaration:
+	//    property-modifier   property-elements   ;
+
+	// property-modifier:
+	//    var   // deprecated
+	//    visibility-modifier   static-modifier(opt)
+	//    static-modifier   visibility-modifier(opt)
+
+	// property-elements:
+	//    property-element
+	//    property-elements   property-element
+
+	// property-element:
+	//    variable-name   property-initializer(opt)   ;
+
+	// property-initializer:
+	//    =   constant-expression
+
+	isProperty := false
+	offset := -1
+	visibilityModifierKeyword := ""
+	staticModifierKeyword := ""
+	propertyType := []string{"mixed"}
+
+	token := func() *lexer.Token {
+		return parser.next(offset)
+	}
+
+	step := "modifier"
+	for {
+		// Only allow one visibility modifier keyword
+		if step == "modifier" && visibilityModifierKeyword == "" &&
+			token().TokenType == lexer.KeywordToken && common.IsVisibilitModifierKeyword(token().Value) {
+			visibilityModifierKeyword = token().Value
+			offset++
+			continue
+		}
+
+		// Allow static modifier even if it will return an error later
+		if step == "modifier" && staticModifierKeyword == "" &&
+			token().TokenType == lexer.KeywordToken && token().Value == "static" {
+			staticModifierKeyword = token().Value
+			offset++
+			continue
+		}
+
+		// Property type
+		if step == "modifier" && parser.isPhpType(token()) {
+			var err phpError.Error
+			propertyType, offset, err = parser.getTypesWithOffset(false, offset)
+			if err != nil {
+				return isProperty, err
+			}
+			step = "type"
+		}
+
+		// Check if given name is a valid variable name
+		if token().TokenType == lexer.VariableNameToken && common.IsVariableName(token().Value) {
+			isProperty = true
+			break
+		}
+
+		break
+	}
+
+	// Return if it is not a method declaration
+	if !isProperty {
+		return isProperty, nil
+	}
+
+	PrintParserCallstack("property-declaration", parser)
+
+	// Eat all tokens to get the name token
+	parser.eatN(offset + 1)
+
+	// property-element
+	pos := parser.at().Position
+	name := parser.eat().Value
+
+	// property-initializer
+	var initialValue ast.IExpression = nil
+	if parser.isToken(lexer.OpOrPuncToken, "=", true) {
+		var err phpError.Error
+		initialValue, err = parser.parseExpr()
+		if err != nil {
+			return isProperty, err
+		}
+		// TODO Check if it is a constant-expression
+	}
+
+	// Fallback to visibility modifier "public"
+	if visibilityModifierKeyword == "" {
+		visibilityModifierKeyword = "public"
+	}
+
+	if !parser.isToken(lexer.OpOrPuncToken, ";", true) {
+		return isProperty, phpError.NewParseError("Expected \";\". Got %s", parser.at())
+	}
+
+	class.AddProperty(ast.NewPropertyDeclarationStmt(parser.nextId(), pos, name, visibilityModifierKeyword, staticModifierKeyword != "", propertyType, initialValue))
+
+	return isProperty, nil
 }
 
 func (parser *Parser) isMethod(name string) (

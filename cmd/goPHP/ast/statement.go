@@ -58,7 +58,7 @@ type MethodDefinitionStatement struct {
 }
 
 func NewMethodDefinitionStmt(id int64, pos *position.Position, name string, modifiers []string, params []FunctionParameter, body *CompoundStatement, returnType []string) *MethodDefinitionStatement {
-	return &MethodDefinitionStatement{Statement: NewStmt(id, FunctionDefinitionStmt, pos),
+	return &MethodDefinitionStatement{Statement: NewStmt(id, MethodDefinitionStmt, pos),
 		Name:       name,
 		Modifiers:  modifiers,
 		Params:     params,
@@ -312,7 +312,33 @@ func (stmt *GlobalDeclarationStatement) Process(visitor Visitor, context any) (a
 	return visitor.ProcessGlobalDeclarationStmt(stmt, context)
 }
 
-// -------------------------------------- ClassDeclaration -------------------------------------- MARK: ClassDeclaration
+// -------------------------------------- PropertyDeclarationStatement -------------------------------------- MARK: PropertyDeclarationStatement
+
+type PropertyDeclarationStatement struct {
+	*Statement
+	Visibility   string
+	IsStatic     bool
+	Name         string
+	Type         []string
+	InitialValue IExpression
+}
+
+func NewPropertyDeclarationStmt(id int64, pos *position.Position, name, visibility string, isStatic bool, pType []string, initialValue IExpression) *PropertyDeclarationStatement {
+	return &PropertyDeclarationStatement{
+		Statement:    NewStmt(id, PropertyDeclarationStmt, pos),
+		Name:         name,
+		Visibility:   visibility,
+		IsStatic:     isStatic,
+		Type:         pType,
+		InitialValue: initialValue,
+	}
+}
+
+func (stmt *PropertyDeclarationStatement) Process(visitor Visitor, context any) (any, error) {
+	panic("PropertyDeclarationStatement.Process should not be called")
+}
+
+// -------------------------------------- ClassDeclarationStatement -------------------------------------- MARK: ClassDeclarationStatement
 
 type ClassDeclarationStatement struct {
 	*Statement
@@ -323,6 +349,7 @@ type ClassDeclarationStatement struct {
 	Interfaces []string
 	Constants  map[string]*ClassConstDeclarationStatement
 	Methods    map[string]*MethodDefinitionStatement
+	Properties map[string]*PropertyDeclarationStatement
 	Traits     []*TraitUseStatement
 }
 
@@ -334,6 +361,7 @@ func NewClassDeclarationStmt(id int64, pos *position.Position, isAbstract, isFin
 		Interfaces: []string{},
 		Constants:  map[string]*ClassConstDeclarationStatement{},
 		Methods:    map[string]*MethodDefinitionStatement{},
+		Properties: map[string]*PropertyDeclarationStatement{},
 		Traits:     []*TraitUseStatement{},
 	}
 }
@@ -346,11 +374,14 @@ func (stmt *ClassDeclarationStatement) AddConst(constStmt *ClassConstDeclaration
 	stmt.Constants[constStmt.Name] = constStmt
 }
 
-func (stmt *ClassDeclarationStatement) AddTrait(trait *TraitUseStatement) {
-	stmt.Traits = append(stmt.Traits, trait)
-}
-
 func (stmt *ClassDeclarationStatement) AddMethod(method *MethodDefinitionStatement) {
 	stmt.Methods[method.Name] = method
+}
 
+func (stmt *ClassDeclarationStatement) AddProperty(property *PropertyDeclarationStatement) {
+	stmt.Properties[property.Name] = property
+}
+
+func (stmt *ClassDeclarationStatement) AddTrait(trait *TraitUseStatement) {
+	stmt.Traits = append(stmt.Traits, trait)
 }
