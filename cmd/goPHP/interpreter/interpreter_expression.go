@@ -837,3 +837,13 @@ func (interpreter *Interpreter) ProcessErrorControlExpr(stmt *ast.ErrorControlEx
 
 	return runtimeValue, nil
 }
+
+// ProcessObjectCreationExpr implements Visitor.
+func (interpreter *Interpreter) ProcessObjectCreationExpr(stmt *ast.ObjectCreationExpression, _ any) (any, error) {
+	class, found := interpreter.classDeclarations[stmt.Designator]
+	if !found {
+		return values.NewVoid(), phpError.NewError("Cannot create object. Class \"s\" not found.", stmt.Designator)
+	}
+	object := values.NewObject(class)
+	return object, nil
+}

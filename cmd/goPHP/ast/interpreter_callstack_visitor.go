@@ -272,6 +272,11 @@ func (visitor InterpreterCallStackVisitor) ProcessLogicalNotExpr(stmt *LogicalNo
 	return fmt.Sprintf("{%s - operator: \"%s\", expr: %s, pos: %s }", stmt.GetKind(), stmt.Operator, ToString(stmt.Expr), stmt.GetPosition().ToPosString()), nil
 }
 
+// ProcessObjectCreationExpr implements Visitor.
+func (visitor InterpreterCallStackVisitor) ProcessObjectCreationExpr(stmt *ObjectCreationExpression, _ any) (any, error) {
+	panic("InterpreterCallStackVisitor.ProcessObjectCreationExpr is not implemented")
+}
+
 // ProcessParenthesizedExpr implements Visitor.
 func (visitor InterpreterCallStackVisitor) ProcessParenthesizedExpr(stmt *ParenthesizedExpression, _ any) (any, error) {
 	return fmt.Sprintf("{%s - expr: %s, pos: %s }", stmt.GetKind(), ToString(stmt.Expr), stmt.GetPosition().ToPosString()), nil

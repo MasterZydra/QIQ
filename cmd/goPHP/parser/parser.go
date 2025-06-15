@@ -1971,8 +1971,28 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, phpError.Error) {
 		return parser.parseIntrinsic()
 	}
 
+	// object-creation-expression
+	if parser.isToken(lexer.KeywordToken, "new", false) {
+		return parser.parseObjectCreationExpression()
+	}
+	// -------------------------------------- anonymous-function-creation-expression -------------------------------------- MARK: anonymous-function-creation-expression
+
+	// Spec: https://phplang.org/spec/10-expressions.html#anonymous-function-creation
+
+	// anonymous-function-creation-expression:
+	//    static(opt)   function   &(opt)   (   parameter-declaration-list(opt)   )   anonymous-function-use-clause(opt)   return-type(opt)   compound-statement
+
+	// anonymous-function-use-clause:
+	//    use   (   use-variable-name-list   )
+
+	// use-variable-name-list:
+	//    &(opt)   variable-name
+	//    use-variable-name-list   ,   &(opt)   variable-name
+
+	// Spec: https://phplang.org/spec/10-expressions.html#anonymous-function-creation
+	// This operator returns an object of type Closure, or a derived type thereof, that encapsulates the anonymous function defined within.
+
 	// TODO anonymous-function-creation-expression
-	// TODO object-creation-expression
 
 	// -------------------------------------- postfix-increment-expression -------------------------------------- MARK: postfix-increment-expression
 

@@ -650,3 +650,18 @@ func NewRequireOnceExpr(id int64, pos *position.Position, expression IExpression
 func (stmt *RequireOnceExpression) Process(visitor Visitor, context any) (any, error) {
 	return visitor.ProcessRequireOnceExpr(stmt, context)
 }
+
+// -------------------------------------- ObjectCreationExpression -------------------------------------- MARK: ObjectCreationExpression
+
+type ObjectCreationExpression struct {
+	*Expression
+	Designator string
+}
+
+func NewObjectCreationExpr(id int64, pos *position.Position, designator string) *ObjectCreationExpression {
+	return &ObjectCreationExpression{Expression: NewExpr(id, ObjectCreationExpr, pos), Designator: designator}
+}
+
+func (stmt *ObjectCreationExpression) Process(visitor Visitor, context any) (any, error) {
+	return visitor.ProcessObjectCreationExpr(stmt, context)
+}

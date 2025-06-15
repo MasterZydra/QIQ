@@ -8,6 +8,50 @@ import (
 	"GoPHP/cmd/goPHP/position"
 )
 
+func (parser *Parser) parseObjectCreationExpression() (ast.IExpression, phpError.Error) {
+	// -------------------------------------- object-creation-expression -------------------------------------- MARK: object-creation-expression
+
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-object-creation-expression
+
+	// object-creation-expression:
+	//    new   class-type-designator   (   argument-expression-list(opt)   )
+	//    new   class-type-designator   (   argument-expression-list   ,(opt)   )
+	//    new   class-type-designator
+	//    new   class   (   argument-expression-list(opt)   )   class-base-clause(opt)   class-interface-clause(opt)   {   class-member-declarations(opt)   }
+	//    new   class   class-base-clause(opt)   class-interface-clause(opt)   {   class-member-declarations(opt)   }
+
+	// class-type-designator:
+	//    qualified-name
+	//    new-variable
+
+	// new-variable:
+	//    simple-variable
+	//    new-variable   [   expression(opt)   ]
+	//    new-variable   {   expression   }
+	//    new-variable   ->   member-name
+	//    qualified-name   ::   simple-variable
+	//    relative-scope   ::   simple-variable
+	//    new-variable   ::   simple-variable
+
+	// TODO object-creation-expression - variants
+
+	if !parser.isToken(lexer.KeywordToken, "new", false) {
+		return ast.NewEmptyExpr(), phpError.NewParseError("Expected keyword \"new\". Got %s", parser.at())
+	}
+
+	pos := parser.eat().Position
+
+	if !parser.isTokenType(lexer.NameToken, false) {
+		return ast.NewEmptyExpr(), phpError.NewParseError("parseObjectCreationExpression: Only qualified name as designator allowed")
+	}
+	if !common.IsQualifiedName(parser.at().Value) {
+		return ast.NewEmptyExpr(), phpError.NewParseError("parseObjectCreationExpression: Only qualified name as designator allowed")
+	}
+	designator := parser.eat().Value
+
+	return ast.NewObjectCreationExpr(parser.nextId(), pos, designator), nil
+}
+
 func (parser *Parser) parseClassDeclaration() (ast.IStatement, phpError.Error) {
 	// -------------------------------------- class-declaration -------------------------------------- MARK: class-declaration
 
