@@ -9,6 +9,7 @@ flowchart LR
     GoPHP_cmd_goPHP[GoPHP/cmd/goPHP] --> GoPHP_cmd_goPHP_request[GoPHP/cmd/goPHP/request]
     GoPHP_cmd_goPHP[GoPHP/cmd/goPHP] --> GoPHP_cmd_goPHP_stats[GoPHP/cmd/goPHP/stats]
 
+    GoPHP_cmd_goPHP_ast[GoPHP/cmd/goPHP/ast] --> GoPHP_cmd_goPHP_common[GoPHP/cmd/goPHP/common]
     GoPHP_cmd_goPHP_ast[GoPHP/cmd/goPHP/ast] --> GoPHP_cmd_goPHP_config[GoPHP/cmd/goPHP/config]
     GoPHP_cmd_goPHP_ast[GoPHP/cmd/goPHP/ast] --> GoPHP_cmd_goPHP_position[GoPHP/cmd/goPHP/position]
 
@@ -46,6 +47,7 @@ flowchart LR
     GoPHP_cmd_goPHP_parser[GoPHP/cmd/goPHP/parser] --> GoPHP_cmd_goPHP_position[GoPHP/cmd/goPHP/position]
     GoPHP_cmd_goPHP_parser[GoPHP/cmd/goPHP/parser] --> GoPHP_cmd_goPHP_stats[GoPHP/cmd/goPHP/stats]
 
+    GoPHP_cmd_goPHP_runtime[GoPHP/cmd/goPHP/runtime] --> GoPHP_cmd_goPHP_ast[GoPHP/cmd/goPHP/ast]
     GoPHP_cmd_goPHP_runtime[GoPHP/cmd/goPHP/runtime] --> GoPHP_cmd_goPHP_ini[GoPHP/cmd/goPHP/ini]
     GoPHP_cmd_goPHP_runtime[GoPHP/cmd/goPHP/runtime] --> GoPHP_cmd_goPHP_phpError[GoPHP/cmd/goPHP/phpError]
     GoPHP_cmd_goPHP_runtime[GoPHP/cmd/goPHP/runtime] --> GoPHP_cmd_goPHP_request[GoPHP/cmd/goPHP/request]
@@ -57,6 +59,7 @@ flowchart LR
 
     GoPHP_cmd_goPHP_runtime_stdlib[GoPHP/cmd/goPHP/runtime/stdlib] --> GoPHP_cmd_goPHP_runtime[GoPHP/cmd/goPHP/runtime]
     GoPHP_cmd_goPHP_runtime_stdlib[GoPHP/cmd/goPHP/runtime/stdlib] --> GoPHP_cmd_goPHP_runtime_stdlib_array[GoPHP/cmd/goPHP/runtime/stdlib/array]
+    GoPHP_cmd_goPHP_runtime_stdlib[GoPHP/cmd/goPHP/runtime/stdlib] --> GoPHP_cmd_goPHP_runtime_stdlib_classes[GoPHP/cmd/goPHP/runtime/stdlib/classes]
     GoPHP_cmd_goPHP_runtime_stdlib[GoPHP/cmd/goPHP/runtime/stdlib] --> GoPHP_cmd_goPHP_runtime_stdlib_dateTime[GoPHP/cmd/goPHP/runtime/stdlib/dateTime]
     GoPHP_cmd_goPHP_runtime_stdlib[GoPHP/cmd/goPHP/runtime/stdlib] --> GoPHP_cmd_goPHP_runtime_stdlib_errorHandling[GoPHP/cmd/goPHP/runtime/stdlib/errorHandling]
     GoPHP_cmd_goPHP_runtime_stdlib[GoPHP/cmd/goPHP/runtime/stdlib] --> GoPHP_cmd_goPHP_runtime_stdlib_filesystem[GoPHP/cmd/goPHP/runtime/stdlib/filesystem]
@@ -73,6 +76,12 @@ flowchart LR
     GoPHP_cmd_goPHP_runtime_stdlib_array[GoPHP/cmd/goPHP/runtime/stdlib/array] --> GoPHP_cmd_goPHP_runtime_funcParamValidator[GoPHP/cmd/goPHP/runtime/funcParamValidator]
     GoPHP_cmd_goPHP_runtime_stdlib_array[GoPHP/cmd/goPHP/runtime/stdlib/array] --> GoPHP_cmd_goPHP_runtime_stdlib_variableHandling[GoPHP/cmd/goPHP/runtime/stdlib/variableHandling]
     GoPHP_cmd_goPHP_runtime_stdlib_array[GoPHP/cmd/goPHP/runtime/stdlib/array] --> GoPHP_cmd_goPHP_runtime_values[GoPHP/cmd/goPHP/runtime/values]
+
+    GoPHP_cmd_goPHP_runtime_stdlib_classes[GoPHP/cmd/goPHP/runtime/stdlib/classes] --> GoPHP_cmd_goPHP_ast[GoPHP/cmd/goPHP/ast]
+    GoPHP_cmd_goPHP_runtime_stdlib_classes[GoPHP/cmd/goPHP/runtime/stdlib/classes] --> GoPHP_cmd_goPHP_phpError[GoPHP/cmd/goPHP/phpError]
+    GoPHP_cmd_goPHP_runtime_stdlib_classes[GoPHP/cmd/goPHP/runtime/stdlib/classes] --> GoPHP_cmd_goPHP_runtime[GoPHP/cmd/goPHP/runtime]
+    GoPHP_cmd_goPHP_runtime_stdlib_classes[GoPHP/cmd/goPHP/runtime/stdlib/classes] --> GoPHP_cmd_goPHP_runtime_funcParamValidator[GoPHP/cmd/goPHP/runtime/funcParamValidator]
+    GoPHP_cmd_goPHP_runtime_stdlib_classes[GoPHP/cmd/goPHP/runtime/stdlib/classes] --> GoPHP_cmd_goPHP_runtime_values[GoPHP/cmd/goPHP/runtime/values]
 
     GoPHP_cmd_goPHP_runtime_stdlib_dateTime[GoPHP/cmd/goPHP/runtime/stdlib/dateTime] --> GoPHP_cmd_goPHP_phpError[GoPHP/cmd/goPHP/phpError]
     GoPHP_cmd_goPHP_runtime_stdlib_dateTime[GoPHP/cmd/goPHP/runtime/stdlib/dateTime] --> GoPHP_cmd_goPHP_runtime[GoPHP/cmd/goPHP/runtime]
@@ -130,6 +139,7 @@ flowchart LR
     GoPHP_cmd_goPHP_runtime_stdlib_variableHandling[GoPHP/cmd/goPHP/runtime/stdlib/variableHandling] --> GoPHP_cmd_goPHP_runtime_funcParamValidator[GoPHP/cmd/goPHP/runtime/funcParamValidator]
     GoPHP_cmd_goPHP_runtime_stdlib_variableHandling[GoPHP/cmd/goPHP/runtime/stdlib/variableHandling] --> GoPHP_cmd_goPHP_runtime_values[GoPHP/cmd/goPHP/runtime/values]
 
+    GoPHP_cmd_goPHP_runtime_values[GoPHP/cmd/goPHP/runtime/values] --> GoPHP_cmd_goPHP_ast[GoPHP/cmd/goPHP/ast]
     GoPHP_cmd_goPHP_runtime_values[GoPHP/cmd/goPHP/runtime/values] --> GoPHP_cmd_goPHP_common[GoPHP/cmd/goPHP/common]
     GoPHP_cmd_goPHP_runtime_values[GoPHP/cmd/goPHP/runtime/values] --> GoPHP_cmd_goPHP_config[GoPHP/cmd/goPHP/config]
     GoPHP_cmd_goPHP_runtime_values[GoPHP/cmd/goPHP/runtime/values] --> GoPHP_cmd_goPHP_phpError[GoPHP/cmd/goPHP/phpError]

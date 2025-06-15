@@ -10,6 +10,11 @@
 - array_push
 - key_exists
 
+## Classes/Object Functions
+- get_class
+- get_parent_class
+- is_subclass_of
+
 ## Date/Time Functions
 - checkdate
 - date
@@ -43,6 +48,7 @@
 
 ## Misc. Functions
 - constant
+- define
 - defined
 
 ## Options/Info Functions

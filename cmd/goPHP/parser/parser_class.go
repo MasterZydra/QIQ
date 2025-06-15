@@ -77,20 +77,22 @@ func (parser *Parser) parseClassDeclaration() (ast.IStatement, phpError.Error) {
 	isAbstract := parser.isToken(lexer.KeywordToken, "abstract", true)
 	isFinal := parser.isToken(lexer.KeywordToken, "final", true)
 
-	class := ast.NewClassDeclarationStmt(parser.nextId(), parser.eat().Position, isAbstract, isFinal)
+	pos := parser.eat().Position
 
 	// class name
-	class.Name = parser.at().Value
+	className := parser.at().Value
 	classNamePos := parser.eat().Position
-	if !common.IsName(class.Name) {
-		return ast.NewEmptyExpr(), phpError.NewParseError("\"%s\" is not a valid class name at %s", class.Name, classNamePos.ToPosString())
+	if !common.IsName(className) {
+		return ast.NewEmptyExpr(), phpError.NewParseError("\"%s\" is not a valid class name at %s", className, classNamePos.ToPosString())
 	}
+
+	class := ast.NewClassDeclarationStmt(parser.nextId(), pos, className, isAbstract, isFinal)
 
 	// class-base-clause
 	if parser.isToken(lexer.KeywordToken, "extends", true) {
 		class.BaseClass = parser.at().Value
 		baseClassPos := parser.eat().Position
-		if !common.IsQualifiedName(class.Name) {
+		if !common.IsQualifiedName(class.BaseClass) {
 			return ast.NewEmptyExpr(), phpError.NewParseError("\"%s\" is not a valid class name at %s", class.Name, baseClassPos.ToPosString())
 		}
 	}

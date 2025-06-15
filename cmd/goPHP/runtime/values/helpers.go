@@ -51,6 +51,8 @@ func ToPhpType(value RuntimeValue) string {
 		return "NULL"
 	case StrValue:
 		return "string"
+	case ObjectValue:
+		return "object"
 	case VoidValue:
 		return "void"
 	default:

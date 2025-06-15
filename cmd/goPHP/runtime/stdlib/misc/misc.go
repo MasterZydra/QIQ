@@ -10,6 +10,7 @@ import (
 func Register(environment runtime.Environment) {
 	// Category: Misc. Functions
 	environment.AddNativeFunction("constant", nativeFn_constant)
+	environment.AddNativeFunction("define", nativeFn_define)
 	environment.AddNativeFunction("defined", nativeFn_defined)
 }
 
@@ -29,6 +30,29 @@ func nativeFn_constant(args []values.RuntimeValue, context runtime.Context) (val
 	}
 
 	return constantValue, nil
+}
+
+// -------------------------------------- define -------------------------------------- MARK: define
+
+func nativeFn_define(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
+	// Spec: https://www.php.net/manual/en/function.define.php
+
+	args, err := funcParamValidator.NewValidator("define").
+		AddParam("$constant_name", []string{"string"}, nil).
+		AddParam("$value", []string{"mixed"}, nil).
+		AddParam("$case_sensitive", []string{"bool"}, values.NewBool(false)).
+		Validate(args)
+	if err != nil {
+		return values.NewVoid(), err
+	}
+
+	if args[2].(*values.Bool).Value {
+		return values.NewBool(false), phpError.NewError("define: $case_sensitive cannot be changed")
+	}
+
+	context.Env.AddConstants(args[0].(*values.Str).Value, args[1])
+
+	return values.NewBool(true), nil
 }
 
 // -------------------------------------- defined -------------------------------------- MARK: defined

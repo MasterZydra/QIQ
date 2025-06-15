@@ -133,6 +133,10 @@ func (env *Environment) addGlobalVariable(variableName string) {
 
 // -------------------------------------- Constants -------------------------------------- MARK: Constants
 
+func (env *Environment) AddConstants(name string, value values.RuntimeValue) {
+	env.constants[name] = value
+}
+
 func (env *Environment) AddPredefinedConstants(name string, value values.RuntimeValue) {
 	env.predefinedConstants[name] = value
 }

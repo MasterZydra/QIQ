@@ -353,9 +353,10 @@ type ClassDeclarationStatement struct {
 	Traits     []*TraitUseStatement
 }
 
-func NewClassDeclarationStmt(id int64, pos *position.Position, isAbstract, isFinal bool) *ClassDeclarationStatement {
+func NewClassDeclarationStmt(id int64, pos *position.Position, name string, isAbstract, isFinal bool) *ClassDeclarationStatement {
 	return &ClassDeclarationStatement{
 		Statement:  NewStmt(id, ClassDeclarationStmt, pos),
+		Name:       name,
 		IsAbstract: isAbstract,
 		IsFinal:    isFinal,
 		Interfaces: []string{},

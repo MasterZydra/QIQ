@@ -846,20 +846,52 @@ func (interpreter *Interpreter) ProcessObjectCreationExpr(stmt *ast.ObjectCreati
 	}
 	object := values.NewObject(class)
 
+	if err := interpreter.initObject(object, env); err != nil {
+		return values.NewVoid(), err
+	}
+
+	return object, nil
+}
+
+func (interpreter *Interpreter) initObject(object *values.Object, env any) phpError.Error {
+	initializeProperties := func(properties map[string]*ast.PropertyDeclarationStatement) phpError.Error {
 	// Initialize properties
-	for _, property := range class.Properties {
+		for _, property := range properties {
 		if property.InitialValue == nil {
 			object.SetProperty(property.Name, values.NewNull())
 		} else {
 			value, err := interpreter.processStmt(property.InitialValue, env)
 			if err != nil {
-				return values.NewVoid(), phpError.NewError("Failed to initialize property \"%s\": %s", property.Name, err)
+					return phpError.NewError("Failed to initialize property \"%s\": %s", property.Name, err)
 			}
 			object.SetProperty(property.Name, value)
 		}
 	}
+		return nil
+	}
 
-	return object, nil
+	// TODO Fix order of initialization - first parent-parent than parent
+	baseClass := object.Class.BaseClass
+	for baseClass != "" {
+		baseClassDecl, found := interpreter.classDeclarations[baseClass]
+		if !found {
+			return phpError.NewError("Cannot create object. Class \"%s\" not found.", object.Class.BaseClass)
+		}
+		// TODO initialize parent class
+
+		// Initialize parent properties
+		if err := initializeProperties(baseClassDecl.Properties); err != nil {
+			return err
+		}
+
+		baseClass = baseClassDecl.BaseClass
+	}
+
+	if err := initializeProperties(object.Class.Properties); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (interpreter *Interpreter) ProcessMemberAccessExpr(stmt *ast.MemberAccessExpression, env any) (any, error) {

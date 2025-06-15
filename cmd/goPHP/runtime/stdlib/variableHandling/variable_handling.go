@@ -514,6 +514,18 @@ func lib_print_r_var(value values.RuntimeValue, depth int) (string, phpError.Err
 		result = ""
 	case values.StrValue:
 		result = value.(*values.Str).Value
+	case values.ObjectValue:
+		object := value.(*values.Object)
+		result = fmt.Sprintf("%s Object\n%s(\n", object.Class.Name, strings.Repeat(" ", depth-4))
+		for name, value := range object.Properties {
+			valueStr, err := lib_print_r_var(value, depth+8)
+			if err != nil {
+				return "", err
+			}
+
+			result += fmt.Sprintf("%s[%s] => %s\n", strings.Repeat(" ", depth), name[1:], valueStr)
+		}
+		result += fmt.Sprintf("%s)\n", strings.Repeat(" ", depth-4))
 	default:
 		return "", phpError.NewError("lib_print_r_var: Unsupported runtime value %s", value.GetType())
 	}

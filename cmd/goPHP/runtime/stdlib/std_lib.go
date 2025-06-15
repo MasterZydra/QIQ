@@ -3,6 +3,7 @@ package stdlib
 import (
 	"GoPHP/cmd/goPHP/runtime"
 	"GoPHP/cmd/goPHP/runtime/stdlib/array"
+	"GoPHP/cmd/goPHP/runtime/stdlib/classes"
 	"GoPHP/cmd/goPHP/runtime/stdlib/dateTime"
 	"GoPHP/cmd/goPHP/runtime/stdlib/errorHandling"
 	"GoPHP/cmd/goPHP/runtime/stdlib/filesystem"
@@ -17,6 +18,7 @@ import (
 
 func Register(environment runtime.Environment) {
 	array.Register(environment)
+	classes.Register(environment)
 	dateTime.Register(environment)
 	errorHandling.Register(environment)
 	filesystem.Register(environment)

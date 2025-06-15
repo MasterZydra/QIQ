@@ -274,6 +274,14 @@ func GetExecutableCreationDate() time.Time {
 	return info.ModTime()
 }
 
+func (interpreter *Interpreter) GetClass(class string) (*ast.ClassDeclarationStatement, bool) {
+	classDeclaration, found := interpreter.classDeclarations[class]
+	if !found {
+		return nil, false
+	}
+	return classDeclaration, true
+}
+
 // -------------------------------------- Caching -------------------------------------- MARK: Caching
 
 func (interpreter *Interpreter) isCached(stmt ast.IStatement) bool {

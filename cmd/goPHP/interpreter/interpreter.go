@@ -42,11 +42,14 @@ func NewInterpreter(ini *ini.Ini, r *request.Request, filename string) (*Interpr
 		cache:             map[int64]values.RuntimeValue{},
 		outputBufferStack: outputBuffer.NewStack(),
 	}
+
 	var err phpError.Error
 	interpreter.env, err = NewEnvironment(nil, r, interpreter)
 	if err != nil {
 		return interpreter, err
 	}
+
+	interpreter.classDeclarations["stdClass"] = ast.NewClassDeclarationStmt(0, nil, "stdClass", false, false)
 
 	if ini.GetBool("register_argc_argv") {
 		server := interpreter.env.predefinedVariables["$_SERVER"].(*values.Array)
