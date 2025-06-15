@@ -421,7 +421,7 @@ func (interpreter *Interpreter) ProcessEvalIntrinsicExpr(expr *ast.EvalIntrinsic
 
 	expression, err := interpreter.processStmt(expr.Arguments[0], env)
 	if err != nil {
-		return values.NewVoid(), phpError.NewParseError(err.Error())
+		return values.NewVoid(), phpError.NewParseError("%s", err.Error())
 	}
 	expressionStr, err := variableHandling.StrVal(expression)
 	if err != nil {

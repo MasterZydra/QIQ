@@ -169,7 +169,7 @@ func FloatVal(runtimeValue values.RuntimeValue, leadingNumeric bool) (float64, p
 		if common.IsIntegerLiteralWithSign(intStr, leadingNumeric) {
 			intValue, err := common.IntegerLiteralToInt64WithSign(intStr, leadingNumeric)
 			if err != nil {
-				return 0, phpError.NewError(err.Error())
+				return 0, phpError.NewError("%s", err.Error())
 			}
 			return FloatVal(values.NewInt(intValue), leadingNumeric)
 		}
@@ -320,7 +320,7 @@ func IntVal(runtimeValue values.RuntimeValue, leadingNumeric bool) (int64, phpEr
 		if common.IsIntegerLiteralWithSign(intStr, leadingNumeric) {
 			intValue, err := common.IntegerLiteralToInt64WithSign(intStr, leadingNumeric)
 			if err != nil {
-				return 0, phpError.NewError(err.Error())
+				return 0, phpError.NewError("%s", err.Error())
 			}
 			return intValue, nil
 		}

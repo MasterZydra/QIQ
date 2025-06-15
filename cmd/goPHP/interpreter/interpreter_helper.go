@@ -352,7 +352,7 @@ func (interpreter *Interpreter) exprToRuntimeValue(expr ast.IExpression, env *En
 					filenameRegex := regexp.MustCompile(`__file_name__:\d+:\d+`)
 					interpreter.PrintError(
 						phpError.NewWarning(
-							strings.TrimPrefix(
+							"%s", strings.TrimPrefix(
 								strings.TrimSpace(
 									filenameRegex.ReplaceAllString(result, expr.GetPosition().ToPosString())),
 								"Warning: ")))
@@ -367,7 +367,7 @@ func (interpreter *Interpreter) exprToRuntimeValue(expr ast.IExpression, env *En
 			for _, match := range matches {
 				unicodeChar, err := strconv.ParseInt(match[3:len(match)-1], 16, 32)
 				if err != nil {
-					return values.NewVoid(), phpError.NewError(err.Error())
+					return values.NewVoid(), phpError.NewError("%s", err.Error())
 				}
 				str = strings.Replace(str, match, string(rune(unicodeChar)), 1)
 			}

@@ -25,7 +25,7 @@ func NewIniReader() *IniReader {
 func (reader *IniReader) Read(filename string) phpError.Error {
 	file, err := os.Open(filename)
 	if err != nil {
-		return phpError.NewError(err.Error())
+		return phpError.NewError("%s", err.Error())
 	}
 	defer file.Close()
 

@@ -42,7 +42,7 @@ func (parser *Parser) ProduceAST(sourceCode string, filename string) (*ast.Progr
 	var lexerErr error
 	parser.tokens, lexerErr = parser.lexer.Tokenize(sourceCode, filename)
 	if lexerErr != nil {
-		return parser.program, phpError.NewParseError(lexerErr.Error())
+		return parser.program, phpError.NewParseError("%s", lexerErr.Error())
 	}
 
 	stat := stats.Start()
