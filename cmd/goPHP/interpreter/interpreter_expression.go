@@ -839,11 +839,57 @@ func (interpreter *Interpreter) ProcessErrorControlExpr(stmt *ast.ErrorControlEx
 }
 
 // ProcessObjectCreationExpr implements Visitor.
-func (interpreter *Interpreter) ProcessObjectCreationExpr(stmt *ast.ObjectCreationExpression, _ any) (any, error) {
+func (interpreter *Interpreter) ProcessObjectCreationExpr(stmt *ast.ObjectCreationExpression, env any) (any, error) {
 	class, found := interpreter.classDeclarations[stmt.Designator]
 	if !found {
-		return values.NewVoid(), phpError.NewError("Cannot create object. Class \"s\" not found.", stmt.Designator)
+		return values.NewVoid(), phpError.NewError("Cannot create object. Class \"%s\" not found.", stmt.Designator)
 	}
 	object := values.NewObject(class)
+
+	// Initialize properties
+	for _, property := range class.Properties {
+		if property.InitialValue == nil {
+			object.SetProperty(property.Name, values.NewNull())
+		} else {
+			value, err := interpreter.processStmt(property.InitialValue, env)
+			if err != nil {
+				return values.NewVoid(), phpError.NewError("Failed to initialize property \"%s\": %s", property.Name, err)
+			}
+			object.SetProperty(property.Name, value)
+		}
+	}
+
 	return object, nil
+}
+
+func (interpreter *Interpreter) ProcessMemberAccessExpr(stmt *ast.MemberAccessExpression, env any) (any, error) {
+	variableName := mustOrVoid(interpreter.varExprToVarName(stmt.Object, env.(*Environment)))
+	runtimeObject, err := env.(*Environment).LookupVariable(variableName)
+	if err != nil {
+		return values.NewVoid(), err
+	}
+
+	if stmt.Member.GetKind() != ast.ConstantAccessExpr {
+		return values.NewVoid(), phpError.NewError("ProcessMemberAccessExpr: Unsupported member type: %s", stmt.Member.GetKind())
+	}
+
+	member := stmt.Member.(*ast.ConstantAccessExpression).ConstantName
+
+	if runtimeObject.GetType() != values.ObjectValue {
+		return values.NewVoid(), phpError.NewError(
+			"Uncaught Error: Attempt to read property \"%s\" on %s in %s",
+			member, values.ToPhpType(runtimeObject), stmt.GetPosition().ToPosString(),
+		)
+	}
+
+	object := runtimeObject.(*values.Object)
+	// property, found := object.Class.Properties["$" + member]
+	value, found := object.GetProperty("$" + member)
+	if !found {
+		return values.NewVoid(), phpError.NewError("Undefined property: %s::$%s in %s",
+			object.Class.Name, member, stmt.Member.GetPosition().ToPosString())
+	}
+	// TODO Check if visibility --> != public, ...
+
+	return value, nil
 }

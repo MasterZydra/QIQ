@@ -28,6 +28,9 @@ func ToString(value RuntimeValue) string {
 		result += fmt.Sprintf("{FloatValue: %f}\n", value.(*Float).Value)
 	case StrValue:
 		result += fmt.Sprintf("{StrValue: %s}\n", value.(*Str).Value)
+	case ObjectValue:
+		result += fmt.Sprintf("{Object: %s}\n", value.(*Object).Class.Name)
+		// TODO Add properties
 	default:
 		result += fmt.Sprintf("Unsupported RuntimeValue type %s\n", value.GetType())
 	}

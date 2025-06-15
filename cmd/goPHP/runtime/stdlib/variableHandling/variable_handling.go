@@ -565,6 +565,8 @@ func StrVal(runtimeValue values.RuntimeValue) (string, phpError.Error) {
 		return "", nil
 	case values.StrValue:
 		return runtimeValue.(*values.Str).Value, nil
+	case values.VoidValue:
+		return "", nil
 	default:
 		return "", phpError.NewError("lib_strval: Unsupported runtime value %s", runtimeValue.GetType())
 	}

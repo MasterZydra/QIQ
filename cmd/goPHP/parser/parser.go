@@ -1824,7 +1824,7 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, phpError.Error) {
 	if ast.IsVariableExpr(variable) &&
 		!parser.isToken(lexer.OpOrPuncToken, "(", false) && !parser.isToken(lexer.OpOrPuncToken, "[", false) &&
 		!parser.isToken(lexer.OpOrPuncToken, "{", false) && !parser.isToken(lexer.OpOrPuncToken, "++", false) &&
-		!parser.isToken(lexer.OpOrPuncToken, "--", false) {
+		!parser.isToken(lexer.OpOrPuncToken, "--", false) && !parser.isToken(lexer.OpOrPuncToken, "->", false) {
 		return variable, nil
 	}
 
@@ -1925,7 +1925,35 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, phpError.Error) {
 	}
 
 	// TODO scoped-property-access-expression
-	// TODO member-access-expression
+
+	// -------------------------------------- member-access-expression -------------------------------------- MARK: member-access-expression
+
+	// Spec: https://phplang.org/spec/10-expressions.html#member-access-operator
+
+	// member-access-expression:
+	//    dereferencable-expression   ->   member-name
+
+	// member-name:
+	//    name
+	//    simple-variable
+	//    {   expression   }
+
+	// TODO member-access-expression - check if it is a "dereferencable-expression"
+
+	if ast.IsVariableExpr(variable) && parser.isToken(lexer.OpOrPuncToken, "->", false) {
+		PrintParserCallstack("member-access-expression", parser)
+
+		pos := parser.eat().Position
+
+		member, err := parser.parseExpr()
+		if err != nil {
+			return ast.NewEmptyExpr(), err
+		}
+
+		// TODO member-access-expression - check member name type
+
+		return ast.NewMemberAccessExpr(parser.nextId(), pos, variable, member), nil
+	}
 
 	// TODO class-constant-access-expression
 

@@ -665,3 +665,21 @@ func NewObjectCreationExpr(id int64, pos *position.Position, designator string) 
 func (stmt *ObjectCreationExpression) Process(visitor Visitor, context any) (any, error) {
 	return visitor.ProcessObjectCreationExpr(stmt, context)
 }
+
+// -------------------------------------- MemberAccessExpression -------------------------------------- MARK: MemberAccessExpression
+
+type MemberAccessExpression struct {
+	*Expression
+	Object IExpression
+	Member IExpression
+}
+
+func NewMemberAccessExpr(id int64, pos *position.Position, object, member IExpression) *MemberAccessExpression {
+	return &MemberAccessExpression{Expression: NewExpr(id, MemberAccessExpr, pos),
+		Object: object, Member: member,
+	}
+}
+
+func (stmt *MemberAccessExpression) Process(visitor Visitor, context any) (any, error) {
+	return visitor.ProcessMemberAccessExpr(stmt, context)
+}

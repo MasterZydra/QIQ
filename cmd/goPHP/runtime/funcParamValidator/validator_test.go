@@ -70,9 +70,12 @@ func TestWrongParamType(t *testing.T) {
 
 func TestCorrectParamType(t *testing.T) {
 	validator := NewValidator("testFn").AddParam("paramA", []string{"int"}, nil)
-	_, err := validator.Validate([]values.RuntimeValue{values.NewInt(42)})
+	got, err := validator.Validate([]values.RuntimeValue{values.NewInt(42)})
 	if err != nil {
 		t.Errorf("\nExpected: nil\nGot: \"%s\"", err)
+	}
+	if len(got) != 1 {
+		t.Errorf("\nExpected length 1, got %d", len(got))
 	}
 
 	validator = NewValidator("testFn").AddParam("paramA", []string{"int"}, values.NewInt(42))

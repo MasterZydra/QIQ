@@ -1271,3 +1271,11 @@ func TestCompareRelation(t *testing.T) {
 	testInputOutput(t, `<?php var_dump("22" <= NULL);`, "bool(false)\n")
 	testInputOutput(t, `<?php var_dump("22" <=> NULL);`, "int(1)\n")
 }
+
+// -------------------------------------- classes and objects -------------------------------------- MARK: classes and objects
+
+func TestClasses(t *testing.T) {
+	testInputOutput(t, `<?php class c { public int $i = 42; } $c = new c; var_dump($c->i);`, "int(42)\n")
+	// testInputOutput(t, `<?php class c { private int $i = 42; } $c = new c; var_dump($c->i);`, "int(42)\n")
+	testForError(t, `<?php class c { } $c = new c; $c->prop;`, phpError.NewError("Undefined property: c::$prop in %s:1:35", TEST_FILE_NAME))
+}

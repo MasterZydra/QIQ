@@ -73,6 +73,8 @@
 - error control expression: `@fn();`
 - global declaration: `global $var;`
 - class declaration: `class MyClass extends ParentC implements I, J {}`
+- object creation expression: `new myClass;`
+- member access expression: `$obj->member`
 
 ## Data types
 - array

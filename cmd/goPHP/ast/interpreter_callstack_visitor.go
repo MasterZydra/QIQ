@@ -1,8 +1,11 @@
 package ast
 
 import (
+	"GoPHP/cmd/goPHP/common"
 	"GoPHP/cmd/goPHP/config"
 	"fmt"
+	"maps"
+	"slices"
 )
 
 func PrintInterpreterCallstack(stmt IStatement) {
@@ -78,7 +81,40 @@ func (visitor InterpreterCallStackVisitor) ProcessCastExpr(stmt *CastExpression,
 
 // ProcessClassDeclarationStmt implements Visitor.
 func (visitor InterpreterCallStackVisitor) ProcessClassDeclarationStmt(stmt *ClassDeclarationStatement, context any) (any, error) {
-	panic("InterpreterCallStackVisitor.ProcessClassDeclarationStmt is not implemented")
+	constants := ""
+	constantsKeys := slices.Sorted(maps.Keys(stmt.Constants))
+	for _, key := range constantsKeys {
+		constant := stmt.Constants[key]
+		constants += "{visibility: \"" + constant.Visiblity + "\", name: \"" + constant.Name + "\", " + ToString(constant.Value) + "}, "
+	}
+
+	methods := ""
+	methodsKeys := slices.Sorted(maps.Keys(stmt.Methods))
+	for _, key := range methodsKeys {
+		method := stmt.Methods[key]
+		methods += fmt.Sprintf("{name: %s, modifiers: %s, return type: {%s}, parameters: %s, body: %s}",
+			method.Name, common.ImplodeStrSlice(method.Modifiers), common.ImplodeStrSlice(method.ReturnType), method.Params, ToString(method.Body),
+		)
+	}
+
+	traits := ""
+	for _, trait := range stmt.Traits {
+		traits += "{" + trait.Name + "}"
+	}
+
+	properties := ""
+	propertiesKeys := slices.Sorted(maps.Keys(stmt.Properties))
+	for _, key := range propertiesKeys {
+		property := stmt.Properties[key]
+		properties += fmt.Sprintf("{name: %s, isStatic: %v, visibility: %s, type: {%s}, initialValue: %s}",
+			property.Name, property.IsStatic, property.Visibility, common.ImplodeStrSlice(property.Type), ToString(property.InitialValue),
+		)
+	}
+
+	return fmt.Sprintf(
+		"{%s - name: \"%s\", isAbstract: %v, isFinal: %v, extends: \"%s\" , implements: %s, constants: {%s}, methods: {%s}, traits: {%s}, properties: {%s}, pos: %s }",
+		stmt.GetKind(), stmt.Name, stmt.IsAbstract, stmt.IsFinal, stmt.BaseClass, common.ImplodeStrSlice(stmt.Interfaces), constants, methods, traits, properties, stmt.GetPosition().ToPosString(),
+	), nil
 }
 
 // ProcessCoalesceExpr implements Visitor.
@@ -205,7 +241,7 @@ func (visitor InterpreterCallStackVisitor) ProcessForStmt(stmt *ForStatement, co
 func (visitor InterpreterCallStackVisitor) ProcessFunctionCallExpr(stmt *FunctionCallExpression, _ any) (any, error) {
 	return fmt.Sprintf(
 		"{%s - functionName: \"%s\", arguments: %s, pos: %s}",
-		stmt.GetKind(), stmt.FunctionName, dumpInternalCallstackExpressions(stmt.Arguments), stmt.GetPosition().ToPosString(),
+		stmt.GetKind(), ToString(stmt.FunctionName), dumpInternalCallstackExpressions(stmt.Arguments), stmt.GetPosition().ToPosString(),
 	), nil
 }
 
@@ -272,9 +308,14 @@ func (visitor InterpreterCallStackVisitor) ProcessLogicalNotExpr(stmt *LogicalNo
 	return fmt.Sprintf("{%s - operator: \"%s\", expr: %s, pos: %s }", stmt.GetKind(), stmt.Operator, ToString(stmt.Expr), stmt.GetPosition().ToPosString()), nil
 }
 
+// ProcessMemberAccessExpr implements Visitor.
+func (visitor InterpreterCallStackVisitor) ProcessMemberAccessExpr(stmt *MemberAccessExpression, _ any) (any, error) {
+	return fmt.Sprintf("{%s - object: %s, member: %s, pos: %s}", stmt.GetKind(), ToString(stmt.Object), ToString(stmt.Member), stmt.GetPosition().ToPosString()), nil
+}
+
 // ProcessObjectCreationExpr implements Visitor.
 func (visitor InterpreterCallStackVisitor) ProcessObjectCreationExpr(stmt *ObjectCreationExpression, _ any) (any, error) {
-	panic("InterpreterCallStackVisitor.ProcessObjectCreationExpr is not implemented")
+	return fmt.Sprintf("{%s - designator: %s, pos: %s }", stmt.GetKind(), stmt.Designator, stmt.GetPosition().ToPosString()), nil
 }
 
 // ProcessParenthesizedExpr implements Visitor.

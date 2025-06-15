@@ -303,6 +303,11 @@ func (visitor DumpVisitor) ProcessLogicalNotExpr(stmt *LogicalNotExpression, _ a
 	return fmt.Sprintf("{%s - operator: \"%s\" expr: %s }", stmt.GetKind(), stmt.Operator, ToString(stmt.Expr)), nil
 }
 
+// ProcessMemberAccessExpr implements Visitor.
+func (visitor DumpVisitor) ProcessMemberAccessExpr(stmt *MemberAccessExpression, _ any) (any, error) {
+	return fmt.Sprintf("{%s - object: %s, member: %s}", stmt.GetKind(), ToString(stmt.Object), ToString(stmt.Member)), nil
+}
+
 // ProcessObjectCreationExpr implements Visitor.
 func (visitor DumpVisitor) ProcessObjectCreationExpr(stmt *ObjectCreationExpression, _ any) (any, error) {
 	return fmt.Sprintf("{%s - designator: %s }", stmt.GetKind(), stmt.Designator), nil

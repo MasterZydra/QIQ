@@ -27,6 +27,7 @@ const (
 	IntegerLiteralExpr     NodeType = "IntegerLiteralExpression"
 	IssetIntrinsicExpr     NodeType = "IssetIntrinsicExpression"
 	LogicalNotExpr         NodeType = "LogicalNotExpression"
+	MemberAccessExpr       NodeType = "MemberAccessExpression"
 	ObjectCreationExpr     NodeType = "ObjectCreationExpression"
 	ParenthesizedExpr      NodeType = "ParenthesizedExpression"
 	PostfixIncExpr         NodeType = "PostfixIncExpression"
