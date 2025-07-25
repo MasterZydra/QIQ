@@ -6,7 +6,6 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
-	"sort"
 	"strings"
 )
 
@@ -26,9 +25,7 @@ func docPackage() {
 	for category := range imports {
 		packages = append(packages, category)
 	}
-	sort.Slice(packages, func(i, j int) bool {
-		return packages[i] < packages[j]
-	})
+	slices.Sort(packages)
 
 	writeToFile("./doc/Packages.md", generateMermaidPackage(packages))
 }
@@ -43,9 +40,7 @@ func generateMermaidPackage(packages []string) string {
 	for _, pack := range packages {
 
 		packageImports := imports[pack]
-		sort.Slice(packageImports, func(i, j int) bool {
-			return packageImports[i] < packageImports[j]
-		})
+		slices.Sort(packageImports)
 
 		for _, packageImport := range packageImports {
 			markdown.WriteString("    ")

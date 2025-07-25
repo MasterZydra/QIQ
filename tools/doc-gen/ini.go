@@ -4,14 +4,13 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"sort"
+	"slices"
 	"strings"
 )
 
 var iniDirectives = map[string]string{}
 
 func docIniDirectives() {
-	println("hi")
 	err := readGoFileIni("./cmd/goPHP/ini/ini.go")
 	if err != nil {
 		fmt.Println(err)
@@ -23,9 +22,7 @@ func docIniDirectives() {
 	for directive := range iniDirectives {
 		directives = append(directives, directive)
 	}
-	sort.Slice(directives, func(i, j int) bool {
-		return directives[i] < directives[j]
-	})
+	slices.Sort(directives)
 
 	writeToFile("./doc/IniDirectives.md", generateMarkdownIni(directives))
 }
@@ -60,7 +57,6 @@ func readGoFileIni(path string) error {
 		if line == "" {
 			continue
 		}
-		println(line)
 
 		if strings.HasPrefix(line, "// Ini Directives:") {
 			isIniSection = true

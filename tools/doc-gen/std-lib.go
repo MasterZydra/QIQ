@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"sort"
+	"slices"
 	"strings"
 )
 
@@ -22,9 +22,7 @@ func docStdLib() {
 	for category := range stdLibFunctions {
 		categories = append(categories, category)
 	}
-	sort.Slice(categories, func(i, j int) bool {
-		return categories[i] < categories[j]
-	})
+	slices.Sort(categories)
 
 	writeToFile("./doc/StdLib.md", generateMarkdownStdLib(categories))
 }
@@ -40,9 +38,7 @@ func generateMarkdownStdLib(categories []string) string {
 		markdown.WriteString("\n")
 
 		functions := stdLibFunctions[category]
-		sort.Slice(functions, func(i, j int) bool {
-			return functions[i] < functions[j]
-		})
+		slices.Sort(functions)
 
 		for _, function := range functions {
 			markdown.WriteString("- ")

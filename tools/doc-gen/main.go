@@ -6,9 +6,18 @@ import (
 )
 
 func main() {
+	println("Generating documentation for ...")
+
+	println("- std lib")
 	docStdLib()
+
+	println("- constants")
 	docConst()
+
+	println("- packages")
 	docPackage()
+
+	println("- ini directives")
 	docIniDirectives()
 }
 
