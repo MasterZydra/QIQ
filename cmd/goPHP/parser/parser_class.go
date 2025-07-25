@@ -49,6 +49,14 @@ func (parser *Parser) parseObjectCreationExpression() (ast.IExpression, phpError
 	}
 	designator := parser.eat().Value
 
+	hasParenthese := parser.isToken(lexer.OpOrPuncToken, "(", true)
+
+	// TODO parse argument-expression-list
+
+	if hasParenthese && !parser.isToken(lexer.OpOrPuncToken, ")", true) {
+		return ast.NewEmptyExpr(), phpError.NewParseError("Expected \")\". Got %s", parser.at())
+	}
+
 	return ast.NewObjectCreationExpr(parser.nextId(), pos, designator), nil
 }
 
