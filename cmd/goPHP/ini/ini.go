@@ -61,6 +61,7 @@ type Ini struct {
 func NewDefaultIni() *Ini {
 	return &Ini{
 		directives: map[string]string{
+			// Ini Directives:
 			"always_populate_raw_post_data": "",
 			"arg_separator.input":           "&",
 			"arg_separator.output":          "&",

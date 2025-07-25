@@ -9,6 +9,7 @@ func main() {
 	docStdLib()
 	docConst()
 	docPackage()
+	docIniDirectives()
 }
 
 func writeToFile(path, content string) error {
