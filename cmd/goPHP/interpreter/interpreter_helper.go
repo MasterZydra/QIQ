@@ -735,3 +735,66 @@ func calculateString(operand1 *values.Str, operator string, operand2 *values.Str
 		return values.NewStr(""), phpError.NewError("calculateString: Operator \"%s\" not implemented", operator)
 	}
 }
+
+// -------------------------------------- class-object -------------------------------------- MARK: class-object
+
+func (interpreter *Interpreter) CallMethod(object *values.Object, method string, args []ast.IExpression, env *Environment) (values.RuntimeValue, phpError.Error) {
+	methodDefinition, found := object.GetMethod(method)
+	if !found {
+		return values.NewNull(), phpError.NewError("Class %s does not have a function \"%s\"", object.Class.Name, method)
+	}
+
+	methodEnv, err := NewEnvironment(env, nil, interpreter)
+	if err != nil {
+		return values.NewVoid(), err
+	}
+	methodEnv.CurrentObject = object
+	methodEnv.CurrentMethod = methodDefinition
+
+	if len(methodDefinition.Params) != len(args) {
+		return values.NewVoid(), phpError.NewError(
+			"Uncaught ArgumentCountError: %s::%s() expects exactly %d arguments, %d given",
+			object.Class.BaseClass, methodDefinition.Name, len(methodDefinition.Params), len(args),
+		)
+	}
+
+	for index, param := range methodDefinition.Params {
+		runtimeValue := must(interpreter.processStmt(args[index], env))
+
+		// Check if the parameter types match
+		err = checkParameterTypes(runtimeValue, param.Type)
+		if err != nil && err.GetMessage() == "Types do not match" {
+			givenType, err := variableHandling.GetType(runtimeValue)
+			if err != nil {
+				return values.NewVoid(), err
+			}
+			return values.NewVoid(), phpError.NewError(
+				"Uncaught TypeError: %s::%s(): Argument #%d (%s) must be of type %s, %s given",
+				object.Class.BaseClass, methodDefinition.Name, index+1, param.Name, strings.Join(param.Type, "|"), givenType,
+			)
+		}
+		// Declare parameter in method environment
+		methodEnv.declareVariable(param.Name, values.DeepCopy(runtimeValue))
+	}
+
+	runtimeValue, err := interpreter.processStmt(methodDefinition.Body, methodEnv)
+	if err != nil && !(err.GetErrorType() == phpError.EventError && err.GetMessage() == phpError.ReturnEvent) {
+		return runtimeValue, err
+	}
+	err = checkParameterTypes(runtimeValue, methodDefinition.ReturnType)
+	if err != nil && err.GetMessage() == "Types do not match" {
+		givenType, err := variableHandling.GetType(runtimeValue)
+		if runtimeValue.GetType() == values.VoidValue {
+			givenType = "void"
+		}
+		if err != nil {
+			return runtimeValue, err
+		}
+		return runtimeValue, phpError.NewError(
+			"Uncaught TypeError: %s::%s(): Return value must be of type %s, %s given",
+			object.Class.BaseClass, methodDefinition.Name, strings.Join(methodDefinition.ReturnType, "|"), givenType,
+		)
+	}
+
+	return runtimeValue, nil
+}

@@ -315,7 +315,7 @@ func (visitor InterpreterCallStackVisitor) ProcessMemberAccessExpr(stmt *MemberA
 
 // ProcessObjectCreationExpr implements Visitor.
 func (visitor InterpreterCallStackVisitor) ProcessObjectCreationExpr(stmt *ObjectCreationExpression, _ any) (any, error) {
-	return fmt.Sprintf("{%s - designator: %s, pos: %s }", stmt.GetKind(), stmt.Designator, stmt.GetPosition().ToPosString()), nil
+	return fmt.Sprintf("{%s - designator: %s, args: %s, pos: %s }", stmt.GetKind(), stmt.Designator, dumpExpressions(stmt.Args), stmt.GetPosition().ToPosString()), nil
 }
 
 // ProcessParenthesizedExpr implements Visitor.

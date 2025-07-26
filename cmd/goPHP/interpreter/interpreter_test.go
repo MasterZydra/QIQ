@@ -1275,8 +1275,12 @@ func TestCompareRelation(t *testing.T) {
 // -------------------------------------- classes and objects -------------------------------------- MARK: classes and objects
 
 func TestClasses(t *testing.T) {
+	// Constructor
 	testInputOutput(t, `<?php class c {} $c = new c; echo "Class created";`, "Class created")
 	testInputOutput(t, `<?php class c {} $c = new c(); echo "Class created";`, "Class created")
+	testInputOutput(t, `<?php class c { public function __construct(string $name) { echo "Construct(Name: " . $name . ")\n"; } } $c = new c("Max"); echo "Done";`, "Construct(Name: Max)\nDone")
+
+	// Property access
 	testInputOutput(t, `<?php class c { public int $i = 42; } $c = new c; var_dump($c->i);`, "int(42)\n")
 	// TODO testInputOutput(t, `<?php class c { private int $i = 42; } $c = new c; var_dump($c->i);`, "int(42)\n")
 	testForError(t, `<?php class c { } $c = new c; $c->prop;`, phpError.NewError("Undefined property: c::$prop in %s:1:35", TEST_FILE_NAME))

@@ -51,13 +51,31 @@ func (parser *Parser) parseObjectCreationExpression() (ast.IExpression, phpError
 
 	hasParenthese := parser.isToken(lexer.OpOrPuncToken, "(", true)
 
-	// TODO parse argument-expression-list
+	args := []ast.IExpression{}
+	if hasParenthese {
+		for {
+			if parser.isToken(lexer.OpOrPuncToken, ")", false) {
+				break
+			}
+
+			arg, err := parser.parseExpr()
+			if err != nil {
+				return ast.NewEmptyExpr(), err
+			}
+			args = append(args, arg)
+
+			if parser.isToken(lexer.OpOrPuncToken, ",", true) || parser.isToken(lexer.OpOrPuncToken, ")", false) {
+				continue
+			}
+			return ast.NewEmptyExpr(), phpError.NewParseError("Expected \",\" or \")\". Got: %s", parser.at())
+		}
+	}
 
 	if hasParenthese && !parser.isToken(lexer.OpOrPuncToken, ")", true) {
 		return ast.NewEmptyExpr(), phpError.NewParseError("Expected \")\". Got %s", parser.at())
 	}
 
-	return ast.NewObjectCreationExpr(parser.nextId(), pos, designator), nil
+	return ast.NewObjectCreationExpr(parser.nextId(), pos, designator, args), nil
 }
 
 func (parser *Parser) parseClassDeclaration() (ast.IStatement, phpError.Error) {

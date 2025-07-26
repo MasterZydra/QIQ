@@ -846,14 +846,14 @@ func (interpreter *Interpreter) ProcessObjectCreationExpr(stmt *ast.ObjectCreati
 	}
 	object := values.NewObject(class)
 
-	if err := interpreter.initObject(object, env); err != nil {
+	if err := interpreter.initObject(object, stmt.Args, env); err != nil {
 		return values.NewVoid(), err
 	}
 
 	return object, nil
 }
 
-func (interpreter *Interpreter) initObject(object *values.Object, env any) phpError.Error {
+func (interpreter *Interpreter) initObject(object *values.Object, constructorArgs []ast.IExpression, env any) phpError.Error {
 	initializeProperties := func(properties map[string]*ast.PropertyDeclarationStatement) phpError.Error {
 	// Initialize properties
 		for _, property := range properties {
@@ -867,6 +867,14 @@ func (interpreter *Interpreter) initObject(object *values.Object, env any) phpEr
 			object.SetProperty(property.Name, value)
 		}
 	}
+
+		// Call constructor
+		if _, found := object.GetMethod("__construct"); found {
+			if _, err := interpreter.CallMethod(object, "__construct", constructorArgs, env.(*Environment)); err != nil {
+				return err
+			}
+		}
+
 		return nil
 	}
 

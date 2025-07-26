@@ -310,7 +310,7 @@ func (visitor DumpVisitor) ProcessMemberAccessExpr(stmt *MemberAccessExpression,
 
 // ProcessObjectCreationExpr implements Visitor.
 func (visitor DumpVisitor) ProcessObjectCreationExpr(stmt *ObjectCreationExpression, _ any) (any, error) {
-	return fmt.Sprintf("{%s - designator: %s }", stmt.GetKind(), stmt.Designator), nil
+	return fmt.Sprintf("{%s - designator: %s, args: %s }", stmt.GetKind(), stmt.Designator, dumpExpressions(stmt.Args)), nil
 }
 
 // ProcessParenthesizedExpr implements Visitor.

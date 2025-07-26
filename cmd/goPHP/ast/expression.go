@@ -656,10 +656,11 @@ func (stmt *RequireOnceExpression) Process(visitor Visitor, context any) (any, e
 type ObjectCreationExpression struct {
 	*Expression
 	Designator string
+	Args       []IExpression
 }
 
-func NewObjectCreationExpr(id int64, pos *position.Position, designator string) *ObjectCreationExpression {
-	return &ObjectCreationExpression{Expression: NewExpr(id, ObjectCreationExpr, pos), Designator: designator}
+func NewObjectCreationExpr(id int64, pos *position.Position, designator string, args []IExpression) *ObjectCreationExpression {
+	return &ObjectCreationExpression{Expression: NewExpr(id, ObjectCreationExpr, pos), Designator: designator, Args: args}
 }
 
 func (stmt *ObjectCreationExpression) Process(visitor Visitor, context any) (any, error) {

@@ -28,3 +28,9 @@ func (object *Object) GetProperty(name string) (RuntimeValue, bool) {
 	}
 	return value, true
 }
+
+func (object *Object) GetMethod(name string) (*ast.MethodDefinitionStatement, bool) {
+	// TODO search parent classes if not contained in this one
+	method, found := object.Class.Methods[name]
+	return method, found
+}
