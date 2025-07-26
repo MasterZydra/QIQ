@@ -317,7 +317,7 @@ func (lexer *Lexer) tokenizeToken() error {
 		}
 
 		// integer-literal or floating-literal
-		if common.IsDigit(lexer.at()) || (lexer.at() == "." && (common.IsDigit(lexer.next(0)) || strings.ToLower(lexer.next(0)) == "e")) {
+		if common.IsDigit(lexer.at()) || (lexer.at() == "." && (common.IsDigit(lexer.next(0)) || (strings.ToLower(lexer.next(0)) == "e" && common.IsDigit(lexer.next(1))))) {
 			// floating-literal
 			if float := lexer.getFloatingPointLiteral(false); float != "" {
 				lexer.getFloatingPointLiteral(true)
