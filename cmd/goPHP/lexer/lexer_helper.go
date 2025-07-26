@@ -23,7 +23,9 @@ func (lexer *Lexer) next(offset int) string {
 	if pos > len(lexer.input) {
 		pos = len(lexer.input)
 	}
-
+	if pos+1 > len(lexer.input) {
+		return ""
+	}
 	return lexer.input[pos : pos+1]
 }
 
