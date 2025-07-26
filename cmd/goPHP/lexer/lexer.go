@@ -204,7 +204,7 @@ func (lexer *Lexer) tokenizeComment() error {
 		lexer.eatN(2)
 		isSingleLineComment = false
 	} else {
-		return fmt.Errorf("Syntax error: Unexpected start of a comment")
+		return fmt.Errorf("Syntax error: Unexpected start of a comment at %s:%d:%d", lexer.filename, lexer.currPos.CurrLine, lexer.currPos.CurrCol)
 	}
 
 	for !lexer.isEof() {
@@ -233,7 +233,7 @@ func (lexer *Lexer) tokenizeComment() error {
 
 	// Delimited-comment must be closed with */
 	if !isSingleLineComment {
-		return fmt.Errorf("Unterminated delimited comment detected")
+		return fmt.Errorf("Unterminated delimited comment detected at %s:%d:%d", lexer.filename, lexer.currPos.CurrLine, lexer.currPos.CurrCol)
 	}
 
 	return nil
@@ -260,7 +260,7 @@ func (lexer *Lexer) tokenizeToken() error {
 				lexer.pushToken(StringLiteralToken, str)
 				return nil
 			}
-			return fmt.Errorf("Unsupported string literal detected")
+			return fmt.Errorf("Unsupported string literal detected at %s:%d:%d", lexer.filename, lexer.currPos.CurrLine, lexer.currPos.CurrCol)
 		}
 
 		// variable-name
@@ -313,7 +313,7 @@ func (lexer *Lexer) tokenizeToken() error {
 				lexer.pushToken(NameToken, name)
 				return nil
 			}
-			return fmt.Errorf("Unsupported name detected")
+			return fmt.Errorf("Unsupported name detected at %s:%d:%d", lexer.filename, lexer.currPos.CurrLine, lexer.currPos.CurrCol)
 		}
 
 		// integer-literal or floating-literal
@@ -332,7 +332,7 @@ func (lexer *Lexer) tokenizeToken() error {
 				return nil
 			}
 
-			return fmt.Errorf("Unsupported number format detected")
+			return fmt.Errorf("Unsupported number format detected \"%s\" at %s:%d:%d", lexer.at(), lexer.filename, lexer.currPos.CurrLine, lexer.currPos.CurrCol)
 		}
 
 		// operator-or-punctuator
