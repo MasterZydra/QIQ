@@ -23,6 +23,8 @@ type Environment struct {
 	nativeFunctions     map[string]runtime.NativeFunction
 	// Context
 	CurrentFunction *ast.FunctionDefinitionStatement
+	CurrentObject   *values.Object
+	CurrentMethod   *ast.MethodDefinitionStatement
 }
 
 func NewEnvironment(parentEnv *Environment, request *request.Request, interpreter runtime.Interpreter) (*Environment, phpError.Error) {
@@ -129,6 +131,17 @@ func (env *Environment) addGlobalVariable(variableName string) {
 		return
 	}
 	env.globalVariables = append(env.globalVariables, variableName)
+}
+
+func (env *Environment) getAllObjects() []*values.Object {
+	objects := []*values.Object{}
+	for _, variable := range env.variables {
+		if variable.GetType() != values.ObjectValue {
+			continue
+		}
+		objects = append(objects, variable.(*values.Object))
+	}
+	return objects
 }
 
 // -------------------------------------- Constants -------------------------------------- MARK: Constants

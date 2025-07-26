@@ -28,6 +28,7 @@ type Interpreter struct {
 	resultRuntimeValue values.RuntimeValue
 	// Status
 	suppressWarning bool
+	exitCalled      bool
 }
 
 func NewInterpreter(ini *ini.Ini, r *request.Request, filename string) (*Interpreter, phpError.Error) {
@@ -123,6 +124,11 @@ func (interpreter *Interpreter) processProgram(program *ast.Program, env *Enviro
 			return runtimeValue, err
 		}
 	}
+
+	if !interpreter.exitCalled {
+		interpreter.ProcessExitIntrinsicExpr(ast.NewExitIntrinsic(0, nil, ast.NewIntegerLiteralExpr(0, nil, 0)), interpreter.env)
+	}
+
 	return runtimeValue, nil
 }
 

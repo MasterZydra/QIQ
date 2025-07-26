@@ -8,6 +8,7 @@ import (
 	"GoPHP/cmd/goPHP/runtime"
 	"GoPHP/cmd/goPHP/runtime/stdlib/variableHandling"
 	"GoPHP/cmd/goPHP/runtime/values"
+	"fmt"
 	"strings"
 )
 
@@ -454,7 +455,19 @@ func (interpreter *Interpreter) ProcessExitIntrinsicExpr(expr *ast.ExitIntrinsic
 	// "exit" performs the following operations, in order:
 	//   1. Writes the optional string to STDOUT.
 	//   2. Calls any functions registered via the library function register_shutdown_function in their order of registration.
-	//   3. Invokes destructors for all remaining instances.
+
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-exit-intrinsic
+	// Invokes destructors for all remaining instances
+	objects := env.(*Environment).getAllObjects()
+	for _, object := range objects {
+		_, found := object.GetMethod("__destruct")
+		if found {
+			_, err := interpreter.CallMethod(object, "__destruct", []ast.IExpression{}, env.(*Environment))
+			if err != nil {
+				fmt.Printf("Exit: Calling destructor failed: %s", err)
+			}
+		}
+	}
 
 	expression := expr.Arguments[0]
 	if expression != nil {
@@ -472,6 +485,8 @@ func (interpreter *Interpreter) ProcessExitIntrinsicExpr(expr *ast.ExitIntrinsic
 
 	// TODO processExitIntrinsicExpr - call shutdown functions
 	// TODO processExitIntrinsicExpr - call destructors
+
+	interpreter.exitCalled = true
 
 	return values.NewVoid(), phpError.NewEvent(phpError.ExitEvent)
 }
