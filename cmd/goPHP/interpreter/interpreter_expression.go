@@ -556,31 +556,48 @@ func (interpreter *Interpreter) ProcessConstantAccessExpr(expr *ast.ConstantAcce
 	}
 
 	// Spec: https://www.php.net/manual/en/language.constants.magic.php
-	// The function name, or {closure} for anonymous functions.
-	if expr.ConstantName == "__FUNCTION__" {
-		if env.(*Environment).CurrentFunction != nil {
-			return values.NewStr(env.(*Environment).CurrentFunction.FunctionName), nil
-		}
-		return values.NewStr(""), nil
-	}
-
-	// Spec: https://www.php.net/manual/en/language.constants.magic.php
 	// The current line number of the file.
 	if expr.ConstantName == "__LINE__" {
 		return values.NewInt(int64(expr.GetPosition().Line)), nil
 	}
 
+	environment := env.(*Environment)
+
+	// Spec: https://www.php.net/manual/en/language.constants.magic.php
+	// The function name, or {closure} for anonymous functions.
+	if expr.ConstantName == "__FUNCTION__" {
+		if environment.CurrentFunction != nil {
+			return values.NewStr(environment.CurrentFunction.FunctionName), nil
+		}
+		if environment.CurrentMethod != nil {
+			return values.NewStr(environment.CurrentMethod.Name), nil
+		}
+		return values.NewStr(""), nil
+	}
+
+	// Spec: https://www.php.net/manual/en/language.constants.magic.php
+	// The class name. The class name includes the namespace it was declared in (e.g. Foo\Bar).
+	// When used inside a trait method, __CLASS__ is the name of the class the trait is used in.
+	if expr.ConstantName == "__CLASS__" {
+		// TODO __CLASS__: Add namespace
+		return values.NewStr(environment.CurrentObject.Class.Name), nil
+	}
+
+	// Spec: https://www.php.net/manual/en/language.constants.magic.php
+	// The class method name.
+	if expr.ConstantName == "__METHOD__" {
+		return values.NewStr(environment.CurrentMethod.Name), nil
+	}
+
+	// TODO __TRAIT__ 	The trait name. The trait name includes the namespace it was declared in (e.g. Foo\Bar).
+	// TODO __PROPERTY__ 	Only valid inside a property hook. It is equal to the name of the property.
+	// TODO __NAMESPACE__ 	The name of the current namespace.
+
 	if expr.ConstantName == "PHP_BUILD_DATE" {
 		return values.NewStr(GetExecutableCreationDate().Format("Jan 02 2006 15:04:05")), nil
 	}
 
-	// TODO __CLASS__ 	The class name. The class name includes the namespace it was declared in (e.g. Foo\Bar). When used inside a trait method, __CLASS__ is the name of the class the trait is used in.
-	// TODO __TRAIT__ 	The trait name. The trait name includes the namespace it was declared in (e.g. Foo\Bar).
-	// TODO __METHOD__ 	The class method name.
-	// TODO __PROPERTY__ 	Only valid inside a property hook. It is equal to the name of the property.
-	// TODO __NAMESPACE__ 	The name of the current namespace.
-
-	return env.(*Environment).LookupConstant(expr.ConstantName)
+	return environment.LookupConstant(expr.ConstantName)
 }
 
 // ProcessCompoundAssignmentExpr implements Visitor.

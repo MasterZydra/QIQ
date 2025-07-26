@@ -70,10 +70,12 @@
 - $_SERVER
 
 ## Magic constants
+- \_\_CLASS\_\_
 - \_\_DIR\_\_
 - \_\_FILE\_\_
 - \_\_FUNCTION\_\_
 - \_\_LINE\_\_
+- \_\_METHOD\_\_
 
 ## Intrinsics
 - die
