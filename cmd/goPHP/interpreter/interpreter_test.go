@@ -593,40 +593,40 @@ func TestNumbers(t *testing.T) {
 	testInputOutput(t, `<?php var_dump(299_792_458);`, "int(299792458)\n")
 	// Invalid
 	testForError(t, `<?php var_dump(_100);`, phpError.NewError("Undefined constant \"_100\""))
-	testForError(t, `<?php var_dump(100_);`, phpError.NewParseError("Unsupported number format detected"))
-	testForError(t, `<?php var_dump(1__1);`, phpError.NewParseError("Unsupported number format detected"))
+	testForError(t, `<?php var_dump(100_);`, phpError.NewParseError("Unsupported number format detected at %s:1:16", TEST_FILE_NAME))
+	testForError(t, `<?php var_dump(1__1);`, phpError.NewParseError("Unsupported number format detected at %s:1:16", TEST_FILE_NAME))
 
 	// Hexadecimal
 	testInputOutput(t, `<?php var_dump(0xCAFE_F00D);`, "int(3405705229)\n")
 	testInputOutput(t, `<?php var_dump(0x42_72_6F_77_6E);`, "int(285387749230)\n")
 	// Invalid
-	testForError(t, `<?php var_dump(0x_123);`, phpError.NewParseError("Unsupported number format detected"))
-	testForError(t, `<?php var_dump(0x1_23_);`, phpError.NewParseError("Unsupported number format detected"))
-	testForError(t, `<?php var_dump(0x1__23);`, phpError.NewParseError("Unsupported number format detected"))
+	testForError(t, `<?php var_dump(0x_123);`, phpError.NewParseError("Unsupported number format detected at %s:1:16", TEST_FILE_NAME))
+	testForError(t, `<?php var_dump(0x1_23_);`, phpError.NewParseError("Unsupported number format detected at %s:1:16", TEST_FILE_NAME))
+	testForError(t, `<?php var_dump(0x1__23);`, phpError.NewParseError("Unsupported number format detected at %s:1:16", TEST_FILE_NAME))
 
 	// Binary
 	testInputOutput(t, `<?php var_dump(0b0101_1111);`, "int(95)\n")
 	testInputOutput(t, `<?php var_dump(0b01010100_01101000_01100101_01101111);`, "int(1416127855)\n")
 	// Invalid
-	testForError(t, `<?php var_dump(0b_101);`, phpError.NewParseError("Unsupported number format detected"))
-	testForError(t, `<?php var_dump(0b1_1_);`, phpError.NewParseError("Unsupported number format detected"))
-	testForError(t, `<?php var_dump(0b1__1);`, phpError.NewParseError("Unsupported number format detected"))
+	testForError(t, `<?php var_dump(0b_101);`, phpError.NewParseError("Unsupported number format detected at %s:1:16", TEST_FILE_NAME))
+	testForError(t, `<?php var_dump(0b1_1_);`, phpError.NewParseError("Unsupported number format detected at %s:1:16", TEST_FILE_NAME))
+	testForError(t, `<?php var_dump(0b1__1);`, phpError.NewParseError("Unsupported number format detected at %s:1:16", TEST_FILE_NAME))
 
 	// Octal
 	testInputOutput(t, `<?php var_dump(0137_041);`, "int(48673)\n")
 	testInputOutput(t, `<?php var_dump(0_101);`, "int(65)\n")
 	// Invalid
 	testForError(t, `<?php var_dump(_010);`, phpError.NewError("Undefined constant \"_010\""))
-	testForError(t, `<?php var_dump(010_);`, phpError.NewParseError("Unsupported number format detected"))
-	testForError(t, `<?php var_dump(0__10);`, phpError.NewParseError("Unsupported number format detected"))
+	testForError(t, `<?php var_dump(010_);`, phpError.NewParseError("Unsupported number format detected at %s:1:16", TEST_FILE_NAME))
+	testForError(t, `<?php var_dump(0__10);`, phpError.NewParseError("Unsupported number format detected at %s:1:16", TEST_FILE_NAME))
 
 	// Float
 	testInputOutput(t, `<?php var_dump(107_925_284.88);`, "float(107925284.88)\n")
 	testInputOutput(t, `<?php var_dump(6.674_083e-11);`, "float(0.00000000006674083)\n")
 	// Invalid
-	testForError(t, `<?php var_dump(1_.0);`, phpError.NewParseError("Unsupported number format detected"))
+	testForError(t, `<?php var_dump(1_.0);`, phpError.NewParseError("Unsupported number format detected at %s:1:16", TEST_FILE_NAME))
 	testForError(t, `<?php var_dump(1._0);`, phpError.NewError("Undefined constant \"_0\""))
-	testForError(t, `<?php var_dump(1_e2);`, phpError.NewParseError("Unsupported number format detected"))
+	testForError(t, `<?php var_dump(1_e2);`, phpError.NewParseError("Unsupported number format detected at %s:1:16", TEST_FILE_NAME))
 	testForError(t, `<?php var_dump(1e_2);`, phpError.NewParseError("Expected \",\" or \")\". Got: &{Token - type: Name, value: \"e_2\", position: {Position - file: \"%s\", ln: 1, col: 17}}", TEST_FILE_NAME))
 
 	// Convertion

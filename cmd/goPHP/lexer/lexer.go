@@ -332,7 +332,7 @@ func (lexer *Lexer) tokenizeToken() error {
 				return nil
 			}
 
-			return fmt.Errorf("Unsupported number format detected \"%s\" at %s:%d:%d", lexer.at(), lexer.filename, lexer.currPos.CurrLine, lexer.currPos.CurrCol)
+			return fmt.Errorf("Unsupported number format detected at %s:%d:%d", lexer.filename, lexer.currPos.CurrLine, lexer.currPos.CurrCol)
 		}
 
 		// operator-or-punctuator
