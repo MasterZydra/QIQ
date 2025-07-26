@@ -392,6 +392,11 @@ func (visitor DumpVisitor) ProcessTextExpr(stmt *TextExpression, _ any) (any, er
 	return fmt.Sprintf("{%s - value: \"%s\" }", stmt.GetKind(), stmt.Value), nil
 }
 
+// ProcessThrowStmt implements Visitor.
+func (visitor DumpVisitor) ProcessThrowStmt(stmt *ThrowStatement, _ any) (any, error) {
+	return fmt.Sprintf("{%s - expr: \"%s\" }", stmt.GetKind(), ToString(stmt.Expr)), nil
+}
+
 // ProcessUnaryExpr implements Visitor.
 func (visitor DumpVisitor) ProcessUnaryExpr(stmt *UnaryOpExpression, _ any) (any, error) {
 	return fmt.Sprintf(

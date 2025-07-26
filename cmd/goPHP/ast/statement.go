@@ -386,3 +386,18 @@ func (stmt *ClassDeclarationStatement) AddProperty(property *PropertyDeclaration
 func (stmt *ClassDeclarationStatement) AddTrait(trait *TraitUseStatement) {
 	stmt.Traits = append(stmt.Traits, trait)
 }
+
+// -------------------------------------- ThrowStatement -------------------------------------- MARK: ThrowStatement
+
+type ThrowStatement struct {
+	*Statement
+	Expr IExpression
+}
+
+func NewThrowStmt(id int64, pos *position.Position, expr IExpression) *ThrowStatement {
+	return &ThrowStatement{Statement: NewStmt(id, ThrowStmt, pos), Expr: expr}
+}
+
+func (stmt *ThrowStatement) Process(visitor Visitor, context any) (any, error) {
+	return visitor.ProcessThrowStmt(stmt, context)
+}

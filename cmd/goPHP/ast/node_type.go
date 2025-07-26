@@ -59,6 +59,7 @@ const (
 	ReturnStmt             NodeType = "ReturnStatement"
 	ContinueStmt           NodeType = "ContinueStatement"
 	BreakStmt              NodeType = "BreakStatement"
+	ThrowStmt              NodeType = "ThrowStatement"
 	// Class
 	ClassDeclarationStmt      NodeType = "ClassDeclarationStatement"
 	ClassConstDeclarationStmt NodeType = "ClassConstDeclarationStatement"

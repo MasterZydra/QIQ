@@ -282,3 +282,8 @@ func (interpreter *Interpreter) ProcessGlobalDeclarationStmt(stmt *ast.GlobalDec
 	}
 	return values.NewVoid(), nil
 }
+
+// ProcessThrowStmt implements Visitor.
+func (interpreter *Interpreter) ProcessThrowStmt(stmt *ast.ThrowStatement, env any) (any, error) {
+	return values.NewVoid(), phpError.NewError("ProcessThrowStmt is not implemented")
+}

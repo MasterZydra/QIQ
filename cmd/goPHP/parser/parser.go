@@ -885,7 +885,25 @@ func (parser *Parser) parseJumpStmt() (ast.IStatement, phpError.Error) {
 		return ast.NewReturnStmt(parser.nextId(), pos, expr), nil
 	}
 
-	// TODO throw-statement
+	// -------------------------------------- throw-statement -------------------------------------- MARK: throw-statement
+
+	// Spec: https://phplang.org/spec/11-statements.html#grammar-throw-statement
+
+	// throw-statement:
+	//    throw   expression   ;
+
+	if parser.isToken(lexer.KeywordToken, "throw", false) {
+		PrintParserCallstack("throw-statement", parser)
+		pos := parser.eat().Position
+		expr, err := parser.parseExpr()
+		if err != nil {
+			return ast.NewEmptyStmt(), err
+		}
+		if !parser.isToken(lexer.OpOrPuncToken, ";", true) {
+			return ast.NewEmptyStmt(), phpError.NewParseError("Expected: \";\". Got: \"%s\"", parser.at())
+		}
+		return ast.NewThrowStmt(parser.nextId(), pos, expr), nil
+	}
 
 	return ast.NewEmptyStmt(), phpError.NewParseError("Unsupported jump statement '%s' at %s", parser.at().Value, parser.at().Position.ToPosString())
 }
@@ -2094,7 +2112,7 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, phpError.Error) {
 	// 	return ast.NewExpressionStmt(parser.nextId(), ast.NewTextExpr(parser.nextId(), parser.eat().Value)), nil
 	// }
 
-	return ast.NewEmptyExpr(), phpError.NewParseError("Unsupported expression type: %s", parser.at())
+	return ast.NewEmptyExpr(), phpError.NewParseError("Unsupported expression type '%s', value: '%s' at %s", parser.at().TokenType, parser.at().Value, parser.at().Position.ToPosString())
 }
 
 func (parser *Parser) parseLiteral() (ast.IExpression, phpError.Error) {

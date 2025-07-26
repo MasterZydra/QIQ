@@ -394,7 +394,12 @@ func (visitor InterpreterCallStackVisitor) ProcessSubscriptExpr(stmt *SubscriptE
 
 // ProcessTextExpr implements Visitor.
 func (visitor InterpreterCallStackVisitor) ProcessTextExpr(stmt *TextExpression, _ any) (any, error) {
-	return fmt.Sprintf("{%s - value: \"%s\" }", stmt.GetKind(), stmt.Value), nil
+	return fmt.Sprintf("{%s - value: \"%s\", pos: %s }", stmt.GetKind(), stmt.Value, stmt.GetPosition().ToPosString()), nil
+}
+
+// ProcessThrowStmt implements Visitor.
+func (visitor InterpreterCallStackVisitor) ProcessThrowStmt(stmt *ThrowStatement, _ any) (any, error) {
+	return fmt.Sprintf("{%s - expr: \"%s\", pos: %s }", stmt.GetKind(), ToString(stmt.Expr), stmt.GetPosition().ToPosString()), nil
 }
 
 // ProcessUnaryExpr implements Visitor.
