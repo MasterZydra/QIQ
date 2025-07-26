@@ -8,6 +8,7 @@
 - array_last
 - array_pop
 - array_push
+- count
 - key_exists
 
 ## Classes/Object Functions

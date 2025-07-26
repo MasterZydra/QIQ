@@ -17,6 +17,7 @@ func Register(environment runtime.Environment) {
 	environment.AddNativeFunction("array_last", nativeFn_array_last)
 	environment.AddNativeFunction("array_pop", nativeFn_array_pop)
 	environment.AddNativeFunction("array_push", nativeFn_array_push)
+	environment.AddNativeFunction("count", nativeFn_count)
 	environment.AddNativeFunction("key_exists", nativeFn_array_key_exists)
 }
 
@@ -181,6 +182,22 @@ func nativeFn_array_push(args []values.RuntimeValue, _ runtime.Context) (values.
 	return values.NewInt(int64(len(array.Keys))), nil
 }
 
+// -------------------------------------- count -------------------------------------- MARK: count
+
+func nativeFn_count(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
+	// Spec: https://www.php.net/manual/en/function.count.php
+	args, err := funcParamValidator.NewValidator("count").
+		AddParam("$array", []string{"Countable", "array"}, nil).
+		Validate(args)
+		// TOOD count param mode
+	if err != nil {
+		return values.NewVoid(), err
+	}
+
+	array := args[0].(*values.Array)
+	return values.NewInt(int64(len(array.Elements))), nil
+}
+
 // TODO array
 // TODO array_all
 // TODO array_any
@@ -237,7 +254,6 @@ func nativeFn_array_push(args []values.RuntimeValue, _ runtime.Context) (values.
 // TODO arsort
 // TODO asort
 // TODO compact
-// TODO count
 // TODO current
 // TODO end
 // TODO extract
