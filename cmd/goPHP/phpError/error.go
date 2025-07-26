@@ -73,6 +73,8 @@ func (err *PhpError) GetMessage() string {
 
 func (err *PhpError) String() string {
 	switch err.errorType {
+	case NoticePhpError:
+		return "Notice: " + err.message
 	case WarningPhpError:
 		return "Warning: " + err.message
 	case ErrorPhpError:
@@ -98,6 +100,10 @@ func NewError(format string, a ...any) Error {
 
 func NewWarning(format string, a ...any) Error {
 	return &PhpError{errorType: WarningPhpError, message: fmt.Sprintf(format, a...)}
+}
+
+func NewNotice(format string, a ...any) Error {
+	return &PhpError{errorType: NoticePhpError, message: fmt.Sprintf(format, a...)}
 }
 
 func NewEvent(event string) Error {
