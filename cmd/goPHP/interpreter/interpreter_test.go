@@ -882,6 +882,11 @@ func TestStrictComparison(t *testing.T) {
 	testInputOutput(t, `<?php var_dump("php" === "");`, "bool(false)\n")
 	// ""
 	testInputOutput(t, `<?php var_dump("" === "");`, "bool(true)\n")
+
+	// Object
+	testInputOutput(t, `<?php class c {} $c1 = new c; var_dump($c1 === $c1);`, "bool(true)\n")
+	testInputOutput(t, `<?php class c {} $c1 = new c; var_dump($c1 !== $c1);`, "bool(false)\n")
+	testInputOutput(t, `<?php class c {} $c1 = new c; var_dump($c1 === null);`, "bool(false)\n")
 }
 
 func TestLooseComparison(t *testing.T) {
@@ -990,6 +995,11 @@ func TestLooseComparison(t *testing.T) {
 	testInputOutput(t, `<?php var_dump("1e1" == "10");`, "bool(true)\n")
 	testInputOutput(t, `<?php var_dump(100 == "1e2");`, "bool(true)\n")
 	testInputOutput(t, `<?php var_dump(1e2 == "100");`, "bool(true)\n")
+
+	// Object
+	testInputOutput(t, `<?php class c {} $c1 = new c; var_dump($c1 == $c1);`, "bool(true)\n")
+	testInputOutput(t, `<?php class c {} $c1 = new c; var_dump($c1 != $c1);`, "bool(false)\n")
+	testInputOutput(t, `<?php class c {} $c1 = new c; var_dump($c1 == null);`, "bool(false)\n")
 }
 
 func TestCompareRelation(t *testing.T) {
@@ -1270,6 +1280,12 @@ func TestCompareRelation(t *testing.T) {
 	testInputOutput(t, `<?php var_dump("22" < NULL);`, "bool(false)\n")
 	testInputOutput(t, `<?php var_dump("22" <= NULL);`, "bool(false)\n")
 	testInputOutput(t, `<?php var_dump("22" <=> NULL);`, "int(1)\n")
+
+	// Object
+	// Object - Null
+	testInputOutput(t, `<?php class c {} $c1 = new c; var_dump($c1 < NULL);`, "bool(false)\n")
+	testInputOutput(t, `<?php class c {} $c1 = new c; var_dump($c1 <= NULL);`, "bool(false)\n")
+	testInputOutput(t, `<?php class c {} $c1 = new c; var_dump($c1 <=> null);`, "int(1)\n")
 }
 
 // -------------------------------------- classes and objects -------------------------------------- MARK: classes and objects

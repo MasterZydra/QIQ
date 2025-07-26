@@ -77,6 +77,8 @@ func CompareRelation(lhs values.RuntimeValue, operator string, rhs values.Runtim
 		return compareRelationString(lhs.(*values.Str), operator, rhs, leadingNumeric)
 	case values.NullValue:
 		return compareRelationNull(operator, rhs, leadingNumeric)
+	case values.ObjectValue:
+		return compareRelationObject(lhs.(*values.Object), operator, rhs)
 	default:
 		return values.NewVoid(), phpError.NewError("compareRelation: Type \"%s\" not implemented", lhs.GetType())
 	}
@@ -599,10 +601,44 @@ func compareRelationString(lhs *values.Str, operator string, rhs values.RuntimeV
 	}
 }
 
-// TODO compareRelationObject
-// Spec: https://phplang.org/spec/10-expressions.html#grammar-relational-expression
-//         NULL  bool  int  float  string  array  object  resource
-// object   >     ->    3    3      3       3      6       3
+func compareRelationObject(lhs *values.Object, operator string, rhs values.RuntimeValue) (values.RuntimeValue, phpError.Error) {
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-relational-expression
+	//         NULL  bool  int  float  string  array  object  resource
+	// object   >     ->    3    3      3       3      6       3
+
+	switch rhs.GetType() {
+	case values.NullValue:
+		switch operator {
+		case "<", "<=":
+			return values.NewBool(false), nil
+		case "<=>":
+			return values.NewInt(1), nil
+		default:
+			return values.NewVoid(), phpError.NewError("compareRelationObject: Operator \"%s\" not implemented for type null", operator)
+		}
+
+	case values.ObjectValue:
+		// TODO 6. When comparing two objects, if any of the object types has its own compare semantics, that would define the result, with the left operand taking precedence. Otherwise, if the objects are of different types, the comparison result is FALSE. If the objects are of the same type, the properties of the objects are compares using the array comparison described above.
+		switch operator {
+		case "<=>":
+			if lhs == rhs.(*values.Object) {
+				return values.NewInt(0), nil
+			}
+			return values.NewInt(-1), nil
+		default:
+			return values.NewVoid(), phpError.NewError("compareRelationObject: Operator \"%s\" not implemented", operator)
+		}
+
+	// TODO compareRelationObject - int
+	// TODO compareRelationObject - float
+	// TODO compareRelationObject - string
+	// TODO compareRelationObject - array
+	// TODO compareRelationObject - resource
+
+	default:
+		return values.NewVoid(), phpError.NewError("compareRelationObject: Type \"%s\" not implemented", rhs.GetType())
+	}
+}
 
 // TODO compareRelationResource
 // Spec: https://phplang.org/spec/10-expressions.html#grammar-relational-expression
@@ -684,6 +720,8 @@ func Compare(lhs values.RuntimeValue, operator string, rhs values.RuntimeValue) 
 				result = true
 			case values.StrValue:
 				result = lhs.(*values.Str).Value == rhs.(*values.Str).Value
+			case values.ObjectValue:
+				result = lhs.(*values.Object) == rhs.(*values.Object)
 			default:
 				return values.NewBool(false), phpError.NewError("compare: Runtime type %s for operator \"===\" not implemented", lhs.GetType())
 			}
