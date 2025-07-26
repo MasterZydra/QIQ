@@ -9,7 +9,7 @@ import (
 // -------------------------------------- array_first -------------------------------------- MARK: array_first
 
 func TestArrayFirst(t *testing.T) {
-	context := runtime.NewContext(nil, nil)
+	context := runtime.NewContext(nil, nil, nil)
 
 	array := values.NewArray()
 	actual, err := nativeFn_array_first([]values.RuntimeValue{array}, context)
@@ -108,7 +108,7 @@ func TestArrayKeyLast(t *testing.T) {
 // -------------------------------------- array_last -------------------------------------- MARK: array_last
 
 func TestArrayLast(t *testing.T) {
-	context := runtime.NewContext(nil, nil)
+	context := runtime.NewContext(nil, nil, nil)
 
 	array := values.NewArray()
 	actual, err := nativeFn_array_last([]values.RuntimeValue{array}, context)
@@ -140,7 +140,7 @@ func TestArrayLast(t *testing.T) {
 // -------------------------------------- array_pop -------------------------------------- MARK: array_pop
 
 func TestArrayPop(t *testing.T) {
-	context := runtime.NewContext(nil, nil)
+	context := runtime.NewContext(nil, nil, nil)
 
 	array := values.NewArray()
 	actual, err := nativeFn_array_pop([]values.RuntimeValue{array}, context)
@@ -178,7 +178,7 @@ func TestArrayPop(t *testing.T) {
 // -------------------------------------- array_push -------------------------------------- MARK: array_push
 
 func TestArrayPush(t *testing.T) {
-	context := runtime.NewContext(nil, nil)
+	context := runtime.NewContext(nil, nil, nil)
 
 	array := values.NewArray()
 	actual, err := nativeFn_array_push([]values.RuntimeValue{array, values.NewInt(42)}, context)

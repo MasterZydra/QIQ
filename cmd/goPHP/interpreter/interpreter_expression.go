@@ -324,7 +324,7 @@ func (interpreter *Interpreter) ProcessFunctionCallExpr(expr *ast.FunctionCallEx
 			runtimeValue := must(interpreter.processStmt(arg, env))
 			functionArguments[index] = values.DeepCopy(runtimeValue)
 		}
-		return nativeFunction(functionArguments, runtime.NewContext(interpreter, env.(*Environment)))
+		return nativeFunction(functionArguments, runtime.NewContext(interpreter, env.(*Environment), expr))
 	}
 
 	// Lookup user function

@@ -43,7 +43,7 @@ func (interpreter *Interpreter) flushOutputBuffers() {
 	}
 
 	for interpreter.outputBufferStack.Len() > 0 {
-		outputControl.ObEndFlush(runtime.NewContext(interpreter, nil))
+		outputControl.ObEndFlush(runtime.NewContext(interpreter, nil, nil))
 	}
 }
 
