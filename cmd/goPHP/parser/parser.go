@@ -887,7 +887,7 @@ func (parser *Parser) parseJumpStmt() (ast.IStatement, phpError.Error) {
 
 	// TODO throw-statement
 
-	return ast.NewEmptyStmt(), phpError.NewParseError("Unsupported jump statement %s", parser.at())
+	return ast.NewEmptyStmt(), phpError.NewParseError("Unsupported jump statement '%s' at %s", parser.at().Value, parser.at().Position.ToPosString())
 }
 
 func (parser *Parser) parseFunctionDefinition() (ast.IStatement, phpError.Error) {
