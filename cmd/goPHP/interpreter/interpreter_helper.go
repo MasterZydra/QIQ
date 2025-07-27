@@ -326,6 +326,7 @@ func (interpreter *Interpreter) exprToRuntimeValue(expr ast.IExpression, env *En
 	case ast.StringLiteralExpr:
 		str := expr.(*ast.StringLiteralExpression).Value
 		if expr.(*ast.StringLiteralExpression).StringType == ast.DoubleQuotedString {
+			// Supported expression: variable substitution: `echo "{$a}";`
 			// variable substitution
 			// TODO improve variable substitution: Regex and replace will not work for every case here. A parser is required that searches for variables, subscriptExpr, ... and resolves them.
 			// TODO improve variable substitution to detect if a $ is escaped. E.g. "\$i"

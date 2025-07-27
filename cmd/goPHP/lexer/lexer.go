@@ -88,6 +88,7 @@ func (lexer *Lexer) tokenizeScript() error {
 			continue
 		}
 
+		// Supported statement: short echo statement: `<?= "123";`
 		if lexer.nextN(3) == "<?=" {
 			lexer.eatN(3)
 			lexer.pushToken(StartTagToken, "")
@@ -101,6 +102,7 @@ func (lexer *Lexer) tokenizeScript() error {
 			continue
 		}
 
+		// Supported statement: short open tag: `<? 1 + 2;`
 		if lexer.ini.GetBool("short_open_tag") && lexer.nextN(2) == "<?" {
 			lexer.eatN(2)
 			lexer.pushToken(StartTagToken, "")

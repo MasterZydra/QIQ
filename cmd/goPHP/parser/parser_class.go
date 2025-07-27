@@ -35,6 +35,7 @@ func (parser *Parser) parseObjectCreationExpression() (ast.IExpression, phpError
 
 	// TODO object-creation-expression - variants
 
+	// Supported expression: object creation expression: `new myClass;`
 	if !parser.isToken(lexer.KeywordToken, "new", false) {
 		return ast.NewEmptyExpr(), phpError.NewParseError("Expected keyword \"new\". Got %s", parser.at())
 	}
@@ -97,6 +98,7 @@ func (parser *Parser) parseClassDeclaration() (ast.IStatement, phpError.Error) {
 	//    implements   qualified-name
 	//    class-interface-clause   ,   qualified-name
 
+	// Supported statement: class declaration: `class MyClass extends ParentC implements I, J {}`
 	PrintParserCallstack("class-declaration", parser)
 
 	// class-modifier

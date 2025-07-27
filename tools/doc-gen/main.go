@@ -19,6 +19,9 @@ func main() {
 
 	println("- ini directives")
 	docIniDirectives()
+
+	println("- statements and expressions")
+	docStatements()
 }
 
 func writeToFile(path, content string) error {
