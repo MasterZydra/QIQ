@@ -161,6 +161,14 @@ func (visitor InterpreterCallStackVisitor) ProcessContinueStmt(stmt *ContinueSta
 	return fmt.Sprintf("{%s - %s, pos: %s}", stmt.GetKind(), ToString(stmt.Expr), stmt.GetPosition().ToPosString()), nil
 }
 
+// ProcessDeclareStmt implements Visitor.
+func (visitor InterpreterCallStackVisitor) ProcessDeclareStmt(stmt *DeclareStatement, _ any) (any, error) {
+	return fmt.Sprintf(
+		"{%s - directive: %s, literal: %s, pos: %s }",
+		stmt.GetKind(), stmt.Directive, ToString(stmt.Literal), stmt.GetPosition().ToPosString(),
+	), nil
+}
+
 // ProcessDoStmt implements Visitor.
 func (visitor InterpreterCallStackVisitor) ProcessDoStmt(stmt *DoStatement, _ any) (any, error) {
 	return fmt.Sprintf(

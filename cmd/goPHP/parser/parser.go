@@ -162,7 +162,79 @@ func (parser *Parser) parseStmt() (ast.IStatement, phpError.Error) {
 	}
 
 	// TODO try-statement
-	// TODO declare-statement
+
+	// -------------------------------------- declare-statement -------------------------------------- MARK: declare-statement
+
+	// Spec: https://phplang.org/spec/11-statements.html?#the-declare-statement
+
+	// declare-statement:
+	//    declare   (   declare-directive   )   statement
+	//    declare   (   declare-directive   )   :   statement-list   enddeclare   ;
+	//    declare   (   declare-directive   )   ;
+
+	// declare-directive:
+	//    ticks   =   literal
+	//    encoding   =   literal
+	//    strict_types   =   literal
+
+	// Supported statement: declare statement: `declare(strict_types = 1)`
+	if parser.isToken(lexer.KeywordToken, "declare", false) {
+		PrintParserCallstack("declare-statement", parser)
+		pos := parser.eat().Position
+
+		// (
+		if !parser.isToken(lexer.OpOrPuncToken, "(", true) {
+			return ast.NewEmptyStmt(), phpError.NewParseError("Expected \"(\". Got: \"%s\" at %s", parser.at().Value, parser.at().Position.ToPosString())
+		}
+
+		// declare-directive
+		if !parser.isTokenType(lexer.NameToken, false) {
+			return ast.NewEmptyStmt(), phpError.NewParseError("Unsupported declare '%s' at %s", parser.at().Value, parser.at().Position.ToPosString())
+		}
+		if !slices.Contains([]string{"ticks", "encoding", "strict_types"}, parser.at().Value) {
+			return ast.NewEmptyStmt(), phpError.NewParseError("Unsupported declare '%s' at %s", parser.at().Value, parser.at().Position.ToPosString())
+		}
+		directive := parser.eat().Value
+
+		// =
+		if !parser.isToken(lexer.OpOrPuncToken, "=", true) {
+			return ast.NewEmptyStmt(), phpError.NewParseError("Expected \"=\". Got: \"%s\" at %s", parser.at().Value, parser.at().Position.ToPosString())
+		}
+
+		// literal
+		if !lexer.IsLiteral(parser.at()) {
+			return ast.NewEmptyStmt(), phpError.NewParseError("Expected a literal. Got %s at %s", parser.at().TokenType, parser.at().Position.ToPosString())
+		}
+		literal, err := parser.parseLiteral()
+		if err != nil {
+			return ast.NewEmptyStmt(), err
+		}
+
+		// Validate allowed values
+		if directive == "strict_types" {
+			if literal.GetKind() != ast.IntegerLiteralExpr {
+				return ast.NewEmptyStmt(), phpError.NewParseError("Only 0 and 1 allowed as values for the declare directive 'strict_types' at %s", parser.at().Position.ToPosString())
+			}
+			if literal.(*ast.IntegerLiteralExpression).Value < 0 || literal.(*ast.IntegerLiteralExpression).Value > 1 {
+				return ast.NewEmptyStmt(), phpError.NewParseError("Only 0 and 1 allowed as values for the declare directive 'strict_types' at %s", parser.at().Position.ToPosString())
+			}
+		}
+
+		// )
+		if !parser.isToken(lexer.OpOrPuncToken, ")", true) {
+			return ast.NewEmptyStmt(), phpError.NewParseError("Expected \")\". Got: \"%s\" at %s", parser.at().Value, parser.at().Position.ToPosString())
+		}
+
+		// ;
+		if !parser.isToken(lexer.OpOrPuncToken, ";", true) {
+			return ast.NewEmptyStmt(), phpError.NewParseError("Expected \";\". Got: \"%s\" at %s", parser.at().Value, parser.at().Position.ToPosString())
+		}
+
+		// TODO declare-statement - statement
+		// TODO declare-statement - statement-list
+
+		return ast.NewDeclareStmt(parser.nextId(), pos, directive, literal), nil
+	}
 
 	// -------------------------------------- echo-statement -------------------------------------- MARK: echo-statement
 

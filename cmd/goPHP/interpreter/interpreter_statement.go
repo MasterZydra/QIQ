@@ -287,3 +287,17 @@ func (interpreter *Interpreter) ProcessGlobalDeclarationStmt(stmt *ast.GlobalDec
 func (interpreter *Interpreter) ProcessThrowStmt(stmt *ast.ThrowStatement, env any) (any, error) {
 	return values.NewVoid(), phpError.NewError("ProcessThrowStmt is not implemented")
 }
+
+// ProcessDeclareStmt implements Visitor.
+func (interpreter *Interpreter) ProcessDeclareStmt(stmt *ast.DeclareStatement, env any) (any, error) {
+	if stmt.Directive == "strict_types" {
+		if stmt.Literal.(*ast.IntegerLiteralExpression).Value == 1 {
+			stmt.GetPosition().File.IsStrictType = true
+		} else {
+			stmt.GetPosition().File.IsStrictType = false
+		}
+		return values.NewVoid(), nil
+	}
+
+	return values.NewVoid(), phpError.NewError("ProcessDeclareStmt: Directive '%s' is not implemented", stmt.Directive)
+}

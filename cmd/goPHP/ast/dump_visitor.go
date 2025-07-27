@@ -156,6 +156,14 @@ func (visitor DumpVisitor) ProcessContinueStmt(stmt *ContinueStatement, _ any) (
 	return fmt.Sprintf("{%s - %s}", stmt.GetKind(), ToString(stmt.Expr)), nil
 }
 
+// ProcessDeclareStmt implements Visitor.
+func (visitor DumpVisitor) ProcessDeclareStmt(stmt *DeclareStatement, _ any) (any, error) {
+	return fmt.Sprintf(
+		"{%s - directive: %s, literal: %s}",
+		stmt.GetKind(), stmt.Directive, ToString(stmt.Literal),
+	), nil
+}
+
 // ProcessDoStmt implements Visitor.
 func (visitor DumpVisitor) ProcessDoStmt(stmt *DoStatement, _ any) (any, error) {
 	return fmt.Sprintf(

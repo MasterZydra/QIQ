@@ -401,3 +401,19 @@ func NewThrowStmt(id int64, pos *position.Position, expr IExpression) *ThrowStat
 func (stmt *ThrowStatement) Process(visitor Visitor, context any) (any, error) {
 	return visitor.ProcessThrowStmt(stmt, context)
 }
+
+// -------------------------------------- DeclareStatement -------------------------------------- MARK: DeclareStatement
+
+type DeclareStatement struct {
+	*Statement
+	Directive string
+	Literal   IExpression
+}
+
+func NewDeclareStmt(id int64, pos *position.Position, directive string, literal IExpression) *DeclareStatement {
+	return &DeclareStatement{Statement: NewStmt(id, DeclareStmt, pos), Directive: directive, Literal: literal}
+}
+
+func (stmt *DeclareStatement) Process(visitor Visitor, context any) (any, error) {
+	return visitor.ProcessDeclareStmt(stmt, context)
+}

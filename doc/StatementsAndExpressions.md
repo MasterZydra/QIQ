@@ -4,6 +4,7 @@
 - compound statement: `{ doThis(); doThat(); }`
 - const statement: `const TRUTH = 42;`
 - continue statement: `continue (2);`
+- declare statement: `declare(strict_types = 1)`
 - do statement: `do { ... } while (true);`
 - echo statement: `echo "abc", 123, true;`
 - for statement: `for (...; ...; ...) { ... }`

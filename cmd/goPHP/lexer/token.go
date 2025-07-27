@@ -3,6 +3,7 @@ package lexer
 import (
 	"GoPHP/cmd/goPHP/position"
 	"fmt"
+	"slices"
 )
 
 type Token struct {
@@ -36,3 +37,7 @@ const (
 	StringLiteralToken   TokenType = "StringLiteral"
 	OpOrPuncToken        TokenType = "OperatorOrPunctuator"
 )
+
+func IsLiteral(token *Token) bool {
+	return slices.Contains([]TokenType{IntegerLiteralToken, FloatingLiteralToken, StringLiteralToken}, token.TokenType)
+}
