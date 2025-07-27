@@ -545,14 +545,14 @@ func (interpreter *Interpreter) ProcessConstantAccessExpr(expr *ast.ConstantAcce
 	// This is equivalent to dirname(__FILE__). This directory name does not have a trailing slash unless it is the root directory.
 	if expr.ConstantName == "__DIR__" {
 		// TODO Use lib function dirname
-		return values.NewStr(common.ExtractPath(expr.GetPosition().Filename)), nil
+		return values.NewStr(common.ExtractPath(expr.GetPosition().File.Filename)), nil
 	}
 
 	// Spec: https://www.php.net/manual/en/language.constants.magic.php
 	// The full path and filename of the file with symlinks resolved.
 	// If used inside an include, the name of the included file is returned.
 	if expr.ConstantName == "__FILE__" {
-		return values.NewStr(expr.GetPosition().Filename), nil
+		return values.NewStr(expr.GetPosition().File.Filename), nil
 	}
 
 	// Spec: https://www.php.net/manual/en/language.constants.magic.php

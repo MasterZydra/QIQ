@@ -29,7 +29,7 @@ func (parser *Parser) isEof() bool {
 func (parser *Parser) at() *lexer.Token {
 	if parser.isEof() {
 		lastPos := parser.tokens[parser.currPos-1].Position
-		eofPos := position.NewPosition(lastPos.Filename, lastPos.Line, lastPos.Column+1)
+		eofPos := position.NewPosition(lastPos.File, lastPos.Line, lastPos.Column+1)
 		return lexer.NewToken(lexer.EndOfFileToken, "EOF", eofPos)
 	}
 

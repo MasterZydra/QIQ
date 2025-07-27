@@ -7,17 +7,17 @@ import (
 	"testing"
 )
 
-var testFile = "test.php"
+var testFile = position.NewFile("test.php")
 
 func testTokenize(t *testing.T, php string, expected []*Token) {
 	compareTokens := func(t1 *Token, t2 *Token) bool {
 		if t1.Position != nil && t2.Position != nil {
-			t1.Position.Filename = t2.Position.Filename
+			t1.Position.File.Filename = t2.Position.File.Filename
 		}
 		return t1.String() == t2.String()
 	}
 
-	tokens, err := NewLexer(ini.NewDevIni()).Tokenize(php, testFile)
+	tokens, err := NewLexer(ini.NewDevIni()).Tokenize(php, testFile.Filename)
 	if err != nil {
 		fmt.Println("    Code:", php)
 		t.Errorf("Unexpected error: \"%s\"", err)

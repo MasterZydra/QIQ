@@ -209,7 +209,7 @@ func (interpreter *Interpreter) includeFile(filepathExpr ast.IExpression, env *E
 
 	absFilename := filename
 	if !common.IsAbsPath(filename) {
-		absFilename = common.GetAbsPathForWorkingDir(common.ExtractPath(filepathExpr.GetPosition().Filename), filename)
+		absFilename = common.GetAbsPathForWorkingDir(common.ExtractPath(filepathExpr.GetPosition().File.Filename), filename)
 	}
 
 	var functionName string
@@ -226,12 +226,12 @@ func (interpreter *Interpreter) includeFile(filepathExpr ast.IExpression, env *E
 		if include {
 			return values.NewVoid(), phpError.NewWarning(
 				"%s(): Failed opening '%s' for inclusion (include_path='%s') in %s",
-				functionName, filename, common.ExtractPath(filepathExpr.GetPosition().Filename), filepathExpr.GetPosition().ToPosString(),
+				functionName, filename, common.ExtractPath(filepathExpr.GetPosition().File.Filename), filepathExpr.GetPosition().ToPosString(),
 			)
 		} else {
 			return values.NewVoid(), phpError.NewError(
 				"Uncaught Error: Failed opening required '%s' (include_path='%s') in %s",
-				filename, common.ExtractPath(filepathExpr.GetPosition().Filename), filepathExpr.GetPosition().ToPosString(),
+				filename, common.ExtractPath(filepathExpr.GetPosition().File.Filename), filepathExpr.GetPosition().ToPosString(),
 			)
 		}
 	}

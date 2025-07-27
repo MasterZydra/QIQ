@@ -73,7 +73,7 @@ func (lexer *Lexer) eatN(length int) string {
 func (lexer *Lexer) pushToken(tokenType TokenType, value string) {
 	var pos *position.Position = nil
 	if tokenType != TextToken {
-		pos = position.NewPosition(lexer.filename, lexer.currPos.CurrTokenLine, lexer.currPos.CurrTokenCol)
+		pos = position.NewPosition(lexer.file, lexer.currPos.CurrTokenLine, lexer.currPos.CurrTokenCol)
 	}
 	lexer.tokens = append(lexer.tokens, NewToken(tokenType, value, pos))
 	lexer.currPos.SearchTokenStart = true
