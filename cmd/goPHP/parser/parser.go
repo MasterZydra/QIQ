@@ -770,7 +770,7 @@ func (parser *Parser) parseIterationStmt() (ast.IStatement, phpError.Error) {
 
 	// TODO foreach-statement
 
-	return ast.NewEmptyStmt(), phpError.NewParseError("Unsupported iteration statement %s", parser.at())
+	return ast.NewEmptyStmt(), phpError.NewParseError("Unsupported iteration statement '%s' at %s", parser.at().Value, parser.at().Position.ToPosString())
 }
 
 func (parser *Parser) parseJumpStmt() (ast.IStatement, phpError.Error) {
@@ -2215,11 +2215,17 @@ func (parser *Parser) parseLiteral() (ast.IExpression, phpError.Error) {
 				nil
 		}
 
-		// TODO heredoc-string-literal
+		// heredoc-string-literal
+		if common.IsHeredocStringLiteral(parser.at().Value) {
+			return ast.NewStringLiteralExpr(
+					parser.nextId(), parser.at().Position, common.HeredocStringLiteralToString(parser.eat().Value), ast.HeredocString),
+				nil
+		}
+
 		// TODO nowdoc-string-literal
 	}
 
-	return ast.NewEmptyExpr(), phpError.NewParseError("parseLiteral: Unsupported literal: %s", parser.at())
+	return ast.NewEmptyExpr(), phpError.NewParseError("parseLiteral: Unsupported literal: '%s' at %s", parser.at().Value, parser.at().Position.ToPosString())
 }
 
 func (parser *Parser) parseArrayCreationExpr() (ast.IExpression, phpError.Error) {

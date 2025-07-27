@@ -176,6 +176,18 @@ func TestStringLiteral(t *testing.T) {
 		NewToken(StartTagToken, "", position.NewPosition(testFile, 1, 1)),
 		NewToken(StringLiteralToken, `"\"abc\\\n\$"`, position.NewPosition(testFile, 1, 7)),
 	})
+
+	// Heredoc
+	testTokenize(t, "<?php <<<   ID\nSome text\nover\nmutiple lines\nID;", []*Token{
+		NewToken(StartTagToken, "", position.NewPosition(testFile, 1, 1)),
+		NewToken(StringLiteralToken, "<<<ID\nSome text\nover\nmutiple lines\nID", position.NewPosition(testFile, 1, 7)),
+		NewToken(OpOrPuncToken, ";", position.NewPosition(testFile, 5, 3)),
+	})
+	testTokenize(t, "<?php <<<   ID\nID;", []*Token{
+		NewToken(StartTagToken, "", position.NewPosition(testFile, 1, 1)),
+		NewToken(StringLiteralToken, "<<<ID\nID", position.NewPosition(testFile, 1, 7)),
+		NewToken(OpOrPuncToken, ";", position.NewPosition(testFile, 2, 3)),
+	})
 }
 
 func TestOperatorOrPunctuator(t *testing.T) {

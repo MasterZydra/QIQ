@@ -5,13 +5,17 @@ import (
 	"strings"
 )
 
+const (
+	nameRegex string = `[_a-zA-Z\x80-\xff][_a-zA-Z0-9\x80-\xff]*`
+)
+
 func IsVariableName(name string) bool {
 	// Spec: https://phplang.org/spec/09-lexical-structure.html#grammar-variable-name
 
 	// variable-name::
 	//    $   name
 
-	match, _ := regexp.MatchString(`^\$[_a-zA-Z\x80-\xff][_a-zA-Z0-9\x80-\xff]*$`, name)
+	match, _ := regexp.MatchString(`^\$`+nameRegex+`$`, name)
 	return match
 }
 
@@ -27,7 +31,7 @@ func IsQualifiedName(name string) bool {
 	//    namespace   \
 	//    namespace   \   namespace-name
 
-	match, _ := regexp.MatchString(`^\\?([_a-zA-Z\x80-\xff][_a-zA-Z0-9\x80-\xff]*\\)*[_a-zA-Z\x80-\xff][_a-zA-Z0-9\x80-\xff]*$`, name)
+	match, _ := regexp.MatchString(`^\\?(`+nameRegex+`\\)*`+nameRegex+`$`, name)
 	return match
 }
 
@@ -53,7 +57,7 @@ func IsName(name string) bool {
 	// digit:: one of
 	//    0   1   2   3   4   5   6   7   8   9
 
-	match, _ := regexp.MatchString(`^[_a-zA-Z\x80-\xff][_a-zA-Z0-9\x80-\xff]*$`, name)
+	match, _ := regexp.MatchString(`^`+nameRegex+`$`, name)
 	return match
 }
 
@@ -229,6 +233,99 @@ func ReplaceDoubleQuoteControlChars(str string) string {
 
 func DoubleQuotedStringLiteralToString(str string) string {
 	return ReplaceDoubleQuoteControlChars(extractStringContent(str))
+}
+
+func IsHeredocStringLiteral(str string) bool {
+	// Spec: https://phplang.org/spec/09-lexical-structure.html#grammar-heredoc-string-literal
+
+	// heredoc-string-literal::
+	//    b-prefix(opt)   <<<   hd-start-identifier   new-line   hd-body(opt)   hd-end-identifier   ;(opt)   new-line
+
+	// hd-start-identifier::
+	//    name
+	//    "   name   "
+
+	// hd-end-identifier::
+	//    name
+
+	// hd-body::
+	//    hd-char-sequence(opt)   new-line
+
+	// hd-char-sequence::
+	//    hd-char
+	//    hd-char-sequence   hd-char
+
+	// hd-char::
+	//    hd-escape-sequence
+	//    any member of the source character set except backslash (\)
+	//    \ any member of the source character set except \$efnrtvxX or   octal-digit
+
+	// hd-escape-sequence::
+	//    hd-simple-escape-sequence
+	//    dq-octal-escape-sequence
+	//    dq-hexadecimal-escape-sequence
+	//    dq-unicode-escape-sequence
+
+	// hd-simple-escape-sequence:: one of
+	//    \\   \$   \e   \f   \n   \r   \t   \v
+
+	match, _ := regexp.MatchString(
+		`^[bB]?<<<[ \t]*"?`+nameRegex+`"?\r?\n`+
+			`((`+
+			`(\\"|\\\\|\\\$|\\e|\\f|\\n|\\r|\\t|\\v)|`+
+			`(\\[0-7]{1,3})|`+
+			`(\\[xX][0-9a-fA-F]{1,2})|`+
+			`(\\u\{[0-9a-fA-F]+\})|`+
+			`([^\\])|`+
+			`(\\[^"\\$efnrtvxX]|\\[0-7])]`+
+			`)*\r?\n)?`+
+			nameRegex+`;?\r?\n?$`,
+		str)
+	return match
+}
+
+func HeredocStringLiteralToString(str string) string {
+	lines := strings.SplitN(str, "\n", 2)
+	if len(lines) < 2 {
+		return ""
+	}
+
+	body := lines[1]
+	bodyLines := strings.Split(body, "\n")
+	if len(bodyLines) < 2 {
+		return ""
+	}
+	body = strings.Join(bodyLines[:len(bodyLines)-1], "\n")
+
+	return ReplaceHeredocControlChars(body)
+}
+
+func ReplaceHeredocControlChars(str string) string {
+	findCtrlChars := regexp.MustCompile(
+		`(\\\\|\\\$|\\e|\\f|\\n|\\r|\\t|\\v)|` +
+			`(\\[0-7]{1,3})|` +
+			`(\\[xX][0-9a-fA-F]{1,2})|` +
+			`(\\u\{[0-9a-fA-F]+\})|` +
+			`([^"\\])|` +
+			`(\\[^"\\$efnrtvxX]|\\[0-7])`,
+	)
+
+	return findCtrlChars.ReplaceAllStringFunc(str,
+		func(sub string) string {
+			switch sub {
+			case `\\`:
+				return `\`
+			case `\r`:
+				return "\r"
+			case `\n`:
+				return "\n"
+			case `\t`:
+				return "\t"
+			default:
+				return sub
+			}
+		},
+	)
 }
 
 func TrimTrailingLineBreak(str string) string {

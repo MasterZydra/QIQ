@@ -1,6 +1,6 @@
 # Supported syntax and features
 
-[Statements and expressions](./StatementsAndExpressions.md)
+[Statements and expressions](./StatementsAndExpressions.md)  
 [StdLib Functions](./StdLib.md)  
 [Constants](./Constants.md)  
 [Ini directives](./IniDirectives.md)

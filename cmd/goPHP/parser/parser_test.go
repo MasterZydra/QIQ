@@ -119,6 +119,9 @@ func TestLiteral(t *testing.T) {
 	testExpr(t, `<?php 'A "single quoted" \'string\'';`, ast.NewStringLiteralExpr(0, nil, `A "single quoted" 'string'`, ast.SingleQuotedString))
 	testExpr(t, `<?php b"A \"double quoted\" 'string'";`, ast.NewStringLiteralExpr(0, nil, `A "double quoted" 'string'`, ast.DoubleQuotedString))
 	testExpr(t, `<?php "A \"double quoted\" 'string'";`, ast.NewStringLiteralExpr(0, nil, `A "double quoted" 'string'`, ast.DoubleQuotedString))
+	testExpr(t, "<?php b<<<   ID\nSome text\nover\nmutiple lines\nID;", ast.NewStringLiteralExpr(0, nil, "Some text\nover\nmutiple lines", ast.HeredocString))
+	testExpr(t, "<?php <<<EOF\nEOF;", ast.NewStringLiteralExpr(0, nil, "", ast.HeredocString))
+	testExpr(t, "<?php <<<   ID\nSome text\nover\nmutiple lines\nID;", ast.NewStringLiteralExpr(0, nil, "Some text\nover\nmutiple lines", ast.HeredocString))
 }
 
 func TestEchoStatement(t *testing.T) {

@@ -467,6 +467,9 @@ func TestUserFunctions(t *testing.T) {
 }
 
 func TestString(t *testing.T) {
+	// Heredoc string
+	testInputOutput(t, "<?php $v = 123; $s = <<< ID\n"+`S'o'me "\"t e\txt; v = $v"`+"\nSome more text\nID; echo \">$s<\";", `>S'o'me "\"t e`+"\t"+`xt; v = 123"`+"\nSome more text<")
+
 	// Read string index
 	testInputOutput(t, `<?php $s = 'abc'; var_dump($s[0]);`, "string(1) \"a\"\n")
 	testForError(t, `<?php $s = 'abc'; var_dump($s[""]);`, phpError.NewError("Cannot access offset of type string on string in %s:1:31", TEST_FILE_NAME))

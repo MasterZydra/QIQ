@@ -325,7 +325,8 @@ func (interpreter *Interpreter) exprToRuntimeValue(expr ast.IExpression, env *En
 		return values.NewFloat(expr.(*ast.FloatingLiteralExpression).Value), nil
 	case ast.StringLiteralExpr:
 		str := expr.(*ast.StringLiteralExpression).Value
-		if expr.(*ast.StringLiteralExpression).StringType == ast.DoubleQuotedString {
+		strType := expr.(*ast.StringLiteralExpression).StringType
+		if strType == ast.DoubleQuotedString || strType == ast.HeredocString {
 			// Supported expression: variable substitution: `echo "{$a}";`
 			// variable substitution
 			// TODO improve variable substitution: Regex and replace will not work for every case here. A parser is required that searches for variables, subscriptExpr, ... and resolves them.

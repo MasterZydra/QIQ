@@ -373,6 +373,7 @@ type StringType string
 const (
 	SingleQuotedString StringType = "SingleQuotedString"
 	DoubleQuotedString StringType = "DoubleQuotedString"
+	HeredocString      StringType = "HeredocString"
 )
 
 type StringLiteralExpression struct {

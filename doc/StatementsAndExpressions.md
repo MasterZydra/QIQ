@@ -26,10 +26,12 @@
 - coalesce expression: `$var ?? "b";`
 - compound assignment expression: `$v += 2; $w &= 8;`
 - conditional expression: `$var ? $a : "b";`
+- double quoted string: `"Hi $world!"`
 - equality expression: `$var === 42;`
 - error control expression: `@fn();`
 - exponentiation expression: `$var ** 42;`
 - function call expression: `fn(42);`
+- heredoc string: `"<<<EOF\nHi $world!\nEOF;"`
 - include expression: `include 'lib.php';`
 - include_once expression: `include_once 'lib.php';`
 - logical and expression 2: `$var and 8;`
@@ -49,6 +51,7 @@
 - require_once expression: `require_once 'lib.php';`
 - shift expression: `$var << 8;`
 - simple assignment expression: `$v = "abc";`
+- single quoted string: `'Hi World!'`
 - subscript expression: `$a[1];`
 - unary expression: `-1; +1; ~1;`
 - variable access: `echo $v;`

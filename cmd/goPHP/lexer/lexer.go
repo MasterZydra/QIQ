@@ -3,6 +3,7 @@ package lexer
 import (
 	"GoPHP/cmd/goPHP/common"
 	"GoPHP/cmd/goPHP/ini"
+	"GoPHP/cmd/goPHP/phpError"
 	"GoPHP/cmd/goPHP/stats"
 	"fmt"
 	"slices"
@@ -256,13 +257,15 @@ func (lexer *Lexer) tokenizeToken() error {
 	for !lexer.isEof() {
 		// string-literal
 		if strings.ToLower(lexer.nextN(2)) == `b"` || lexer.at() == `"` ||
-			strings.ToLower(lexer.nextN(2)) == "b'" || lexer.at() == "'" {
-			if str := lexer.getStringLiteral(false); str != "" {
-				lexer.getStringLiteral(true)
-				lexer.pushToken(StringLiteralToken, str)
-				return nil
+			strings.ToLower(lexer.nextN(2)) == "b'" || lexer.at() == "'" ||
+			strings.ToLower(lexer.nextN(4)) == "b<<<" || lexer.nextN(3) == "<<<" {
+			_, err := lexer.getStringLiteral(false)
+			if err != nil {
+				return err
 			}
-			return fmt.Errorf("Unsupported string literal detected at %s:%d:%d", lexer.filename, lexer.currPos.CurrLine, lexer.currPos.CurrCol)
+			str, _ := lexer.getStringLiteral(true)
+			lexer.pushToken(StringLiteralToken, str)
+			return nil
 		}
 
 		// variable-name
@@ -581,7 +584,7 @@ func (lexer *Lexer) getFloatingPointLiteral(eat bool) string {
 	return ""
 }
 
-func (lexer *Lexer) getStringLiteral(eat bool) string {
+func (lexer *Lexer) getStringLiteral(eat bool) (string, phpError.Error) {
 	// Spec: https://phplang.org/spec/09-lexical-structure.html#grammar-string-literal
 
 	// string-literal::
@@ -614,6 +617,7 @@ func (lexer *Lexer) getStringLiteral(eat bool) string {
 	//  b-prefix:: one of
 	//    b   B
 
+	// Supported expression: single quoted string: `'Hi World!'`
 	if strings.ToLower(lexer.nextN(2)) == "b'" || lexer.at() == "'" {
 		if strings.ToLower(lexer.nextN(2)) == "b'" {
 			strValue += lexer.nextN(2)
@@ -641,11 +645,11 @@ func (lexer *Lexer) getStringLiteral(eat bool) string {
 
 		if common.IsSingleQuotedStringLiteral(strValue) {
 			lexer.popSnapShot(!eat)
-			return strValue
+			return strValue, nil
 		}
 
 		lexer.popSnapShot(true)
-		return ""
+		return "", phpError.NewError("Invalid single quoted string literal detected at %s:%d:%d", lexer.filename, lexer.currPos.CurrLine, lexer.currPos.CurrPos)
 	}
 
 	// ------------------- double-quoted-string-literal -------------------
@@ -700,6 +704,7 @@ func (lexer *Lexer) getStringLiteral(eat bool) string {
 	//    a   b   c   d   e   f
 	//    A   B   C   D   E   F
 
+	// Supported expression: double quoted string: `"Hi $world!"`
 	if strings.ToLower(lexer.nextN(2)) == `b"` || lexer.at() == `"` {
 		if strings.ToLower(lexer.nextN(2)) == `b"` {
 			strValue += lexer.nextN(2)
@@ -726,21 +731,133 @@ func (lexer *Lexer) getStringLiteral(eat bool) string {
 
 		if common.IsDoubleQuotedStringLiteral(strValue) {
 			lexer.popSnapShot(!eat)
-			return strValue
+			return strValue, nil
 		}
 
 		lexer.popSnapShot(true)
-		return ""
+		return "", phpError.NewError("Invalid double quoted string literal detected at %s:%d:%d", lexer.filename, lexer.currPos.CurrLine, lexer.currPos.CurrPos)
 	}
 
 	// ------------------- heredoc-string-literal -------------------
 
 	// Spec: https://phplang.org/spec/09-lexical-structure.html#grammar-heredoc-string-literal
 
-	// TODO heredoc-string-literal
+	// heredoc-string-literal::
+	//    b-prefix(opt)   <<<   hd-start-identifier   new-line   hd-body(opt)   hd-end-identifier   ;(opt)   new-line
+
+	// hd-start-identifier::
+	//    name
+	//    "   name   "
+
+	// hd-end-identifier::
+	//    name
+
+	// hd-body::
+	//    hd-char-sequence(opt)   new-line
+
+	// hd-char-sequence::
+	//    hd-char
+	//    hd-char-sequence   hd-char
+
+	// hd-char::
+	//    hd-escape-sequence
+	//    any member of the source character set except backslash (\)
+	//    \ any member of the source character set except \$efnrtvxX or   octal-digit
+
+	// hd-escape-sequence::
+	//    hd-simple-escape-sequence
+	//    dq-octal-escape-sequence
+	//    dq-hexadecimal-escape-sequence
+	//    dq-unicode-escape-sequence
+
+	// hd-simple-escape-sequence:: one of
+	//    \\   \$   \e   \f   \n   \r   \t   \v
+
+	// Supported expression: heredoc string: `"<<<EOF\nHi $world!\nEOF;"`
+	if strings.ToLower(lexer.nextN(4)) == `b<<<` || lexer.nextN(3) == "<<<" {
+		// Opening symbol
+		if lexer.nextN(3) == "<<<" {
+			strValue += lexer.eatN(3)
+		} else {
+			strValue += lexer.eatN(4)
+		}
+
+		// Spec: https://phplang.org/spec/09-lexical-structure.html#grammar-heredoc-string-literal
+		// Only horizontal white space is permitted between <<< and the start identifier.
+		for lexer.isWhiteSpaceChar(lexer.at()) {
+			lexer.eat()
+		}
+
+		// Check if hd-start-identifier is in quotes
+		hasQuotes := lexer.at() == "\""
+		if hasQuotes {
+			strValue += lexer.eat()
+		}
+
+		// Get hd-start-identifier
+		hdStartIdentifier := lexer.getName(true)
+		strValue += hdStartIdentifier
+
+		// Process closing quote
+		if hasQuotes {
+			if lexer.at() != "\"" {
+				return "", phpError.NewError("Invalid heredoc string literal: Expected closing quote '\"', Got: '%s' at %s:%d:%d", lexer.at(), lexer.filename, lexer.currPos.CurrLine, lexer.currPos.CurrPos)
+			}
+			strValue += lexer.eat()
+		}
+
+		// Spec: https://phplang.org/spec/09-lexical-structure.html#grammar-heredoc-string-literal
+		// No white space is permitted between the start identifier and the new-line that follows.
+		if !lexer.isNewLine(false) {
+			return "", phpError.NewError("Invalid heredoc string literal: Expected new line, Got: '%s' at %s:%d:%d", lexer.at(), lexer.filename, lexer.currPos.CurrLine, lexer.currPos.CurrPos)
+		}
+		strValue += lexer.getAndEatNewLine()
+
+		lastWasNewLine := true
+		for !lexer.isEof() {
+			// Spec: https://phplang.org/spec/09-lexical-structure.html#grammar-heredoc-string-literal
+			// No white space is permitted between the new-line and the end identifier that follows.
+			if lastWasNewLine && lexer.nextN(len(hdStartIdentifier)) == hdStartIdentifier {
+				strValue += lexer.eatN(len(hdStartIdentifier))
+				// Spec: https://phplang.org/spec/09-lexical-structure.html#grammar-heredoc-string-literal
+				// Except for an optional semicolon (;)
+				if lexer.at() == ";" {
+					break
+				}
+
+				// Spec: https://phplang.org/spec/09-lexical-structure.html#grammar-heredoc-string-literal
+				// no characters—-not even comments or white space-—are permitted between the end identifier and the new-line that terminates that source line.
+				if !lexer.isNewLine(false) {
+					return "", phpError.NewError("Invalid heredoc string literal: Expected new line, Got: '%s' at %s:%d:%d", lexer.at(), lexer.filename, lexer.currPos.CurrLine, lexer.currPos.CurrPos)
+				}
+
+				strValue += lexer.getAndEatNewLine()
+				break
+			}
+
+			lastWasNewLine = lexer.isNewLine(false)
+			if lexer.at() == `\` && lexer.next(0) != "" {
+				strValue += lexer.eatN(2)
+				continue
+			}
+			if lexer.at() != `\` {
+				strValue += lexer.eat()
+				continue
+			}
+		}
+
+		if common.IsHeredocStringLiteral(strValue) {
+			lexer.popSnapShot(!eat)
+			return strValue, nil
+		}
+
+		lexer.popSnapShot(true)
+		return "", phpError.NewError("Invalid heredoc string literal detected at %s:%d:%d", lexer.filename, lexer.currPos.CurrLine, lexer.currPos.CurrPos)
+	}
+
 	// TODO nowdoc-string-literal
 
-	return strValue
+	return "", phpError.NewError("Unsupported string literal detected at %s:%d:%d", lexer.filename, lexer.currPos.CurrLine, lexer.currPos.CurrPos)
 }
 
 func (lexer *Lexer) getOperatorOrPunctuator(eat bool) string {
@@ -751,9 +868,9 @@ func (lexer *Lexer) getOperatorOrPunctuator(eat bool) string {
 	//    $   /   %   <<   >>   <   >   <=   >=   ==   ===   !=   !==   ^   |
 	//    &   &&   ||   ?   :   ;   =   **=   *=   /=   %=   +=   -=   .=   <<=
 	//    >>=   &=   ^=   |=   ,   ??   <=>   ...   \
-	// Spec-Fix: =>   @
+	// Spec-Fix: =>   @   <<<
 
-	if op := lexer.nextN(3); slices.Contains([]string{"===", "!==", "**=", "<<=", ">>=", "<=>", "..."}, op) {
+	if op := lexer.nextN(3); slices.Contains([]string{"===", "!==", "**=", "<<=", ">>=", "<=>", "...", "<<<"}, op) {
 		if eat {
 			lexer.eatN(3)
 		}
@@ -807,6 +924,16 @@ func (lexer *Lexer) isNewLine(eat bool) bool {
 		return true
 	}
 	return false
+}
+
+func (lexer *Lexer) getAndEatNewLine() string {
+	if lexer.nextN(2) == "\r\n" {
+		return lexer.eatN(2)
+	}
+	if lexer.at() == "\n" || lexer.at() == "\r" {
+		return lexer.eat()
+	}
+	return ""
 }
 
 func (lexer *Lexer) isWhiteSpaceChar(char string) bool {

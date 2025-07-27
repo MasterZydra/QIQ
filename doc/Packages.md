@@ -35,6 +35,7 @@ flowchart LR
 
     GoPHP_cmd_goPHP_lexer[GoPHP/cmd/goPHP/lexer] --> GoPHP_cmd_goPHP_common[GoPHP/cmd/goPHP/common]
     GoPHP_cmd_goPHP_lexer[GoPHP/cmd/goPHP/lexer] --> GoPHP_cmd_goPHP_ini[GoPHP/cmd/goPHP/ini]
+    GoPHP_cmd_goPHP_lexer[GoPHP/cmd/goPHP/lexer] --> GoPHP_cmd_goPHP_phpError[GoPHP/cmd/goPHP/phpError]
     GoPHP_cmd_goPHP_lexer[GoPHP/cmd/goPHP/lexer] --> GoPHP_cmd_goPHP_position[GoPHP/cmd/goPHP/position]
     GoPHP_cmd_goPHP_lexer[GoPHP/cmd/goPHP/lexer] --> GoPHP_cmd_goPHP_stats[GoPHP/cmd/goPHP/stats]
 
