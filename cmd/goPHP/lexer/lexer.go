@@ -49,7 +49,7 @@ func (lexer *Lexer) Tokenize(sourceCode string, filename string) ([]*Token, erro
 	stat := stats.Start()
 	defer stats.StopAndPrint(stat, "Lexer")
 
-	lexer.init(common.TrimTrailingLineBreak(sourceCode), filename)
+	lexer.init(sourceCode, filename)
 
 	err := lexer.tokenizeScript()
 
