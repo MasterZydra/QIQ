@@ -10,3 +10,7 @@ func ImplodeStrSlice(slice []string) string {
 	}
 	return result
 }
+
+func RemoveIndex[T any](s []T, index int) []T {
+	return append(append(make([]T, 0), s[:index]...), s[index+1:]...)
+}

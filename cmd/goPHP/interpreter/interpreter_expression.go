@@ -158,6 +158,9 @@ func (interpreter *Interpreter) ProcessSimpleAssignmentExpr(expr *ast.SimpleAssi
 	}
 
 	value := must(interpreter.processStmt(expr.Value, env))
+	if value.GetType() == values.ObjectValue {
+		value.(*values.Object).IsUsed = true
+	}
 	return env.(*Environment).declareVariable(variableName, value)
 }
 
@@ -361,6 +364,7 @@ func (interpreter *Interpreter) ProcessFunctionCallExpr(expr *ast.FunctionCallEx
 	}
 
 	runtimeValue, err := interpreter.processStmt(userFunction.Body, functionEnv)
+	interpreter.destructAllObjects(functionEnv)
 	if err != nil && !(err.GetErrorType() == phpError.EventError && err.GetMessage() == phpError.ReturnEvent) {
 		return runtimeValue, err
 	}
@@ -457,12 +461,7 @@ func (interpreter *Interpreter) ProcessExitIntrinsicExpr(expr *ast.ExitIntrinsic
 
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-exit-intrinsic
 	// Invokes destructors for all remaining instances
-	objects := env.(*Environment).getAllObjects()
-	for _, object := range objects {
-		if err := interpreter.destructObject(object, env.(*Environment)); err != nil {
-			interpreter.PrintError(err)
-		}
-	}
+	interpreter.destructAllObjects(env.(*Environment))
 
 	expression := expr.Arguments[0]
 	if expression != nil {
@@ -885,6 +884,8 @@ func (interpreter *Interpreter) ProcessObjectCreationExpr(stmt *ast.ObjectCreati
 	if err := interpreter.initObject(object, stmt.Args, env); err != nil {
 		return values.NewVoid(), err
 	}
+
+	env.(*Environment).AddObject(object)
 
 	return object, nil
 }

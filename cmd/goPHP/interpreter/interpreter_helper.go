@@ -85,6 +85,15 @@ func (interpreter *Interpreter) destructObject(object *values.Object, env *Envir
 	return nil
 }
 
+func (interpreter *Interpreter) destructAllObjects(env *Environment) {
+	objects := env.getAllObjects()
+	for _, object := range objects {
+		if err := interpreter.destructObject(object, env); err != nil {
+			interpreter.PrintError(err)
+		}
+	}
+}
+
 // Convert a variable expression into the interpreted variable name
 func (interpreter *Interpreter) varExprToVarName(expr ast.IExpression, env *Environment) (string, phpError.Error) {
 	switch expr.GetKind() {

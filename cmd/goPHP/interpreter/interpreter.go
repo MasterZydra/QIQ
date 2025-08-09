@@ -2,6 +2,7 @@ package interpreter
 
 import (
 	"GoPHP/cmd/goPHP/ast"
+	"GoPHP/cmd/goPHP/common"
 	"GoPHP/cmd/goPHP/ini"
 	"GoPHP/cmd/goPHP/parser"
 	"GoPHP/cmd/goPHP/phpError"
@@ -145,6 +146,20 @@ func (interpreter *Interpreter) processStmt(stmt ast.IStatement, env any) (value
 	if err != nil {
 		phpErr = err.(phpError.Error)
 	}
+
+	// Destruct unused objects
+	if stmt.GetKind() != ast.ObjectCreationExpr {
+		for index, object := range env.(*Environment).objects {
+			if object.IsUsed {
+				continue
+			}
+			if err := interpreter.destructObject(object, env.(*Environment)); err != nil {
+				interpreter.PrintError(err)
+			}
+			env.(*Environment).objects = common.RemoveIndex(env.(*Environment).objects, index)
+		}
+	}
+
 	return runtimeValue.(values.RuntimeValue), phpErr
 }
 

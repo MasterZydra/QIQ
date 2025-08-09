@@ -12,6 +12,7 @@ type Object struct {
 	// TODO methods
 	// TODO parent
 	// Status
+	IsUsed       bool
 	IsDestructed bool
 }
 

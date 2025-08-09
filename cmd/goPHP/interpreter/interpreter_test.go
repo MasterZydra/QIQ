@@ -1319,4 +1319,25 @@ func TestClasses(t *testing.T) {
 
 	// Destructor
 	testInputOutput(t, `<?php class c { function __destruct() { echo __METHOD__; } } $c = new c; echo "Done\n";`, "Done\nc::__destruct")
+	testInputOutput(t, `<?php class c { function __destruct() { echo __METHOD__ . "\n"; } } new c; echo "Done";`, "c::__destruct\nDone")
+	testInputOutput(t, `<?php
+		class C {
+			public function __construct() { echo __METHOD__ . "\n"; }
+			public function __destruct() { echo __METHOD__ . "\n"; }
+		}
+		function func() {
+			echo "1\n";
+			new C;
+			echo "2\n";
+		}
+		func();
+
+		function func1() {
+			echo "3\n";
+			$c = new C;
+			echo "4\n";
+		}
+		func1();`,
+		"1\nC::__construct\nC::__destruct\n2\n3\nC::__construct\n4\nC::__destruct\n",
+	)
 }

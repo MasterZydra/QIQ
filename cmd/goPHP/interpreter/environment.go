@@ -17,6 +17,7 @@ type Environment struct {
 	variables       map[string]values.RuntimeValue
 	constants       map[string]values.RuntimeValue
 	functions       map[string]*ast.FunctionDefinitionStatement
+	objects         []*values.Object
 	// StdLib
 	predefinedVariables map[string]values.RuntimeValue
 	predefinedConstants map[string]values.RuntimeValue
@@ -33,6 +34,7 @@ func NewEnvironment(parentEnv *Environment, request *request.Request, interprete
 		variables: map[string]values.RuntimeValue{},
 		constants: map[string]values.RuntimeValue{},
 		functions: map[string]*ast.FunctionDefinitionStatement{},
+		objects:   []*values.Object{},
 		// StdLib
 		predefinedVariables: map[string]values.RuntimeValue{},
 		predefinedConstants: map[string]values.RuntimeValue{},
@@ -142,6 +144,12 @@ func (env *Environment) getAllObjects() []*values.Object {
 		objects = append(objects, variable.(*values.Object))
 	}
 	return objects
+}
+
+// -------------------------------------- Objects -------------------------------------- MARK: Objects
+
+func (env *Environment) AddObject(object *values.Object) {
+	env.objects = append(env.objects, object)
 }
 
 // -------------------------------------- Constants -------------------------------------- MARK: Constants
