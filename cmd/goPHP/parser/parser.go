@@ -875,17 +875,27 @@ func (parser *Parser) parseIterationStmt() (ast.IStatement, phpError.Error) {
 			return ast.NewEmptyStmt(), NewExpectedError("as", parser.at())
 		}
 
+		valuePos := parser.at().GetPosString()
 		value, err := parser.parseExpr()
 		if err != nil {
 			return ast.NewEmptyStmt(), err
+		}
+		// Check if value is a variable name
+		if value.GetKind() != ast.SimpleVariableExpr {
+			return ast.NewEmptyStmt(), phpError.NewParseError("Syntax error, unexpected token \"%s\", expecting variable name at %s", parser.at().Value, valuePos)
 		}
 
 		var key ast.IExpression = nil
 		if parser.isToken(lexer.OpOrPuncToken, "=>", true) {
 			key = value
+			valuePos = parser.at().GetPosString()
 			value, err = parser.parseExpr()
 			if err != nil {
 				return ast.NewEmptyStmt(), err
+			}
+			// Check if value is a variable name
+			if value.GetKind() != ast.SimpleVariableExpr {
+				return ast.NewEmptyStmt(), phpError.NewParseError("Syntax error, unexpected token \"%s\", expecting variable name at %s", parser.at().Value, valuePos)
 			}
 		}
 
