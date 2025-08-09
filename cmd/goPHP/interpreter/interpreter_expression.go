@@ -574,14 +574,23 @@ func (interpreter *Interpreter) ProcessConstantAccessExpr(expr *ast.ConstantAcce
 	// The class name. The class name includes the namespace it was declared in (e.g. Foo\Bar).
 	// When used inside a trait method, __CLASS__ is the name of the class the trait is used in.
 	if expr.ConstantName == "__CLASS__" {
+		if environment.CurrentObject != nil {
 		// TODO __CLASS__: Add namespace
 		return values.NewStr(environment.CurrentObject.Class.Name), nil
+		}
+		return values.NewStr(""), nil
 	}
 
 	// Spec: https://www.php.net/manual/en/language.constants.magic.php
 	// The class method name.
 	if expr.ConstantName == "__METHOD__" {
-		return values.NewStr(environment.CurrentMethod.Name), nil
+		if environment.CurrentFunction != nil {
+			return values.NewStr(environment.CurrentFunction.FunctionName), nil
+		}
+		if environment.CurrentMethod != nil {
+			return values.NewStr(environment.CurrentObject.Class.Name + "::" + environment.CurrentMethod.Name), nil
+		}
+		return values.NewStr(""), nil
 	}
 
 	// TODO __TRAIT__ 	The trait name. The trait name includes the namespace it was declared in (e.g. Foo\Bar).

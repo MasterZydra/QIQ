@@ -173,9 +173,12 @@ func TestConstants(t *testing.T) {
 
 	// Magic constants
 	testInputOutput(t, "<?php var_dump(__DIR__);", fmt.Sprintf("string(%d) \"%s\"\n", len(TEST_FILE_PATH), TEST_FILE_PATH))
-	testInputOutput(t, "<?php var_dump(__FUNCTION__); function fn() { var_dump(__FUNCTION__); } fn();", "string(0) \"\"\nstring(2) \"fn\"\n")
+	testInputOutput(t, "<?php var_dump(__FUNCTION__); function func() { var_dump(__FUNCTION__); } func();", "string(0) \"\"\nstring(4) \"func\"\n")
+	testInputOutput(t, "<?php var_dump(__METHOD__); function func() { var_dump(__METHOD__); } func();", "string(0) \"\"\nstring(4) \"func\"\n")
 	testInputOutput(t, "<?php var_dump(__FILE__);", fmt.Sprintf("string(%d) \"%s\"\n", len(TEST_FILE_NAME), TEST_FILE_NAME))
 	testInputOutput(t, "<?php var_dump(__LINE__);\nvar_dump(__LINE__);", "int(1)\nint(2)\n")
+	testInputOutput(t, "<?php var_dump(__CLASS__); class c { function __construct() { var_dump(__CLASS__); } }; new c;", "string(0) \"\"\nstring(1) \"c\"\n")
+	testInputOutput(t, "<?php class c { function __construct() { var_dump(__FUNCTION__); var_dump(__METHOD__); } }; new c;", "string(11) \"__construct\"\nstring(14) \"c::__construct\"\n")
 
 	// Userdefined constants
 	testInputOutput(t, `<?php const TRUTH = 42; const PI = "3.141";echo TRUTH, PI;`, "423.141")
@@ -1313,4 +1316,7 @@ func TestClasses(t *testing.T) {
 	testInputOutput(t, `<?php class c { public int $i = 42; } $c = new c; var_dump($c->i);`, "int(42)\n")
 	// TODO testInputOutput(t, `<?php class c { private int $i = 42; } $c = new c; var_dump($c->i);`, "int(42)\n")
 	testForError(t, `<?php class c { } $c = new c; $c->prop;`, phpError.NewError("Undefined property: c::$prop in %s:1:35", TEST_FILE_NAME))
+
+	// Destructor
+	testInputOutput(t, `<?php class c { function __destruct() { echo __METHOD__; } } $c = new c; echo "Done\n";`, "Done\nc::__destruct")
 }
