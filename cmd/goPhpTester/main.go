@@ -176,6 +176,9 @@ func doTest(path string, info goOs.FileInfo, err error) error {
 			if strings.Contains(testFile.Expect, "in %s on line %d") {
 				testFile.Expect = strings.ReplaceAll(testFile.Expect, "in %s on line %d", "in %s")
 			}
+			if matched, _ := regexp.MatchString(`in %s on line \d+`, testFile.Expect); matched {
+				testFile.Expect = regexp.MustCompile(`in %s on line \d+`).ReplaceAllString(testFile.Expect, "in %s")
+			}
 			pattern = replaceExpectfTags(testFile.Expect)
 		}
 		equal, err = regexp.MatchString(pattern, common.TrimLineBreaks(result))
