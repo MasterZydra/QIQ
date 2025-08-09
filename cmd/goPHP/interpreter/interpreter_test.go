@@ -306,6 +306,16 @@ func TestConditionals(t *testing.T) {
 		}`,
 		"2 100\n4 90\n6 80\n8 70\n10 60\n",
 	)
+
+	// Foreach statment
+	testInputOutput(t,
+		`<?php foreach([1,2,3] as $i) { echo $i; } echo $i;`,
+		"1233",
+	)
+	testInputOutput(t,
+		`<?php foreach([2, 4, 8] as $k => $v) { echo $k . ":" . $v . ","; } echo $k . ":" . $v;`,
+		"0:2,1:4,2:8,2:8",
+	)
 }
 
 func TestIntrinsic(t *testing.T) {

@@ -4,6 +4,7 @@ import (
 	"GoPHP/cmd/goPHP/common"
 	"fmt"
 	"maps"
+	"reflect"
 	"slices"
 )
 
@@ -11,6 +12,12 @@ func ToString(stmt IStatement) string {
 	if stmt == nil {
 		return "nil"
 	}
+	// Check if the underlying value is nil
+	val := reflect.ValueOf(stmt)
+	if val.Kind() == reflect.Ptr && val.IsNil() {
+		return "nil"
+	}
+
 	result, _ := stmt.Process(DumpVisitor{}, nil)
 	return result.(string)
 }
@@ -235,8 +242,8 @@ func (visitor DumpVisitor) ProcessFloatingLiteralExpr(stmt *FloatingLiteralExpre
 // ProcessForeachStmt implements Visitor.
 func (visitor DumpVisitor) ProcessForeachStmt(stmt *ForeachStatement, _ any) (any, error) {
 	return fmt.Sprintf(
-		"{%s - collection: %s, key: %s, value: %s }",
-		stmt.GetKind(), ToString(stmt.Collection), ToString(stmt.Key), ToString(stmt.Value),
+		"{%s - collection: %s, key: %s, value: %s, block: %s }",
+		stmt.GetKind(), ToString(stmt.Collection), ToString(stmt.Key), ToString(stmt.Value), ToString(stmt.Block),
 	), nil
 }
 

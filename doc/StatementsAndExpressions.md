@@ -8,6 +8,7 @@
 - do statement: `do { ... } while (true);`
 - echo statement: `echo "abc", 123, true;`
 - for statement: `for (...; ...; ...) { ... }`
+- foreach statement: `foreach ($entries as $key => $entry) { ... }`
 - function definition: `function func1($param1) { ... }`
 - global declaration: `global $var;`
 - if statement: `if (true) { ... } elseif (false) { ... } else { ... }`

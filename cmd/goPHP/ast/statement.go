@@ -107,7 +107,7 @@ type ForStatement struct {
 }
 
 func NewForStmt(id int64, pos *position.Position, initializer *CompoundStatement, control *CompoundStatement, endOfLoop *CompoundStatement, block IStatement) *ForStatement {
-	return &ForStatement{Statement: NewStmt(id, IfStmt, pos), Initializer: initializer, Control: control, EndOfLoop: endOfLoop, Block: block}
+	return &ForStatement{Statement: NewStmt(id, ForStmt, pos), Initializer: initializer, Control: control, EndOfLoop: endOfLoop, Block: block}
 }
 
 func (stmt *ForStatement) Process(visitor Visitor, context any) (any, error) {
@@ -425,10 +425,11 @@ type ForeachStatement struct {
 	Collection IExpression
 	Key        IExpression
 	Value      IExpression
+	Block      IStatement
 }
 
-func NewForeachStmt(id int64, pos *position.Position, collection, key, value IExpression) *ForeachStatement {
-	return &ForeachStatement{Statement: NewStmt(id, ForeachStmt, pos), Collection: collection, Key: key, Value: value}
+func NewForeachStmt(id int64, pos *position.Position, collection, key, value IExpression, block IStatement) *ForeachStatement {
+	return &ForeachStatement{Statement: NewStmt(id, ForeachStmt, pos), Collection: collection, Key: key, Value: value, Block: block}
 }
 
 func (stmt *ForeachStatement) Process(visitor Visitor, context any) (any, error) {

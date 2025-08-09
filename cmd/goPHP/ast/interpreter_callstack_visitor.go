@@ -240,8 +240,8 @@ func (visitor InterpreterCallStackVisitor) ProcessFloatingLiteralExpr(stmt *Floa
 // ProcessForeachStmt implements Visitor.
 func (visitor InterpreterCallStackVisitor) ProcessForeachStmt(stmt *ForeachStatement, _ any) (any, error) {
 	return fmt.Sprintf(
-		"{%s - collection: %s, key: %s, value: %s, pos: %s}",
-		stmt.GetKind(), ToString(stmt.Collection), ToString(stmt.Key), ToString(stmt.Value), stmt.GetPosition().ToPosString(),
+		"{%s - collection: %s, key: %s, value: %s, block: %s, pos: %s}",
+		stmt.GetKind(), ToString(stmt.Collection), ToString(stmt.Key), ToString(stmt.Value), ToString(stmt.Block), stmt.GetPosition().ToPosString(),
 	), nil
 }
 

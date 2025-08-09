@@ -304,5 +304,59 @@ func (interpreter *Interpreter) ProcessDeclareStmt(stmt *ast.DeclareStatement, e
 
 // ProcessForeachStmt implements Visitor.
 func (interpreter *Interpreter) ProcessForeachStmt(stmt *ast.ForeachStatement, env any) (any, error) {
-	return values.NewVoid(), phpError.NewError("ProcessForeachStmt is not implemented")
+	runtimeValue, err := interpreter.processStmt(stmt.Collection, env)
+	if err != nil {
+		return values.NewVoid(), err
+	}
+
+	environment := env.(*Environment)
+	if runtimeValue.GetType() == values.ArrayValue {
+		runtimeArray := runtimeValue.(*values.Array)
+		for _, keyValue := range runtimeArray.Keys {
+			// Set key and value variable
+			if stmt.Key != nil {
+				keyName := mustOrVoid(interpreter.varExprToVarName(stmt.Key, environment))
+				environment.declareVariable(keyName, keyValue)
+			}
+			value, _ := runtimeArray.GetElement(keyValue)
+			valueName := mustOrVoid(interpreter.varExprToVarName(stmt.Value, environment))
+			environment.declareVariable(valueName, value)
+
+			// Execute body
+			runtimeValue, err := interpreter.processStmt(stmt.Block, env)
+			if err != nil {
+				if err.GetErrorType() == phpError.EventError && err.GetMessage() == "break" {
+					breakoutLevel := err.(*phpError.ContinueEventError).GetBreakoutLevel()
+					if breakoutLevel == 1 {
+						return values.NewVoid(), nil
+					}
+					return values.NewVoid(), phpError.NewBreakEvent(breakoutLevel - 1)
+				}
+				if err.GetErrorType() == phpError.EventError && err.GetMessage() == "continue" {
+					breakoutLevel := err.(*phpError.ContinueEventError).GetBreakoutLevel()
+					if breakoutLevel == 1 {
+						continue
+					}
+					return values.NewVoid(), phpError.NewContinueEvent(breakoutLevel - 1)
+				}
+				return runtimeValue, err
+			}
+		}
+		return values.NewVoid(), nil
+	}
+
+	givenType := values.ToPhpType(runtimeValue)
+	if runtimeValue.GetType() == values.BoolValue {
+		if runtimeValue.(*values.Bool).Value {
+			givenType = "true"
+		} else {
+			givenType = "false"
+		}
+	}
+	if runtimeValue.GetType() == values.NullValue {
+		givenType = "null"
+	}
+	interpreter.PrintError(phpError.NewWarning("foreach() argument must be of type array|object, %s given in %s", givenType, stmt.Collection.GetPosition().ToPosString()))
+
+	return values.NewVoid(), nil
 }

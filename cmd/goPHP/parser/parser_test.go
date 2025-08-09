@@ -294,6 +294,100 @@ func TestGlobalDeclaration(t *testing.T) {
 	)
 }
 
+func TestLoops(t *testing.T) {
+	// While
+	testStmt(t, `<?php while (true) {}`,
+		ast.NewWhileStmt(0, nil, ast.NewBooleanLiteralExpr(0, nil, true), ast.NewCompoundStmt(0, []ast.IStatement{})),
+	)
+	testStmt(t, `<?php while (true) { func(); }`,
+		ast.NewWhileStmt(0, nil, ast.NewBooleanLiteralExpr(0, nil, true), ast.NewCompoundStmt(0, []ast.IStatement{
+			ast.NewExpressionStmt(0, ast.NewFunctionCallExpr(0, nil, ast.NewStringLiteralExpr(0, nil, "func", ast.SingleQuotedString), []ast.IExpression{})),
+		})),
+	)
+	testStmt(t, `<?php while (true): endwhile;`,
+		ast.NewWhileStmt(0, nil, ast.NewBooleanLiteralExpr(0, nil, true), ast.NewCompoundStmt(0, []ast.IStatement{})),
+	)
+	testStmt(t, `<?php while (true): func(); endwhile;`,
+		ast.NewWhileStmt(0, nil, ast.NewBooleanLiteralExpr(0, nil, true), ast.NewCompoundStmt(0, []ast.IStatement{
+			ast.NewExpressionStmt(0, ast.NewFunctionCallExpr(0, nil, ast.NewStringLiteralExpr(0, nil, "func", ast.SingleQuotedString), []ast.IExpression{})),
+		})),
+	)
+
+	// Do while
+	testStmt(t, `<?php do {} while (true);`,
+		ast.NewDoStmt(0, nil, ast.NewBooleanLiteralExpr(0, nil, true), ast.NewCompoundStmt(0, []ast.IStatement{})),
+	)
+	testStmt(t, `<?php do { func(); } while (true);`,
+		ast.NewDoStmt(0, nil, ast.NewBooleanLiteralExpr(0, nil, true), ast.NewCompoundStmt(0, []ast.IStatement{
+			ast.NewExpressionStmt(0, ast.NewFunctionCallExpr(0, nil, ast.NewStringLiteralExpr(0, nil, "func", ast.SingleQuotedString), []ast.IExpression{})),
+		})),
+	)
+
+	// For
+	testStmt(t, `<?php for ($i = 1; $i <= 10; ++$i) { func(); }`,
+		ast.NewForStmt(0, nil,
+			ast.NewCompoundStmt(0, []ast.IStatement{ast.NewSimpleAssignmentExpr(0, ast.NewSimpleVariableExpr(0, ast.NewVariableNameExpr(0, nil, "$i")), ast.NewIntegerLiteralExpr(0, nil, 1))}),
+			ast.NewCompoundStmt(0, []ast.IStatement{ast.NewRelationalExpr(0, ast.NewSimpleVariableExpr(0, ast.NewVariableNameExpr(0, nil, "$i")), "<=", ast.NewIntegerLiteralExpr(0, nil, 10))}),
+			ast.NewCompoundStmt(0, []ast.IStatement{ast.NewPrefixIncExpr(0, nil, ast.NewSimpleVariableExpr(0, ast.NewVariableNameExpr(0, nil, "$i")), "++")}),
+			ast.NewCompoundStmt(0, []ast.IStatement{ast.NewExpressionStmt(0, ast.NewFunctionCallExpr(0, nil, ast.NewStringLiteralExpr(0, nil, "func", ast.SingleQuotedString), []ast.IExpression{}))}),
+		),
+	)
+	// Omit 1st and 3rd expressions
+	testStmt(t, `<?php for (; $i <= 10;): func(); endfor;`,
+		ast.NewForStmt(0, nil,
+			nil,
+			ast.NewCompoundStmt(0, []ast.IStatement{ast.NewRelationalExpr(0, ast.NewSimpleVariableExpr(0, ast.NewVariableNameExpr(0, nil, "$i")), "<=", ast.NewIntegerLiteralExpr(0, nil, 10))}),
+			nil,
+			ast.NewCompoundStmt(0, []ast.IStatement{ast.NewExpressionStmt(0, ast.NewFunctionCallExpr(0, nil, ast.NewStringLiteralExpr(0, nil, "func", ast.SingleQuotedString), []ast.IExpression{}))}),
+		),
+	)
+	// Omit all 3 expressions
+	testStmt(t, `<?php for (;;) { func(); }`,
+		ast.NewForStmt(0, nil,
+			nil,
+			nil,
+			nil,
+			ast.NewCompoundStmt(0, []ast.IStatement{ast.NewExpressionStmt(0, ast.NewFunctionCallExpr(0, nil, ast.NewStringLiteralExpr(0, nil, "func", ast.SingleQuotedString), []ast.IExpression{}))}),
+		),
+	)
+	// Use groups of expressions
+	testStmt(t, `<?php for ($a = 100, $i = 1; ++$i, $i <= 10; ++$i, $a -= 10) { func(); }`,
+		ast.NewForStmt(0, nil,
+			ast.NewCompoundStmt(0, []ast.IStatement{
+				ast.NewSimpleAssignmentExpr(0, ast.NewSimpleVariableExpr(0, ast.NewVariableNameExpr(0, nil, "$a")), ast.NewIntegerLiteralExpr(0, nil, 100)),
+				ast.NewSimpleAssignmentExpr(0, ast.NewSimpleVariableExpr(0, ast.NewVariableNameExpr(0, nil, "$i")), ast.NewIntegerLiteralExpr(0, nil, 1)),
+			}),
+			ast.NewCompoundStmt(0, []ast.IStatement{
+				ast.NewPrefixIncExpr(0, nil, ast.NewSimpleVariableExpr(0, ast.NewVariableNameExpr(0, nil, "$i")), "++"),
+				ast.NewRelationalExpr(0, ast.NewSimpleVariableExpr(0, ast.NewVariableNameExpr(0, nil, "$i")), "<=", ast.NewIntegerLiteralExpr(0, nil, 10)),
+			}),
+			ast.NewCompoundStmt(0, []ast.IStatement{
+				ast.NewPrefixIncExpr(0, nil, ast.NewSimpleVariableExpr(0, ast.NewVariableNameExpr(0, nil, "$i")), "++"),
+				ast.NewCompoundAssignmentExpr(0, ast.NewSimpleVariableExpr(0, ast.NewVariableNameExpr(0, nil, "$a")), "-", ast.NewIntegerLiteralExpr(0, nil, 10)),
+			}),
+			ast.NewCompoundStmt(0, []ast.IStatement{ast.NewExpressionStmt(0, ast.NewFunctionCallExpr(0, nil, ast.NewStringLiteralExpr(0, nil, "func", ast.SingleQuotedString), []ast.IExpression{}))}),
+		),
+	)
+
+	// Foreach
+	testStmt(t, `<?php foreach ([] as $value) {}`,
+		ast.NewForeachStmt(0, nil,
+			ast.NewArrayLiteralExpr(0, nil),
+			nil,
+			ast.NewSimpleVariableExpr(0, ast.NewVariableNameExpr(0, nil, "$value")),
+			ast.NewCompoundStmt(0, []ast.IStatement{}),
+		),
+	)
+	testStmt(t, `<?php foreach ([] as $key => $value) { func(); }`,
+		ast.NewForeachStmt(0, nil,
+			ast.NewArrayLiteralExpr(0, nil),
+			ast.NewSimpleVariableExpr(0, ast.NewVariableNameExpr(0, nil, "$key")),
+			ast.NewSimpleVariableExpr(0, ast.NewVariableNameExpr(0, nil, "$value")),
+			ast.NewCompoundStmt(0, []ast.IStatement{ast.NewExpressionStmt(0, ast.NewFunctionCallExpr(0, nil, ast.NewStringLiteralExpr(0, nil, "func", ast.SingleQuotedString), []ast.IExpression{}))}),
+		),
+	)
+}
+
 func TestClassDeclaration(t *testing.T) {
 	// Simple class
 	class := ast.NewClassDeclarationStmt(0, nil, "c", false, false)

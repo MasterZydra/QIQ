@@ -840,7 +840,88 @@ func (parser *Parser) parseIterationStmt() (ast.IStatement, phpError.Error) {
 		return ast.NewForStmt(parser.nextId(), pos, forInitializer, forControl, forEndOfLoop, block), nil
 	}
 
-	// TODO foreach-statement
+	// Supported statement: foreach statement: `foreach ($entries as $key => $entry) { ... }`
+	if parser.isToken(lexer.KeywordToken, "foreach", false) {
+		// Spec: https://phplang.org/spec/11-statements.html#the-foreach-statement
+
+		// foreach-statement:
+		//    foreach   (   foreach-collection-name   as   foreach-key(opt)   foreach-value   )   statement
+		//    foreach   (   foreach-collection-name   as   foreach-key(opt)   foreach-value   )   :   statement-list   endforeach   ;
+
+		// foreach-collection-name:
+		//    expression
+
+		// foreach-key:
+		//    expression   =>
+
+		// foreach-value:
+		//    &(opt)   expression
+		//    list-intrinsic
+
+		PrintParserCallstack("foreach-statement", parser)
+
+		pos := parser.eat().Position
+
+		if !parser.isToken(lexer.OpOrPuncToken, "(", true) {
+			return ast.NewEmptyStmt(), NewExpectedError("(", parser.at())
+		}
+
+		collection, err := parser.parseExpr()
+		if err != nil {
+			return ast.NewEmptyStmt(), err
+		}
+
+		if !parser.isToken(lexer.KeywordToken, "as", true) {
+			return ast.NewEmptyStmt(), NewExpectedError("as", parser.at())
+		}
+
+		value, err := parser.parseExpr()
+		if err != nil {
+			return ast.NewEmptyStmt(), err
+		}
+
+		var key ast.IExpression = nil
+		if parser.isToken(lexer.OpOrPuncToken, "=>", true) {
+			key = value
+			value, err = parser.parseExpr()
+			if err != nil {
+				return ast.NewEmptyStmt(), err
+			}
+		}
+
+		if !parser.isToken(lexer.OpOrPuncToken, ")", true) {
+			return ast.NewEmptyStmt(), NewExpectedError(")", parser.at())
+		}
+
+		isAltSytax := parser.isToken(lexer.OpOrPuncToken, ":", true)
+
+		var block ast.IStatement
+		if !isAltSytax {
+			block, err = parser.parseStmt()
+			if err != nil {
+				return ast.NewEmptyStmt(), err
+			}
+		} else {
+			statements := []ast.IStatement{}
+			for !parser.isToken(lexer.KeywordToken, "endforeach", false) {
+				statement, err := parser.parseStmt()
+				if err != nil {
+					return ast.NewEmptyStmt(), err
+				}
+				statements = append(statements, statement)
+			}
+			block = ast.NewCompoundStmt(parser.nextId(), statements)
+		}
+
+		if isAltSytax && !parser.isToken(lexer.KeywordToken, "endforeach", true) {
+			return ast.NewEmptyStmt(), NewExpectedError("endforeach", parser.at())
+		}
+		if isAltSytax && !parser.isToken(lexer.OpOrPuncToken, ";", true) {
+			return ast.NewEmptyStmt(), NewExpectedError(";", parser.at())
+		}
+
+		return ast.NewForeachStmt(parser.nextId(), pos, collection, key, value, block), nil
+	}
 
 	return ast.NewEmptyStmt(), phpError.NewParseError("Unsupported iteration statement '%s' at %s", parser.at().Value, parser.at().Position.ToPosString())
 }
