@@ -189,10 +189,10 @@ func (parser *Parser) parseStmt() (ast.IStatement, phpError.Error) {
 
 		// declare-directive
 		if !parser.isTokenType(lexer.NameToken, false) {
-			return ast.NewEmptyStmt(), phpError.NewParseError("Unsupported declare '%s' at %s", parser.at().Value, parser.at().Position.ToPosString())
+			return ast.NewEmptyStmt(), phpError.NewParseError("Unsupported declare '%s' at %s", parser.at().Value, parser.at().GetPosString())
 		}
 		if !slices.Contains([]string{"ticks", "encoding", "strict_types"}, parser.at().Value) {
-			return ast.NewEmptyStmt(), phpError.NewParseError("Unsupported declare '%s' at %s", parser.at().Value, parser.at().Position.ToPosString())
+			return ast.NewEmptyStmt(), phpError.NewParseError("Unsupported declare '%s' at %s", parser.at().Value, parser.at().GetPosString())
 		}
 		directive := parser.eat().Value
 
@@ -203,7 +203,7 @@ func (parser *Parser) parseStmt() (ast.IStatement, phpError.Error) {
 
 		// literal
 		if !lexer.IsLiteral(parser.at()) {
-			return ast.NewEmptyStmt(), phpError.NewParseError("Expected a literal. Got %s at %s", parser.at().TokenType, parser.at().Position.ToPosString())
+			return ast.NewEmptyStmt(), phpError.NewParseError("Expected a literal. Got %s at %s", parser.at().TokenType, parser.at().GetPosString())
 		}
 		literal, err := parser.parseLiteral()
 		if err != nil {
@@ -213,10 +213,10 @@ func (parser *Parser) parseStmt() (ast.IStatement, phpError.Error) {
 		// Validate allowed values
 		if directive == "strict_types" {
 			if literal.GetKind() != ast.IntegerLiteralExpr {
-				return ast.NewEmptyStmt(), phpError.NewParseError("Only 0 and 1 allowed as values for the declare directive 'strict_types' at %s", parser.at().Position.ToPosString())
+				return ast.NewEmptyStmt(), phpError.NewParseError("Only 0 and 1 allowed as values for the declare directive 'strict_types' at %s", parser.at().GetPosString())
 			}
 			if literal.(*ast.IntegerLiteralExpression).Value < 0 || literal.(*ast.IntegerLiteralExpression).Value > 1 {
-				return ast.NewEmptyStmt(), phpError.NewParseError("Only 0 and 1 allowed as values for the declare directive 'strict_types' at %s", parser.at().Position.ToPosString())
+				return ast.NewEmptyStmt(), phpError.NewParseError("Only 0 and 1 allowed as values for the declare directive 'strict_types' at %s", parser.at().GetPosString())
 			}
 		}
 
@@ -366,7 +366,7 @@ func (parser *Parser) parseStmt() (ast.IStatement, phpError.Error) {
 				return ast.NewEmptyStmt(), err
 			}
 			if variable.GetKind() != ast.SimpleVariableExpr {
-				return ast.NewEmptyStmt(), phpError.NewParseError("Global declaration expected a simple variable but got %s at %s", variable.GetKind(), variable.GetPosition().ToPosString())
+				return ast.NewEmptyStmt(), phpError.NewParseError("Global declaration expected a simple variable but got %s at %s", variable.GetKind(), variable.GetPosString())
 			}
 
 			variables = append(variables, variable)
@@ -409,7 +409,7 @@ func (parser *Parser) parseStmt() (ast.IStatement, phpError.Error) {
 			return ast.NewExpressionStmt(parser.nextId(), expr), nil
 		}
 		return ast.NewEmptyExpr(),
-			phpError.NewParseError(`Statement must end with a semicolon. Got: "%s" at %s`, parser.at().Value, parser.at().Position.ToPosString())
+			phpError.NewParseError(`Statement must end with a semicolon. Got: "%s" at %s`, parser.at().Value, parser.at().GetPosString())
 	}
 }
 
@@ -923,7 +923,7 @@ func (parser *Parser) parseIterationStmt() (ast.IStatement, phpError.Error) {
 		return ast.NewForeachStmt(parser.nextId(), pos, collection, key, value, block), nil
 	}
 
-	return ast.NewEmptyStmt(), phpError.NewParseError("Unsupported iteration statement '%s' at %s", parser.at().Value, parser.at().Position.ToPosString())
+	return ast.NewEmptyStmt(), phpError.NewParseError("Unsupported iteration statement '%s' at %s", parser.at().Value, parser.at().GetPosString())
 }
 
 func (parser *Parser) parseJumpStmt() (ast.IStatement, phpError.Error) {
@@ -1071,7 +1071,7 @@ func (parser *Parser) parseJumpStmt() (ast.IStatement, phpError.Error) {
 		return ast.NewThrowStmt(parser.nextId(), pos, expr), nil
 	}
 
-	return ast.NewEmptyStmt(), phpError.NewParseError("Unsupported jump statement '%s' at %s", parser.at().Value, parser.at().Position.ToPosString())
+	return ast.NewEmptyStmt(), phpError.NewParseError("Unsupported jump statement '%s' at %s", parser.at().Value, parser.at().GetPosString())
 }
 
 func (parser *Parser) parseFunctionDefinition() (ast.IStatement, phpError.Error) {
@@ -1140,9 +1140,9 @@ func (parser *Parser) parseFunctionDefinition() (ast.IStatement, phpError.Error)
 	}
 
 	functionName := parser.at().Value
-	functionNamePos := parser.eat().Position
+	functionNamePos := parser.eat().GetPosString()
 	if !common.IsName(functionName) {
-		return ast.NewEmptyExpr(), phpError.NewParseError("\"%s\" is not a valid function name at %s", functionName, functionNamePos.ToPosString())
+		return ast.NewEmptyExpr(), phpError.NewParseError("\"%s\" is not a valid function name at %s", functionName, functionNamePos)
 	}
 
 	if !parser.isToken(lexer.OpOrPuncToken, "(", true) {
@@ -2018,7 +2018,7 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, phpError.Error) {
 			parser.eat()
 			variable = ast.NewSimpleVariableExpr(parser.nextId(), expr)
 		} else {
-			return ast.NewEmptyExpr(), phpError.NewParseError("End of simple variable expression not detected at %s", parser.at().Position.ToPosString())
+			return ast.NewEmptyExpr(), phpError.NewParseError("End of simple variable expression not detected at %s", parser.at().GetPosString())
 		}
 	}
 
@@ -2315,7 +2315,7 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, phpError.Error) {
 	// 	return ast.NewExpressionStmt(parser.nextId(), ast.NewTextExpr(parser.nextId(), parser.eat().Value)), nil
 	// }
 
-	return ast.NewEmptyExpr(), phpError.NewParseError("Unsupported expression type '%s', value: '%s' at %s", parser.at().TokenType, parser.at().Value, parser.at().Position.ToPosString())
+	return ast.NewEmptyExpr(), phpError.NewParseError("Unsupported expression type '%s', value: '%s' at %s", parser.at().TokenType, parser.at().Value, parser.at().GetPosString())
 }
 
 func (parser *Parser) parseLiteral() (ast.IExpression, phpError.Error) {
@@ -2378,7 +2378,7 @@ func (parser *Parser) parseLiteral() (ast.IExpression, phpError.Error) {
 		// TODO nowdoc-string-literal
 	}
 
-	return ast.NewEmptyExpr(), phpError.NewParseError("parseLiteral: Unsupported literal: '%s' at %s", parser.at().Value, parser.at().Position.ToPosString())
+	return ast.NewEmptyExpr(), phpError.NewParseError("parseLiteral: Unsupported literal: '%s' at %s", parser.at().Value, parser.at().GetPosString())
 }
 
 func (parser *Parser) parseArrayCreationExpr() (ast.IExpression, phpError.Error) {

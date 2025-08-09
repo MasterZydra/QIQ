@@ -50,7 +50,7 @@ func (visitor InterpreterCallStackVisitor) ProcessArrayLiteralExpr(stmt *ArrayLi
 		elements += ToString(key) + " => " + ToString(stmt.Elements[key]) + ", "
 	}
 	elements += "}"
-	return fmt.Sprintf("{%s - elements: %s , pos: %s}", stmt.GetKind(), elements, stmt.GetPosition().ToPosString()), nil
+	return fmt.Sprintf("{%s - elements: %s , pos: %s}", stmt.GetKind(), elements, stmt.GetPosString()), nil
 }
 
 // ProcessArrayNextKeyExpr implements Visitor.
@@ -62,20 +62,20 @@ func (visitor InterpreterCallStackVisitor) ProcessArrayNextKeyExpr(stmt *ArrayNe
 func (visitor InterpreterCallStackVisitor) ProcessBinaryOpExpr(stmt *BinaryOpExpression, _ any) (any, error) {
 	return fmt.Sprintf(
 		"{%s - lhs: %s, operator: \"%s\" rhs: %s, pos: %s }",
-		stmt.GetKind(), ToString(stmt.Lhs), stmt.Operator, ToString(stmt.Rhs), stmt.GetPosition().ToPosString(),
+		stmt.GetKind(), ToString(stmt.Lhs), stmt.Operator, ToString(stmt.Rhs), stmt.GetPosString(),
 	), nil
 }
 
 // ProcessBreakStmt implements Visitor.
 func (visitor InterpreterCallStackVisitor) ProcessBreakStmt(stmt *BreakStatement, _ any) (any, error) {
-	return fmt.Sprintf("{%s - %s, pos: %s}", stmt.GetKind(), ToString(stmt.Expr), stmt.GetPosition().ToPosString()), nil
+	return fmt.Sprintf("{%s - %s, pos: %s}", stmt.GetKind(), ToString(stmt.Expr), stmt.GetPosString()), nil
 }
 
 // ProcessCastExpr implements Visitor.
 func (visitor InterpreterCallStackVisitor) ProcessCastExpr(stmt *CastExpression, _ any) (any, error) {
 	return fmt.Sprintf(
 		"{%s - operator: \"%s\" expr: %s, pos: %s }",
-		stmt.GetKind(), stmt.Operator, ToString(stmt.Expr), stmt.GetPosition().ToPosString(),
+		stmt.GetKind(), stmt.Operator, ToString(stmt.Expr), stmt.GetPosString(),
 	), nil
 }
 
@@ -113,7 +113,7 @@ func (visitor InterpreterCallStackVisitor) ProcessClassDeclarationStmt(stmt *Cla
 
 	return fmt.Sprintf(
 		"{%s - name: \"%s\", isAbstract: %v, isFinal: %v, extends: \"%s\" , implements: %s, constants: {%s}, methods: {%s}, traits: {%s}, properties: {%s}, pos: %s }",
-		stmt.GetKind(), stmt.Name, stmt.IsAbstract, stmt.IsFinal, stmt.BaseClass, common.ImplodeStrSlice(stmt.Interfaces), constants, methods, traits, properties, stmt.GetPosition().ToPosString(),
+		stmt.GetKind(), stmt.Name, stmt.IsAbstract, stmt.IsFinal, stmt.BaseClass, common.ImplodeStrSlice(stmt.Interfaces), constants, methods, traits, properties, stmt.GetPosString(),
 	), nil
 }
 
@@ -121,7 +121,7 @@ func (visitor InterpreterCallStackVisitor) ProcessClassDeclarationStmt(stmt *Cla
 func (visitor InterpreterCallStackVisitor) ProcessCoalesceExpr(stmt *CoalesceExpression, _ any) (any, error) {
 	return fmt.Sprintf(
 		"{%s - condition: %s, elseExpr: %s, pos: %s }",
-		stmt.GetKind(), ToString(stmt.Cond), ToString(stmt.ElseExpr), stmt.GetPosition().ToPosString(),
+		stmt.GetKind(), ToString(stmt.Cond), ToString(stmt.ElseExpr), stmt.GetPosString(),
 	), nil
 }
 
@@ -129,7 +129,7 @@ func (visitor InterpreterCallStackVisitor) ProcessCoalesceExpr(stmt *CoalesceExp
 func (visitor InterpreterCallStackVisitor) ProcessCompoundAssignmentExpr(stmt *CompoundAssignmentExpression, _ any) (any, error) {
 	return fmt.Sprintf(
 		"{%s - variable: %s, operator: \"%s\", value: %s, pos: %s }",
-		stmt.GetKind(), ToString(stmt.Variable), stmt.Operator, ToString(stmt.Value), stmt.GetPosition().ToPosString(),
+		stmt.GetKind(), ToString(stmt.Variable), stmt.Operator, ToString(stmt.Value), stmt.GetPosString(),
 	), nil
 }
 
@@ -142,30 +142,30 @@ func (visitor InterpreterCallStackVisitor) ProcessCompoundStmt(stmt *CompoundSta
 func (visitor InterpreterCallStackVisitor) ProcessConditionalExpr(stmt *ConditionalExpression, _ any) (any, error) {
 	return fmt.Sprintf(
 		"{%s - condition: %s, ifExpr: %s, elseExpr: %s, pos: %s }",
-		stmt.GetKind(), ToString(stmt.Cond), ToString(stmt.IfExpr), ToString(stmt.ElseExpr), stmt.GetPosition().ToPosString(),
+		stmt.GetKind(), ToString(stmt.Cond), ToString(stmt.IfExpr), ToString(stmt.ElseExpr), stmt.GetPosString(),
 	), nil
 }
 
 // ProcessConstDeclarationStmt implements Visitor.
 func (visitor InterpreterCallStackVisitor) ProcessConstDeclarationStmt(stmt *ConstDeclarationStatement, _ any) (any, error) {
-	return fmt.Sprintf("{%s - name: \"%s\" value: %s, pos: %s}", stmt.GetKind(), stmt.Name, ToString(stmt.Value), stmt.GetPosition().ToPosString()), nil
+	return fmt.Sprintf("{%s - name: \"%s\" value: %s, pos: %s}", stmt.GetKind(), stmt.Name, ToString(stmt.Value), stmt.GetPosString()), nil
 }
 
 // ProcessConstantAccessExpr implements Visitor.
 func (visitor InterpreterCallStackVisitor) ProcessConstantAccessExpr(stmt *ConstantAccessExpression, _ any) (any, error) {
-	return fmt.Sprintf("{%s - constantName: %s, pos: %s}", stmt.GetKind(), stmt.ConstantName, stmt.GetPosition().ToPosString()), nil
+	return fmt.Sprintf("{%s - constantName: %s, pos: %s}", stmt.GetKind(), stmt.ConstantName, stmt.GetPosString()), nil
 }
 
 // ProcessContinueStmt implements Visitor.
 func (visitor InterpreterCallStackVisitor) ProcessContinueStmt(stmt *ContinueStatement, _ any) (any, error) {
-	return fmt.Sprintf("{%s - %s, pos: %s}", stmt.GetKind(), ToString(stmt.Expr), stmt.GetPosition().ToPosString()), nil
+	return fmt.Sprintf("{%s - %s, pos: %s}", stmt.GetKind(), ToString(stmt.Expr), stmt.GetPosString()), nil
 }
 
 // ProcessDeclareStmt implements Visitor.
 func (visitor InterpreterCallStackVisitor) ProcessDeclareStmt(stmt *DeclareStatement, _ any) (any, error) {
 	return fmt.Sprintf(
 		"{%s - directive: %s, literal: %s, pos: %s }",
-		stmt.GetKind(), stmt.Directive, ToString(stmt.Literal), stmt.GetPosition().ToPosString(),
+		stmt.GetKind(), stmt.Directive, ToString(stmt.Literal), stmt.GetPosString(),
 	), nil
 }
 
@@ -173,20 +173,20 @@ func (visitor InterpreterCallStackVisitor) ProcessDeclareStmt(stmt *DeclareState
 func (visitor InterpreterCallStackVisitor) ProcessDoStmt(stmt *DoStatement, _ any) (any, error) {
 	return fmt.Sprintf(
 		"{%s - condition: %s, block: %s, pos: %s }",
-		stmt.GetKind(), ToString(stmt.Condition), ToString(stmt.Block), stmt.GetPosition().ToPosString(),
+		stmt.GetKind(), ToString(stmt.Condition), ToString(stmt.Block), stmt.GetPosString(),
 	), nil
 }
 
 // ProcessEchoStmt implements Visitor.
 func (visitor InterpreterCallStackVisitor) ProcessEchoStmt(stmt *EchoStatement, _ any) (any, error) {
-	return fmt.Sprintf("{%s - %s, pos: %s}", stmt.GetKind(), dumpInternalCallstackExpressions(stmt.Expressions), stmt.GetPosition().ToPosString()), nil
+	return fmt.Sprintf("{%s - %s, pos: %s}", stmt.GetKind(), dumpInternalCallstackExpressions(stmt.Expressions), stmt.GetPosString()), nil
 }
 
 // ProcessEmptyIntrinsicExpr implements Visitor.
 func (visitor InterpreterCallStackVisitor) ProcessEmptyIntrinsicExpr(stmt *EmptyIntrinsicExpression, _ any) (any, error) {
 	return fmt.Sprintf(
 		"{%s - functionName: \"%s\", arguments: %s, pos: %s}",
-		stmt.GetKind(), stmt.FunctionName, dumpInternalCallstackExpressions(stmt.Arguments), stmt.GetPosition().ToPosString(),
+		stmt.GetKind(), stmt.FunctionName, dumpInternalCallstackExpressions(stmt.Arguments), stmt.GetPosString(),
 	), nil
 }
 
@@ -194,7 +194,7 @@ func (visitor InterpreterCallStackVisitor) ProcessEmptyIntrinsicExpr(stmt *Empty
 func (visitor InterpreterCallStackVisitor) ProcessEqualityExpr(stmt *EqualityExpression, _ any) (any, error) {
 	return fmt.Sprintf(
 		"{%s - lhs: %s, operator: \"%s\", rhs: %s, pos: %s}",
-		stmt.GetKind(), ToString(stmt.Lhs), stmt.Operator, ToString(stmt.Rhs), stmt.GetPosition().ToPosString(),
+		stmt.GetKind(), ToString(stmt.Lhs), stmt.Operator, ToString(stmt.Rhs), stmt.GetPosString(),
 	), nil
 }
 
@@ -202,7 +202,7 @@ func (visitor InterpreterCallStackVisitor) ProcessEqualityExpr(stmt *EqualityExp
 func (visitor InterpreterCallStackVisitor) ProcessErrorControlExpr(stmt *ErrorControlExpression, _ any) (any, error) {
 	return fmt.Sprintf(
 		"{%s - expr: %s, pos: %s}",
-		stmt.GetKind(), ToString(stmt.Expr), stmt.GetPosition().ToPosString(),
+		stmt.GetKind(), ToString(stmt.Expr), stmt.GetPosString(),
 	), nil
 }
 
@@ -210,7 +210,7 @@ func (visitor InterpreterCallStackVisitor) ProcessErrorControlExpr(stmt *ErrorCo
 func (visitor InterpreterCallStackVisitor) ProcessEvalIntrinsicExpr(stmt *EvalIntrinsicExpression, _ any) (any, error) {
 	return fmt.Sprintf(
 		"{%s - functionName: \"%s\", arguments: %s, pos: %s}",
-		stmt.GetKind(), stmt.FunctionName, dumpInternalCallstackExpressions(stmt.Arguments), stmt.GetPosition().ToPosString(),
+		stmt.GetKind(), stmt.FunctionName, dumpInternalCallstackExpressions(stmt.Arguments), stmt.GetPosString(),
 	), nil
 }
 
@@ -218,30 +218,30 @@ func (visitor InterpreterCallStackVisitor) ProcessEvalIntrinsicExpr(stmt *EvalIn
 func (visitor InterpreterCallStackVisitor) ProcessExitIntrinsicExpr(stmt *ExitIntrinsicExpression, _ any) (any, error) {
 	return fmt.Sprintf(
 		"{%s - functionName: \"%s\", arguments: %s, pos: %s}",
-		stmt.GetKind(), stmt.FunctionName, dumpInternalCallstackExpressions(stmt.Arguments), stmt.GetPosition().ToPosString(),
+		stmt.GetKind(), stmt.FunctionName, dumpInternalCallstackExpressions(stmt.Arguments), stmt.GetPosString(),
 	), nil
 }
 
 // ProcessExpr implements Visitor.
 func (visitor InterpreterCallStackVisitor) ProcessExpr(stmt *Expression, _ any) (any, error) {
-	return fmt.Sprintf("{%s - pos: %s}", stmt.GetKind(), stmt.GetPosition().ToPosString()), nil
+	return fmt.Sprintf("{%s - pos: %s}", stmt.GetKind(), stmt.GetPosString()), nil
 }
 
 // ProcessExpressionStmt implements Visitor.
 func (visitor InterpreterCallStackVisitor) ProcessExpressionStmt(stmt *ExpressionStatement, _ any) (any, error) {
-	return fmt.Sprintf("{%s - %s, pos: %s}", stmt.GetKind(), ToString(stmt.Expr), stmt.GetPosition().ToPosString()), nil
+	return fmt.Sprintf("{%s - %s, pos: %s}", stmt.GetKind(), ToString(stmt.Expr), stmt.GetPosString()), nil
 }
 
 // ProcessFloatingLiteralExpr implements Visitor.
 func (visitor InterpreterCallStackVisitor) ProcessFloatingLiteralExpr(stmt *FloatingLiteralExpression, _ any) (any, error) {
-	return fmt.Sprintf("{%s - value: %f, pos: %s}", stmt.GetKind(), stmt.Value, stmt.GetPosition().ToPosString()), nil
+	return fmt.Sprintf("{%s - value: %f, pos: %s}", stmt.GetKind(), stmt.Value, stmt.GetPosString()), nil
 }
 
 // ProcessForeachStmt implements Visitor.
 func (visitor InterpreterCallStackVisitor) ProcessForeachStmt(stmt *ForeachStatement, _ any) (any, error) {
 	return fmt.Sprintf(
 		"{%s - collection: %s, key: %s, value: %s, block: %s, pos: %s}",
-		stmt.GetKind(), ToString(stmt.Collection), ToString(stmt.Key), ToString(stmt.Value), ToString(stmt.Block), stmt.GetPosition().ToPosString(),
+		stmt.GetKind(), ToString(stmt.Collection), ToString(stmt.Key), ToString(stmt.Value), ToString(stmt.Block), stmt.GetPosString(),
 	), nil
 }
 
@@ -249,7 +249,7 @@ func (visitor InterpreterCallStackVisitor) ProcessForeachStmt(stmt *ForeachState
 func (visitor InterpreterCallStackVisitor) ProcessForStmt(stmt *ForStatement, context any) (any, error) {
 	return fmt.Sprintf(
 		"{%s - initializer: %s, control: %s, endOfLoop: %s, block: %s, pos: %s}",
-		stmt.GetKind(), ToString(stmt.Initializer), ToString(stmt.Control), ToString(stmt.EndOfLoop), ToString(stmt.Block), stmt.GetPosition().ToPosString(),
+		stmt.GetKind(), ToString(stmt.Initializer), ToString(stmt.Control), ToString(stmt.EndOfLoop), ToString(stmt.Block), stmt.GetPosString(),
 	), nil
 }
 
@@ -257,21 +257,21 @@ func (visitor InterpreterCallStackVisitor) ProcessForStmt(stmt *ForStatement, co
 func (visitor InterpreterCallStackVisitor) ProcessFunctionCallExpr(stmt *FunctionCallExpression, _ any) (any, error) {
 	return fmt.Sprintf(
 		"{%s - functionName: \"%s\", arguments: %s, pos: %s}",
-		stmt.GetKind(), ToString(stmt.FunctionName), dumpInternalCallstackExpressions(stmt.Arguments), stmt.GetPosition().ToPosString(),
+		stmt.GetKind(), ToString(stmt.FunctionName), dumpInternalCallstackExpressions(stmt.Arguments), stmt.GetPosString(),
 	), nil
 }
 
 // ProcessFunctionDefinitionStmt implements Visitor.
 func (visitor InterpreterCallStackVisitor) ProcessFunctionDefinitionStmt(stmt *FunctionDefinitionStatement, _ any) (any, error) {
 	return fmt.Sprintf("{%s - name: %s, params: %s, body: %s, returnType: %s, pos: %s}",
-		stmt.GetKind(), stmt.FunctionName, stmt.Params, ToString(stmt.Body), stmt.ReturnType, stmt.GetPosition().ToPosString(),
+		stmt.GetKind(), stmt.FunctionName, stmt.Params, ToString(stmt.Body), stmt.ReturnType, stmt.GetPosString(),
 	), nil
 }
 
 // ProcessGlobalDeclarationStmt implements Visitor.
 func (visitor InterpreterCallStackVisitor) ProcessGlobalDeclarationStmt(stmt *GlobalDeclarationStatement, _ any) (any, error) {
 	return fmt.Sprintf("{%s - variables: %s, pos: %s}",
-		stmt.GetKind(), dumpExpressions(stmt.Variables), stmt.GetPosition().ToPosString(),
+		stmt.GetKind(), dumpExpressions(stmt.Variables), stmt.GetPosString(),
 	), nil
 }
 
@@ -284,30 +284,30 @@ func (visitor InterpreterCallStackVisitor) ProcessIfStmt(stmt *IfStatement, _ an
 	elseIf += "}"
 	return fmt.Sprintf(
 		"{%s - condition: %s, ifBlock: %s, elseIf: %s, else: %s, pos: %s}",
-		stmt.GetKind(), ToString(stmt.Condition), ToString(stmt.IfBlock), elseIf, ToString(stmt.ElseBlock), stmt.GetPosition().ToPosString(),
+		stmt.GetKind(), ToString(stmt.Condition), ToString(stmt.IfBlock), elseIf, ToString(stmt.ElseBlock), stmt.GetPosString(),
 	), nil
 }
 
 // ProcessIncludeExpr implements Visitor.
 func (visitor InterpreterCallStackVisitor) ProcessIncludeExpr(stmt *IncludeExpression, _ any) (any, error) {
-	return fmt.Sprintf("{%s - expr: %s, pos: %s }", stmt.GetKind(), ToString(stmt.Expr), stmt.GetPosition().ToPosString()), nil
+	return fmt.Sprintf("{%s - expr: %s, pos: %s }", stmt.GetKind(), ToString(stmt.Expr), stmt.GetPosString()), nil
 }
 
 // ProcessIncludeOnceExpr implements Visitor.
 func (visitor InterpreterCallStackVisitor) ProcessIncludeOnceExpr(stmt *IncludeOnceExpression, _ any) (any, error) {
-	return fmt.Sprintf("{%s - expr: %s, pos: %s }", stmt.GetKind(), ToString(stmt.Expr), stmt.GetPosition().ToPosString()), nil
+	return fmt.Sprintf("{%s - expr: %s, pos: %s }", stmt.GetKind(), ToString(stmt.Expr), stmt.GetPosString()), nil
 }
 
 // ProcessIntegerLiteralExpr implements Visitor.
 func (visitor InterpreterCallStackVisitor) ProcessIntegerLiteralExpr(stmt *IntegerLiteralExpression, _ any) (any, error) {
-	return fmt.Sprintf("{%s - value: %d, pos: %s }", stmt.GetKind(), stmt.Value, stmt.GetPosition().ToPosString()), nil
+	return fmt.Sprintf("{%s - value: %d, pos: %s }", stmt.GetKind(), stmt.Value, stmt.GetPosString()), nil
 }
 
 // ProcessIssetIntrinsicExpr implements Visitor.
 func (visitor InterpreterCallStackVisitor) ProcessIssetIntrinsicExpr(stmt *IssetIntrinsicExpression, _ any) (any, error) {
 	return fmt.Sprintf(
 		"{%s - functionName: \"%s\" arguments: %s, pos: %s }",
-		stmt.GetKind(), stmt.FunctionName, dumpInternalCallstackExpressions(stmt.Arguments), stmt.GetPosition().ToPosString(),
+		stmt.GetKind(), stmt.FunctionName, dumpInternalCallstackExpressions(stmt.Arguments), stmt.GetPosString(),
 	), nil
 }
 
@@ -315,114 +315,114 @@ func (visitor InterpreterCallStackVisitor) ProcessIssetIntrinsicExpr(stmt *Isset
 func (visitor InterpreterCallStackVisitor) ProcessLogicalExpr(stmt *LogicalExpression, _ any) (any, error) {
 	return fmt.Sprintf(
 		"{%s - lhs: %s, operator: \"%s\", rhs: %s, pos: %s }",
-		stmt.GetKind(), ToString(stmt.Lhs), stmt.Operator, ToString(stmt.Rhs), stmt.GetPosition().ToPosString(),
+		stmt.GetKind(), ToString(stmt.Lhs), stmt.Operator, ToString(stmt.Rhs), stmt.GetPosString(),
 	), nil
 }
 
 // ProcessLogicalNotExpr implements Visitor.
 func (visitor InterpreterCallStackVisitor) ProcessLogicalNotExpr(stmt *LogicalNotExpression, _ any) (any, error) {
-	return fmt.Sprintf("{%s - operator: \"%s\", expr: %s, pos: %s }", stmt.GetKind(), stmt.Operator, ToString(stmt.Expr), stmt.GetPosition().ToPosString()), nil
+	return fmt.Sprintf("{%s - operator: \"%s\", expr: %s, pos: %s }", stmt.GetKind(), stmt.Operator, ToString(stmt.Expr), stmt.GetPosString()), nil
 }
 
 // ProcessMemberAccessExpr implements Visitor.
 func (visitor InterpreterCallStackVisitor) ProcessMemberAccessExpr(stmt *MemberAccessExpression, _ any) (any, error) {
-	return fmt.Sprintf("{%s - object: %s, member: %s, pos: %s}", stmt.GetKind(), ToString(stmt.Object), ToString(stmt.Member), stmt.GetPosition().ToPosString()), nil
+	return fmt.Sprintf("{%s - object: %s, member: %s, pos: %s}", stmt.GetKind(), ToString(stmt.Object), ToString(stmt.Member), stmt.GetPosString()), nil
 }
 
 // ProcessObjectCreationExpr implements Visitor.
 func (visitor InterpreterCallStackVisitor) ProcessObjectCreationExpr(stmt *ObjectCreationExpression, _ any) (any, error) {
-	return fmt.Sprintf("{%s - designator: %s, args: %s, pos: %s }", stmt.GetKind(), stmt.Designator, dumpExpressions(stmt.Args), stmt.GetPosition().ToPosString()), nil
+	return fmt.Sprintf("{%s - designator: %s, args: %s, pos: %s }", stmt.GetKind(), stmt.Designator, dumpExpressions(stmt.Args), stmt.GetPosString()), nil
 }
 
 // ProcessParenthesizedExpr implements Visitor.
 func (visitor InterpreterCallStackVisitor) ProcessParenthesizedExpr(stmt *ParenthesizedExpression, _ any) (any, error) {
-	return fmt.Sprintf("{%s - expr: %s, pos: %s }", stmt.GetKind(), ToString(stmt.Expr), stmt.GetPosition().ToPosString()), nil
+	return fmt.Sprintf("{%s - expr: %s, pos: %s }", stmt.GetKind(), ToString(stmt.Expr), stmt.GetPosString()), nil
 }
 
 // ProcessPostfixIncExpr implements Visitor.
 func (visitor InterpreterCallStackVisitor) ProcessPostfixIncExpr(stmt *PostfixIncExpression, _ any) (any, error) {
-	return fmt.Sprintf("{%s - operator: \"%s\", expr: %s, pos: %s }", stmt.GetKind(), stmt.Operator, ToString(stmt.Expr), stmt.GetPosition().ToPosString()), nil
+	return fmt.Sprintf("{%s - operator: \"%s\", expr: %s, pos: %s }", stmt.GetKind(), stmt.Operator, ToString(stmt.Expr), stmt.GetPosString()), nil
 }
 
 // ProcessPrefixIncExpr implements Visitor.
 func (visitor InterpreterCallStackVisitor) ProcessPrefixIncExpr(stmt *PrefixIncExpression, _ any) (any, error) {
-	return fmt.Sprintf("{%s - operator: \"%s\", expr: %s, pos: %s }", stmt.GetKind(), stmt.Operator, ToString(stmt.Expr), stmt.GetPosition().ToPosString()), nil
+	return fmt.Sprintf("{%s - operator: \"%s\", expr: %s, pos: %s }", stmt.GetKind(), stmt.Operator, ToString(stmt.Expr), stmt.GetPosString()), nil
 }
 
 // ProcessPrintExpr implements Visitor.
 func (visitor InterpreterCallStackVisitor) ProcessPrintExpr(stmt *PrintExpression, context any) (any, error) {
-	return fmt.Sprintf("{%s - expr: %s, pos: %s }", stmt.GetKind(), ToString(stmt.Expr), stmt.GetPosition().ToPosString()), nil
+	return fmt.Sprintf("{%s - expr: %s, pos: %s }", stmt.GetKind(), ToString(stmt.Expr), stmt.GetPosString()), nil
 }
 
 // ProcessRelationalExpr implements Visitor.
 func (visitor InterpreterCallStackVisitor) ProcessRelationalExpr(stmt *RelationalExpression, _ any) (any, error) {
 	return fmt.Sprintf(
 		"{%s - lhs: %s, operator: \"%s\", rhs: %s, pos: %s }",
-		stmt.GetKind(), ToString(stmt.Lhs), stmt.Operator, ToString(stmt.Rhs), stmt.GetPosition().ToPosString(),
+		stmt.GetKind(), ToString(stmt.Lhs), stmt.Operator, ToString(stmt.Rhs), stmt.GetPosString(),
 	), nil
 }
 
 // ProcessRequireExpr implements Visitor.
 func (visitor InterpreterCallStackVisitor) ProcessRequireExpr(stmt *RequireExpression, _ any) (any, error) {
-	return fmt.Sprintf("{%s - expr: %s, pos: %s }", stmt.GetKind(), ToString(stmt.Expr), stmt.GetPosition().ToPosString()), nil
+	return fmt.Sprintf("{%s - expr: %s, pos: %s }", stmt.GetKind(), ToString(stmt.Expr), stmt.GetPosString()), nil
 }
 
 // ProcessRequireOnceExpr implements Visitor.
 func (visitor InterpreterCallStackVisitor) ProcessRequireOnceExpr(stmt *RequireOnceExpression, _ any) (any, error) {
-	return fmt.Sprintf("{%s - expr: %s, pos: %s }", stmt.GetKind(), ToString(stmt.Expr), stmt.GetPosition().ToPosString()), nil
+	return fmt.Sprintf("{%s - expr: %s, pos: %s }", stmt.GetKind(), ToString(stmt.Expr), stmt.GetPosString()), nil
 }
 
 // ProcessReturnStmt implements Visitor.
 func (visitor InterpreterCallStackVisitor) ProcessReturnStmt(stmt *ReturnStatement, _ any) (any, error) {
-	return fmt.Sprintf("{%s - %s, pos: %s }", stmt.GetKind(), ToString(stmt.Expr), stmt.GetPosition().ToPosString()), nil
+	return fmt.Sprintf("{%s - %s, pos: %s }", stmt.GetKind(), ToString(stmt.Expr), stmt.GetPosString()), nil
 }
 
 // ProcessSimpleAssignmentExpr implements Visitor.
 func (visitor InterpreterCallStackVisitor) ProcessSimpleAssignmentExpr(stmt *SimpleAssignmentExpression, _ any) (any, error) {
 	return fmt.Sprintf(
 		"{%s - variable: %s, value: %s, pos: %s }",
-		stmt.GetKind(), ToString(stmt.Variable), ToString(stmt.Value), stmt.GetPosition().ToPosString(),
+		stmt.GetKind(), ToString(stmt.Variable), ToString(stmt.Value), stmt.GetPosString(),
 	), nil
 }
 
 // ProcessSimpleVariableExpr implements Visitor.
 func (visitor InterpreterCallStackVisitor) ProcessSimpleVariableExpr(stmt *SimpleVariableExpression, _ any) (any, error) {
-	return fmt.Sprintf("{%s - variableName: \"%s\", pos: %s }", stmt.GetKind(), ToString(stmt.VariableName), stmt.GetPosition().ToPosString()), nil
+	return fmt.Sprintf("{%s - variableName: \"%s\", pos: %s }", stmt.GetKind(), ToString(stmt.VariableName), stmt.GetPosString()), nil
 }
 
 // ProcessStmt implements Visitor.
 func (visitor InterpreterCallStackVisitor) ProcessStmt(stmt *Statement, _ any) (any, error) {
-	return fmt.Sprintf("{%s - pos: %s}", stmt.GetKind(), stmt.GetPosition().ToPosString()), nil
+	return fmt.Sprintf("{%s - pos: %s}", stmt.GetKind(), stmt.GetPosString()), nil
 }
 
 // ProcessStringLiteralExpr implements Visitor.
 func (visitor InterpreterCallStackVisitor) ProcessStringLiteralExpr(stmt *StringLiteralExpression, _ any) (any, error) {
-	return fmt.Sprintf("{%s - type: \"%s\", value: \"%s\", pos: %s }", stmt.GetKind(), stmt.StringType, stmt.Value, stmt.GetPosition().ToPosString()), nil
+	return fmt.Sprintf("{%s - type: \"%s\", value: \"%s\", pos: %s }", stmt.GetKind(), stmt.StringType, stmt.Value, stmt.GetPosString()), nil
 }
 
 // ProcessSubscriptExpr implements Visitor.
 func (visitor InterpreterCallStackVisitor) ProcessSubscriptExpr(stmt *SubscriptExpression, _ any) (any, error) {
 	return fmt.Sprintf(
 		"{%s - variable: %s, index: \"%s\", pos: %s }",
-		stmt.GetKind(), ToString(stmt.Variable), ToString(stmt.Index), stmt.GetPosition().ToPosString(),
+		stmt.GetKind(), ToString(stmt.Variable), ToString(stmt.Index), stmt.GetPosString(),
 	), nil
 }
 
 // ProcessTextExpr implements Visitor.
 func (visitor InterpreterCallStackVisitor) ProcessTextExpr(stmt *TextExpression, _ any) (any, error) {
-	return fmt.Sprintf("{%s - value: \"%s\", pos: %s }", stmt.GetKind(), stmt.Value, stmt.GetPosition().ToPosString()), nil
+	return fmt.Sprintf("{%s - value: \"%s\", pos: %s }", stmt.GetKind(), stmt.Value, stmt.GetPosString()), nil
 }
 
 // ProcessThrowStmt implements Visitor.
 func (visitor InterpreterCallStackVisitor) ProcessThrowStmt(stmt *ThrowStatement, _ any) (any, error) {
-	return fmt.Sprintf("{%s - expr: \"%s\", pos: %s }", stmt.GetKind(), ToString(stmt.Expr), stmt.GetPosition().ToPosString()), nil
+	return fmt.Sprintf("{%s - expr: \"%s\", pos: %s }", stmt.GetKind(), ToString(stmt.Expr), stmt.GetPosString()), nil
 }
 
 // ProcessUnaryExpr implements Visitor.
 func (visitor InterpreterCallStackVisitor) ProcessUnaryExpr(stmt *UnaryOpExpression, _ any) (any, error) {
 	return fmt.Sprintf(
 		"{%s - operator: \"%s\", expr: %s, pos: %s }",
-		stmt.GetKind(), stmt.Operator, ToString(stmt.Expr), stmt.GetPosition().ToPosString(),
+		stmt.GetKind(), stmt.Operator, ToString(stmt.Expr), stmt.GetPosString(),
 	), nil
 }
 
@@ -430,7 +430,7 @@ func (visitor InterpreterCallStackVisitor) ProcessUnaryExpr(stmt *UnaryOpExpress
 func (visitor InterpreterCallStackVisitor) ProcessUnsetIntrinsicExpr(stmt *UnsetIntrinsicExpression, _ any) (any, error) {
 	return fmt.Sprintf(
 		"{%s - functionName: \"%s\", arguments: %s, pos: %s }",
-		stmt.GetKind(), stmt.FunctionName, dumpInternalCallstackExpressions(stmt.Arguments), stmt.GetPosition().ToPosString(),
+		stmt.GetKind(), stmt.FunctionName, dumpInternalCallstackExpressions(stmt.Arguments), stmt.GetPosString(),
 	), nil
 }
 
@@ -438,11 +438,11 @@ func (visitor InterpreterCallStackVisitor) ProcessUnsetIntrinsicExpr(stmt *Unset
 func (visitor InterpreterCallStackVisitor) ProcessWhileStmt(stmt *WhileStatement, _ any) (any, error) {
 	return fmt.Sprintf(
 		"{%s - condition: %s, block: %s, pos: %s }",
-		stmt.GetKind(), ToString(stmt.Condition), ToString(stmt.Block), stmt.GetPosition().ToPosString(),
+		stmt.GetKind(), ToString(stmt.Condition), ToString(stmt.Block), stmt.GetPosString(),
 	), nil
 }
 
 // ProcessVariableNameExpr implements Visitor.
 func (visitor InterpreterCallStackVisitor) ProcessVariableNameExpr(stmt *VariableNameExpression, _ any) (any, error) {
-	return fmt.Sprintf("{%s - variableName: \"%s\", pos: %s }", stmt.GetKind(), stmt.VariableName, stmt.GetPosition().ToPosString()), nil
+	return fmt.Sprintf("{%s - variableName: \"%s\", pos: %s }", stmt.GetKind(), stmt.VariableName, stmt.GetPosString()), nil
 }

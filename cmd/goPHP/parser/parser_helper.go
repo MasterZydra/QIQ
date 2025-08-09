@@ -13,7 +13,7 @@ import (
 func PrintParserCallstack(function string, parser *Parser) {
 	if config.ShowParserCallStack {
 		if parser != nil {
-			fmt.Printf("%s (%s)\n", function, parser.at().Position.ToPosString())
+			fmt.Printf("%s (%s)\n", function, parser.at().GetPosString())
 		} else {
 			println(function)
 		}
@@ -21,7 +21,7 @@ func PrintParserCallstack(function string, parser *Parser) {
 }
 
 func NewExpectedError(expected string, got *lexer.Token) phpError.Error {
-	return phpError.NewParseError("Expected \"%s\", got \"%s\" instead at %s", expected, got.Value, got.Position.ToPosString())
+	return phpError.NewParseError("Expected \"%s\", got \"%s\" instead at %s", expected, got.Value, got.GetPosString())
 }
 
 // -------------------------------------- Common -------------------------------------- MARK: Common
@@ -136,7 +136,7 @@ func (parser *Parser) getTypesWithOffset(eat bool, offset int) ([]string, int, p
 	}
 
 	if !parser.isPhpType(token()) {
-		return types, offset, phpError.NewParseError("Expected a type. Got \"%s\"s at %s", token().Value, token().Position.ToPosString())
+		return types, offset, phpError.NewParseError("Expected a type. Got \"%s\"s at %s", token().Value, token().GetPosString())
 	}
 
 	for parser.isPhpType(token()) {

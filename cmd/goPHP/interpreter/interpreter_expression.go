@@ -75,14 +75,14 @@ func (interpreter *Interpreter) ProcessSimpleAssignmentExpr(expr *ast.SimpleAssi
 
 	if currentValue.GetType() == values.StrValue && expr.Variable.GetKind() == ast.SubscriptExpr {
 		if expr.Variable.(*ast.SubscriptExpression).Index == nil {
-			return values.NewVoid(), phpError.NewError("[] operator not supported for strings in %s", expr.Variable.GetPosition().ToPosString())
+			return values.NewVoid(), phpError.NewError("[] operator not supported for strings in %s", expr.Variable.GetPosString())
 		}
 		if expr.Variable.(*ast.SubscriptExpression).Index.GetKind() != ast.IntegerLiteralExpr {
 			indexType, err := literalExprTypeToRuntimeValue(expr.Variable.(*ast.SubscriptExpression).Index)
 			if err != nil {
 				return values.NewVoid(), err
 			}
-			return values.NewVoid(), phpError.NewError("Cannot access offset of type %s on string in %s", indexType, expr.Variable.(*ast.SubscriptExpression).Index.GetPosition().ToPosString())
+			return values.NewVoid(), phpError.NewError("Cannot access offset of type %s on string in %s", indexType, expr.Variable.(*ast.SubscriptExpression).Index.GetPosString())
 		}
 
 		key := expr.Variable.(*ast.SubscriptExpression).Index.(*ast.IntegerLiteralExpression).Value
@@ -97,7 +97,7 @@ func (interpreter *Interpreter) ProcessSimpleAssignmentExpr(expr *ast.SimpleAssi
 		}
 		if valueStr == "" {
 			return values.NewVoid(),
-				phpError.NewError("Cannot assign an empty string to a string offset in %s", expr.Value.GetPosition().ToPosString())
+				phpError.NewError("Cannot assign an empty string to a string offset in %s", expr.Value.GetPosString())
 		}
 
 		str = common.ExtendWithSpaces(str, int(key+1))
@@ -170,21 +170,21 @@ func (interpreter *Interpreter) ProcessSubscriptExpr(expr *ast.SubscriptExpressi
 
 	if variable.GetType() == values.StrValue {
 		if expr.Index == nil {
-			return values.NewVoid(), phpError.NewError("Cannot use [] for reading in %s", expr.Variable.GetPosition().ToPosString())
+			return values.NewVoid(), phpError.NewError("Cannot use [] for reading in %s", expr.Variable.GetPosString())
 		}
 		if expr.Index.GetKind() != ast.IntegerLiteralExpr {
 			indexType, err := literalExprTypeToRuntimeValue(expr.Index)
 			if err != nil {
 				return values.NewVoid(), err
 			}
-			return values.NewVoid(), phpError.NewError("Cannot access offset of type %s on string in %s", indexType, expr.Index.GetPosition().ToPosString())
+			return values.NewVoid(), phpError.NewError("Cannot access offset of type %s on string in %s", indexType, expr.Index.GetPosString())
 		}
 
 		key := expr.Index.(*ast.IntegerLiteralExpression).Value
 		str := variable.(*values.Str).Value
 
 		if len(str) <= int(key) {
-			return values.NewVoid(), phpError.NewError("Uninitialized string offset %d in %s", key, expr.Index.GetPosition().ToPosString())
+			return values.NewVoid(), phpError.NewError("Uninitialized string offset %d in %s", key, expr.Index.GetPosString())
 		}
 
 		return values.NewStr(str[key : key+1]), nil
@@ -950,7 +950,7 @@ func (interpreter *Interpreter) ProcessMemberAccessExpr(stmt *ast.MemberAccessEx
 	if runtimeObject.GetType() != values.ObjectValue {
 		return values.NewVoid(), phpError.NewError(
 			"Uncaught Error: Attempt to read property \"%s\" on %s in %s",
-			member, values.ToPhpType(runtimeObject), stmt.GetPosition().ToPosString(),
+			member, values.ToPhpType(runtimeObject), stmt.GetPosString(),
 		)
 	}
 
@@ -959,7 +959,7 @@ func (interpreter *Interpreter) ProcessMemberAccessExpr(stmt *ast.MemberAccessEx
 	value, found := object.GetProperty("$" + member)
 	if !found {
 		return values.NewVoid(), phpError.NewError("Undefined property: %s::$%s in %s",
-			object.Class.Name, member, stmt.Member.GetPosition().ToPosString())
+			object.Class.Name, member, stmt.Member.GetPosString())
 	}
 	// TODO Check if visibility --> != public, ...
 

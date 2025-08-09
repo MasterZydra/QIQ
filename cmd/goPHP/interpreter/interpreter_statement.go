@@ -398,7 +398,7 @@ func (interpreter *Interpreter) ProcessForeachStmt(stmt *ast.ForeachStatement, e
 	if runtimeValue.GetType() == values.NullValue {
 		givenType = "null"
 	}
-	interpreter.PrintError(phpError.NewWarning("foreach() argument must be of type array|object, %s given in %s", givenType, stmt.Collection.GetPosition().ToPosString()))
+	interpreter.PrintError(phpError.NewWarning("foreach() argument must be of type array|object, %s given in %s", givenType, stmt.Collection.GetPosString()))
 
 	return values.NewVoid(), nil
 }

@@ -109,9 +109,9 @@ func (parser *Parser) parseClassDeclaration() (ast.IStatement, phpError.Error) {
 
 	// class name
 	className := parser.at().Value
-	classNamePos := parser.eat().Position
+	classNamePos := parser.eat().GetPosString()
 	if !common.IsName(className) {
-		return ast.NewEmptyExpr(), phpError.NewParseError("\"%s\" is not a valid class name at %s", className, classNamePos.ToPosString())
+		return ast.NewEmptyExpr(), phpError.NewParseError("\"%s\" is not a valid class name at %s", className, classNamePos)
 	}
 
 	class := ast.NewClassDeclarationStmt(parser.nextId(), pos, className, isAbstract, isFinal)
@@ -119,9 +119,9 @@ func (parser *Parser) parseClassDeclaration() (ast.IStatement, phpError.Error) {
 	// class-base-clause
 	if parser.isToken(lexer.KeywordToken, "extends", true) {
 		class.BaseClass = parser.at().Value
-		baseClassPos := parser.eat().Position
+		baseClassPos := parser.eat().GetPosString()
 		if !common.IsQualifiedName(class.BaseClass) {
-			return ast.NewEmptyExpr(), phpError.NewParseError("\"%s\" is not a valid class name at %s", class.Name, baseClassPos.ToPosString())
+			return ast.NewEmptyExpr(), phpError.NewParseError("\"%s\" is not a valid class name at %s", class.Name, baseClassPos)
 		}
 	}
 
@@ -129,9 +129,9 @@ func (parser *Parser) parseClassDeclaration() (ast.IStatement, phpError.Error) {
 	if parser.isToken(lexer.KeywordToken, "implements", true) {
 		for {
 			interfaceName := parser.at().Value
-			interfaceNamePos := parser.eat().Position
+			interfaceNamePos := parser.eat().GetPosString()
 			if !common.IsQualifiedName(interfaceName) {
-				return ast.NewEmptyExpr(), phpError.NewParseError("\"%s\" is not a valid interface name at %s", class.Name, interfaceNamePos.ToPosString())
+				return ast.NewEmptyExpr(), phpError.NewParseError("\"%s\" is not a valid interface name at %s", class.Name, interfaceNamePos)
 			}
 
 			class.Interfaces = append(class.Interfaces, interfaceName)

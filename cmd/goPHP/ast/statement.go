@@ -11,6 +11,7 @@ type IStatement interface {
 	GetId() int64
 	GetKind() NodeType
 	GetPosition() *position.Position
+	GetPosString() string
 	Process(visitor Visitor, context any) (any, error)
 }
 
@@ -41,6 +42,10 @@ func (stmt *Statement) GetPosition() *position.Position {
 		return &position.Position{}
 	}
 	return stmt.pos
+}
+
+func (stmt *Statement) GetPosString() string {
+	return stmt.GetPosition().ToPosString()
 }
 
 func (stmt *Statement) Process(visitor Visitor, context any) (any, error) {

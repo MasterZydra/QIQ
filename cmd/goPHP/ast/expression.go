@@ -39,6 +39,10 @@ func (expr *Expression) GetPosition() *position.Position {
 	return expr.pos
 }
 
+func (expr *Expression) GetPosString() string {
+	return expr.GetPosition().ToPosString()
+}
+
 func (stmt *Expression) Process(visitor Visitor, context any) (any, error) {
 	return visitor.ProcessExpr(stmt, context)
 }
@@ -320,6 +324,10 @@ func (expr *ArrayNextKeyExpression) GetKind() NodeType {
 // GetPosition implements IExpression.
 func (expr *ArrayNextKeyExpression) GetPosition() *position.Position {
 	return &position.Position{}
+}
+
+func (expr *ArrayNextKeyExpression) GetPosString() string {
+	return expr.GetPosition().ToPosString()
 }
 
 // Process implements IExpression.

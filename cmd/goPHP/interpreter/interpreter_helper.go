@@ -65,7 +65,7 @@ func (interpreter *Interpreter) lookupVariable(expr ast.IExpression, env *Enviro
 
 	runtimeValue, err := env.LookupVariable(variableName)
 	if !interpreter.suppressWarning && err != nil {
-		interpreter.PrintError(phpError.NewWarning("%s in %s", strings.TrimPrefix(err.Error(), "Warning: "), expr.GetPosition().ToPosString()))
+		interpreter.PrintError(phpError.NewWarning("%s in %s", strings.TrimPrefix(err.Error(), "Warning: "), expr.GetPosString()))
 	}
 	return runtimeValue, nil
 }
@@ -189,7 +189,7 @@ func (interpreter *Interpreter) includeFile(filepathExpr ast.IExpression, env *E
 		return runtimeValue, err
 	}
 	if runtimeValue.GetType() == values.NullValue {
-		return runtimeValue, phpError.NewError("Uncaught ValueError: Path cannot be empty in %s", filepathExpr.GetPosition().ToPosString())
+		return runtimeValue, phpError.NewError("Uncaught ValueError: Path cannot be empty in %s", filepathExpr.GetPosString())
 	}
 
 	filename, err := variableHandling.StrVal(runtimeValue)
@@ -226,12 +226,12 @@ func (interpreter *Interpreter) includeFile(filepathExpr ast.IExpression, env *E
 		if include {
 			return values.NewVoid(), phpError.NewWarning(
 				"%s(): Failed opening '%s' for inclusion (include_path='%s') in %s",
-				functionName, filename, common.ExtractPath(filepathExpr.GetPosition().File.Filename), filepathExpr.GetPosition().ToPosString(),
+				functionName, filename, common.ExtractPath(filepathExpr.GetPosition().File.Filename), filepathExpr.GetPosString(),
 			)
 		} else {
 			return values.NewVoid(), phpError.NewError(
 				"Uncaught Error: Failed opening required '%s' (include_path='%s') in %s",
-				filename, common.ExtractPath(filepathExpr.GetPosition().File.Filename), filepathExpr.GetPosition().ToPosString(),
+				filename, common.ExtractPath(filepathExpr.GetPosition().File.Filename), filepathExpr.GetPosString(),
 			)
 		}
 	}
@@ -239,7 +239,7 @@ func (interpreter *Interpreter) includeFile(filepathExpr ast.IExpression, env *E
 	if !common.PathExists(absFilename) {
 		interpreter.PrintError(phpError.NewWarning(
 			"%s(%s): Failed to open stream: No such file or directory in %s",
-			functionName, filename, filepathExpr.GetPosition().ToPosString(),
+			functionName, filename, filepathExpr.GetPosString(),
 		))
 		return getError()
 	}
@@ -357,7 +357,7 @@ func (interpreter *Interpreter) exprToRuntimeValue(expr ast.IExpression, env *En
 						phpError.NewWarning(
 							"%s", strings.TrimPrefix(
 								strings.TrimSpace(
-									filenameRegex.ReplaceAllString(result, expr.GetPosition().ToPosString())),
+									filenameRegex.ReplaceAllString(result, expr.GetPosString())),
 								"Warning: ")))
 					result = ""
 				}

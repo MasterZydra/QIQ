@@ -36,7 +36,7 @@ func nativeFn_ob_clean(args []values.RuntimeValue, context runtime.Context) (val
 	// discards it's return value and cleans (erases) the contents of the active output buffer.
 
 	if context.Interpreter.GetOutputBufferStack().Len() == 0 {
-		context.Interpreter.PrintError(phpError.NewNotice("ob_clean(): Failed to delete buffer. No buffer to delete in %s", context.Stmt.GetPosition().ToPosString()))
+		context.Interpreter.PrintError(phpError.NewNotice("ob_clean(): Failed to delete buffer. No buffer to delete in %s", context.Stmt.GetPosString()))
 		return values.NewBool(false), nil
 	}
 
@@ -60,7 +60,7 @@ func nativeFn_ob_end_clean(args []values.RuntimeValue, context runtime.Context) 
 	// discards it's return value, discards the contents of the active output buffer and turns off the active output buffer.
 
 	if context.Interpreter.GetOutputBufferStack().Len() == 0 {
-		context.Interpreter.PrintError(phpError.NewNotice("ob_end_clean(): Failed to delete buffer. No buffer to delete in %s", context.Stmt.GetPosition().ToPosString()))
+		context.Interpreter.PrintError(phpError.NewNotice("ob_end_clean(): Failed to delete buffer. No buffer to delete in %s", context.Stmt.GetPosString()))
 		return values.NewBool(false), nil
 	}
 
@@ -88,7 +88,7 @@ func ObEndFlush(context runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// flushes (sends) it's return value, discards the contents of the active output buffer and turns off the active output buffer.
 
 	if context.Interpreter.GetOutputBufferStack().Len() == 0 {
-		context.Interpreter.PrintError(phpError.NewNotice("ob_end_flush(): Failed to delete and flush buffer. No buffer to delete or flush in %s", context.Stmt.GetPosition().ToPosString()))
+		context.Interpreter.PrintError(phpError.NewNotice("ob_end_flush(): Failed to delete and flush buffer. No buffer to delete or flush in %s", context.Stmt.GetPosString()))
 		return values.NewBool(false), nil
 	}
 
@@ -113,7 +113,7 @@ func nativeFn_ob_flush(args []values.RuntimeValue, context runtime.Context) (val
 	// discards it's return value and flushs (erases) the contents of the active output buffer.
 
 	if context.Interpreter.GetOutputBufferStack().Len() == 0 {
-		context.Interpreter.PrintError(phpError.NewNotice("ob_flush(): Failed to flush buffer. No buffer to flush in %s", context.Stmt.GetPosition().ToPosString()))
+		context.Interpreter.PrintError(phpError.NewNotice("ob_flush(): Failed to flush buffer. No buffer to flush in %s", context.Stmt.GetPosString()))
 		return values.NewBool(false), nil
 	}
 
@@ -184,7 +184,7 @@ func nativeFn_ob_get_flush(args []values.RuntimeValue, context runtime.Context) 
 	// flushes (sends) it's return value, returns the contents of the active output buffer and turns off the active output buffer.
 
 	if context.Interpreter.GetOutputBufferStack().Len() == 0 {
-		context.Interpreter.PrintError(phpError.NewNotice("ob_get_flush(): Failed to delete buffer. No buffer to delete in %s", context.Stmt.GetPosition().ToPosString()))
+		context.Interpreter.PrintError(phpError.NewNotice("ob_get_flush(): Failed to delete buffer. No buffer to delete in %s", context.Stmt.GetPosString()))
 		return values.NewBool(false), nil
 	}
 
