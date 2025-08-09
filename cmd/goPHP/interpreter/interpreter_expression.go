@@ -8,7 +8,6 @@ import (
 	"GoPHP/cmd/goPHP/runtime"
 	"GoPHP/cmd/goPHP/runtime/stdlib/variableHandling"
 	"GoPHP/cmd/goPHP/runtime/values"
-	"fmt"
 	"strings"
 )
 
@@ -460,12 +459,8 @@ func (interpreter *Interpreter) ProcessExitIntrinsicExpr(expr *ast.ExitIntrinsic
 	// Invokes destructors for all remaining instances
 	objects := env.(*Environment).getAllObjects()
 	for _, object := range objects {
-		_, found := object.GetMethod("__destruct")
-		if found {
-			_, err := interpreter.CallMethod(object, "__destruct", []ast.IExpression{}, env.(*Environment))
-			if err != nil {
-				fmt.Printf("Exit: Calling destructor failed: %s", err)
-			}
+		if err := interpreter.destructObject(object, env.(*Environment)); err != nil {
+			interpreter.PrintError(err)
 		}
 	}
 

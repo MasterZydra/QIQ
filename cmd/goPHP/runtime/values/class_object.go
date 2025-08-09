@@ -11,6 +11,8 @@ type Object struct {
 	Properties    map[string]RuntimeValue
 	// TODO methods
 	// TODO parent
+	// Status
+	IsDestructed bool
 }
 
 func NewObject(class *ast.ClassDeclarationStatement) *Object {

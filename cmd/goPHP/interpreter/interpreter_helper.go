@@ -70,6 +70,21 @@ func (interpreter *Interpreter) lookupVariable(expr ast.IExpression, env *Enviro
 	return runtimeValue, nil
 }
 
+func (interpreter *Interpreter) destructObject(object *values.Object, env *Environment) phpError.Error {
+	if object.IsDestructed {
+		return nil
+	}
+	_, found := object.GetMethod("__destruct")
+	if found {
+		_, err := interpreter.CallMethod(object, "__destruct", []ast.IExpression{}, env)
+		if err != nil {
+			return err
+		}
+		object.IsDestructed = true
+	}
+	return nil
+}
+
 // Convert a variable expression into the interpreted variable name
 func (interpreter *Interpreter) varExprToVarName(expr ast.IExpression, env *Environment) (string, phpError.Error) {
 	switch expr.GetKind() {
