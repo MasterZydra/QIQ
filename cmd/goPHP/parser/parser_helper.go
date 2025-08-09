@@ -20,6 +20,10 @@ func PrintParserCallstack(function string, parser *Parser) {
 	}
 }
 
+func NewExpectedError(expected string, got *lexer.Token) phpError.Error {
+	return phpError.NewParseError("Expected \"%s\", got \"%s\" instead at %s", expected, got.Value, got.Position.ToPosString())
+}
+
 // -------------------------------------- Common -------------------------------------- MARK: Common
 
 func (parser *Parser) isEof() bool {

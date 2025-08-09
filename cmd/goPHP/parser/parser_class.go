@@ -73,7 +73,7 @@ func (parser *Parser) parseObjectCreationExpression() (ast.IExpression, phpError
 	}
 
 	if hasParenthese && !parser.isToken(lexer.OpOrPuncToken, ")", true) {
-		return ast.NewEmptyExpr(), phpError.NewParseError("Expected \")\". Got %s", parser.at())
+		return ast.NewEmptyExpr(), NewExpectedError(")", parser.at())
 	}
 
 	return ast.NewObjectCreationExpr(parser.nextId(), pos, designator, args), nil
@@ -144,7 +144,7 @@ func (parser *Parser) parseClassDeclaration() (ast.IStatement, phpError.Error) {
 	}
 
 	if !parser.isToken(lexer.OpOrPuncToken, "{", true) {
-		return ast.NewEmptyStmt(), phpError.NewParseError("Expected \"{\". Got %s", parser.at())
+		return ast.NewEmptyStmt(), NewExpectedError("{", parser.at())
 	}
 
 	if err := parser.parseClassMemberDeclaration(class); err != nil {
@@ -152,7 +152,7 @@ func (parser *Parser) parseClassDeclaration() (ast.IStatement, phpError.Error) {
 	}
 
 	if !parser.isToken(lexer.OpOrPuncToken, "}", true) {
-		return ast.NewEmptyStmt(), phpError.NewParseError("Expected \"{\". Got %s", parser.at())
+		return ast.NewEmptyStmt(), NewExpectedError("}", parser.at())
 	}
 
 	return class, nil
@@ -342,7 +342,7 @@ func (parser *Parser) parserTraitUseClause(class *ast.ClassDeclarationStatement)
 
 		// trait-use-specification
 		if !parser.isToken(lexer.OpOrPuncToken, ";", true) {
-			return phpError.NewParseError("parserTraitUseClause: Expected \";\". Got: %s", parser.at())
+			return NewExpectedError(";", parser.at())
 		}
 		// TODO trait-select-and-alias-clauses(opt)
 		return nil
@@ -394,7 +394,7 @@ func (parser *Parser) parseClassConstrutorDeclaration(class *ast.ClassDeclaratio
 
 	// (   parameter-declaration-list(opt)   )
 	if !parser.isToken(lexer.OpOrPuncToken, "(", true) {
-		return isConstructor, phpError.NewParseError("Expected \"(\". Got %s", parser.at())
+		return isConstructor, NewExpectedError("(", parser.at())
 	}
 	parameters, err := parser.parseFunctionParameters()
 	if err != nil {
@@ -402,7 +402,7 @@ func (parser *Parser) parseClassConstrutorDeclaration(class *ast.ClassDeclaratio
 	}
 
 	if !parser.isToken(lexer.OpOrPuncToken, ")", true) {
-		return isConstructor, phpError.NewParseError("Expected \")\". Got %s", parser.at())
+		return isConstructor, NewExpectedError(")", parser.at())
 	}
 
 	// compound-statement
@@ -467,10 +467,10 @@ func (parser *Parser) parseClassDestrutorDeclaration(class *ast.ClassDeclaration
 
 	// (   )
 	if !parser.isToken(lexer.OpOrPuncToken, "(", true) {
-		return isDestructor, phpError.NewParseError("Expected \"(\". Got %s", parser.at())
+		return isDestructor, NewExpectedError("(", parser.at())
 	}
 	if !parser.isToken(lexer.OpOrPuncToken, ")", true) {
-		return isDestructor, phpError.NewParseError("Expected \")\". Got %s", parser.at())
+		return isDestructor, NewExpectedError(")", parser.at())
 	}
 
 	// compound-statement
@@ -547,7 +547,7 @@ func (parser *Parser) parseClassMethodDeclaration(class *ast.ClassDeclarationSta
 
 	// (   parameter-declaration-list(opt)   )
 	if !parser.isToken(lexer.OpOrPuncToken, "(", true) {
-		return isMethod, phpError.NewParseError("Expected \"(\". Got %s", parser.at())
+		return isMethod, NewExpectedError("(", parser.at())
 	}
 	parameters, err := parser.parseFunctionParameters()
 	if err != nil {
@@ -555,7 +555,7 @@ func (parser *Parser) parseClassMethodDeclaration(class *ast.ClassDeclarationSta
 	}
 
 	if !parser.isToken(lexer.OpOrPuncToken, ")", true) {
-		return isMethod, phpError.NewParseError("Expected \")\". Got %s", parser.at())
+		return isMethod, NewExpectedError(")", parser.at())
 	}
 
 	// return-type
@@ -685,7 +685,7 @@ func (parser *Parser) parseClassPropertyDeclaration(class *ast.ClassDeclarationS
 	}
 
 	if !parser.isToken(lexer.OpOrPuncToken, ";", true) {
-		return isProperty, phpError.NewParseError("Expected \";\". Got %s", parser.at())
+		return isProperty, NewExpectedError(";", parser.at())
 	}
 
 	class.AddProperty(ast.NewPropertyDeclarationStmt(parser.nextId(), pos, name, visibilityModifierKeyword, staticModifierKeyword != "", propertyType, initialValue))

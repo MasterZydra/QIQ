@@ -136,7 +136,7 @@ func (parser *Parser) parseStmt() (ast.IStatement, phpError.Error) {
 		}
 
 		if !parser.isToken(lexer.OpOrPuncToken, "}", true) {
-			return ast.NewEmptyStmt(), phpError.NewParseError("Expected \"}\", Got: %s", parser.at())
+			return ast.NewEmptyStmt(), NewExpectedError("}", parser.at())
 		}
 		return ast.NewCompoundStmt(parser.nextId(), statements), nil
 	}
@@ -184,7 +184,7 @@ func (parser *Parser) parseStmt() (ast.IStatement, phpError.Error) {
 
 		// (
 		if !parser.isToken(lexer.OpOrPuncToken, "(", true) {
-			return ast.NewEmptyStmt(), phpError.NewParseError("Expected \"(\". Got: \"%s\" at %s", parser.at().Value, parser.at().Position.ToPosString())
+			return ast.NewEmptyStmt(), NewExpectedError("(", parser.at())
 		}
 
 		// declare-directive
@@ -198,7 +198,7 @@ func (parser *Parser) parseStmt() (ast.IStatement, phpError.Error) {
 
 		// =
 		if !parser.isToken(lexer.OpOrPuncToken, "=", true) {
-			return ast.NewEmptyStmt(), phpError.NewParseError("Expected \"=\". Got: \"%s\" at %s", parser.at().Value, parser.at().Position.ToPosString())
+			return ast.NewEmptyStmt(), NewExpectedError("=", parser.at())
 		}
 
 		// literal
@@ -222,12 +222,12 @@ func (parser *Parser) parseStmt() (ast.IStatement, phpError.Error) {
 
 		// )
 		if !parser.isToken(lexer.OpOrPuncToken, ")", true) {
-			return ast.NewEmptyStmt(), phpError.NewParseError("Expected \")\". Got: \"%s\" at %s", parser.at().Value, parser.at().Position.ToPosString())
+			return ast.NewEmptyStmt(), NewExpectedError(")", parser.at())
 		}
 
 		// ;
 		if !parser.isToken(lexer.OpOrPuncToken, ";", true) {
-			return ast.NewEmptyStmt(), phpError.NewParseError("Expected \";\". Got: \"%s\" at %s", parser.at().Value, parser.at().Position.ToPosString())
+			return ast.NewEmptyStmt(), NewExpectedError(";", parser.at())
 		}
 
 		// TODO declare-statement - statement
@@ -292,7 +292,7 @@ func (parser *Parser) parseStmt() (ast.IStatement, phpError.Error) {
 		PrintParserCallstack("unset-statement", parser)
 		pos := parser.eat().Position
 		if !parser.isToken(lexer.OpOrPuncToken, "(", true) {
-			return ast.NewEmptyStmt(), phpError.NewParseError("Expected \"(\". Got: \"%s\"", parser.at())
+			return ast.NewEmptyStmt(), NewExpectedError("(", parser.at())
 		}
 		args := []ast.IExpression{}
 		for {
@@ -316,7 +316,7 @@ func (parser *Parser) parseStmt() (ast.IStatement, phpError.Error) {
 			return ast.NewEmptyStmt(), phpError.NewParseError("Expected \",\" or \")\". Got: %s", parser.at())
 		}
 		if !parser.isToken(lexer.OpOrPuncToken, ";", true) {
-			return ast.NewEmptyStmt(), phpError.NewParseError("Expected \";\". Got: \"%s\"", parser.at())
+			return ast.NewEmptyStmt(), NewExpectedError(";", parser.at())
 		}
 		return ast.NewExpressionStmt(parser.nextId(), ast.NewUnsetIntrinsic(parser.nextId(), pos, args)), nil
 	}
@@ -499,7 +499,7 @@ func (parser *Parser) parseSelectionStmt() (ast.IStatement, phpError.Error) {
 		// if
 		ifPos := parser.eat().Position
 		if !parser.isToken(lexer.OpOrPuncToken, "(", true) {
-			return ast.NewEmptyStmt(), phpError.NewParseError("Expected \"(\". Got %s", parser.at())
+			return ast.NewEmptyStmt(), NewExpectedError("(", parser.at())
 		}
 
 		condition, err := parser.parseExpr()
@@ -508,7 +508,7 @@ func (parser *Parser) parseSelectionStmt() (ast.IStatement, phpError.Error) {
 		}
 
 		if !parser.isToken(lexer.OpOrPuncToken, ")", true) {
-			return ast.NewEmptyStmt(), phpError.NewParseError("Expected \")\". Got %s", parser.at())
+			return ast.NewEmptyStmt(), NewExpectedError(")", parser.at())
 		}
 
 		isAltSytax := parser.isToken(lexer.OpOrPuncToken, ":", true)
@@ -537,7 +537,7 @@ func (parser *Parser) parseSelectionStmt() (ast.IStatement, phpError.Error) {
 		for parser.isToken(lexer.KeywordToken, "elseif", false) {
 			elseIfPos := parser.eat().Position
 			if !parser.isToken(lexer.OpOrPuncToken, "(", true) {
-				return ast.NewEmptyStmt(), phpError.NewParseError("Expected \"(\". Got %s", parser.at())
+				return ast.NewEmptyStmt(), NewExpectedError("(", parser.at())
 			}
 
 			elseIfCondition, err := parser.parseExpr()
@@ -546,11 +546,11 @@ func (parser *Parser) parseSelectionStmt() (ast.IStatement, phpError.Error) {
 			}
 
 			if !parser.isToken(lexer.OpOrPuncToken, ")", true) {
-				return ast.NewEmptyStmt(), phpError.NewParseError("Expected \")\". Got %s", parser.at())
+				return ast.NewEmptyStmt(), NewExpectedError(")", parser.at())
 			}
 
 			if isAltSytax && !parser.isToken(lexer.OpOrPuncToken, ":", true) {
-				return ast.NewEmptyStmt(), phpError.NewParseError("Expected \":\". Got %s", parser.at())
+				return ast.NewEmptyStmt(), NewExpectedError(":", parser.at())
 			}
 
 			var elseIfBlock ast.IStatement
@@ -579,7 +579,7 @@ func (parser *Parser) parseSelectionStmt() (ast.IStatement, phpError.Error) {
 		var elseBlock ast.IStatement = nil
 		if parser.isToken(lexer.KeywordToken, "else", true) {
 			if isAltSytax && !parser.isToken(lexer.OpOrPuncToken, ":", true) {
-				return ast.NewEmptyStmt(), phpError.NewParseError("Expected \":\". Got %s", parser.at())
+				return ast.NewEmptyStmt(), NewExpectedError(":", parser.at())
 			}
 
 			if !isAltSytax {
@@ -601,10 +601,10 @@ func (parser *Parser) parseSelectionStmt() (ast.IStatement, phpError.Error) {
 		}
 
 		if isAltSytax && !parser.isToken(lexer.KeywordToken, "endif", true) {
-			return ast.NewEmptyStmt(), phpError.NewParseError("Expected \"endif\". Got %s", parser.at())
+			return ast.NewEmptyStmt(), NewExpectedError("endif", parser.at())
 		}
 		if isAltSytax && !parser.isToken(lexer.OpOrPuncToken, ";", true) {
-			return ast.NewEmptyStmt(), phpError.NewParseError("Expected \";\". Got %s", parser.at())
+			return ast.NewEmptyStmt(), NewExpectedError(";", parser.at())
 		}
 
 		return ast.NewIfStmt(parser.nextId(), ifPos, condition, ifBlock, elseIf, elseBlock), nil
@@ -641,7 +641,7 @@ func (parser *Parser) parseIterationStmt() (ast.IStatement, phpError.Error) {
 		// condition
 		whilePos := parser.eat().Position
 		if !parser.isToken(lexer.OpOrPuncToken, "(", true) {
-			return ast.NewEmptyStmt(), phpError.NewParseError("Expected \"(\". Got %s", parser.at())
+			return ast.NewEmptyStmt(), NewExpectedError("(", parser.at())
 		}
 
 		condition, err := parser.parseExpr()
@@ -650,7 +650,7 @@ func (parser *Parser) parseIterationStmt() (ast.IStatement, phpError.Error) {
 		}
 
 		if !parser.isToken(lexer.OpOrPuncToken, ")", true) {
-			return ast.NewEmptyStmt(), phpError.NewParseError("Expected \")\". Got %s", parser.at())
+			return ast.NewEmptyStmt(), NewExpectedError(")", parser.at())
 		}
 
 		isAltSytax := parser.isToken(lexer.OpOrPuncToken, ":", true)
@@ -674,10 +674,10 @@ func (parser *Parser) parseIterationStmt() (ast.IStatement, phpError.Error) {
 		}
 
 		if isAltSytax && !parser.isToken(lexer.KeywordToken, "endwhile", true) {
-			return ast.NewEmptyStmt(), phpError.NewParseError("Expected \"endwhile\". Got %s", parser.at())
+			return ast.NewEmptyStmt(), NewExpectedError("endwhile", parser.at())
 		}
 		if isAltSytax && !parser.isToken(lexer.OpOrPuncToken, ";", true) {
-			return ast.NewEmptyStmt(), phpError.NewParseError("Expected \";\". Got %s", parser.at())
+			return ast.NewEmptyStmt(), NewExpectedError(";", parser.at())
 		}
 
 		return ast.NewWhileStmt(parser.nextId(), whilePos, condition, block), nil
@@ -702,11 +702,11 @@ func (parser *Parser) parseIterationStmt() (ast.IStatement, phpError.Error) {
 
 		// condition
 		if !parser.isToken(lexer.KeywordToken, "while", true) {
-			return ast.NewEmptyStmt(), phpError.NewParseError("Expected \"while\". Got %s", parser.at())
+			return ast.NewEmptyStmt(), NewExpectedError("while", parser.at())
 		}
 
 		if !parser.isToken(lexer.OpOrPuncToken, "(", true) {
-			return ast.NewEmptyStmt(), phpError.NewParseError("Expected \"(\". Got %s", parser.at())
+			return ast.NewEmptyStmt(), NewExpectedError("(", parser.at())
 		}
 
 		condition, err := parser.parseExpr()
@@ -715,11 +715,11 @@ func (parser *Parser) parseIterationStmt() (ast.IStatement, phpError.Error) {
 		}
 
 		if !parser.isToken(lexer.OpOrPuncToken, ")", true) {
-			return ast.NewEmptyStmt(), phpError.NewParseError("Expected \")\". Got %s", parser.at())
+			return ast.NewEmptyStmt(), NewExpectedError(")", parser.at())
 		}
 
 		if !parser.isToken(lexer.OpOrPuncToken, ";", true) {
-			return ast.NewEmptyStmt(), phpError.NewParseError("Expected \";\". Got %s", parser.at())
+			return ast.NewEmptyStmt(), NewExpectedError(";", parser.at())
 		}
 
 		return ast.NewDoStmt(parser.nextId(), doPos, condition, block), nil
@@ -751,7 +751,7 @@ func (parser *Parser) parseIterationStmt() (ast.IStatement, phpError.Error) {
 		pos := parser.eat().Position
 
 		if !parser.isToken(lexer.OpOrPuncToken, "(", true) {
-			return ast.NewEmptyStmt(), phpError.NewParseError("Expected \"(\". Got %s", parser.at())
+			return ast.NewEmptyStmt(), NewExpectedError("(", parser.at())
 		}
 
 		var err phpError.Error = nil
@@ -781,7 +781,7 @@ func (parser *Parser) parseIterationStmt() (ast.IStatement, phpError.Error) {
 		}
 
 		if !parser.isToken(lexer.OpOrPuncToken, ";", true) {
-			return ast.NewEmptyStmt(), phpError.NewParseError("Expected \";\". Got %s", parser.at())
+			return ast.NewEmptyStmt(), NewExpectedError(";", parser.at())
 		}
 
 		// for-control
@@ -794,7 +794,7 @@ func (parser *Parser) parseIterationStmt() (ast.IStatement, phpError.Error) {
 		}
 
 		if !parser.isToken(lexer.OpOrPuncToken, ";", true) {
-			return ast.NewEmptyStmt(), phpError.NewParseError("Expected \";\". Got %s", parser.at())
+			return ast.NewEmptyStmt(), NewExpectedError(";", parser.at())
 		}
 
 		// for-end-of-loop
@@ -807,7 +807,7 @@ func (parser *Parser) parseIterationStmt() (ast.IStatement, phpError.Error) {
 		}
 
 		if !parser.isToken(lexer.OpOrPuncToken, ")", true) {
-			return ast.NewEmptyStmt(), phpError.NewParseError("Expected \")\". Got %s", parser.at())
+			return ast.NewEmptyStmt(), NewExpectedError(")", parser.at())
 		}
 
 		isAltSytax := parser.isToken(lexer.OpOrPuncToken, ":", true)
@@ -831,10 +831,10 @@ func (parser *Parser) parseIterationStmt() (ast.IStatement, phpError.Error) {
 		}
 
 		if isAltSytax && !parser.isToken(lexer.KeywordToken, "endfor", true) {
-			return ast.NewEmptyStmt(), phpError.NewParseError("Expected \"endfor\". Got %s", parser.at())
+			return ast.NewEmptyStmt(), NewExpectedError("endfor", parser.at())
 		}
 		if isAltSytax && !parser.isToken(lexer.OpOrPuncToken, ";", true) {
-			return ast.NewEmptyStmt(), phpError.NewParseError("Expected \";\". Got %s", parser.at())
+			return ast.NewEmptyStmt(), NewExpectedError(";", parser.at())
 		}
 
 		return ast.NewForStmt(parser.nextId(), pos, forInitializer, forControl, forEndOfLoop, block), nil
@@ -891,7 +891,7 @@ func (parser *Parser) parseJumpStmt() (ast.IStatement, phpError.Error) {
 		}
 
 		if !parser.isToken(lexer.OpOrPuncToken, ";", true) {
-			return ast.NewEmptyStmt(), phpError.NewParseError("Expected \";\". Got %s", parser.at())
+			return ast.NewEmptyStmt(), NewExpectedError(";", parser.at())
 		}
 
 		if expr == nil {
@@ -933,7 +933,7 @@ func (parser *Parser) parseJumpStmt() (ast.IStatement, phpError.Error) {
 		}
 
 		if !parser.isToken(lexer.OpOrPuncToken, ";", true) {
-			return ast.NewEmptyStmt(), phpError.NewParseError("Expected \";\". Got %s", parser.at())
+			return ast.NewEmptyStmt(), NewExpectedError(";", parser.at())
 		}
 
 		if expr == nil {
@@ -1047,7 +1047,7 @@ func (parser *Parser) parseFunctionDefinition() (ast.IStatement, phpError.Error)
 	// Supported statement: function definition: `function func1($param1) { ... }`
 	PrintParserCallstack("function-definition", parser)
 	if !parser.isToken(lexer.KeywordToken, "function", false) {
-		return ast.NewEmptyStmt(), phpError.NewParseError("Expected \"function\". Got %s", parser.at())
+		return ast.NewEmptyStmt(), NewExpectedError("function", parser.at())
 	}
 
 	pos := parser.eat().Position
@@ -1065,7 +1065,7 @@ func (parser *Parser) parseFunctionDefinition() (ast.IStatement, phpError.Error)
 	}
 
 	if !parser.isToken(lexer.OpOrPuncToken, "(", true) {
-		return ast.NewEmptyStmt(), phpError.NewParseError("Expected \"(\". Got %s", parser.at())
+		return ast.NewEmptyStmt(), NewExpectedError("(", parser.at())
 	}
 
 	parameters, err := parser.parseFunctionParameters()
@@ -1074,7 +1074,7 @@ func (parser *Parser) parseFunctionDefinition() (ast.IStatement, phpError.Error)
 	}
 
 	if !parser.isToken(lexer.OpOrPuncToken, ")", true) {
-		return ast.NewEmptyStmt(), phpError.NewParseError("Expected \")\". Got %s", parser.at())
+		return ast.NewEmptyStmt(), NewExpectedError(")", parser.at())
 	}
 
 	returnTypes := []string{}
@@ -1814,7 +1814,7 @@ func (parser *Parser) parseUnaryExpr() (ast.IExpression, phpError.Error) {
 		pos := parser.eat().Position
 		castType := parser.eat().Value
 		if !parser.isToken(lexer.OpOrPuncToken, ")", true) {
-			return ast.NewEmptyExpr(), phpError.NewParseError("Expected \")\". Got %s", parser.at())
+			return ast.NewEmptyExpr(), NewExpectedError(")", parser.at())
 		}
 		expr, err := parser.parseUnaryExpr()
 		if err != nil {
@@ -1991,7 +1991,7 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, phpError.Error) {
 				}
 			}
 			if !parser.isToken(lexer.OpOrPuncToken, "]", true) {
-				return ast.NewEmptyExpr(), phpError.NewParseError("Expected \"]\". Got: %s", parser.at())
+				return ast.NewEmptyExpr(), NewExpectedError("]", parser.at())
 			}
 			variable = ast.NewSubscriptExpr(parser.nextId(), variable, index)
 		}
@@ -2221,7 +2221,7 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, phpError.Error) {
 		if parser.isToken(lexer.OpOrPuncToken, ")", true) {
 			return ast.NewParenthesizedExpr(parser.nextId(), pos, expr), nil
 		} else {
-			return ast.NewEmptyExpr(), phpError.NewParseError("Expected \")\". Got: %s", parser.at())
+			return ast.NewEmptyExpr(), NewExpectedError(")", parser.at())
 		}
 	}
 
@@ -2408,14 +2408,14 @@ func (parser *Parser) parseIntrinsic() (ast.IExpression, phpError.Error) {
 		PrintParserCallstack("empty-intrinsic", parser)
 		pos := parser.eat().Position
 		if !parser.isToken(lexer.OpOrPuncToken, "(", true) {
-			return ast.NewEmptyExpr(), phpError.NewParseError("Expected \"(\". Got: \"%s\"", parser.at())
+			return ast.NewEmptyExpr(), NewExpectedError("(", parser.at())
 		}
 		expr, err := parser.parseExpr()
 		if err != nil {
 			return ast.NewEmptyExpr(), err
 		}
 		if !parser.isToken(lexer.OpOrPuncToken, ")", true) {
-			return ast.NewEmptyExpr(), phpError.NewParseError("Expected \")\". Got: \"%s\"", parser.at())
+			return ast.NewEmptyExpr(), NewExpectedError(")", parser.at())
 		}
 		return ast.NewEmptyIntrinsic(parser.nextId(), pos, expr), nil
 	}
@@ -2432,14 +2432,14 @@ func (parser *Parser) parseIntrinsic() (ast.IExpression, phpError.Error) {
 		PrintParserCallstack("eval-intrinsic", parser)
 		pos := parser.eat().Position
 		if !parser.isToken(lexer.OpOrPuncToken, "(", true) {
-			return ast.NewEmptyExpr(), phpError.NewParseError("Expected \"(\". Got: \"%s\"", parser.at())
+			return ast.NewEmptyExpr(), NewExpectedError("(", parser.at())
 		}
 		expr, err := parser.parseExpr()
 		if err != nil {
 			return ast.NewEmptyExpr(), err
 		}
 		if !parser.isToken(lexer.OpOrPuncToken, ")", true) {
-			return ast.NewEmptyExpr(), phpError.NewParseError("Expected \")\". Got: \"%s\"", parser.at())
+			return ast.NewEmptyExpr(), NewExpectedError(")", parser.at())
 		}
 		return ast.NewEvalIntrinsic(parser.nextId(), pos, expr), nil
 	}
@@ -2469,7 +2469,7 @@ func (parser *Parser) parseIntrinsic() (ast.IExpression, phpError.Error) {
 				}
 			}
 			if !parser.isToken(lexer.OpOrPuncToken, ")", true) {
-				return ast.NewEmptyExpr(), phpError.NewParseError("Expected \")\". Got %s", parser.at())
+				return ast.NewEmptyExpr(), NewExpectedError(")", parser.at())
 			}
 		}
 		return ast.NewExitIntrinsic(parser.nextId(), pos, expr), nil
@@ -2491,7 +2491,7 @@ func (parser *Parser) parseIntrinsic() (ast.IExpression, phpError.Error) {
 		PrintParserCallstack("isset-intrinsic", parser)
 		pos := parser.eat().Position
 		if !parser.isToken(lexer.OpOrPuncToken, "(", true) {
-			return ast.NewEmptyExpr(), phpError.NewParseError("Expected \"(\". Got: \"%s\"", parser.at())
+			return ast.NewEmptyExpr(), NewExpectedError("(", parser.at())
 		}
 		args := []ast.IExpression{}
 		for {
