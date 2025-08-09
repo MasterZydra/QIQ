@@ -15,22 +15,22 @@ func Register(environment runtime.Environment) {
 
 	// Const Category: Error Handling Constants
 	// Spec: https://www.php.net/manual/en/errorfunc.constants.php
-	environment.AddPredefinedConstants("E_ERROR", values.NewInt(phpError.E_ERROR))
-	environment.AddPredefinedConstants("E_WARNING", values.NewInt(phpError.E_WARNING))
-	environment.AddPredefinedConstants("E_PARSE", values.NewInt(phpError.E_PARSE))
-	environment.AddPredefinedConstants("E_NOTICE", values.NewInt(phpError.E_NOTICE))
-	environment.AddPredefinedConstants("E_CORE_ERROR", values.NewInt(phpError.E_CORE_ERROR))
-	environment.AddPredefinedConstants("E_CORE_WARNING", values.NewInt(phpError.E_CORE_WARNING))
-	environment.AddPredefinedConstants("E_COMPILE_ERROR", values.NewInt(phpError.E_COMPILE_ERROR))
-	environment.AddPredefinedConstants("E_COMPILE_WARNING", values.NewInt(phpError.E_COMPILE_WARNING))
-	environment.AddPredefinedConstants("E_USER_ERROR", values.NewInt(phpError.E_USER_ERROR))
-	environment.AddPredefinedConstants("E_USER_WARNING", values.NewInt(phpError.E_USER_WARNING))
-	environment.AddPredefinedConstants("E_USER_NOTICE", values.NewInt(phpError.E_USER_NOTICE))
-	environment.AddPredefinedConstants("E_STRICT", values.NewInt(phpError.E_STRICT))
-	environment.AddPredefinedConstants("E_RECOVERABLE_ERROR", values.NewInt(phpError.E_RECOVERABLE_ERROR))
-	environment.AddPredefinedConstants("E_DEPRECATED", values.NewInt(phpError.E_DEPRECATED))
-	environment.AddPredefinedConstants("E_USER_DEPRECATED", values.NewInt(phpError.E_USER_DEPRECATED))
-	environment.AddPredefinedConstants("E_ALL", values.NewInt(phpError.E_ALL))
+	environment.AddPredefinedConstant("E_ERROR", values.NewInt(phpError.E_ERROR))
+	environment.AddPredefinedConstant("E_WARNING", values.NewInt(phpError.E_WARNING))
+	environment.AddPredefinedConstant("E_PARSE", values.NewInt(phpError.E_PARSE))
+	environment.AddPredefinedConstant("E_NOTICE", values.NewInt(phpError.E_NOTICE))
+	environment.AddPredefinedConstant("E_CORE_ERROR", values.NewInt(phpError.E_CORE_ERROR))
+	environment.AddPredefinedConstant("E_CORE_WARNING", values.NewInt(phpError.E_CORE_WARNING))
+	environment.AddPredefinedConstant("E_COMPILE_ERROR", values.NewInt(phpError.E_COMPILE_ERROR))
+	environment.AddPredefinedConstant("E_COMPILE_WARNING", values.NewInt(phpError.E_COMPILE_WARNING))
+	environment.AddPredefinedConstant("E_USER_ERROR", values.NewInt(phpError.E_USER_ERROR))
+	environment.AddPredefinedConstant("E_USER_WARNING", values.NewInt(phpError.E_USER_WARNING))
+	environment.AddPredefinedConstant("E_USER_NOTICE", values.NewInt(phpError.E_USER_NOTICE))
+	environment.AddPredefinedConstant("E_STRICT", values.NewInt(phpError.E_STRICT))
+	environment.AddPredefinedConstant("E_RECOVERABLE_ERROR", values.NewInt(phpError.E_RECOVERABLE_ERROR))
+	environment.AddPredefinedConstant("E_DEPRECATED", values.NewInt(phpError.E_DEPRECATED))
+	environment.AddPredefinedConstant("E_USER_DEPRECATED", values.NewInt(phpError.E_USER_DEPRECATED))
+	environment.AddPredefinedConstant("E_ALL", values.NewInt(phpError.E_ALL))
 }
 
 // -------------------------------------- error_reporting -------------------------------------- MARK: error_reporting

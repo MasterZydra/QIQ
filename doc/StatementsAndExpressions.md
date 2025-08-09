@@ -30,9 +30,9 @@
 - conditional expression: `$var ? $a : "b";`
 - double quoted string: `"Hi $world!"`
 - equality expression: `$var === 42;`
-- error control expression: `@fn();`
+- error control expression: `@func();`
 - exponentiation expression: `$var ** 42;`
-- function call expression: `fn(42);`
+- function call expression: `func(42);`
 - heredoc string: `"<<<EOF\nHi $world!\nEOF;"`
 - include expression: `include 'lib.php';`
 - include_once expression: `include_once 'lib.php';`

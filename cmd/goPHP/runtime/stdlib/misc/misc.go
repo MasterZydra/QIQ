@@ -50,7 +50,7 @@ func nativeFn_define(args []values.RuntimeValue, context runtime.Context) (value
 		return values.NewBool(false), phpError.NewError("define: $case_sensitive cannot be changed")
 	}
 
-	context.Env.AddConstants(args[0].(*values.Str).Value, args[1])
+	context.Env.AddConstant(args[0].(*values.Str).Value, args[1])
 
 	return values.NewBool(true), nil
 }

@@ -1880,7 +1880,7 @@ func (parser *Parser) parseUnaryExpr() (ast.IExpression, phpError.Error) {
 	// error-control-expression:
 	//    @   unary-expression
 
-	// Supported expression: error control expression: `@fn();`
+	// Supported expression: error control expression: `@func();`
 	if parser.isToken(lexer.OpOrPuncToken, "@", false) {
 		PrintParserCallstack("error-control-expression", parser)
 		pos := parser.eat().Position
@@ -2113,7 +2113,7 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, phpError.Error) {
 	// variadic-unpacking:
 	//    ...   expression
 
-	// Supported expression: function call expression: `fn(42);`
+	// Supported expression: function call expression: `func(42);`
 	if (parser.isTokenType(lexer.NameToken, false) && parser.next(0).TokenType == lexer.OpOrPuncToken && parser.next(0).Value == "(") ||
 		(ast.IsVariableExpr(variable) && parser.isToken(lexer.OpOrPuncToken, "(", false)) {
 		PrintParserCallstack("function-call-expression", parser)

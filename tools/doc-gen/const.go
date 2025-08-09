@@ -97,7 +97,7 @@ func readGoFileConstants(path string) error {
 			continue
 		}
 
-		if strings.HasPrefix(line, "environment.AddPredefinedConstants(") {
+		if strings.HasPrefix(line, "environment.AddPredefinedConstant(") {
 			if category == "" {
 				return fmt.Errorf("category is not set before adding predefined constants in file %s", path)
 			}
@@ -106,7 +106,7 @@ func readGoFileConstants(path string) error {
 				constants[category] = []string{}
 			}
 
-			functionName := strings.Replace(line, "environment.AddPredefinedConstants(\"", "", 1)
+			functionName := strings.Replace(line, "environment.AddPredefinedConstant(\"", "", 1)
 			functionName = functionName[:strings.Index(functionName, "\"")]
 
 			constants[category] = append(constants[category], functionName)

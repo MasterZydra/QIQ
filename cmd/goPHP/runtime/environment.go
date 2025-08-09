@@ -6,10 +6,13 @@ import (
 )
 
 type Environment interface {
-	LookupConstant(constantName string) (values.RuntimeValue, phpError.Error)
+	// Variables
 	LookupVariable(variableName string) (values.RuntimeValue, phpError.Error)
+	// Functions
 	AddNativeFunction(functionName string, function NativeFunction)
-	AddPredefinedConstants(name string, value values.RuntimeValue)
-	AddConstants(name string, value values.RuntimeValue)
 	FunctionExists(functionName string) bool
+	// Constants
+	LookupConstant(constantName string) (values.RuntimeValue, phpError.Error)
+	AddPredefinedConstant(name string, value values.RuntimeValue)
+	AddConstant(name string, value values.RuntimeValue)
 }

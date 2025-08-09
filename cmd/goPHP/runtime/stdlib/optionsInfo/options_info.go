@@ -17,10 +17,10 @@ func Register(environment runtime.Environment) {
 
 	// Const Category: Options/Info Constants
 	// Spec: https://www.php.net/manual/en/info.constants.php
-	environment.AddPredefinedConstants("INI_USER", values.NewInt(int64(ini.INI_USER)))
-	environment.AddPredefinedConstants("INI_PERDIR", values.NewInt(int64(ini.INI_PERDIR)))
-	environment.AddPredefinedConstants("INI_SYSTEM", values.NewInt(int64(ini.INI_SYSTEM)))
-	environment.AddPredefinedConstants("INI_ALL", values.NewInt(int64(ini.INI_ALL)))
+	environment.AddPredefinedConstant("INI_USER", values.NewInt(int64(ini.INI_USER)))
+	environment.AddPredefinedConstant("INI_PERDIR", values.NewInt(int64(ini.INI_PERDIR)))
+	environment.AddPredefinedConstant("INI_SYSTEM", values.NewInt(int64(ini.INI_SYSTEM)))
+	environment.AddPredefinedConstant("INI_ALL", values.NewInt(int64(ini.INI_ALL)))
 }
 
 // -------------------------------------- getenv -------------------------------------- MARK: getenv
