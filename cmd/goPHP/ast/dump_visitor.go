@@ -232,6 +232,14 @@ func (visitor DumpVisitor) ProcessFloatingLiteralExpr(stmt *FloatingLiteralExpre
 	return fmt.Sprintf("{%s - value: %f }", stmt.GetKind(), stmt.Value), nil
 }
 
+// ProcessForeachStmt implements Visitor.
+func (visitor DumpVisitor) ProcessForeachStmt(stmt *ForeachStatement, _ any) (any, error) {
+	return fmt.Sprintf(
+		"{%s - collection: %s, key: %s, value: %s }",
+		stmt.GetKind(), ToString(stmt.Collection), ToString(stmt.Key), ToString(stmt.Value),
+	), nil
+}
+
 // ProcessForStmt implements Visitor.
 func (visitor DumpVisitor) ProcessForStmt(stmt *ForStatement, context any) (any, error) {
 	return fmt.Sprintf(

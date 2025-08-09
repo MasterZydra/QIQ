@@ -301,3 +301,8 @@ func (interpreter *Interpreter) ProcessDeclareStmt(stmt *ast.DeclareStatement, e
 
 	return values.NewVoid(), phpError.NewError("ProcessDeclareStmt: Directive '%s' is not implemented", stmt.Directive)
 }
+
+// ProcessForeachStmt implements Visitor.
+func (interpreter *Interpreter) ProcessForeachStmt(stmt *ast.ForeachStatement, env any) (any, error) {
+	return values.NewVoid(), phpError.NewError("ProcessForeachStmt is not implemented")
+}

@@ -417,3 +417,20 @@ func NewDeclareStmt(id int64, pos *position.Position, directive string, literal 
 func (stmt *DeclareStatement) Process(visitor Visitor, context any) (any, error) {
 	return visitor.ProcessDeclareStmt(stmt, context)
 }
+
+// -------------------------------------- ForeachStatement -------------------------------------- MARK: ForeachStatement
+
+type ForeachStatement struct {
+	*Statement
+	Collection IExpression
+	Key        IExpression
+	Value      IExpression
+}
+
+func NewForeachStmt(id int64, pos *position.Position, collection, key, value IExpression) *ForeachStatement {
+	return &ForeachStatement{Statement: NewStmt(id, ForeachStmt, pos), Collection: collection, Key: key, Value: value}
+}
+
+func (stmt *ForeachStatement) Process(visitor Visitor, context any) (any, error) {
+	return visitor.ProcessForeachStmt(stmt, context)
+}

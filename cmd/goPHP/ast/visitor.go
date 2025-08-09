@@ -12,6 +12,7 @@ type Visitor interface {
 	ProcessEchoStmt(stmt *EchoStatement, context any) (any, error)
 	ProcessExpressionStmt(stmt *ExpressionStatement, context any) (any, error)
 	ProcessForStmt(stmt *ForStatement, context any) (any, error)
+	ProcessForeachStmt(stmt *ForeachStatement, context any) (any, error)
 	ProcessFunctionDefinitionStmt(stmt *FunctionDefinitionStatement, context any) (any, error)
 	ProcessGlobalDeclarationStmt(stmt *GlobalDeclarationStatement, context any) (any, error)
 	ProcessIfStmt(stmt *IfStatement, context any) (any, error)

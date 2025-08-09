@@ -54,6 +54,7 @@ const (
 	EchoStmt               NodeType = "EchoStatement"
 	ExpressionStmt         NodeType = "ExpressionStatement"
 	ForStmt                NodeType = "ForStatement"
+	ForeachStmt            NodeType = "ForeachStatement"
 	FunctionDefinitionStmt NodeType = "FunctionDefinitionStatement"
 	GlobalDeclarationStmt  NodeType = "GlobalDeclarationStatement"
 	IfStmt                 NodeType = "IfStatement"

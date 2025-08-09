@@ -234,7 +234,15 @@ func (visitor InterpreterCallStackVisitor) ProcessExpressionStmt(stmt *Expressio
 
 // ProcessFloatingLiteralExpr implements Visitor.
 func (visitor InterpreterCallStackVisitor) ProcessFloatingLiteralExpr(stmt *FloatingLiteralExpression, _ any) (any, error) {
-	return fmt.Sprintf("{%s - value: %f, pos: %s }", stmt.GetKind(), stmt.Value, stmt.GetPosition().ToPosString()), nil
+	return fmt.Sprintf("{%s - value: %f, pos: %s}", stmt.GetKind(), stmt.Value, stmt.GetPosition().ToPosString()), nil
+}
+
+// ProcessForeachStmt implements Visitor.
+func (visitor InterpreterCallStackVisitor) ProcessForeachStmt(stmt *ForeachStatement, _ any) (any, error) {
+	return fmt.Sprintf(
+		"{%s - collection: %s, key: %s, value: %s, pos: %s}",
+		stmt.GetKind(), ToString(stmt.Collection), ToString(stmt.Key), ToString(stmt.Value), stmt.GetPosition().ToPosString(),
+	), nil
 }
 
 // ProcessForStmt implements Visitor.
