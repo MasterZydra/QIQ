@@ -6,15 +6,19 @@ import (
 
 type Object struct {
 	*abstractValue
-	Class      *ast.ClassDeclarationStatement
-	Properties map[string]RuntimeValue
+	Class         *ast.ClassDeclarationStatement
+	PropertyNames []string
+	Properties    map[string]RuntimeValue
 	// TODO methods
 	// TODO parent
 }
 
 func NewObject(class *ast.ClassDeclarationStatement) *Object {
 	return &Object{abstractValue: newAbstractValue(ObjectValue),
-		Class: class, Properties: map[string]RuntimeValue{}}
+		Class:         class,
+		PropertyNames: append([]string(nil), class.PropertieNames...),
+		Properties:    map[string]RuntimeValue{},
+	}
 }
 
 func (object *Object) SetProperty(name string, value RuntimeValue) {

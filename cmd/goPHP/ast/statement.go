@@ -2,6 +2,7 @@ package ast
 
 import (
 	"GoPHP/cmd/goPHP/position"
+	"slices"
 )
 
 // -------------------------------------- Statement -------------------------------------- MARK: Statement
@@ -342,28 +343,30 @@ func (stmt *PropertyDeclarationStatement) Process(visitor Visitor, context any) 
 
 type ClassDeclarationStatement struct {
 	*Statement
-	IsAbstract bool
-	IsFinal    bool
-	Name       string
-	BaseClass  string
-	Interfaces []string
-	Constants  map[string]*ClassConstDeclarationStatement
-	Methods    map[string]*MethodDefinitionStatement
-	Properties map[string]*PropertyDeclarationStatement
-	Traits     []*TraitUseStatement
+	IsAbstract     bool
+	IsFinal        bool
+	Name           string
+	BaseClass      string
+	Interfaces     []string
+	Constants      map[string]*ClassConstDeclarationStatement
+	Methods        map[string]*MethodDefinitionStatement
+	PropertieNames []string
+	Properties     map[string]*PropertyDeclarationStatement
+	Traits         []*TraitUseStatement
 }
 
 func NewClassDeclarationStmt(id int64, pos *position.Position, name string, isAbstract, isFinal bool) *ClassDeclarationStatement {
 	return &ClassDeclarationStatement{
-		Statement:  NewStmt(id, ClassDeclarationStmt, pos),
-		Name:       name,
-		IsAbstract: isAbstract,
-		IsFinal:    isFinal,
-		Interfaces: []string{},
-		Constants:  map[string]*ClassConstDeclarationStatement{},
-		Methods:    map[string]*MethodDefinitionStatement{},
-		Properties: map[string]*PropertyDeclarationStatement{},
-		Traits:     []*TraitUseStatement{},
+		Statement:      NewStmt(id, ClassDeclarationStmt, pos),
+		Name:           name,
+		IsAbstract:     isAbstract,
+		IsFinal:        isFinal,
+		Interfaces:     []string{},
+		Constants:      map[string]*ClassConstDeclarationStatement{},
+		Methods:        map[string]*MethodDefinitionStatement{},
+		PropertieNames: []string{},
+		Properties:     map[string]*PropertyDeclarationStatement{},
+		Traits:         []*TraitUseStatement{},
 	}
 }
 
@@ -380,6 +383,9 @@ func (stmt *ClassDeclarationStatement) AddMethod(method *MethodDefinitionStateme
 }
 
 func (stmt *ClassDeclarationStatement) AddProperty(property *PropertyDeclarationStatement) {
+	if !slices.Contains(stmt.PropertieNames, property.Name) {
+		stmt.PropertieNames = append(stmt.PropertieNames, property.Name)
+	}
 	stmt.Properties[property.Name] = property
 }
 

@@ -310,6 +310,8 @@ func (interpreter *Interpreter) ProcessForeachStmt(stmt *ast.ForeachStatement, e
 	}
 
 	environment := env.(*Environment)
+
+	// Array
 	if runtimeValue.GetType() == values.ArrayValue {
 		runtimeArray := runtimeValue.(*values.Array)
 		for _, keyValue := range runtimeArray.Keys {
@@ -321,6 +323,46 @@ func (interpreter *Interpreter) ProcessForeachStmt(stmt *ast.ForeachStatement, e
 			value, _ := runtimeArray.GetElement(keyValue)
 			valueName := mustOrVoid(interpreter.varExprToVarName(stmt.Value, environment))
 			environment.declareVariable(valueName, value)
+
+			// Execute body
+			runtimeValue, err := interpreter.processStmt(stmt.Block, env)
+			if err != nil {
+				if err.GetErrorType() == phpError.EventError && err.GetMessage() == "break" {
+					breakoutLevel := err.(*phpError.ContinueEventError).GetBreakoutLevel()
+					if breakoutLevel == 1 {
+						return values.NewVoid(), nil
+					}
+					return values.NewVoid(), phpError.NewBreakEvent(breakoutLevel - 1)
+				}
+				if err.GetErrorType() == phpError.EventError && err.GetMessage() == "continue" {
+					breakoutLevel := err.(*phpError.ContinueEventError).GetBreakoutLevel()
+					if breakoutLevel == 1 {
+						continue
+					}
+					return values.NewVoid(), phpError.NewContinueEvent(breakoutLevel - 1)
+				}
+				return runtimeValue, err
+			}
+		}
+		return values.NewVoid(), nil
+	}
+
+	// Object
+	if runtimeValue.GetType() == values.ObjectValue {
+		runtimeObject := runtimeValue.(*values.Object)
+
+		for _, propertyName := range runtimeObject.PropertyNames {
+			if runtimeObject.Class.Properties[propertyName].Visibility != "public" {
+				continue
+			}
+
+			// Set key and value variable
+			if stmt.Key != nil {
+				keyName := mustOrVoid(interpreter.varExprToVarName(stmt.Key, environment))
+				environment.declareVariable(keyName, values.NewStr(propertyName[1:]))
+			}
+			valueName := mustOrVoid(interpreter.varExprToVarName(stmt.Value, environment))
+			environment.declareVariable(valueName, runtimeObject.Properties[propertyName])
 
 			// Execute body
 			runtimeValue, err := interpreter.processStmt(stmt.Block, env)
