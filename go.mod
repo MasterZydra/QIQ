@@ -1,4 +1,4 @@
-module GoPHP
+module QIQ
 
 go 1.24.0
 
