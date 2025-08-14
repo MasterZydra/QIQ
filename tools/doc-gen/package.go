@@ -132,12 +132,12 @@ func readGoFilePackage(path, filename string) error {
 }
 
 func addImportPackage(curPackage, usedPackage string) {
-	if skipGoPackages && !strings.HasPrefix(usedPackage, "GoPHP/cmd/") {
+	if skipGoPackages && !strings.HasPrefix(usedPackage, "QIQ/cmd/") {
 		return
 	}
 
 	if strings.HasPrefix(curPackage, "cmd/") {
-		curPackage = strings.Replace(curPackage, "cmd/", "GoPHP/cmd/", 1)
+		curPackage = strings.Replace(curPackage, "cmd/", "QIQ/cmd/", 1)
 	}
 
 	if _, found := imports[curPackage]; !found {

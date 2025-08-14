@@ -35,7 +35,7 @@ A GoLang `map[RuntimeValue]RuntimeValue` was used.
 `RuntimeValue` is a pointer to one struct implementing the `RuntimeValue` interface.
 The lookup of a value required the iteration of all keys to check if the given key (also a `RuntimeValue`) is equal to the one of the keys of the array.
 
-The second iteration is now a lot faster (see [#47](https://github.com/MasterZydra/GoPHP/issues/47)).  
+The second iteration is now a lot faster (see [#47](https://github.com/MasterZydra/QIQ/issues/47)).  
 Now a GoLang `map[string]RuntimeValue` is used.
 PHP only allows integers and strings as keys.
 So the map key is `i_%d` for integers and `s_%s` for strings.

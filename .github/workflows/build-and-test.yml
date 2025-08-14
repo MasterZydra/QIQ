@@ -1,4 +1,4 @@
-name: Official PHP Tests
+name: Build and Test
 
 on:
   push:
@@ -13,8 +13,8 @@ on:
       - '**.md'
 
 jobs:
-  test-linux:
-    name: Build & Run official PHP Tests on Linux
+  build-linux:
+    name: Build & Run Tests on Linux
     runs-on: ubuntu-latest
     steps:
 
@@ -26,17 +26,14 @@ jobs:
     - name: Check out code into the Go module directory
       uses: actions/checkout@v5
 
-    - name: Download php-src repository
-      run: git clone https://github.com/php/php-src.git --depth 1
-
     - name: Building
-      run: go build -v -o . ./...
+      run: go build -v ./...
 
-    - name: Testing against official PHP Tests
-      run: ./qiqTester -v2 php-src/tests
+    - name: Testing
+      run: go test -cover ./...
 
-  windows-linux:
-    name: Build & Run official PHP Tests on Windows
+  build-windows:
+    name: Build & Run Tests on Windows
     runs-on: windows-latest
     steps:
 
@@ -48,11 +45,8 @@ jobs:
     - name: Check out code into the Go module directory
       uses: actions/checkout@v5
 
-    - name: Download php-src repository
-      run: git clone https://github.com/php/php-src.git --depth 1
-
     - name: Building
-      run: go build -v -o . ./...
+      run: go build -v ./...
 
-    - name: Testing against official PHP Tests
-      run: .\qiqTester.exe -v2 php-src\tests
+    - name: Testing
+      run: go test -cover ./...
