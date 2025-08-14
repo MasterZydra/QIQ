@@ -1,10 +1,10 @@
 # Binaries
 /doc-gen
 /doc-gen.exe
-/goPHP
-/goPHP.exe
-/goPhpTester
-/goPhpTester.exe
+/qiq
+/qiq.exe
+/qiqTester
+/qiqTester.exe
 
 # PHP files
 *.php

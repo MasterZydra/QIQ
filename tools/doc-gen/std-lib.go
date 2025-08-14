@@ -12,7 +12,7 @@ import (
 var stdLibFunctions = map[string][]string{}
 
 func docStdLib() {
-	if err := searchDirectoryStdLib("./cmd/goPHP/runtime/stdlib"); err != nil {
+	if err := searchDirectoryStdLib("./cmd/qiq/runtime/stdlib"); err != nil {
 		fmt.Println(err)
 		return
 	}

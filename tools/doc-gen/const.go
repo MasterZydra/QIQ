@@ -12,7 +12,7 @@ import (
 var constants = map[string][]string{}
 
 func docConst() {
-	if err := searchDirectoryConstants("./cmd/goPHP"); err != nil {
+	if err := searchDirectoryConstants("./cmd/qiq"); err != nil {
 		fmt.Println(err)
 		return
 	}

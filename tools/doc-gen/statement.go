@@ -14,7 +14,7 @@ var expressions = []string{}
 var intrinsics = []string{}
 
 func docStatements() {
-	if err := searchDirectoryStatements("./cmd/goPHP"); err != nil {
+	if err := searchDirectoryStatements("./cmd/qiq"); err != nil {
 		fmt.Println(err)
 		return
 	}

@@ -11,7 +11,7 @@ import (
 var iniDirectives = map[string]string{}
 
 func docIniDirectives() {
-	err := readGoFileIni("./cmd/goPHP/ini/ini.go")
+	err := readGoFileIni("./cmd/qiq/ini/ini.go")
 	if err != nil {
 		fmt.Println(err)
 		return

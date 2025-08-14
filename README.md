@@ -1,8 +1,7 @@
 [![Build and Test](https://github.com/MasterZydra/QIQ/actions/workflows/go-build-and-test.yml/badge.svg)](https://github.com/MasterZydra/QIQ/actions/workflows/go-build-and-test.yml)
 # QIQ
 
-QIQ (**Q**uick **I**nterpreter for **Q**uasi-PHP)
-GoPHP is an implementation of the [PHP language specification](https://phplang.org/) written in the Go programming language.
+QIQ (**Q**uick **I**nterpreter for **Q**uasi-PHP) is an implementation of the [PHP language specification](https://phplang.org/) written in the Go programming language.
 
 The goals of the project are:
 - Deep dive into the PHP language syntax and the internals of its mode of operation

@@ -33,7 +33,7 @@ jobs:
       run: go build -v -o . ./...
 
     - name: Testing against official PHP Tests
-      run: ./goPhpTester -v2 php-src/tests
+      run: ./qiqTester -v2 php-src/tests
 
   windows-linux:
     name: Build & Run official PHP Tests on Windows
@@ -55,4 +55,4 @@ jobs:
       run: go build -v -o . ./...
 
     - name: Testing against official PHP Tests
-      run: .\goPhpTester.exe -v2 php-src\tests
+      run: .\qiqTester.exe -v2 php-src\tests
