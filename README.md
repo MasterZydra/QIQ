@@ -1,4 +1,4 @@
-[![Build and Test](https://github.com/MasterZydra/QIQ/actions/workflows/go-build-and-test.yml/badge.svg)](https://github.com/MasterZydra/QIQ/actions/workflows/go-build-and-test.yml)
+[![Build and Test](https://github.com/MasterZydra/QIQ/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/MasterZydra/QIQ/actions/workflows/build-and-test.yml)
 # QIQ <img style="height: 1em;" src="doc/Rabbit.svg">
 
 QIQ (**Q**uick **I**nterpreter for **Q**uasi-PHP) is an implementation of the [PHP language specification](https://phplang.org/) written in the Go programming language.
