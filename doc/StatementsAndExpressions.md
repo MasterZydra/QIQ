@@ -12,6 +12,7 @@
 - function definition: `function func1($param1) { ... }`
 - global declaration: `global $var;`
 - if statement: `if (true) { ... } elseif (false) { ... } else { ... }`
+- namespace definition: `namespace My\Name\Space;`
 - print statement: `print "abc";`
 - return statement: `return 42;`
 - short echo statement: `<?= "123";`

@@ -226,7 +226,7 @@ func (visitor DumpVisitor) ProcessExitIntrinsicExpr(stmt *ExitIntrinsicExpressio
 
 // ProcessExpr implements Visitor.
 func (visitor DumpVisitor) ProcessExpr(stmt *Expression, _ any) (any, error) {
-	return fmt.Sprintf("{%s}", stmt.GetKind()), nil
+	return fmt.Sprintf("{%sExpression}", stmt.GetKind()), nil
 }
 
 // ProcessExpressionStmt implements Visitor.
@@ -394,7 +394,7 @@ func (visitor DumpVisitor) ProcessSimpleVariableExpr(stmt *SimpleVariableExpress
 
 // ProcessStmt implements Visitor.
 func (visitor DumpVisitor) ProcessStmt(stmt *Statement, _ any) (any, error) {
-	return fmt.Sprintf("{%s}", stmt.GetKind()), nil
+	return fmt.Sprintf("{%sStatement}", stmt.GetKind()), nil
 }
 
 // ProcessStringLiteralExpr implements Visitor.

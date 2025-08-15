@@ -1340,4 +1340,12 @@ func TestClasses(t *testing.T) {
 		func1();`,
 		"1\nC::__construct\nC::__destruct\n2\n3\nC::__construct\n4\nC::__destruct\n",
 	)
+
+	// Class with namespace
+	testInputOutput(t, `<?php
+	namespace My\Namespace;
+	class C { function __construct() { var_dump(__CLASS__); } }
+	new C;`,
+		`string(14) "My\Namespace\C"`+"\n",
+	)
 }

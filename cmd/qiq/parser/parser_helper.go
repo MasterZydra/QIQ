@@ -76,7 +76,16 @@ func (parser *Parser) isTokenType(tokenType lexer.TokenType, eat bool) bool {
 }
 
 func (parser *Parser) isToken(tokenType lexer.TokenType, value string, eat bool) bool {
-	result := parser.at().TokenType == tokenType && parser.at().Value == value
+	parserValue := parser.at().Value
+	if common.IsKeyword(parserValue) {
+		parserValue = strings.ToLower(parserValue)
+	}
+	// TODO Find a way to reduce "is..constant" to just one time
+	if common.IsCorePredefinedConstant(parserValue) || common.IsContextDependentConstant(parserValue) {
+		parserValue = strings.ToUpper(parserValue)
+	}
+
+	result := parser.at().TokenType == tokenType && parserValue == value
 	if result && eat {
 		parser.eat()
 	}

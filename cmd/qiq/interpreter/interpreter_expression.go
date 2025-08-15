@@ -574,8 +574,11 @@ func (interpreter *Interpreter) ProcessConstantAccessExpr(expr *ast.ConstantAcce
 	// When used inside a trait method, __CLASS__ is the name of the class the trait is used in.
 	if expr.ConstantName == "__CLASS__" {
 		if environment.CurrentObject != nil {
-			// TODO __CLASS__: Add namespace
-			return values.NewStr(environment.CurrentObject.Class.Name), nil
+			namespace := ""
+			if environment.CurrentObject.Class.GetPosition().File.Namespace != nil {
+				namespace = environment.CurrentObject.Class.GetPosition().File.Namespace.ToString()
+			}
+			return values.NewStr(namespace + environment.CurrentObject.Class.Name), nil
 		}
 		return values.NewStr(""), nil
 	}

@@ -2,15 +2,40 @@ package position
 
 import "fmt"
 
+// MARK: Namespace
+
+type Namespace struct {
+	namespace []string
+}
+
+func NewNamespace(namespace []string) *Namespace {
+	return &Namespace{namespace: namespace}
+}
+
+func (namespace *Namespace) ToString() string {
+	result := ""
+	if len(namespace.namespace) > 0 {
+		for _, name := range namespace.namespace {
+			result += name + "\\"
+		}
+	}
+	return result
+}
+
+// MARK: File
+
 type File struct {
+	Namespace    *Namespace
 	Filename     string
 	IsStrictType bool
 }
 
 func NewFile(filename string) *File {
 	// TODO position - Set IsStrictType default value to true/false depending on future ini setting for a strict mode
-	return &File{Filename: filename, IsStrictType: false}
+	return &File{Filename: filename, Namespace: nil, IsStrictType: false}
 }
+
+// MARK: Position
 
 type Position struct {
 	File   *File

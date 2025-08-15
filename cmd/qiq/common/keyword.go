@@ -116,7 +116,7 @@ var contextDependentConstants = []string{
 	"__METHOD__", "__NAMESPACE__", "__TRAIT__",
 }
 
-func IsContextDependentConstants(token string) bool {
+func IsContextDependentConstant(token string) bool {
 	// Spec: https://phplang.org/spec/06-constants.html#context-dependent-constants
 
 	// The following constants—sometimes referred to as magic constants—are automatically available to all scripts;
@@ -140,7 +140,7 @@ var corePredefinedConstants = []string{
 	"TRUE",
 }
 
-func IsCorePredefinedConstants(token string) bool {
+func IsCorePredefinedConstant(token string) bool {
 	// Spec: https://phplang.org/spec/06-constants.html#core-predefined-constants
 
 	// The following constants are automatically available to all scripts;

@@ -60,7 +60,9 @@ func (parser *Parser) ProduceAST(sourceCode string, filename string) (*ast.Progr
 		if err != nil {
 			return parser.program, err
 		}
-		parser.program.Append(stmt)
+		if stmt.GetKind() != ast.EmptyNode {
+			parser.program.Append(stmt)
+		}
 	}
 
 	return parser.program, nil
@@ -340,7 +342,50 @@ func (parser *Parser) parseStmt() (ast.IStatement, phpError.Error) {
 
 	// TODO interface-declaration
 	// TODO trait-declaration
-	// TODO namespace-definition
+
+	// -------------------------------------- namespace-definition -------------------------------------- MARK: namespace-definition
+
+	// Spec: https://phplang.org/spec/18-namespaces.html#grammar-namespace-definition
+
+	// namespace-definition:
+	//    namespace   namespace-name   ;
+	//    namespace   namespace-name(opt)   compound-statement
+
+	// Spec: https://phplang.org/spec/09-lexical-structure.html#grammar-namespace-name
+
+	// namespace-name::
+	//    name
+	//    namespace-name   \   name
+
+	// Supported statement: namespace definition: `namespace My\Name\Space;`
+	if parser.isToken(lexer.KeywordToken, "namespace", true) {
+		PrintParserCallstack("namespace-definition", parser)
+		namespace := []string{}
+
+		for {
+			if !parser.isTokenType(lexer.NameToken, false) && !parser.isTokenType(lexer.KeywordToken, false) {
+				break
+			}
+
+			namespace = append(namespace, parser.eat().Value)
+
+			if parser.isToken(lexer.OpOrPuncToken, "\\", true) {
+				continue
+			}
+			break
+		}
+
+		if !parser.isToken(lexer.OpOrPuncToken, ";", true) {
+			return ast.NewEmptyStmt(), NewExpectedError(";", parser.at())
+		}
+
+		// TODO namespace-declaration - support compound-statment
+
+		// TODO Reuse namespaces within one request
+		parser.at().Position.File.Namespace = position.NewNamespace(namespace)
+		return ast.NewEmptyStmt(), nil
+	}
+
 	// TODO namespace-use-declaration
 
 	// -------------------------------------- global-declaration -------------------------------------- MARK: global-declaration
@@ -2200,11 +2245,16 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, phpError.Error) {
 	//    namespace-name-as-a-prefix(opt)   name
 
 	if parser.isTokenType(lexer.NameToken, false) ||
-		(parser.isTokenType(lexer.KeywordToken, false) && common.IsCorePredefinedConstants(parser.at().Value)) {
+		(parser.isTokenType(lexer.KeywordToken, false) && common.IsCorePredefinedConstant(parser.at().Value)) {
 		// TODO constant-access-expression - namespace-name-as-a-prefix
 		// TODO constant-access-expression - check if name is a defined constant here or in interpreter
 		PrintParserCallstack("constant-access-expression", parser)
-		return ast.NewConstantAccessExpr(parser.nextId(), parser.at().Position, parser.eat().Value), nil
+		constantName := parser.at().Value
+		// TODO Find a way to reduce "is..constant" to just one time
+		if common.IsCorePredefinedConstant(constantName) || common.IsContextDependentConstant(constantName) {
+			constantName = strings.ToUpper(constantName)
+		}
+		return ast.NewConstantAccessExpr(parser.nextId(), parser.eat().Position, constantName), nil
 	}
 
 	// literal

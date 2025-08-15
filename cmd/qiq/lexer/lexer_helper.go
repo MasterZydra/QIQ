@@ -1,9 +1,7 @@
 package lexer
 
 import (
-	"QIQ/cmd/qiq/common"
 	"QIQ/cmd/qiq/position"
-	"strings"
 )
 
 func (lexer *Lexer) isEof() bool {
@@ -80,14 +78,6 @@ func (lexer *Lexer) pushToken(tokenType TokenType, value string) {
 }
 
 func (lexer *Lexer) pushKeywordToken(keyword string) {
-	if common.IsKeyword(keyword) {
-		lexer.pushToken(KeywordToken, strings.ToLower(keyword))
-		return
-	}
-	if common.IsCorePredefinedConstants(keyword) || common.IsContextDependentConstants(keyword) {
-		lexer.pushToken(KeywordToken, strings.ToUpper(keyword))
-		return
-	}
 	lexer.pushToken(KeywordToken, keyword)
 }
 
