@@ -5,17 +5,24 @@ import (
 	"strings"
 )
 
+func IsReservedName(token string) bool {
+	return IsKeyword(token) || IsContextDependentConstant(token) || IsCorePredefinedConstant(token) || slices.Contains([]string{"parent"}, strings.ToLower(token))
+}
+
 // MARK: Keywords
+
+// Spec: https://www.php.net/manual/en/reserved.keywords.php
+// TODO handle __halt_compiler()
 
 // Spec: https://phplang.org/spec/19-grammar.html#grammar-keyword
 var keywords = []string{
 	"abstract", "and", "array", "as", "break", "callable", "case", "catch", "class", "clone",
 	"const", "continue", "declare", "default", "die", "do", "echo", "else", "elseif", "empty",
 	"enddeclare", "endfor", "endforeach", "endif", "endswitch", "endwhile", "eval", "exit",
-	"extends", "final", "finally", "for", "foreach", "function", "global",
+	"extends", "final", "finally", "fn", "for", "foreach", "function", "global",
 	"goto", "if", "implements", "include", "include_once", "instanceof",
-	"insteadof", "interface", "isset", "list", "namespace", "new", "or", "print", "private",
-	"protected", "public", "require", "require_once", "return", "static", "switch",
+	"insteadof", "interface", "isset", "list", "match", "namespace", "new", "or", "print", "private",
+	"protected", "public", "readonly", "require", "require_once", "return", "static", "switch",
 	"throw", "trait", "try", "unset", "use", "var", "while", "xor", "yield", "yield from",
 	// Non-spec:
 	"mixed", "void",

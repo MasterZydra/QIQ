@@ -35,6 +35,13 @@ func NewFile(filename string) *File {
 	return &File{Filename: filename, Namespace: nil, IsStrictType: false}
 }
 
+func (file *File) GetNamespaceStr() string {
+	if file.Namespace == nil {
+		return ""
+	}
+	return file.Namespace.ToString()
+}
+
 // MARK: Position
 
 type Position struct {

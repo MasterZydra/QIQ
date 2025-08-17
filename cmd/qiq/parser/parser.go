@@ -1199,6 +1199,9 @@ func (parser *Parser) parseFunctionDefinition() (ast.IStatement, phpError.Error)
 	if !common.IsName(functionName) {
 		return ast.NewEmptyExpr(), phpError.NewParseError("\"%s\" is not a valid function name at %s", functionName, functionNamePos)
 	}
+	if common.IsReservedName(functionName) {
+		return ast.NewEmptyStmt(), phpError.NewError("Cannot use \"%s\" as a function name as it is reserved in %s", functionName, functionNamePos)
+	}
 
 	if !parser.isToken(lexer.OpOrPuncToken, "(", true) {
 		return ast.NewEmptyStmt(), NewExpectedError("(", parser.at())

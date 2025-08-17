@@ -2,9 +2,41 @@ package parser
 
 import (
 	"QIQ/cmd/qiq/ast"
+	"QIQ/cmd/qiq/common/os"
 	"QIQ/cmd/qiq/ini"
+	"QIQ/cmd/qiq/phpError"
 	"testing"
 )
+
+var TEST_FILE_NAME string = getTestFileName()
+var TEST_FILE_PATH string = getTestFilePath()
+
+func getTestFileName() string {
+	if os.IS_WIN {
+		return `C:\Users\admin\test.php`
+	} else {
+		return "/home/admin/test.php"
+	}
+}
+
+func getTestFilePath() string {
+	if os.IS_WIN {
+		return `C:\Users\admin`
+	} else {
+		return "/home/admin"
+	}
+}
+
+func testForError(t *testing.T, php string, expected phpError.Error) {
+	_, err := NewParser(ini.NewDevIni()).ProduceAST(php, TEST_FILE_NAME)
+	if err == nil {
+		t.Errorf("\nCode: \"%s\"\nExpected error, but got \"nil\"", php)
+		return
+	}
+	if err.GetErrorType() != expected.GetErrorType() || err.GetMessage() != expected.GetMessage() {
+		t.Errorf("\nCode: \"%s\"\nExpected: %s\nGot:      %s", php, expected, err)
+	}
+}
 
 func testExpr(t *testing.T, php string, expected ast.IExpression) {
 	testExprs(t, php, []ast.IExpression{expected})
@@ -294,6 +326,8 @@ func TestGlobalDeclaration(t *testing.T) {
 	)
 }
 
+// -------------------------------------- Loops -------------------------------------- MARK: Loops
+
 func TestLoops(t *testing.T) {
 	// While
 	testStmt(t, `<?php while (true) {}`,
@@ -388,7 +422,12 @@ func TestLoops(t *testing.T) {
 	)
 }
 
+// -------------------------------------- Class -------------------------------------- MARK: Class
+
 func TestClassDeclaration(t *testing.T) {
+	// Reserved name
+	testForError(t, `<?php class Parent {}`, phpError.NewError(`Cannot use "Parent" as a class name as it is reserved in %s:1:13`, TEST_FILE_NAME))
+
 	// Simple class
 	class := ast.NewClassDeclarationStmt(0, nil, "c", false, false)
 	testStmt(t, `<?php class c { }`, class)

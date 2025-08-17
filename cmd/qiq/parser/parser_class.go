@@ -111,17 +111,21 @@ func (parser *Parser) parseClassDeclaration() (ast.IStatement, phpError.Error) {
 	className := parser.at().Value
 	classNamePos := parser.eat().GetPosString()
 	if !common.IsName(className) {
-		return ast.NewEmptyExpr(), phpError.NewParseError("\"%s\" is not a valid class name at %s", className, classNamePos)
+		return ast.NewEmptyStmt(), phpError.NewParseError("\"%s\" is not a valid class name at %s", className, classNamePos)
+	}
+	if common.IsReservedName(className) {
+		return ast.NewEmptyStmt(), phpError.NewError("Cannot use \"%s\" as a class name as it is reserved in %s", className, classNamePos)
 	}
 
 	class := ast.NewClassDeclarationStmt(parser.nextId(), pos, className, isAbstract, isFinal)
 
 	// class-base-clause
 	if parser.isToken(lexer.KeywordToken, "extends", true) {
-		class.BaseClass = parser.at().Value
+		namespace := class.GetPosition().File.GetNamespaceStr()
+		class.BaseClass = namespace + parser.at().Value
 		baseClassPos := parser.eat().GetPosString()
 		if !common.IsQualifiedName(class.BaseClass) {
-			return ast.NewEmptyExpr(), phpError.NewParseError("\"%s\" is not a valid class name at %s", class.Name, baseClassPos)
+			return ast.NewEmptyStmt(), phpError.NewParseError("\"%s\" is not a valid class name at %s", class.Name, baseClassPos)
 		}
 	}
 
@@ -131,7 +135,7 @@ func (parser *Parser) parseClassDeclaration() (ast.IStatement, phpError.Error) {
 			interfaceName := parser.at().Value
 			interfaceNamePos := parser.eat().GetPosString()
 			if !common.IsQualifiedName(interfaceName) {
-				return ast.NewEmptyExpr(), phpError.NewParseError("\"%s\" is not a valid interface name at %s", class.Name, interfaceNamePos)
+				return ast.NewEmptyStmt(), phpError.NewParseError("\"%s\" is not a valid interface name at %s", class.Name, interfaceNamePos)
 			}
 
 			class.Interfaces = append(class.Interfaces, interfaceName)

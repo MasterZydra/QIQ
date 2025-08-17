@@ -300,7 +300,7 @@ func GetExecutableCreationDate() time.Time {
 }
 
 func (interpreter *Interpreter) GetClass(class string) (*ast.ClassDeclarationStatement, bool) {
-	classDeclaration, found := interpreter.classDeclarations[class]
+	classDeclaration, found := interpreter.classDeclarations[strings.ToLower(class)]
 	if !found {
 		return nil, false
 	}

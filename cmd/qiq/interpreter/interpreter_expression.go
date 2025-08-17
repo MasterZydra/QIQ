@@ -574,11 +574,7 @@ func (interpreter *Interpreter) ProcessConstantAccessExpr(expr *ast.ConstantAcce
 	// When used inside a trait method, __CLASS__ is the name of the class the trait is used in.
 	if expr.ConstantName == "__CLASS__" {
 		if environment.CurrentObject != nil {
-			namespace := ""
-			if environment.CurrentObject.Class.GetPosition().File.Namespace != nil {
-				namespace = environment.CurrentObject.Class.GetPosition().File.Namespace.ToString()
-			}
-			return values.NewStr(namespace + environment.CurrentObject.Class.Name), nil
+			return values.NewStr(environment.CurrentObject.Class.GetQualifiedName()), nil
 		}
 		return values.NewStr(""), nil
 	}
@@ -878,7 +874,8 @@ func (interpreter *Interpreter) ProcessErrorControlExpr(stmt *ast.ErrorControlEx
 
 // ProcessObjectCreationExpr implements Visitor.
 func (interpreter *Interpreter) ProcessObjectCreationExpr(stmt *ast.ObjectCreationExpression, env any) (any, error) {
-	class, found := interpreter.classDeclarations[stmt.Designator]
+	// TODO ProcessObjectCreationExpr - Add correct handling of namespaces
+	class, found := interpreter.GetClass(stmt.GetPosition().File.GetNamespaceStr() + stmt.Designator)
 	if !found {
 		return values.NewVoid(), phpError.NewError("Cannot create object. Class \"%s\" not found.", stmt.Designator)
 	}
@@ -921,7 +918,7 @@ func (interpreter *Interpreter) initObject(object *values.Object, constructorArg
 	// TODO Fix order of initialization - first parent-parent than parent
 	baseClass := object.Class.BaseClass
 	for baseClass != "" {
-		baseClassDecl, found := interpreter.classDeclarations[baseClass]
+		baseClassDecl, found := interpreter.GetClass(baseClass)
 		if !found {
 			return phpError.NewError("Cannot create object. Class \"%s\" not found.", object.Class.BaseClass)
 		}

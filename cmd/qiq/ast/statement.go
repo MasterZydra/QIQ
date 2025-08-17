@@ -379,6 +379,10 @@ func (stmt *ClassDeclarationStatement) Process(visitor Visitor, context any) (an
 	return visitor.ProcessClassDeclarationStmt(stmt, context)
 }
 
+func (stmt *ClassDeclarationStatement) GetQualifiedName() string {
+	return stmt.pos.File.GetNamespaceStr() + stmt.Name
+}
+
 func (stmt *ClassDeclarationStatement) AddConst(constStmt *ClassConstDeclarationStatement) {
 	stmt.Constants[constStmt.Name] = constStmt
 }
