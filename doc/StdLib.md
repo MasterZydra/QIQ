@@ -99,6 +99,7 @@
 - is_integer
 - is_long
 - is_null
+- is_object
 - is_scalar
 - is_string
 - print_r

@@ -28,6 +28,7 @@ func Register(environment runtime.Environment) {
 	environment.AddNativeFunction("is_integer", nativeFn_is_int)
 	environment.AddNativeFunction("is_long", nativeFn_is_int)
 	environment.AddNativeFunction("is_null", nativeFn_is_null)
+	environment.AddNativeFunction("is_object", nativeFn_is_object)
 	environment.AddNativeFunction("is_scalar", nativeFn_is_scalar)
 	environment.AddNativeFunction("is_string", nativeFn_is_string)
 	environment.AddNativeFunction("print_r", nativeFn_print_r)
@@ -405,17 +406,27 @@ func lib_is_int(runtimeValue values.RuntimeValue) bool {
 // -------------------------------------- is_null -------------------------------------- MARK: is_null
 
 func nativeFn_is_null(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
+	// Spec: https://www.php.net/manual/en/function.is-null.php
+
 	args, err := funcParamValidator.NewValidator("is_null").AddParam("$value", []string{"mixed"}, nil).Validate(args)
 	if err != nil {
 		return values.NewVoid(), err
 	}
 
-	return values.NewBool(lib_is_null(args[0])), nil
+	return values.NewBool(args[0].GetType() == values.NullValue), nil
 }
 
-func lib_is_null(runtimeValue values.RuntimeValue) bool {
-	// Spec: https://www.php.net/manual/en/function.is-null.php
-	return runtimeValue.GetType() == values.NullValue
+// -------------------------------------- is_object -------------------------------------- MARK: is_object
+
+func nativeFn_is_object(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
+	// Spec: https://www.php.net/manual/en/function.is-object.php
+
+	args, err := funcParamValidator.NewValidator("is_object").AddParam("$value", []string{"mixed"}, nil).Validate(args)
+	if err != nil {
+		return values.NewVoid(), err
+	}
+
+	return values.NewBool(args[0].GetType() == values.ObjectValue), nil
 }
 
 // -------------------------------------- is_scalar -------------------------------------- MARK: is_scalar
@@ -437,17 +448,14 @@ func IsScalar(runtimeValue values.RuntimeValue) bool {
 // -------------------------------------- is_string -------------------------------------- MARK: is_string
 
 func nativeFn_is_string(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
+	// Spec: https://www.php.net/manual/en/function.is-string
+
 	args, err := funcParamValidator.NewValidator("is_string").AddParam("$value", []string{"mixed"}, nil).Validate(args)
 	if err != nil {
 		return values.NewVoid(), err
 	}
 
-	return values.NewBool(lib_is_string(args[0])), nil
-}
-
-func lib_is_string(runtimeValue values.RuntimeValue) bool {
-	// Spec: https://www.php.net/manual/en/function.is-string
-	return runtimeValue.GetType() == values.StrValue
+	return values.NewBool(args[0].GetType() == values.StrValue), nil
 }
 
 // -------------------------------------- print_r -------------------------------------- MARK: print_r
@@ -760,7 +768,6 @@ func lib_var_export_var(value values.RuntimeValue, depth int) (string, phpError.
 // TODO is_​countable
 // TODO is_​iterable
 // TODO is_​numeric
-// TODO is_​object
 // TODO is_​resource
 // TODO serialize
 // TODO settype

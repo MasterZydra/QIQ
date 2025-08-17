@@ -11,6 +11,7 @@
 - float (including numeric literal separator)
 - int  (including numeric literal separator)
 - null
+- object
 - string
 
 ## Predefined variables

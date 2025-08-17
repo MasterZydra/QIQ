@@ -277,6 +277,11 @@ func TestLibIsType(t *testing.T) {
 	// is_string
 	testInputOutput(t, `<?php $a = " "; var_dump(is_string($a));`, "bool(true)\n")
 	testInputOutput(t, `<?php $a = 42; var_dump(is_string($a));`, "bool(false)\n")
+
+	// is_object
+	testInputOutput(t, `<?php $a = null; var_dump(is_object($a));`, "bool(false)\n")
+	testInputOutput(t, `<?php $a = []; var_dump(is_object($a));`, "bool(false)\n")
+	testInputOutput(t, `<?php class C {} $a = new C; var_dump(is_object($a));`, "bool(true)\n")
 }
 
 // -------------------------------------- print_r -------------------------------------- MARK: print_r
