@@ -380,6 +380,9 @@ func (stmt *ClassDeclarationStatement) Process(visitor Visitor, context any) (an
 }
 
 func (stmt *ClassDeclarationStatement) GetQualifiedName() string {
+	if stmt.pos == nil || stmt.pos.File == nil {
+		return stmt.Name
+	}
 	return stmt.pos.File.GetNamespaceStr() + stmt.Name
 }
 

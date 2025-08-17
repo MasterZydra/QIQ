@@ -51,8 +51,7 @@ func nativeFn_get_class(args []values.RuntimeValue, _ runtime.Context) (values.R
 	// Spec: https://www.php.net/manual/en/function.get-class.php
 	// If the object is an instance of a class which exists in a namespace,
 	// the qualified namespaced name of that class is returned.
-	namespace := object.Class.GetPosition().File.GetNamespaceStr()
-	return values.NewStr(namespace + object.Class.Name), nil
+	return values.NewStr(object.Class.GetQualifiedName()), nil
 }
 
 // -------------------------------------- get_parent_class -------------------------------------- MARK: get_class
