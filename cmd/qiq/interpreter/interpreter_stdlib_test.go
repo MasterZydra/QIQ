@@ -322,7 +322,7 @@ func TestLibVarExport(t *testing.T) {
 	testInputOutput(t, `<?php var_export([1, [1]]);`, "array (\n  0 => 1,\n  1 => \n  array (\n    0 => 1,\n  ),\n)")
 }
 
-// -------------------------------------- optionInfo -------------------------------------- MARK: optionInfo
+// -------------------------------------- option_info -------------------------------------- MARK: option_info
 
 func TestLibOptionInfo(t *testing.T) {
 	// ini_get
@@ -353,4 +353,29 @@ func TestLibErrorReporting(t *testing.T) {
 	testInputOutput(t, `<?php error_reporting(E_ALL); echo error_reporting();`, "32767")
 	// Report all PHP errors
 	testInputOutput(t, `<?php error_reporting(-1); echo error_reporting();`, "32767")
+}
+
+// -------------------------------------- classes_object -------------------------------------- MARK: classesobject
+
+func TestLibClassesObject(t *testing.T) {
+	// class_exists
+	testInputOutput(t, `<?php class C {} var_dump(class_exists('C'));`, "bool(true)\n")
+	testInputOutput(t, `<?php class C {} var_dump(class_exists('c'));`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump(class_exists('c'));`, "bool(false)\n")
+
+	// get_class
+	testInputOutput(t, `<?php class Foo {} $bar = new Foo; var_dump(get_class($bar));`, "string(3) \"Foo\"\n")
+	testInputOutput(t, `<?php namespace Space; class Foo {} $bar = new Foo; var_dump(get_class($bar));`, "string(9) \"Space\\Foo\"\n")
+
+	// get_parent_class
+	testInputOutput(t, `<?php class Dad {} class Child extends Dad {} $c = new Child; var_dump(get_parent_class($c));`, "string(3) \"Dad\"\n")
+	testInputOutput(t, `<?php namespace Space; class Dad {} class Child extends Dad {} $c = new Child; var_dump(get_parent_class($c));`, "string(9) \"Space\\Dad\"\n")
+
+	// is_subclass_of
+	testInputOutput(t, `<?php class Dad {} class Child extends Dad {} $c = new Child; var_dump(is_subclass_of($c, 'Dad'));`, "bool(true)\n")
+	testInputOutput(t, `<?php class Dad {} class Child extends Dad {} $c = new Child; var_dump(is_subclass_of($c, 'dad'));`, "bool(true)\n")
+	testInputOutput(t, `<?php class Dad {} class Child extends Dad {} var_dump(is_subclass_of('Child', 'dad'));`, "bool(true)\n")
+	testInputOutput(t, `<?php class Dad {} class Child extends Dad {} var_dump(is_subclass_of('someChild', 'Dad'));`, "bool(false)\n")
+	testInputOutput(t, `<?php namespace Space; class Dad {} class Child extends Dad {} var_dump(is_subclass_of('someChild', 'Dad'));`, "bool(false)\n")
+	testInputOutput(t, `<?php namespace Space; class Dad {} class Child extends Dad {} $c = new Child; var_dump(is_subclass_of('Space\Child', 'space\dad'));`, "bool(true)\n")
 }
