@@ -49,7 +49,7 @@ func NewPosition(file *File, line int, column int) *Position {
 
 func (pos *Position) ToPosString() string {
 	if pos.File == nil {
-		pos.File = NewFile("")
+		return ""
 	}
 	return fmt.Sprintf("%s:%d:%d", pos.File.Filename, pos.Line, pos.Column)
 }
