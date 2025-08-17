@@ -11,10 +11,38 @@ import (
 
 func Register(environment runtime.Environment) {
 	// Category: Classes/Object Functions
+	environment.AddNativeFunction("class_alias", nativeFn_class_alias)
 	environment.AddNativeFunction("class_exists", nativeFn_class_exists)
 	environment.AddNativeFunction("get_class", nativeFn_get_class)
 	environment.AddNativeFunction("get_parent_class", nativeFn_get_parent_class)
 	environment.AddNativeFunction("is_subclass_of", nativeFn_is_subclass_of)
+}
+
+// -------------------------------------- class_alias -------------------------------------- MARK: class_alias
+
+func nativeFn_class_alias(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
+	// https://www.php.net/manual/en/function.class-exists.php
+
+	args, err := funcParamValidator.NewValidator("class_alias").
+		AddParam("$class", []string{"string"}, nil).
+		AddParam("$alias", []string{"string"}, nil).
+		Validate(args)
+	if err != nil {
+		return values.NewVoid(), err
+	}
+
+	// TODO class_alias - Ad support for param $autoload
+
+	className := args[0].(*values.Str).Value
+	classDecl, found := context.Interpreter.GetClass(className)
+	if !found {
+		context.Interpreter.PrintError(phpError.NewWarning("Class \"%s\" not found in %s", className, context.Stmt.GetPosString()))
+		return values.NewBool(false), nil
+	}
+
+	context.Interpreter.AddClass(args[1].(*values.Str).Value, classDecl)
+
+	return values.NewBool(true), nil
 }
 
 // -------------------------------------- class_exists -------------------------------------- MARK: class_exists
@@ -133,7 +161,6 @@ func nativeFn_is_subclass_of(args []values.RuntimeValue, context runtime.Context
 	return values.NewBool(strings.EqualFold(classDecl.BaseClass, class)), nil
 }
 
-// TODO class_alias
 // TODO enum_exists
 // TODO get_called_class
 // TODO get_class_methods

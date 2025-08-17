@@ -51,7 +51,7 @@ func NewInterpreter(ini *ini.Ini, r *request.Request, filename string) (*Interpr
 		return interpreter, err
 	}
 
-	interpreter.classDeclarations["stdclass"] = ast.NewClassDeclarationStmt(0, nil, "stdClass", false, false)
+	interpreter.AddClass("stdclass", ast.NewClassDeclarationStmt(0, nil, "stdClass", false, false))
 
 	if ini.GetBool("register_argc_argv") {
 		server := interpreter.env.predefinedVariables["$_SERVER"].(*values.Array)

@@ -12,6 +12,7 @@
 - key_exists
 
 ## Classes/Object Functions
+- class_alias
 - class_exists
 - get_class
 - get_parent_class

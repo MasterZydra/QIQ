@@ -13,6 +13,7 @@ type Interpreter interface {
 	GetResponse() *request.Response
 	GetIni() *ini.Ini
 	GetOutputBufferStack() *outputBuffer.Stack
+	AddClass(class string, classDecl *ast.ClassDeclarationStatement)
 	GetClass(class string) (*ast.ClassDeclarationStatement, bool)
 	Print(str string)
 	Println(str string)

@@ -299,6 +299,10 @@ func GetExecutableCreationDate() time.Time {
 	return info.ModTime()
 }
 
+func (interpreter *Interpreter) AddClass(class string, classDecl *ast.ClassDeclarationStatement) {
+	interpreter.classDeclarations[strings.ToLower(class)] = classDecl
+}
+
 func (interpreter *Interpreter) GetClass(class string) (*ast.ClassDeclarationStatement, bool) {
 	classDeclaration, found := interpreter.classDeclarations[strings.ToLower(class)]
 	if !found {

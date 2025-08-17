@@ -5,7 +5,6 @@ import (
 	"QIQ/cmd/qiq/phpError"
 	"QIQ/cmd/qiq/runtime/stdlib/variableHandling"
 	"QIQ/cmd/qiq/runtime/values"
-	"strings"
 )
 
 // ProcessStmt implements Visitor.
@@ -15,7 +14,7 @@ func (interpreter *Interpreter) ProcessStmt(stmt *ast.Statement, _ any) (any, er
 
 // ProcessClassDeclarationStmt implements Visitor.
 func (visitor *Interpreter) ProcessClassDeclarationStmt(stmt *ast.ClassDeclarationStatement, _ any) (any, error) {
-	visitor.classDeclarations[strings.ToLower(stmt.GetPosition().File.GetNamespaceStr()+stmt.Name)] = stmt
+	visitor.AddClass(stmt.GetPosition().File.GetNamespaceStr()+stmt.Name, stmt)
 	return values.NewVoid(), nil
 }
 

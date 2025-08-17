@@ -2,6 +2,7 @@ package interpreter
 
 import (
 	"QIQ/cmd/qiq/phpError"
+	"fmt"
 	"testing"
 )
 
@@ -358,6 +359,12 @@ func TestLibErrorReporting(t *testing.T) {
 // -------------------------------------- classes_object -------------------------------------- MARK: classesobject
 
 func TestLibClassesObject(t *testing.T) {
+	// class_alias
+	testInputOutput(t, `<?php class C {} var_dump(class_alias('C', 'B')); $b = new B;  var_dump(get_class($b));`, "bool(true)\nstring(1) \"C\"\n")
+	testInputOutput(t, `<?php class C {} var_dump(class_alias('D', 'B'));`, fmt.Sprintf("\nWarning: Class \"D\" not found in %s:1:27\nbool(false)\n", TEST_FILE_NAME))
+	// TODO Add support for namespace in object creation
+	// testInputOutput(t, `<?php class C {} var_dump(class_alias('C', 'Space\B')); $b = new \Space\B;  var_dump(get_class($b));`, "bool(true)\nstring(1) \"C\"\n")
+
 	// class_exists
 	testInputOutput(t, `<?php class C {} var_dump(class_exists('C'));`, "bool(true)\n")
 	testInputOutput(t, `<?php class C {} var_dump(class_exists('c'));`, "bool(true)\n")
