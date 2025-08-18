@@ -386,6 +386,20 @@ func TestLibClassesObject(t *testing.T) {
 			"array(3) {\n  [0]=>\n  string(7) \"myfunc1\"\n  [1]=>\n  string(11) \"__construct\"\n  [2]=>\n  string(7) \"myfunc2\"\n}\n",
 	)
 
+	// get_class_vars
+	testInputOutput(t, `<?php var_dump(get_class_vars('stdclass'));`, "array(0) {\n}\n")
+	testInputOutput(t, `<?php
+		class C {
+			public $e = 'hi';
+			public $d = 42;
+			private $c = 4.5;
+			protected $b = 'str';
+			public $a;
+		}
+		var_dump(get_class_vars('c'));
+		`,
+		"array(3) {\n  [\"e\"]=>\n  string(2) \"hi\"\n  [\"d\"]=>\n  int(42)\n  [\"a\"]=>\n  NULL\n}\n",
+	)
 	// get_parent_class
 	testInputOutput(t, `<?php class Dad {} class Child extends Dad {} $c = new Child; var_dump(get_parent_class($c));`, "string(3) \"Dad\"\n")
 	testInputOutput(t, `<?php namespace Space; class Dad {} class Child extends Dad {} $c = new Child; var_dump(get_parent_class($c));`, "string(9) \"Space\\Dad\"\n")

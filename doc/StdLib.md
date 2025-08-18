@@ -16,6 +16,7 @@
 - class_exists
 - get_class
 - get_class_methods
+- get_class_vars
 - get_parent_class
 - is_subclass_of
 

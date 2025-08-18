@@ -133,6 +133,10 @@ func (interpreter *Interpreter) processProgram(program *ast.Program, env *Enviro
 	return runtimeValue, nil
 }
 
+func (interperter *Interpreter) ProcessStatement(stmt ast.IStatement, env any) (values.RuntimeValue, phpError.Error) {
+	return interperter.processStmt(stmt, env)
+}
+
 func (interpreter *Interpreter) processStmt(stmt ast.IStatement, env any) (value values.RuntimeValue, phpErr phpError.Error) {
 	defer func() {
 		if r := recover(); r != nil {

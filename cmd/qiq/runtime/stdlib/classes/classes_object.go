@@ -15,6 +15,7 @@ func Register(environment runtime.Environment) {
 	environment.AddNativeFunction("class_exists", nativeFn_class_exists)
 	environment.AddNativeFunction("get_class", nativeFn_get_class)
 	environment.AddNativeFunction("get_class_methods", nativeFn_get_class_methods)
+	environment.AddNativeFunction("get_class_vars", nativeFn_get_class_vars)
 	environment.AddNativeFunction("get_parent_class", nativeFn_get_parent_class)
 	environment.AddNativeFunction("is_subclass_of", nativeFn_is_subclass_of)
 }
@@ -121,6 +122,48 @@ func nativeFn_get_class_methods(args []values.RuntimeValue, context runtime.Cont
 	return array, nil
 }
 
+// -------------------------------------- get_class_vars -------------------------------------- MARK: get_class_vars
+
+func nativeFn_get_class_vars(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
+	// Spec: https://www.php.net/manual/en/function.get-class-vars.php
+
+	args, err := funcParamValidator.NewValidator("get_class_vars").
+		AddParam("$class", []string{"string"}, nil).
+		Validate(args)
+	if err != nil {
+		return values.NewVoid(), err
+	}
+
+	className := args[0].(*values.Str).Value
+
+	class, found := context.Interpreter.GetClass(className)
+	if !found {
+		// TODO error handling - return a type error: https://www.php.net/manual/en/class.typeerror.php
+		return values.NewVoid(), phpError.NewError("Uncaught Type Error: get_class_vars(): Argument #1 ($class) must be a valid class name, %s given in %s", className, context.Stmt.GetPosString())
+	}
+
+	array := values.NewArray()
+
+	for _, propertyName := range class.PropertieNames {
+		if class.Properties[propertyName].Visibility != "public" {
+			continue
+		}
+
+		if class.Properties[propertyName].InitialValue == nil {
+			array.SetElement(values.NewStr(propertyName[1:]), values.NewNull())
+			continue
+		}
+
+		value, err := context.Interpreter.ProcessStatement(class.Properties[propertyName].InitialValue, context.Env)
+		if err != nil {
+			return array, err
+		}
+		array.SetElement(values.NewStr(propertyName[1:]), value)
+	}
+
+	return array, nil
+}
+
 // -------------------------------------- get_parent_class -------------------------------------- MARK: get_class
 
 func nativeFn_get_parent_class(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
@@ -202,7 +245,6 @@ func nativeFn_is_subclass_of(args []values.RuntimeValue, context runtime.Context
 
 // TODO enum_exists
 // TODO get_called_class
-// TODO get_class_vars
 // TODO get_declared_classes
 // TODO get_declared_interfaces
 // TODO get_declared_traits
