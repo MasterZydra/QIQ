@@ -3,6 +3,7 @@ package ast
 import (
 	"QIQ/cmd/qiq/position"
 	"slices"
+	"strings"
 )
 
 // -------------------------------------- Statement -------------------------------------- MARK: Statement
@@ -395,7 +396,7 @@ func (stmt *ClassDeclarationStatement) AddMethod(method *MethodDefinitionStateme
 	if !slices.Contains(stmt.MethodNames, method.Name) {
 		stmt.MethodNames = append(stmt.MethodNames, method.Name)
 	}
-	stmt.Methods[method.Name] = method
+	stmt.Methods[strings.ToLower(method.Name)] = method
 }
 
 func (stmt *ClassDeclarationStatement) AddProperty(property *PropertyDeclarationStatement) {

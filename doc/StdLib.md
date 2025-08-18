@@ -20,6 +20,7 @@
 - get_parent_class
 - is_a
 - is_subclass_of
+- method_exists
 
 ## Date/Time Functions
 - checkdate

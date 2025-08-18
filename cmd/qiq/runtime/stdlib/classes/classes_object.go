@@ -19,6 +19,7 @@ func Register(environment runtime.Environment) {
 	environment.AddNativeFunction("get_parent_class", nativeFn_get_parent_class)
 	environment.AddNativeFunction("is_a", nativeFn_is_a)
 	environment.AddNativeFunction("is_subclass_of", nativeFn_is_subclass_of)
+	environment.AddNativeFunction("method_exists", nativeFn_method_exists)
 }
 
 // -------------------------------------- class_alias -------------------------------------- MARK: class_alias
@@ -280,6 +281,43 @@ func nativeFn_is_subclass_of(args []values.RuntimeValue, context runtime.Context
 	return values.NewBool(strings.EqualFold(classDecl.BaseClass, class)), nil
 }
 
+// -------------------------------------- method_exists -------------------------------------- MARK: method_exists
+
+func nativeFn_method_exists(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
+	// Spec: https://www.php.net/manual/en/function.method-exists.php
+
+	args, err := funcParamValidator.NewValidator("method_exists").
+		AddParam("$object_or_class", []string{"object", "string"}, nil).
+		AddParam("$method", []string{"string"}, nil).
+		Validate(args)
+	if err != nil {
+		return values.NewVoid(), err
+	}
+
+	objectOrClass := args[0]
+	methodName := args[1].(*values.Str).Value
+
+	var classDecl *ast.ClassDeclarationStatement = nil
+
+	if objectOrClass.GetType() == values.StrValue {
+		className := objectOrClass.(*values.Str).Value
+
+		// Always return false, if the given string is not a valid class
+		var found bool
+		classDecl, found = context.Interpreter.GetClass(className)
+		if !found {
+			return values.NewBool(false), nil
+		}
+	}
+
+	if objectOrClass.GetType() == values.ObjectValue {
+		classDecl = objectOrClass.(*values.Object).Class
+	}
+
+	_, found := classDecl.Methods[strings.ToLower(methodName)]
+	return values.NewBool(found), nil
+}
+
 // TODO enum_exists
 // TODO get_called_class
 // TODO get_declared_classes
@@ -288,6 +326,5 @@ func nativeFn_is_subclass_of(args []values.RuntimeValue, context runtime.Context
 // TODO get_mangled_object_vars
 // TODO get_object_vars
 // TODO interface_exists
-// TODO method_exists
 // TODO property_exists
 // TODO trait_exists

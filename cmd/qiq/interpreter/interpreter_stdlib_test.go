@@ -423,4 +423,13 @@ func TestLibClassesObject(t *testing.T) {
 	testInputOutput(t, `<?php class Dad {} class Child extends Dad {} var_dump(is_subclass_of('someChild', 'Dad'));`, "bool(false)\n")
 	testInputOutput(t, `<?php namespace Space; class Dad {} class Child extends Dad {} var_dump(is_subclass_of('someChild', 'Dad'));`, "bool(false)\n")
 	testInputOutput(t, `<?php namespace Space; class Dad {} class Child extends Dad {} $c = new Child; var_dump(is_subclass_of('Space\Child', 'space\dad'));`, "bool(true)\n")
+
+	// method_exists
+	testInputOutput(t, `<?php var_dump(method_exists('NonexistingClass', 'read'));`, "bool(false)\n")
+	testInputOutput(t, `<?php class C { function f() { } } $c = new C; var_dump(method_exists($c, 'f'));`, "bool(true)\n")
+	testInputOutput(t, `<?php class C { function f() { } } $c = new C; var_dump(method_exists($c, 'F'));`, "bool(true)\n")
+	testInputOutput(t, `<?php class C { function f() { } } $c = new C; var_dump(method_exists($c, 'g'));`, "bool(false)\n")
+	testInputOutput(t, `<?php class C { function f() { } } var_dump(method_exists('C', 'f'));`, "bool(true)\n")
+	testInputOutput(t, `<?php class C { function f() { } } var_dump(method_exists('C', 'F'));`, "bool(true)\n")
+	testInputOutput(t, `<?php class C { function f() { } } var_dump(method_exists('C', 'g'));`, "bool(false)\n")
 }
