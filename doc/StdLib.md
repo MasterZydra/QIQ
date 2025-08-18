@@ -21,6 +21,7 @@
 - is_a
 - is_subclass_of
 - method_exists
+- property_exists
 
 ## Date/Time Functions
 - checkdate

@@ -432,4 +432,14 @@ func TestLibClassesObject(t *testing.T) {
 	testInputOutput(t, `<?php class C { function f() { } } var_dump(method_exists('C', 'f'));`, "bool(true)\n")
 	testInputOutput(t, `<?php class C { function f() { } } var_dump(method_exists('C', 'F'));`, "bool(true)\n")
 	testInputOutput(t, `<?php class C { function f() { } } var_dump(method_exists('C', 'g'));`, "bool(false)\n")
+
+	// property_exists
+	testInputOutput(t, `<?php var_dump(property_exists('C', 'prop'));`, "bool(false)\n")
+	testInputOutput(t, `<?php class C { } var_dump(property_exists('C', 'prop'));`, "bool(false)\n")
+	testInputOutput(t, `<?php class C { public $prop; } var_dump(property_exists('c', 'prop'));`, "bool(true)\n")
+	testInputOutput(t, `<?php class C { public $prop; } var_dump(property_exists('C', 'prop'));`, "bool(true)\n")
+	testInputOutput(t, `<?php class C { public $prop; } var_dump(property_exists('C', 'Prop'));`, "bool(false)\n")
+	testInputOutput(t, `<?php class C { private $prop; } var_dump(property_exists('C', 'prop'));`, "bool(true)\n")
+	testInputOutput(t, `<?php class C { static private $prop; } var_dump(property_exists('C', 'prop'));`, "bool(true)\n")
+	testInputOutput(t, `<?php class C { protected $prop; } var_dump(property_exists('C', 'prop'));`, "bool(true)\n")
 }
