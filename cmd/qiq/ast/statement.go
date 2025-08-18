@@ -354,6 +354,7 @@ type ClassDeclarationStatement struct {
 	BaseClass      string
 	Interfaces     []string
 	Constants      map[string]*ClassConstDeclarationStatement
+	MethodNames    []string
 	Methods        map[string]*MethodDefinitionStatement
 	PropertieNames []string
 	Properties     map[string]*PropertyDeclarationStatement
@@ -391,6 +392,9 @@ func (stmt *ClassDeclarationStatement) AddConst(constStmt *ClassConstDeclaration
 }
 
 func (stmt *ClassDeclarationStatement) AddMethod(method *MethodDefinitionStatement) {
+	if !slices.Contains(stmt.MethodNames, method.Name) {
+		stmt.MethodNames = append(stmt.MethodNames, method.Name)
+	}
 	stmt.Methods[method.Name] = method
 }
 

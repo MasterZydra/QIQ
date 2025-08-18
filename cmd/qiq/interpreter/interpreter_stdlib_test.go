@@ -374,6 +374,18 @@ func TestLibClassesObject(t *testing.T) {
 	testInputOutput(t, `<?php class Foo {} $bar = new Foo; var_dump(get_class($bar));`, "string(3) \"Foo\"\n")
 	testInputOutput(t, `<?php namespace Space; class Foo {} $bar = new Foo; var_dump(get_class($bar));`, "string(9) \"Space\\Foo\"\n")
 
+	// get_class_methods
+	testInputOutput(t, `<?php var_dump(get_class_methods('stdclass'));`, "array(0) {\n}\n")
+	testInputOutput(t,
+		`<?php
+			class C { function myfunc1() { } function __construct() { } function myfunc2() { } }
+			var_dump(get_class_methods('C'));
+			$c = new C; var_dump(get_class_methods($c));
+		`,
+		"array(3) {\n  [0]=>\n  string(7) \"myfunc1\"\n  [1]=>\n  string(11) \"__construct\"\n  [2]=>\n  string(7) \"myfunc2\"\n}\n"+
+			"array(3) {\n  [0]=>\n  string(7) \"myfunc1\"\n  [1]=>\n  string(11) \"__construct\"\n  [2]=>\n  string(7) \"myfunc2\"\n}\n",
+	)
+
 	// get_parent_class
 	testInputOutput(t, `<?php class Dad {} class Child extends Dad {} $c = new Child; var_dump(get_parent_class($c));`, "string(3) \"Dad\"\n")
 	testInputOutput(t, `<?php namespace Space; class Dad {} class Child extends Dad {} $c = new Child; var_dump(get_parent_class($c));`, "string(9) \"Space\\Dad\"\n")

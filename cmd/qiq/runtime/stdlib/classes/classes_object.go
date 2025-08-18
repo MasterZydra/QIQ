@@ -14,6 +14,7 @@ func Register(environment runtime.Environment) {
 	environment.AddNativeFunction("class_alias", nativeFn_class_alias)
 	environment.AddNativeFunction("class_exists", nativeFn_class_exists)
 	environment.AddNativeFunction("get_class", nativeFn_get_class)
+	environment.AddNativeFunction("get_class_methods", nativeFn_get_class_methods)
 	environment.AddNativeFunction("get_parent_class", nativeFn_get_parent_class)
 	environment.AddNativeFunction("is_subclass_of", nativeFn_is_subclass_of)
 }
@@ -21,7 +22,7 @@ func Register(environment runtime.Environment) {
 // -------------------------------------- class_alias -------------------------------------- MARK: class_alias
 
 func nativeFn_class_alias(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
-	// https://www.php.net/manual/en/function.class-exists.php
+	// https://www.php.net/manual/en/function.class-alias.php
 
 	args, err := funcParamValidator.NewValidator("class_alias").
 		AddParam("$class", []string{"string"}, nil).
@@ -80,6 +81,44 @@ func nativeFn_get_class(args []values.RuntimeValue, _ runtime.Context) (values.R
 	// If the object is an instance of a class which exists in a namespace,
 	// the qualified namespaced name of that class is returned.
 	return values.NewStr(object.Class.GetQualifiedName()), nil
+}
+
+// -------------------------------------- get_class_methods -------------------------------------- MARK: get_class_methods
+
+func nativeFn_get_class_methods(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
+	// Spec: https://www.php.net/manual/en/function.get-class-methods.php
+
+	args, err := funcParamValidator.NewValidator("get_class_methods").
+		AddParam("$object_or_class", []string{"object", "string"}, nil).
+		Validate(args)
+	if err != nil {
+		return values.NewVoid(), err
+	}
+
+	objectOrClass := args[0]
+
+	var class *ast.ClassDeclarationStatement = nil
+
+	if objectOrClass.GetType() == values.StrValue {
+		className := objectOrClass.(*values.Str).Value
+		var found bool
+		class, found = context.Interpreter.GetClass(className)
+		if !found {
+			// TODO error handling - return a type error: https://www.php.net/manual/en/class.typeerror.php
+			return values.NewVoid(), phpError.NewError("Uncaught Type Error: get_class_methods(): Argument #1 ($object_or_class) must be an object or a valid class name, string given in %s", context.Stmt.GetPosString())
+		}
+	}
+
+	if objectOrClass.GetType() == values.ObjectValue {
+		class = objectOrClass.(*values.Object).Class
+	}
+
+	array := values.NewArray()
+	for _, methodName := range class.MethodNames {
+		array.SetElement(nil, values.NewStr(methodName))
+	}
+
+	return array, nil
 }
 
 // -------------------------------------- get_parent_class -------------------------------------- MARK: get_class
@@ -163,7 +202,6 @@ func nativeFn_is_subclass_of(args []values.RuntimeValue, context runtime.Context
 
 // TODO enum_exists
 // TODO get_called_class
-// TODO get_class_methods
 // TODO get_class_vars
 // TODO get_declared_classes
 // TODO get_declared_interfaces
