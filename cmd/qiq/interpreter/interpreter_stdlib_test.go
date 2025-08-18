@@ -404,6 +404,18 @@ func TestLibClassesObject(t *testing.T) {
 	testInputOutput(t, `<?php class Dad {} class Child extends Dad {} $c = new Child; var_dump(get_parent_class($c));`, "string(3) \"Dad\"\n")
 	testInputOutput(t, `<?php namespace Space; class Dad {} class Child extends Dad {} $c = new Child; var_dump(get_parent_class($c));`, "string(9) \"Space\\Dad\"\n")
 
+	// is_a
+	testInputOutput(t, `<?php var_dump(is_a('stdclass', 'StdClass'));`, "bool(false)\n")
+	testInputOutput(t, `<?php $c = new StdClass; var_dump(is_a($c, 'StdClass'));`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump(is_a('stdclass', 'StdClass', true));`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump(is_a('stdclass', 'StdClas', true));`, "bool(false)\n")
+	testInputOutput(t, `<?php class C {} $c = new C; var_dump(is_a($c, 'c'));`, "bool(true)\n")
+	testInputOutput(t, `<?php class C {} var_dump(is_a('C', 'c', true));`, "bool(true)\n")
+	testInputOutput(t, `<?php namespace Space; class C {} $c = new C; var_dump(is_a($c, 'c'));`, "bool(false)\n")
+	testInputOutput(t, `<?php namespace Space; class C {} $c = new C; var_dump(is_a($c, 'Space\C'));`, "bool(true)\n")
+	testInputOutput(t, `<?php namespace Space; class C {} var_dump(is_a('c', 'c', true));`, "bool(false)\n")
+	testInputOutput(t, `<?php namespace Space; class C {} var_dump(is_a('Space\c', 'Space\C', true));`, "bool(true)\n")
+
 	// is_subclass_of
 	testInputOutput(t, `<?php class Dad {} class Child extends Dad {} $c = new Child; var_dump(is_subclass_of($c, 'Dad'));`, "bool(true)\n")
 	testInputOutput(t, `<?php class Dad {} class Child extends Dad {} $c = new Child; var_dump(is_subclass_of($c, 'dad'));`, "bool(true)\n")

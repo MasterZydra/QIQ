@@ -17,6 +17,7 @@ func Register(environment runtime.Environment) {
 	environment.AddNativeFunction("get_class_methods", nativeFn_get_class_methods)
 	environment.AddNativeFunction("get_class_vars", nativeFn_get_class_vars)
 	environment.AddNativeFunction("get_parent_class", nativeFn_get_parent_class)
+	environment.AddNativeFunction("is_a", nativeFn_is_a)
 	environment.AddNativeFunction("is_subclass_of", nativeFn_is_subclass_of)
 }
 
@@ -200,6 +201,42 @@ func nativeFn_get_parent_class(args []values.RuntimeValue, context runtime.Conte
 	return values.NewStr(class.BaseClass), nil
 }
 
+// -------------------------------------- is_a -------------------------------------- MARK: is_a
+
+func nativeFn_is_a(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
+	// Spec: https://www.php.net/manual/en/function.is-a.php
+
+	args, err := funcParamValidator.NewValidator("is_a").
+		AddParam("$object_or_class", []string{"object", "string"}, nil).
+		AddParam("$class", []string{"string"}, nil).
+		AddParam("$allow_string", []string{"bool"}, values.NewBool(false)).
+		Validate(args)
+	if err != nil {
+		return values.NewVoid(), err
+	}
+
+	objectOrClass := args[0]
+	class := args[1].(*values.Str).Value
+	allowString := args[2].(*values.Bool).Value
+
+	// Always return false, if a string is not allowed
+	if !allowString && objectOrClass.GetType() == values.StrValue {
+		return values.NewBool(false), nil
+	}
+
+	if objectOrClass.GetType() == values.StrValue {
+		// Always return false, if the given string is not a valid class
+		_, found := context.Interpreter.GetClass(objectOrClass.(*values.Str).Value)
+		if !found {
+			return values.NewBool(false), nil
+		}
+
+		return values.NewBool(strings.EqualFold(objectOrClass.(*values.Str).Value, class)), nil
+	}
+
+	return values.NewBool(strings.EqualFold(objectOrClass.(*values.Object).Class.GetQualifiedName(), class)), nil
+}
+
 // -------------------------------------- is_subclass_of -------------------------------------- MARK: is_subclass_of
 
 func nativeFn_is_subclass_of(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
@@ -251,7 +288,6 @@ func nativeFn_is_subclass_of(args []values.RuntimeValue, context runtime.Context
 // TODO get_mangled_object_vars
 // TODO get_object_vars
 // TODO interface_exists
-// TODO is_a
 // TODO method_exists
 // TODO property_exists
 // TODO trait_exists

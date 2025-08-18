@@ -18,6 +18,7 @@
 - get_class_methods
 - get_class_vars
 - get_parent_class
+- is_a
 - is_subclass_of
 
 ## Date/Time Functions
