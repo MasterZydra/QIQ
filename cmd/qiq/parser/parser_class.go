@@ -418,7 +418,7 @@ func (parser *Parser) parseClassConstrutorDeclaration(class *ast.ClassDeclaratio
 
 	class.AddMethod(ast.NewMethodDefinitionStmt(
 		parser.nextId(), pos,
-		"__construct", modifiers, parameters, body.(*ast.CompoundStatement), []string{"void"},
+		"__construct", modifiers, parameters, body.(*ast.CompoundStatement), []string{},
 	))
 
 	return isConstructor, nil
@@ -484,7 +484,7 @@ func (parser *Parser) parseClassDestrutorDeclaration(class *ast.ClassDeclaration
 
 	class.AddMethod(ast.NewMethodDefinitionStmt(
 		parser.nextId(), pos,
-		"__destruct", modifiers, []ast.FunctionParameter{}, body.(*ast.CompoundStatement), []string{"void"},
+		"__destruct", modifiers, []ast.FunctionParameter{}, body.(*ast.CompoundStatement), []string{},
 	))
 
 	return isDestructor, nil

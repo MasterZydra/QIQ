@@ -9,7 +9,6 @@ import (
 	"QIQ/cmd/qiq/runtime/stdlib/outputControl"
 	"QIQ/cmd/qiq/runtime/stdlib/variableHandling"
 	"QIQ/cmd/qiq/runtime/values"
-	"fmt"
 	"math"
 	GoOs "os"
 	"path/filepath"
@@ -411,11 +410,6 @@ func (interpreter *Interpreter) validateClass(classDecl *ast.ClassDeclarationSta
 
 				interfaceMethodDef, _ := interfaceDecl.GetMethod(methodName)
 				interfaceMethodSignature := MethodDeclToSignature(interfaceMethodDef)
-
-				fmt.Printf("Declaration of %s::%s must be compatible with %s::%s in %s\n",
-					classDecl.Name, classMethodSignature,
-					interfaceDecl.Name, interfaceMethodSignature,
-					classDecl.GetPosString())
 
 				if classMethodSignature != interfaceMethodSignature {
 					return phpError.NewError(
