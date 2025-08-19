@@ -299,6 +299,8 @@ func GetExecutableCreationDate() time.Time {
 	return info.ModTime()
 }
 
+// -------------------------------------- Classes and Interfaces -------------------------------------- MARK: Classes and Interfaces
+
 func (interpreter *Interpreter) AddClass(class string, classDecl *ast.ClassDeclarationStatement) {
 	interpreter.classDeclarations[strings.ToLower(class)] = classDecl
 }
@@ -309,6 +311,10 @@ func (interpreter *Interpreter) GetClass(class string) (*ast.ClassDeclarationSta
 		return nil, false
 	}
 	return classDeclaration, true
+}
+
+func (interpreter *Interpreter) AddInterface(interfaceName string, interfaceDecl *ast.InterfaceDeclarationStatement) {
+	interpreter.interfaceDeclarations[strings.ToLower(interfaceName)] = interfaceDecl
 }
 
 // -------------------------------------- Caching -------------------------------------- MARK: Caching

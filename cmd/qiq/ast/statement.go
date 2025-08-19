@@ -370,6 +370,7 @@ func NewClassDeclarationStmt(id int64, pos *position.Position, name string, isAb
 		IsFinal:        isFinal,
 		Interfaces:     []string{},
 		Constants:      map[string]*ClassConstDeclarationStatement{},
+		MethodNames:    []string{},
 		Methods:        map[string]*MethodDefinitionStatement{},
 		PropertieNames: []string{},
 		Properties:     map[string]*PropertyDeclarationStatement{},
@@ -452,9 +453,59 @@ type ForeachStatement struct {
 }
 
 func NewForeachStmt(id int64, pos *position.Position, collection, key, value IExpression, block IStatement) *ForeachStatement {
-	return &ForeachStatement{Statement: NewStmt(id, ForeachStmt, pos), Collection: collection, Key: key, Value: value, Block: block}
+	return &ForeachStatement{
+		Statement:  NewStmt(id, ForeachStmt, pos),
+		Collection: collection,
+		Key:        key,
+		Value:      value,
+		Block:      block,
+	}
 }
 
 func (stmt *ForeachStatement) Process(visitor Visitor, context any) (any, error) {
 	return visitor.ProcessForeachStmt(stmt, context)
+}
+
+// -------------------------------------- InterfaceDeclarationStatement -------------------------------------- MARK: InterfaceDeclarationStatement
+
+type InterfaceDeclarationStatement struct {
+	*Statement
+	Name        string
+	Parents     []string
+	Constants   map[string]*ClassConstDeclarationStatement
+	MethodNames []string
+	Methods     map[string]*MethodDefinitionStatement
+}
+
+func NewInterfaceDeclarationStmt(id int64, pos *position.Position, name string) *InterfaceDeclarationStatement {
+	return &InterfaceDeclarationStatement{
+		Statement:   NewStmt(id, InterfaceDeclarationStmt, pos),
+		Name:        name,
+		Parents:     []string{},
+		Constants:   map[string]*ClassConstDeclarationStatement{},
+		MethodNames: []string{},
+		Methods:     map[string]*MethodDefinitionStatement{},
+	}
+}
+
+func (stmt *InterfaceDeclarationStatement) Process(visitor Visitor, context any) (any, error) {
+	return visitor.ProcessInterfaceDeclarationStmt(stmt, context)
+}
+
+func (stmt *InterfaceDeclarationStatement) GetQualifiedName() string {
+	if stmt.pos == nil || stmt.pos.File == nil {
+		return stmt.Name
+	}
+	return stmt.pos.File.GetNamespaceStr() + stmt.Name
+}
+
+func (stmt *InterfaceDeclarationStatement) AddConst(constStmt *ClassConstDeclarationStatement) {
+	stmt.Constants[constStmt.Name] = constStmt
+}
+
+func (stmt *InterfaceDeclarationStatement) AddMethod(method *MethodDefinitionStatement) {
+	if !slices.Contains(stmt.MethodNames, method.Name) {
+		stmt.MethodNames = append(stmt.MethodNames, method.Name)
+	}
+	stmt.Methods[strings.ToLower(method.Name)] = method
 }

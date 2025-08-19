@@ -125,7 +125,7 @@ func (parser *Parser) parseClassDeclaration() (ast.IStatement, phpError.Error) {
 		class.BaseClass = namespace + parser.at().Value
 		baseClassPos := parser.eat().GetPosString()
 		if !common.IsQualifiedName(class.BaseClass) {
-			return ast.NewEmptyStmt(), phpError.NewParseError("\"%s\" is not a valid class name at %s", class.Name, baseClassPos)
+			return ast.NewEmptyStmt(), phpError.NewParseError("\"%s\" is not a valid class name at %s", class.BaseClass, baseClassPos)
 		}
 	}
 
@@ -135,7 +135,7 @@ func (parser *Parser) parseClassDeclaration() (ast.IStatement, phpError.Error) {
 			interfaceName := parser.at().Value
 			interfaceNamePos := parser.eat().GetPosString()
 			if !common.IsQualifiedName(interfaceName) {
-				return ast.NewEmptyStmt(), phpError.NewParseError("\"%s\" is not a valid interface name at %s", class.Name, interfaceNamePos)
+				return ast.NewEmptyStmt(), phpError.NewParseError("\"%s\" is not a valid interface name at %s", interfaceName, interfaceNamePos)
 			}
 
 			class.Interfaces = append(class.Interfaces, interfaceName)
@@ -224,7 +224,7 @@ func (parser *Parser) parseClassMemberDeclaration(class *ast.ClassDeclarationSta
 		}
 
 		// method-declaration
-		isMethodDeclaration, err := parser.parseClassMethodDeclaration(class)
+		isMethodDeclaration, err := parser.parseClassMethodDeclaration(class, true)
 		if isMethodDeclaration && err != nil {
 			return err
 		}
@@ -245,7 +245,7 @@ func (parser *Parser) parseClassMemberDeclaration(class *ast.ClassDeclarationSta
 	}
 }
 
-func (parser *Parser) parseClassConstDeclaration(class *ast.ClassDeclarationStatement) phpError.Error {
+func (parser *Parser) parseClassConstDeclaration(class ast.AddConst) phpError.Error {
 	// -------------------------------------- class-const-declaration -------------------------------------- MARK: class-const-declaration
 
 	// Spec: https://phplang.org/spec/14-classes.html#grammar-class-const-declaration
@@ -494,7 +494,7 @@ func (parser *Parser) parseClassDestrutorDeclaration(class *ast.ClassDeclaration
 	return isDestructor, nil
 }
 
-func (parser *Parser) parseClassMethodDeclaration(class *ast.ClassDeclarationStatement) (bool, phpError.Error) {
+func (parser *Parser) parseClassMethodDeclaration(class ast.AddMethod, isClass bool) (bool, phpError.Error) {
 	// -------------------------------------- method-declaration -------------------------------------- MARK: method-declaration
 
 	// Spec: https://phplang.org/spec/14-classes.html#grammar-method-declaration
@@ -569,6 +569,19 @@ func (parser *Parser) parseClassMethodDeclaration(class *ast.ClassDeclarationSta
 		if err != nil {
 			return isMethod, err
 		}
+	}
+
+	if !isClass {
+		if !parser.isToken(lexer.OpOrPuncToken, ";", true) {
+			return isMethod, NewExpectedError(";", parser.at())
+		}
+
+		class.AddMethod(ast.NewMethodDefinitionStmt(
+			parser.nextId(), pos,
+			name, modifiers, parameters, nil, returnTypes,
+		))
+
+		return isMethod, nil
 	}
 
 	// compound-statement
@@ -745,5 +758,114 @@ func (parser *Parser) isMethod(name string) (
 		}
 
 		return
+	}
+}
+
+func (parser *Parser) parseInterfaceDeclaration() (ast.IStatement, phpError.Error) {
+
+	// -------------------------------------- interface-declaration -------------------------------------- MARK: interface-declaration
+
+	// Spec: https://phplang.org/spec/15-interfaces.html#interfaces
+
+	// interface-declaration:
+	//    interface   name   interface-base-clause(opt)   {   interface-member-declarations(opt)   }
+
+	// interface-base-clause:
+	//    extends   qualified-name
+	//    interface-base-clause   ,   qualified-name
+
+	// Supported statement: interface declaration: `interface Reader { function read(string $file): string; }`
+	if !parser.isToken(lexer.KeywordToken, "interface", false) {
+		return ast.NewEmptyExpr(), phpError.NewParseError("Expected keyword \"interface\". Got %s", parser.at())
+	}
+
+	pos := parser.eat().Position
+
+	// interface name
+	interfaceName := parser.at().Value
+	interfaceNamePos := parser.eat().GetPosString()
+	if !common.IsName(interfaceName) {
+		return ast.NewEmptyStmt(), phpError.NewParseError("\"%s\" is not a valid interface name at %s", interfaceName, interfaceNamePos)
+	}
+	if common.IsReservedName(interfaceName) {
+		return ast.NewEmptyStmt(), phpError.NewError("Cannot use \"%s\" as an interface name as it is reserved in %s", interfaceName, interfaceNamePos)
+	}
+
+	interfaceDecl := ast.NewInterfaceDeclarationStmt(parser.nextId(), pos, interfaceName)
+
+	// interface-base-clause
+	if parser.isToken(lexer.KeywordToken, "extends", true) {
+		for {
+			interfaceName := parser.at().Value
+			interfaceNamePos := parser.eat().GetPosString()
+			if !common.IsQualifiedName(interfaceName) {
+				return ast.NewEmptyStmt(), phpError.NewParseError("\"%s\" is not a valid interface name at %s", interfaceName, interfaceNamePos)
+			}
+
+			interfaceDecl.Parents = append(interfaceDecl.Parents, interfaceName)
+
+			if parser.isToken(lexer.OpOrPuncToken, ",", true) {
+				continue
+			}
+			break
+		}
+	}
+
+	if !parser.isToken(lexer.OpOrPuncToken, "{", true) {
+		return ast.NewEmptyStmt(), NewExpectedError("{", parser.at())
+	}
+
+	if err := parser.parseInterfaceMemberDeclaration(interfaceDecl); err != nil {
+		return ast.NewEmptyStmt(), err
+	}
+
+	if !parser.isToken(lexer.OpOrPuncToken, "}", true) {
+		return ast.NewEmptyStmt(), NewExpectedError("}", parser.at())
+	}
+
+	return interfaceDecl, nil
+}
+
+func (parser *Parser) parseInterfaceMemberDeclaration(interfaceDecl *ast.InterfaceDeclarationStatement) phpError.Error {
+	// -------------------------------------- class-member-declarations -------------------------------------- MARK: class-member-declarations
+
+	// Spec: https://phplang.org/spec/15-interfaces.html#grammar-interface-member-declarations
+
+	// interface-member-declarations:
+	//    interface-member-declaration
+	//    interface-member-declarations   interface-member-declaration
+
+	// interface-member-declaration:
+	//    class-const-declaration
+	//    method-declaration
+
+	PrintParserCallstack("interface-member-declarations", parser)
+
+	for {
+		// End of class-member-declarations
+		if parser.isToken(lexer.OpOrPuncToken, "}", false) {
+			return nil
+		}
+
+		// class-const-declaration
+		if (parser.isTokenType(lexer.KeywordToken, false) && common.IsVisibilitModifierKeyword(parser.at().Value) &&
+			parser.next(0).TokenType == lexer.KeywordToken && parser.next(0).Value == "const") ||
+			parser.isToken(lexer.KeywordToken, "const", false) {
+			if err := parser.parseClassConstDeclaration(interfaceDecl); err != nil {
+				return err
+			}
+			continue
+		}
+
+		// method-declaration
+		isMethodDeclaration, err := parser.parseClassMethodDeclaration(interfaceDecl, false)
+		if isMethodDeclaration && err != nil {
+			return err
+		}
+		if isMethodDeclaration {
+			continue
+		}
+
+		return phpError.NewParseError("parseInterfaceMemberDeclaration: Unexpected token: %s", parser.at())
 	}
 }

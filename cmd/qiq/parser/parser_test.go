@@ -428,131 +428,165 @@ func TestClassDeclaration(t *testing.T) {
 	// Reserved name
 	testForError(t, `<?php class Parent {}`, phpError.NewError(`Cannot use "Parent" as a class name as it is reserved in %s:1:13`, TEST_FILE_NAME))
 
-	// Simple class
+	// Empty class
 	class := ast.NewClassDeclarationStmt(0, nil, "c", false, false)
 	testStmt(t, `<?php class c { }`, class)
 
-	// Simple abstract class
+	// Abstract class
 	class = ast.NewClassDeclarationStmt(0, nil, "c", true, false)
 	testStmt(t, `<?php abstract class c { }`, class)
 
-	// Simple final class
+	// Final class
 	class = ast.NewClassDeclarationStmt(0, nil, "c", false, true)
 	testStmt(t, `<?php final class c { }`, class)
 
-	// Simple abstract and extended class
+	// Abstract and extended class
 	class = ast.NewClassDeclarationStmt(0, nil, "c", true, false)
 	class.BaseClass = "b"
 	testStmt(t, `<?php abstract class c extends b { }`, class)
 
-	// Simple final class with interfaces
+	// Final class with interfaces
 	class = ast.NewClassDeclarationStmt(0, nil, "c", false, true)
 	class.Interfaces = append(class.Interfaces, "i")
 	testStmt(t, `<?php final class c implements i { }`, class)
 
-	// Simple final class with multiple interfaces
+	// Final class with multiple interfaces
 	class = ast.NewClassDeclarationStmt(0, nil, "c", false, true)
 	class.Interfaces = append(class.Interfaces, "i")
 	class.Interfaces = append(class.Interfaces, "j")
 	testStmt(t, `<?php final class c implements i, j { }`, class)
 
-	// Simple class with constants
+	// Class with constants
 	class = ast.NewClassDeclarationStmt(0, nil, "c", false, true)
 	class.AddConst(ast.NewClassConstDeclarationStmt(0, nil, "a", ast.NewStringLiteralExpr(0, nil, "a", ast.DoubleQuotedString), "public"))
 	class.AddConst(ast.NewClassConstDeclarationStmt(0, nil, "b", ast.NewStringLiteralExpr(0, nil, "b", ast.DoubleQuotedString), "private"))
 	class.AddConst(ast.NewClassConstDeclarationStmt(0, nil, "c", ast.NewIntegerLiteralExpr(0, nil, 3), "private"))
 	testStmt(t, `<?php final class c { const a="a"; private const b="b", c=3; }`, class)
 
-	// Simple class with trait
+	// Class with trait
 	class = ast.NewClassDeclarationStmt(0, nil, "c", false, false)
 	class.AddTrait(ast.NewTraitUseStmt(0, nil, "MyTrait"))
 	testStmt(t, `<?php class c { use MyTrait; }`, class)
 
-	// Simple class with multiple traits
+	// Class with multiple traits
 	class = ast.NewClassDeclarationStmt(0, nil, "c", false, false)
 	class.AddTrait(ast.NewTraitUseStmt(0, nil, "MyTrait"))
 	class.AddTrait(ast.NewTraitUseStmt(0, nil, "MySecondTrait"))
 	testStmt(t, `<?php class c { use MyTrait, MySecondTrait; }`, class)
 
-	// Simple class with constructor
+	// Class with constructor
 	class = ast.NewClassDeclarationStmt(0, nil, "c", false, false)
 	class.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "__construct", []string{"public"}, []ast.FunctionParameter{}, ast.NewCompoundStmt(0, []ast.IStatement{}), []string{"void"}))
 	testStmt(t, `<?php class c { function __construct() {} }`, class)
 
-	// Simple class with private constructor
+	// Class with private constructor
 	class = ast.NewClassDeclarationStmt(0, nil, "c", false, false)
 	class.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "__construct", []string{"private"}, []ast.FunctionParameter{}, ast.NewCompoundStmt(0, []ast.IStatement{}), []string{"void"}))
 	testStmt(t, `<?php class c { private function __construct() {} }`, class)
 
-	// Simple class with final private constructor
+	// Class with final private constructor
 	class = ast.NewClassDeclarationStmt(0, nil, "c", false, false)
 	class.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "__construct", []string{"private", "final"}, []ast.FunctionParameter{}, ast.NewCompoundStmt(0, []ast.IStatement{}), []string{"void"}))
 	testStmt(t, `<?php class c { final private function __construct() {} }`, class)
 
-	// Simple class with constructor with parameters
+	// Class with constructor with parameters
 	class = ast.NewClassDeclarationStmt(0, nil, "c", false, false)
 	class.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "__construct", []string{"public"}, []ast.FunctionParameter{{Name: "$name", Type: []string{"string"}}}, ast.NewCompoundStmt(0, []ast.IStatement{}), []string{"void"}))
 	testStmt(t, `<?php class c { function __construct(string $name) {} }`, class)
 
-	// Simple class with constructor with body
+	// Class with constructor with body
 	class = ast.NewClassDeclarationStmt(0, nil, "c", false, false)
 	class.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "__construct", []string{"public"}, []ast.FunctionParameter{}, ast.NewCompoundStmt(0, []ast.IStatement{ast.NewExpressionStmt(0, ast.NewExitIntrinsic(0, nil, nil))}), []string{"void"}))
 	testStmt(t, `<?php class c { function __construct() { exit(); } }`, class)
 
-	// Simple class with destructor
+	// Class with destructor
 	class = ast.NewClassDeclarationStmt(0, nil, "c", false, false)
 	class.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "__destruct", []string{"public"}, []ast.FunctionParameter{}, ast.NewCompoundStmt(0, []ast.IStatement{}), []string{"void"}))
 	testStmt(t, `<?php class c { function __destruct() {} }`, class)
 
-	// Simple class with private destructor
+	// Class with private destructor
 	class = ast.NewClassDeclarationStmt(0, nil, "c", false, false)
 	class.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "__destruct", []string{"private"}, []ast.FunctionParameter{}, ast.NewCompoundStmt(0, []ast.IStatement{}), []string{"void"}))
 	testStmt(t, `<?php class c { private function __destruct() {} }`, class)
 
-	// Simple class with final private destructor
+	// Class with final private destructor
 	class = ast.NewClassDeclarationStmt(0, nil, "c", false, false)
 	class.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "__destruct", []string{"private", "final"}, []ast.FunctionParameter{}, ast.NewCompoundStmt(0, []ast.IStatement{}), []string{"void"}))
 	testStmt(t, `<?php class c { final private function __destruct() {} }`, class)
 
-	// Simple class with destructor with body
+	// Class with destructor with body
 	class = ast.NewClassDeclarationStmt(0, nil, "c", false, false)
 	class.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "__destruct", []string{"public"}, []ast.FunctionParameter{}, ast.NewCompoundStmt(0, []ast.IStatement{ast.NewExpressionStmt(0, ast.NewExitIntrinsic(0, nil, nil))}), []string{"void"}))
 	testStmt(t, `<?php class c { function __destruct() { exit(); } }`, class)
 
-	// Simple class with private static method
+	// Class with private static method
 	class = ast.NewClassDeclarationStmt(0, nil, "c", false, false)
 	class.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "myFunction", []string{"private", "static"}, []ast.FunctionParameter{}, ast.NewCompoundStmt(0, []ast.IStatement{}), []string{"mixed"}))
 	testStmt(t, `<?php class c { private static function myFunction() {} }`, class)
 
-	// Simple class with method with parameters
+	// Class with method with parameters
 	class = ast.NewClassDeclarationStmt(0, nil, "c", false, false)
 	class.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "myFunction", []string{"public"}, []ast.FunctionParameter{{Name: "$name", Type: []string{"string"}}}, ast.NewCompoundStmt(0, []ast.IStatement{}), []string{"void"}))
 	testStmt(t, `<?php class c { function myFunction(string $name): void {} }`, class)
 
-	// Simple class with method with return type
+	// Class with method with return type
 	class = ast.NewClassDeclarationStmt(0, nil, "c", false, false)
 	class.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "myFunction", []string{"public"}, []ast.FunctionParameter{}, ast.NewCompoundStmt(0, []ast.IStatement{ast.NewExpressionStmt(0, ast.NewExitIntrinsic(0, nil, nil))}), []string{"null", "int"}))
 	testStmt(t, `<?php class c { function myFunction(): ?int { exit(); } }`, class)
 
-	// Simple class with method with body
+	// Class with method with body
 	class = ast.NewClassDeclarationStmt(0, nil, "c", false, false)
 	class.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "myFunction", []string{"public"}, []ast.FunctionParameter{}, ast.NewCompoundStmt(0, []ast.IStatement{ast.NewExpressionStmt(0, ast.NewExitIntrinsic(0, nil, nil))}), []string{"int", "float"}))
 	testStmt(t, `<?php class c { function myFunction(): int|float { exit(); } }`, class)
 
-	// Simple class with property
+	// Class with property
 	class = ast.NewClassDeclarationStmt(0, nil, "c", false, false)
 	class.AddProperty(ast.NewPropertyDeclarationStmt(0, nil, "$member", "public", false, []string{"mixed"}, nil))
 	testStmt(t, `<?php class c { public $member; }`, class)
 
-	// Simple class with protected property and initial value
+	// Class with protected property and initial value
 	class = ast.NewClassDeclarationStmt(0, nil, "c", false, false)
 	class.AddProperty(ast.NewPropertyDeclarationStmt(0, nil, "$member", "protected", false, []string{"mixed"}, ast.NewIntegerLiteralExpr(0, nil, 42)))
 	testStmt(t, `<?php class c { protected $member = 42; }`, class)
 
-	// Simple class with multiple properties
+	// Class with multiple properties
 	class = ast.NewClassDeclarationStmt(0, nil, "c", false, false)
 	class.AddProperty(ast.NewPropertyDeclarationStmt(0, nil, "$a", "private", false, []string{"mixed"}, nil))
 	class.AddProperty(ast.NewPropertyDeclarationStmt(0, nil, "$b", "protected", false, []string{"mixed"}, nil))
 	class.AddProperty(ast.NewPropertyDeclarationStmt(0, nil, "$c", "public", false, []string{"null", "int"}, ast.NewIntegerLiteralExpr(0, nil, 42)))
 	testStmt(t, `<?php class c { private $a; protected $b; public ?int $c = 42; }`, class)
+}
+
+// -------------------------------------- Interface -------------------------------------- MARK: Interface
+
+func TestInterfaceDeclaration(t *testing.T) {
+	// Reserved name
+	testForError(t, `<?php interface Parent {}`, phpError.NewError(`Cannot use "Parent" as an interface name as it is reserved in %s:1:17`, TEST_FILE_NAME))
+
+	// Empty interface
+	interfaceDecl := ast.NewInterfaceDeclarationStmt(0, nil, "i")
+	testStmt(t, `<?php interface i { }`, interfaceDecl)
+
+	// Interface with parent
+	interfaceDecl = ast.NewInterfaceDeclarationStmt(0, nil, "i")
+	interfaceDecl.Parents = append(interfaceDecl.Parents, "j")
+	testStmt(t, `<?php interface i extends j { }`, interfaceDecl)
+
+	// Interface with multiple parents
+	interfaceDecl = ast.NewInterfaceDeclarationStmt(0, nil, "i")
+	interfaceDecl.Parents = append(interfaceDecl.Parents, "j")
+	interfaceDecl.Parents = append(interfaceDecl.Parents, "k")
+	testStmt(t, `<?php interface i extends j, k { }`, interfaceDecl)
+
+	// Interface with methods
+	interfaceDecl = ast.NewInterfaceDeclarationStmt(0, nil, "i")
+	interfaceDecl.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "f", []string{"public"}, []ast.FunctionParameter{{Name: "$p", Type: []string{"string"}}}, nil, []string{"void"}))
+	testStmt(t, `<?php interface i { function f (string $p): void; }`, interfaceDecl)
+
+	// Interface with constants
+	interfaceDecl = ast.NewInterfaceDeclarationStmt(0, nil, "i")
+	interfaceDecl.AddConst(ast.NewClassConstDeclarationStmt(0, nil, "a", ast.NewStringLiteralExpr(0, nil, "a", ast.DoubleQuotedString), "public"))
+	interfaceDecl.AddConst(ast.NewClassConstDeclarationStmt(0, nil, "b", ast.NewStringLiteralExpr(0, nil, "b", ast.DoubleQuotedString), "private"))
+	interfaceDecl.AddConst(ast.NewClassConstDeclarationStmt(0, nil, "c", ast.NewIntegerLiteralExpr(0, nil, 3), "private"))
+	testStmt(t, `<?php interface i { const a="a"; private const b="b", c=3; }`, interfaceDecl)
 }

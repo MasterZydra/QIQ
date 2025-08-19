@@ -340,7 +340,11 @@ func (parser *Parser) parseStmt() (ast.IStatement, phpError.Error) {
 		return parser.parseClassDeclaration()
 	}
 
-	// TODO interface-declaration
+	// interface-declaration
+	if parser.isToken(lexer.KeywordToken, "interface", false) {
+		return parser.parseInterfaceDeclaration()
+	}
+
 	// TODO trait-declaration
 
 	// -------------------------------------- namespace-definition -------------------------------------- MARK: namespace-definition

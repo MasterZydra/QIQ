@@ -12,9 +12,15 @@ func (interpreter *Interpreter) ProcessStmt(stmt *ast.Statement, _ any) (any, er
 	panic("ProcessStmt should never be called")
 }
 
+// ProcessInterfaceDeclarationStmt implements Visitor.
+func (visitor *Interpreter) ProcessInterfaceDeclarationStmt(stmt *ast.InterfaceDeclarationStatement, _ any) (any, error) {
+	visitor.AddInterface(stmt.GetQualifiedName(), stmt)
+	return values.NewVoid(), nil
+}
+
 // ProcessClassDeclarationStmt implements Visitor.
 func (visitor *Interpreter) ProcessClassDeclarationStmt(stmt *ast.ClassDeclarationStatement, _ any) (any, error) {
-	visitor.AddClass(stmt.GetPosition().File.GetNamespaceStr()+stmt.Name, stmt)
+	visitor.AddClass(stmt.GetQualifiedName(), stmt)
 	return values.NewVoid(), nil
 }
 

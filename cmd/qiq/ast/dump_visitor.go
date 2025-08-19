@@ -119,8 +119,54 @@ func (visitor DumpVisitor) ProcessCastExpr(stmt *CastExpression, _ any) (any, er
 	), nil
 }
 
+// ProcessInterfaceDeclarationStmt implements Visitor.
+func (visitor DumpVisitor) ProcessInterfaceDeclarationStmt(stmt *InterfaceDeclarationStatement, _ any) (any, error) {
+	constants := "["
+	constantsKeys := slices.Sorted(maps.Keys(stmt.Constants))
+	for _, key := range constantsKeys {
+		if len(constants) > 1 {
+			constants += ", "
+		}
+		constant := stmt.Constants[key]
+		constants += fmt.Sprintf(
+			"{ \"visibility\": \"%s\", \"name\": \"%s\", %s }",
+			constant.Visiblity, constant.Name, visitor.toString(constant.Value),
+		)
+	}
+	constants += "]"
+
+	methods := "["
+	methodsKeys := slices.Sorted(maps.Keys(stmt.Methods))
+	for _, key := range methodsKeys {
+		if len(methods) > 1 {
+			methods += ", "
+		}
+
+		method := stmt.Methods[key]
+
+		params := "["
+		for _, param := range method.Params {
+			if len(params) > 1 {
+				params += ", "
+			}
+			params += fmt.Sprintf("{ \"name\": \"%s\", \"type\": [%s] }", param.Name, common.ImplodeStrSlice(param.Type))
+		}
+		params += "]"
+
+		methods += fmt.Sprintf("{ \"name\": \"%s\", \"modifiers\": [%s], \"returnType\": [%s], \"parameters\": %s }",
+			method.Name, common.ImplodeStrSlice(method.Modifiers), common.ImplodeStrSlice(method.ReturnType), params,
+		)
+	}
+	methods += "]"
+
+	return fmt.Sprintf(
+		"{ %s, \"name\": \"%s\", \"extends\": \"%s\", \"constants\": %s, \"methods\": %s }",
+		visitor.getKindAndPos(stmt), stmt.Name, common.ImplodeStrSlice(stmt.Parents), constants, methods,
+	), nil
+}
+
 // ProcessClassDeclarationStmt implements Visitor.
-func (visitor DumpVisitor) ProcessClassDeclarationStmt(stmt *ClassDeclarationStatement, context any) (any, error) {
+func (visitor DumpVisitor) ProcessClassDeclarationStmt(stmt *ClassDeclarationStatement, _ any) (any, error) {
 	constants := "["
 	constantsKeys := slices.Sorted(maps.Keys(stmt.Constants))
 	for _, key := range constantsKeys {
@@ -316,7 +362,7 @@ func (visitor DumpVisitor) ProcessForeachStmt(stmt *ForeachStatement, _ any) (an
 }
 
 // ProcessForStmt implements Visitor.
-func (visitor DumpVisitor) ProcessForStmt(stmt *ForStatement, context any) (any, error) {
+func (visitor DumpVisitor) ProcessForStmt(stmt *ForStatement, _ any) (any, error) {
 	return fmt.Sprintf(
 		"{ %s, \"initializer\": %s, \"control\": %s, \"endOfLoop\": %s, \"block\": %s}",
 		visitor.getKindAndPos(stmt), visitor.toString(stmt.Initializer), visitor.toString(stmt.Control), visitor.toString(stmt.EndOfLoop), visitor.toString(stmt.Block),
@@ -420,7 +466,7 @@ func (visitor DumpVisitor) ProcessPrefixIncExpr(stmt *PrefixIncExpression, _ any
 }
 
 // ProcessPrintExpr implements Visitor.
-func (visitor DumpVisitor) ProcessPrintExpr(stmt *PrintExpression, context any) (any, error) {
+func (visitor DumpVisitor) ProcessPrintExpr(stmt *PrintExpression, _ any) (any, error) {
 	return fmt.Sprintf("{ %s, \"expr\": %s }", visitor.getKindAndPos(stmt), visitor.toString(stmt.Expr)), nil
 }
 

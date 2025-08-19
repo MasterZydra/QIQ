@@ -12,6 +12,7 @@
 - function definition: `function func1($param1) { ... }`
 - global declaration: `global $var;`
 - if statement: `if (true) { ... } elseif (false) { ... } else { ... }`
+- interface declaration: `interface Reader { function read(string $file): string; }`
 - namespace definition: `namespace My\Name\Space;`
 - print statement: `print "abc";`
 - return statement: `return 42;`

@@ -16,6 +16,7 @@ type Visitor interface {
 	ProcessFunctionDefinitionStmt(stmt *FunctionDefinitionStatement, context any) (any, error)
 	ProcessGlobalDeclarationStmt(stmt *GlobalDeclarationStatement, context any) (any, error)
 	ProcessIfStmt(stmt *IfStatement, context any) (any, error)
+	ProcessInterfaceDeclarationStmt(stmt *InterfaceDeclarationStatement, context any) (any, error)
 	ProcessReturnStmt(stmt *ReturnStatement, context any) (any, error)
 	ProcessStmt(stmt *Statement, context any) (any, error)
 	ProcessThrowStmt(stmt *ThrowStatement, context any) (any, error)

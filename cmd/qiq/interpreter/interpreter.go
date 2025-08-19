@@ -15,18 +15,19 @@ import (
 var _ ast.Visitor = &Interpreter{}
 
 type Interpreter struct {
-	filename           string
-	includedFiles      []string
-	classDeclarations  map[string]*ast.ClassDeclarationStatement
-	ini                *ini.Ini
-	request            *request.Request
-	response           *request.Response
-	parser             *parser.Parser
-	env                *Environment
-	cache              map[int64]values.RuntimeValue
-	outputBufferStack  *outputBuffer.Stack
-	result             string
-	resultRuntimeValue values.RuntimeValue
+	filename              string
+	includedFiles         []string
+	classDeclarations     map[string]*ast.ClassDeclarationStatement
+	interfaceDeclarations map[string]*ast.InterfaceDeclarationStatement
+	ini                   *ini.Ini
+	request               *request.Request
+	response              *request.Response
+	parser                *parser.Parser
+	env                   *Environment
+	cache                 map[int64]values.RuntimeValue
+	outputBufferStack     *outputBuffer.Stack
+	result                string
+	resultRuntimeValue    values.RuntimeValue
 	// Status
 	suppressWarning bool
 	exitCalled      bool
@@ -34,15 +35,16 @@ type Interpreter struct {
 
 func NewInterpreter(ini *ini.Ini, r *request.Request, filename string) (*Interpreter, phpError.Error) {
 	interpreter := &Interpreter{
-		filename:          filename,
-		includedFiles:     []string{},
-		classDeclarations: map[string]*ast.ClassDeclarationStatement{},
-		ini:               ini,
-		request:           r,
-		response:          request.NewResponse(),
-		parser:            parser.NewParser(ini),
-		cache:             map[int64]values.RuntimeValue{},
-		outputBufferStack: outputBuffer.NewStack(),
+		filename:              filename,
+		includedFiles:         []string{},
+		classDeclarations:     map[string]*ast.ClassDeclarationStatement{},
+		interfaceDeclarations: map[string]*ast.InterfaceDeclarationStatement{},
+		ini:                   ini,
+		request:               r,
+		response:              request.NewResponse(),
+		parser:                parser.NewParser(ini),
+		cache:                 map[int64]values.RuntimeValue{},
+		outputBufferStack:     outputBuffer.NewStack(),
 	}
 
 	var err phpError.Error
