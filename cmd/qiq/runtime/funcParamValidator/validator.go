@@ -54,7 +54,7 @@ func (validator *Validator) Validate(args []values.RuntimeValue) ([]values.Runti
 		if typeStr == "" {
 			return false
 		}
-		return slices.Contains(param.paramType, "mixed") || slices.Contains(param.paramType, typeStr)
+		return len(param.paramType) == 0 || slices.Contains(param.paramType, "mixed") || slices.Contains(param.paramType, typeStr)
 	}
 
 	lastArgIndex := 0

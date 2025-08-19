@@ -20,6 +20,10 @@ func (visitor *Interpreter) ProcessInterfaceDeclarationStmt(stmt *ast.InterfaceD
 
 // ProcessClassDeclarationStmt implements Visitor.
 func (visitor *Interpreter) ProcessClassDeclarationStmt(stmt *ast.ClassDeclarationStatement, _ any) (any, error) {
+	if err := visitor.validateClass(stmt); err != nil {
+		return values.NewVoid(), err
+	}
+
 	visitor.AddClass(stmt.GetQualifiedName(), stmt)
 	return values.NewVoid(), nil
 }

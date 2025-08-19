@@ -105,6 +105,10 @@ func testForError(t *testing.T, php string, expected phpError.Error) {
 		return
 	}
 	_, err = interpreter.Process(php)
+	if err == nil {
+		t.Errorf("\nCode: \"%s\"\nExpected: %s\nGot:      nil", php, expected)
+		return
+	}
 	if err.GetErrorType() != expected.GetErrorType() || err.GetMessage() != expected.GetMessage() {
 		t.Errorf("\nCode: \"%s\"\nExpected: %s\nGot:      %s", php, expected, err)
 	}
@@ -1343,9 +1347,48 @@ func TestClasses(t *testing.T) {
 
 	// Class with namespace
 	testInputOutput(t, `<?php
-	namespace My\Namespace;
-	class C { function __construct() { var_dump(__CLASS__); } }
-	new C;`,
+		namespace My\Namespace;
+		class C { function __construct() { var_dump(__CLASS__); } }
+		new C;`,
 		`string(14) "My\Namespace\C"`+"\n",
+	)
+
+	// Class with interface
+	testInputOutput(t, `<?php
+		interface I { public function F($p); }
+		class C implements I { public function F($p) { } }
+		new C; echo 'OK';`,
+		"OK",
+	)
+
+	// Class that extends unkown class
+	testForError(t,
+		`<?php class C extends B { }`,
+		phpError.NewError(`Class "B" not found in %s:1:7`, TEST_FILE_NAME),
+	)
+
+	// Class that implements unkown interface
+	testForError(t,
+		`<?php class C implements I { }`,
+		phpError.NewError(`Interface "I" not found in %s:1:7`, TEST_FILE_NAME),
+	)
+
+	// Class that does not implement interface
+	testForError(t,
+		`<?php interface I { public function F($p); }
+		class C implements I { }`,
+		phpError.NewError("Class C contains 1 abstract methods and must therefore be declared abstract or implement the remaining methods (I::F) in %s:2:3", TEST_FILE_NAME),
+	)
+	testForError(t,
+		`<?php interface I { public function F($p); function G(); }
+		class C implements I { }`,
+		phpError.NewError("Class C contains 2 abstract methods and must therefore be declared abstract or implement the remaining methods (I::F, I::G) in %s:2:3", TEST_FILE_NAME),
+	)
+
+	// Class with wrong method signature
+	testForError(t,
+		`<?php interface I { public function F(null|string $p): ?string; }
+		class C implements I { function F($p) {} }`,
+		phpError.NewError("Declaration of C::F($p) must be compatible with I::F(?string $p): ?string in %s:2:3", TEST_FILE_NAME),
 	)
 }

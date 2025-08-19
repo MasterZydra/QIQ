@@ -9,6 +9,7 @@ import (
 	"QIQ/cmd/qiq/runtime/stdlib/outputControl"
 	"QIQ/cmd/qiq/runtime/stdlib/variableHandling"
 	"QIQ/cmd/qiq/runtime/values"
+	"fmt"
 	"math"
 	GoOs "os"
 	"path/filepath"
@@ -299,6 +300,57 @@ func GetExecutableCreationDate() time.Time {
 	return info.ModTime()
 }
 
+// -------------------------------------- Methods -------------------------------------- MARK: Methods
+
+func MethodDeclToSignature(methodDef *ast.MethodDefinitionStatement) string {
+	var signature strings.Builder
+	// Method name
+	signature.WriteString(methodDef.Name)
+	signature.WriteString("(")
+	// Parameters
+	for paramIndex, param := range methodDef.Params {
+		if paramIndex > 0 {
+			signature.WriteString(", ")
+		}
+		// Param types
+		if len(param.Type) > 0 {
+			signature.WriteString(ParamTypesToSignature(param.Type))
+			signature.WriteString(" ")
+		}
+		// Param name
+		signature.WriteString(param.Name)
+	}
+	signature.WriteString(")")
+	// Return type
+	if len(methodDef.ReturnType) > 0 {
+		signature.WriteString(": ")
+		signature.WriteString(ParamTypesToSignature(methodDef.ReturnType))
+	}
+	return signature.String()
+	// F(?string $p): string|int|null
+}
+
+func ParamTypesToSignature(paramTypes []string) string {
+	signature := ""
+	if len(paramTypes) == 2 && slices.Contains(paramTypes, "null") {
+		for _, paramType := range paramTypes {
+			if paramType == "null" {
+				continue
+			}
+			signature += "?" + paramType
+		}
+		return signature
+	}
+
+	for _, paramType := range paramTypes {
+		if len(signature) > 0 {
+			signature += "|"
+		}
+		signature += paramType
+	}
+	return signature
+}
+
 // -------------------------------------- Classes and Interfaces -------------------------------------- MARK: Classes and Interfaces
 
 func (interpreter *Interpreter) AddClass(class string, classDecl *ast.ClassDeclarationStatement) {
@@ -315,6 +367,93 @@ func (interpreter *Interpreter) GetClass(class string) (*ast.ClassDeclarationSta
 
 func (interpreter *Interpreter) AddInterface(interfaceName string, interfaceDecl *ast.InterfaceDeclarationStatement) {
 	interpreter.interfaceDeclarations[strings.ToLower(interfaceName)] = interfaceDecl
+}
+
+func (interpreter *Interpreter) GetInterface(interfaceName string) (*ast.InterfaceDeclarationStatement, bool) {
+	interfaceDecl, found := interpreter.interfaceDeclarations[strings.ToLower(interfaceName)]
+	if !found {
+		return nil, false
+	}
+	return interfaceDecl, true
+}
+
+func (interpreter *Interpreter) validateClass(classDecl *ast.ClassDeclarationStatement) phpError.Error {
+
+	// Check if interface exists
+	if classDecl.BaseClass != "" {
+		_, found := interpreter.GetClass(classDecl.BaseClass)
+		if !found {
+			return phpError.NewError("Class \"%s\" not found in %s", classDecl.BaseClass, classDecl.GetPosString())
+		}
+	}
+
+	// Check if all interfaces are implemented
+	if len(classDecl.Interfaces) > 0 {
+		for _, interfaceName := range classDecl.Interfaces {
+			// Check if interface exists
+			interfaceDecl, found := interpreter.GetInterface(interfaceName)
+			if !found {
+				return phpError.NewError("Interface \"%s\" not found in %s", interfaceName, classDecl.GetPosString())
+			}
+
+			// Check if all methods are implemented
+			missingMethods := []string{}
+			for _, methodName := range interfaceDecl.MethodNames {
+				// Check if method exists
+				methodDef, found := interpreter.classGetMethod(classDecl, methodName)
+				if !found {
+					missingMethods = append(missingMethods, interfaceName+"::"+methodName)
+					continue
+				}
+
+				// Check if method signatures match
+				classMethodSignature := MethodDeclToSignature(methodDef)
+
+				interfaceMethodDef, _ := interfaceDecl.GetMethod(methodName)
+				interfaceMethodSignature := MethodDeclToSignature(interfaceMethodDef)
+
+				fmt.Printf("Declaration of %s::%s must be compatible with %s::%s in %s\n",
+					classDecl.Name, classMethodSignature,
+					interfaceDecl.Name, interfaceMethodSignature,
+					classDecl.GetPosString())
+
+				if classMethodSignature != interfaceMethodSignature {
+					return phpError.NewError(
+						"Declaration of %s::%s must be compatible with %s::%s in %s",
+						classDecl.Name, classMethodSignature,
+						interfaceDecl.Name, interfaceMethodSignature,
+						classDecl.GetPosString(),
+					)
+				}
+			}
+			if len(missingMethods) > 0 {
+				return phpError.NewError(
+					"Class %s contains %d abstract methods and must therefore be declared abstract or implement the remaining methods (%s) in %s",
+					classDecl.Name, len(missingMethods), common.ImplodeSlice(missingMethods, ", "), classDecl.GetPosString(),
+				)
+			}
+		}
+	}
+
+	return nil
+}
+
+func (interpreter *Interpreter) classGetMethod(classDecl *ast.ClassDeclarationStatement, methodName string) (*ast.MethodDefinitionStatement, bool) {
+	methodDecl, found := classDecl.Methods[strings.ToLower(methodName)]
+	if found {
+		return methodDecl, true
+	}
+
+	if classDecl.BaseClass == "" {
+		return nil, false
+	}
+
+	classDecl, found = interpreter.GetClass(classDecl.BaseClass)
+	if !found {
+		return nil, false
+	}
+
+	return interpreter.classGetMethod(classDecl, methodName)
 }
 
 // -------------------------------------- Caching -------------------------------------- MARK: Caching

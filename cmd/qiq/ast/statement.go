@@ -509,3 +509,11 @@ func (stmt *InterfaceDeclarationStatement) AddMethod(method *MethodDefinitionSta
 	}
 	stmt.Methods[strings.ToLower(method.Name)] = method
 }
+
+func (stmt *InterfaceDeclarationStatement) GetMethod(methodName string) (*MethodDefinitionStatement, bool) {
+	methodDef, found := stmt.Methods[strings.ToLower(methodName)]
+	if !found {
+		return nil, false
+	}
+	return methodDef, true
+}

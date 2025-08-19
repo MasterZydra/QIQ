@@ -64,13 +64,16 @@ func testStmt(t *testing.T, php string, expected ast.IStatement) {
 func testStmts(t *testing.T, php string, expected []ast.IStatement) {
 	program, err := NewParser(ini.NewDevIni()).ProduceAST(php, "test.php")
 	if err != nil {
-		t.Errorf("Code: \"%s\"\nUnexpected error: \"%s\"", php, err)
+		t.Errorf("Code: \"%s\"\nUnexpected error: \"%s\"\n", php, err)
 		return
 	}
 	for index, expect := range expected {
 		actual := program.GetStatements()[index]
 		if ast.ToString(expect) != ast.ToString(actual) {
-			t.Errorf("\nExpected: \"%s\"\nGot:      \"%s\"", ast.ToString(expect), ast.ToString(actual))
+			t.Errorf(
+				"Code: \"%s\"\nExpected: \"%s\"\nGot:      \"%s\"\n",
+				php, ast.ToString(expect), ast.ToString(actual),
+			)
 			return
 		}
 	}
@@ -476,7 +479,7 @@ func TestClassDeclaration(t *testing.T) {
 
 	// Class with constructor
 	class = ast.NewClassDeclarationStmt(0, nil, "c", false, false)
-	class.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "__construct", []string{"public"}, []ast.FunctionParameter{}, ast.NewCompoundStmt(0, []ast.IStatement{}), []string{"void"}))
+	class.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "__construct", []string{}, []ast.FunctionParameter{}, ast.NewCompoundStmt(0, []ast.IStatement{}), []string{"void"}))
 	testStmt(t, `<?php class c { function __construct() {} }`, class)
 
 	// Class with private constructor
@@ -491,17 +494,17 @@ func TestClassDeclaration(t *testing.T) {
 
 	// Class with constructor with parameters
 	class = ast.NewClassDeclarationStmt(0, nil, "c", false, false)
-	class.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "__construct", []string{"public"}, []ast.FunctionParameter{{Name: "$name", Type: []string{"string"}}}, ast.NewCompoundStmt(0, []ast.IStatement{}), []string{"void"}))
+	class.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "__construct", []string{}, []ast.FunctionParameter{{Name: "$name", Type: []string{"string"}}}, ast.NewCompoundStmt(0, []ast.IStatement{}), []string{"void"}))
 	testStmt(t, `<?php class c { function __construct(string $name) {} }`, class)
 
 	// Class with constructor with body
 	class = ast.NewClassDeclarationStmt(0, nil, "c", false, false)
-	class.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "__construct", []string{"public"}, []ast.FunctionParameter{}, ast.NewCompoundStmt(0, []ast.IStatement{ast.NewExpressionStmt(0, ast.NewExitIntrinsic(0, nil, nil))}), []string{"void"}))
+	class.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "__construct", []string{}, []ast.FunctionParameter{}, ast.NewCompoundStmt(0, []ast.IStatement{ast.NewExpressionStmt(0, ast.NewExitIntrinsic(0, nil, nil))}), []string{"void"}))
 	testStmt(t, `<?php class c { function __construct() { exit(); } }`, class)
 
 	// Class with destructor
 	class = ast.NewClassDeclarationStmt(0, nil, "c", false, false)
-	class.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "__destruct", []string{"public"}, []ast.FunctionParameter{}, ast.NewCompoundStmt(0, []ast.IStatement{}), []string{"void"}))
+	class.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "__destruct", []string{}, []ast.FunctionParameter{}, ast.NewCompoundStmt(0, []ast.IStatement{}), []string{"void"}))
 	testStmt(t, `<?php class c { function __destruct() {} }`, class)
 
 	// Class with private destructor
@@ -516,43 +519,43 @@ func TestClassDeclaration(t *testing.T) {
 
 	// Class with destructor with body
 	class = ast.NewClassDeclarationStmt(0, nil, "c", false, false)
-	class.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "__destruct", []string{"public"}, []ast.FunctionParameter{}, ast.NewCompoundStmt(0, []ast.IStatement{ast.NewExpressionStmt(0, ast.NewExitIntrinsic(0, nil, nil))}), []string{"void"}))
+	class.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "__destruct", []string{}, []ast.FunctionParameter{}, ast.NewCompoundStmt(0, []ast.IStatement{ast.NewExpressionStmt(0, ast.NewExitIntrinsic(0, nil, nil))}), []string{"void"}))
 	testStmt(t, `<?php class c { function __destruct() { exit(); } }`, class)
 
 	// Class with private static method
 	class = ast.NewClassDeclarationStmt(0, nil, "c", false, false)
-	class.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "myFunction", []string{"private", "static"}, []ast.FunctionParameter{}, ast.NewCompoundStmt(0, []ast.IStatement{}), []string{"mixed"}))
+	class.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "myFunction", []string{"private", "static"}, []ast.FunctionParameter{}, ast.NewCompoundStmt(0, []ast.IStatement{}), []string{}))
 	testStmt(t, `<?php class c { private static function myFunction() {} }`, class)
 
 	// Class with method with parameters
 	class = ast.NewClassDeclarationStmt(0, nil, "c", false, false)
-	class.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "myFunction", []string{"public"}, []ast.FunctionParameter{{Name: "$name", Type: []string{"string"}}}, ast.NewCompoundStmt(0, []ast.IStatement{}), []string{"void"}))
+	class.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "myFunction", []string{}, []ast.FunctionParameter{{Name: "$name", Type: []string{"string"}}}, ast.NewCompoundStmt(0, []ast.IStatement{}), []string{"void"}))
 	testStmt(t, `<?php class c { function myFunction(string $name): void {} }`, class)
 
 	// Class with method with return type
 	class = ast.NewClassDeclarationStmt(0, nil, "c", false, false)
-	class.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "myFunction", []string{"public"}, []ast.FunctionParameter{}, ast.NewCompoundStmt(0, []ast.IStatement{ast.NewExpressionStmt(0, ast.NewExitIntrinsic(0, nil, nil))}), []string{"null", "int"}))
+	class.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "myFunction", []string{}, []ast.FunctionParameter{}, ast.NewCompoundStmt(0, []ast.IStatement{ast.NewExpressionStmt(0, ast.NewExitIntrinsic(0, nil, nil))}), []string{"null", "int"}))
 	testStmt(t, `<?php class c { function myFunction(): ?int { exit(); } }`, class)
 
 	// Class with method with body
 	class = ast.NewClassDeclarationStmt(0, nil, "c", false, false)
-	class.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "myFunction", []string{"public"}, []ast.FunctionParameter{}, ast.NewCompoundStmt(0, []ast.IStatement{ast.NewExpressionStmt(0, ast.NewExitIntrinsic(0, nil, nil))}), []string{"int", "float"}))
+	class.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "myFunction", []string{}, []ast.FunctionParameter{}, ast.NewCompoundStmt(0, []ast.IStatement{ast.NewExpressionStmt(0, ast.NewExitIntrinsic(0, nil, nil))}), []string{"int", "float"}))
 	testStmt(t, `<?php class c { function myFunction(): int|float { exit(); } }`, class)
 
 	// Class with property
 	class = ast.NewClassDeclarationStmt(0, nil, "c", false, false)
-	class.AddProperty(ast.NewPropertyDeclarationStmt(0, nil, "$member", "public", false, []string{"mixed"}, nil))
+	class.AddProperty(ast.NewPropertyDeclarationStmt(0, nil, "$member", "public", false, []string{}, nil))
 	testStmt(t, `<?php class c { public $member; }`, class)
 
 	// Class with protected property and initial value
 	class = ast.NewClassDeclarationStmt(0, nil, "c", false, false)
-	class.AddProperty(ast.NewPropertyDeclarationStmt(0, nil, "$member", "protected", false, []string{"mixed"}, ast.NewIntegerLiteralExpr(0, nil, 42)))
+	class.AddProperty(ast.NewPropertyDeclarationStmt(0, nil, "$member", "protected", false, []string{}, ast.NewIntegerLiteralExpr(0, nil, 42)))
 	testStmt(t, `<?php class c { protected $member = 42; }`, class)
 
 	// Class with multiple properties
 	class = ast.NewClassDeclarationStmt(0, nil, "c", false, false)
-	class.AddProperty(ast.NewPropertyDeclarationStmt(0, nil, "$a", "private", false, []string{"mixed"}, nil))
-	class.AddProperty(ast.NewPropertyDeclarationStmt(0, nil, "$b", "protected", false, []string{"mixed"}, nil))
+	class.AddProperty(ast.NewPropertyDeclarationStmt(0, nil, "$a", "private", false, []string{}, nil))
+	class.AddProperty(ast.NewPropertyDeclarationStmt(0, nil, "$b", "protected", false, []string{}, nil))
 	class.AddProperty(ast.NewPropertyDeclarationStmt(0, nil, "$c", "public", false, []string{"null", "int"}, ast.NewIntegerLiteralExpr(0, nil, 42)))
 	testStmt(t, `<?php class c { private $a; protected $b; public ?int $c = 42; }`, class)
 }
@@ -580,7 +583,7 @@ func TestInterfaceDeclaration(t *testing.T) {
 
 	// Interface with methods
 	interfaceDecl = ast.NewInterfaceDeclarationStmt(0, nil, "i")
-	interfaceDecl.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "f", []string{"public"}, []ast.FunctionParameter{{Name: "$p", Type: []string{"string"}}}, nil, []string{"void"}))
+	interfaceDecl.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "f", []string{}, []ast.FunctionParameter{{Name: "$p", Type: []string{"string"}}}, nil, []string{"void"}))
 	testStmt(t, `<?php interface i { function f (string $p): void; }`, interfaceDecl)
 
 	// Interface with constants

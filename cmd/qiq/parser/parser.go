@@ -1230,9 +1230,6 @@ func (parser *Parser) parseFunctionDefinition() (ast.IStatement, phpError.Error)
 			break
 		}
 	}
-	if len(returnTypes) == 0 {
-		returnTypes = append(returnTypes, "mixed")
-	}
 
 	body, err := parser.parseStmt()
 	if err != nil {
@@ -1255,7 +1252,7 @@ func (parser *Parser) parseFunctionParameters() ([]ast.FunctionParameter, phpErr
 			}
 
 			// type-declaration
-			paramTypes := []string{"mixed"}
+			paramTypes := []string{}
 			if parser.isPhpType(parser.at()) {
 				var err phpError.Error
 				paramTypes, err = parser.getTypes(true)

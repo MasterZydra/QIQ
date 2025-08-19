@@ -385,13 +385,11 @@ func (parser *Parser) parseClassConstrutorDeclaration(class *ast.ClassDeclaratio
 	// Store position of "__construct"
 	pos := parser.eat().Position
 
-	// Fallback to visibility modifier "public"
-	if visibilityModifierKeyword == "" {
-		visibilityModifierKeyword = "public"
-	}
-
 	// Build modifiers list
-	modifiers := []string{visibilityModifierKeyword}
+	modifiers := []string{}
+	if visibilityModifierKeyword != "" {
+		modifiers = append(modifiers, visibilityModifierKeyword)
+	}
 	if classModifierKeyword != "" {
 		modifiers = append(modifiers, classModifierKeyword)
 	}
@@ -458,13 +456,11 @@ func (parser *Parser) parseClassDestrutorDeclaration(class *ast.ClassDeclaration
 	// Store position of "__destruct"
 	pos := parser.eat().Position
 
-	// Fallback to visibility modifier "public"
-	if visibilityModifierKeyword == "" {
-		visibilityModifierKeyword = "public"
-	}
-
 	// Build modifiers list
-	modifiers := []string{visibilityModifierKeyword}
+	modifiers := []string{}
+	if visibilityModifierKeyword != "" {
+		modifiers = append(modifiers, visibilityModifierKeyword)
+	}
 	if classModifierKeyword != "" {
 		modifiers = append(modifiers, classModifierKeyword)
 	}
@@ -535,13 +531,11 @@ func (parser *Parser) parseClassMethodDeclaration(class ast.AddMethod, isClass b
 	name := parser.at().Value
 	pos := parser.eat().Position
 
-	// Fallback to visibility modifier "public"
-	if visibilityModifierKeyword == "" {
-		visibilityModifierKeyword = "public"
-	}
-
 	// Build modifiers list
-	modifiers := []string{visibilityModifierKeyword}
+	modifiers := []string{}
+	if visibilityModifierKeyword != "" {
+		modifiers = append(modifiers, visibilityModifierKeyword)
+	}
 	if classModifierKeyword != "" {
 		modifiers = append(modifiers, classModifierKeyword)
 	}
@@ -563,7 +557,7 @@ func (parser *Parser) parseClassMethodDeclaration(class ast.AddMethod, isClass b
 	}
 
 	// return-type
-	var returnTypes []string = []string{"mixed"}
+	returnTypes := []string{}
 	if parser.isToken(lexer.OpOrPuncToken, ":", true) {
 		returnTypes, err = parser.getTypes(true)
 		if err != nil {
@@ -628,7 +622,7 @@ func (parser *Parser) parseClassPropertyDeclaration(class *ast.ClassDeclarationS
 	offset := -1
 	visibilityModifierKeyword := ""
 	staticModifierKeyword := ""
-	propertyType := []string{"mixed"}
+	propertyType := []string{}
 
 	token := func() *lexer.Token {
 		return parser.next(offset)
@@ -694,11 +688,6 @@ func (parser *Parser) parseClassPropertyDeclaration(class *ast.ClassDeclarationS
 			return isProperty, err
 		}
 		// TODO Check if it is a constant-expression
-	}
-
-	// Fallback to visibility modifier "public"
-	if visibilityModifierKeyword == "" {
-		visibilityModifierKeyword = "public"
 	}
 
 	if !parser.isToken(lexer.OpOrPuncToken, ";", true) {
