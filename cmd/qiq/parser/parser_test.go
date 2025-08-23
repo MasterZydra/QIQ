@@ -428,6 +428,16 @@ func TestLoops(t *testing.T) {
 // -------------------------------------- Class -------------------------------------- MARK: Class
 
 func TestClassDeclaration(t *testing.T) {
+	//  Object creation
+	stmt := ast.NewExpressionStmt(0, ast.NewObjectCreationExpr(0, nil, "stdClass", []ast.IExpression{}))
+	testStmt(t, `<?php new stdClass;`, stmt)
+	//  Object creation with namespace
+	stmt = ast.NewExpressionStmt(0, ast.NewObjectCreationExpr(0, nil, `\stdClass`, []ast.IExpression{}))
+	testStmt(t, `<?php new \stdClass;`, stmt)
+	//  Object creation with namespaces
+	stmt = ast.NewExpressionStmt(0, ast.NewObjectCreationExpr(0, nil, `my\name\space\stdClass`, []ast.IExpression{}))
+	testStmt(t, `<?php new my\name\space\stdClass;`, stmt)
+
 	// Reserved name
 	testForError(t, `<?php class Parent {}`, phpError.NewError(`Cannot use "Parent" as a class name as it is reserved in %s:1:13`, TEST_FILE_NAME))
 

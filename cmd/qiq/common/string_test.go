@@ -93,6 +93,7 @@ func TestIsQualifiedName(t *testing.T) {
 	doTest(t, "abc", true)
 	doTest(t, `a\b\c\d`, true)
 	doTest(t, `\a\b\c`, true)
+	doTest(t, `\Exception`, true)
 
 	doTest(t, `a\b\`, false)
 	doTest(t, `a/b`, false)

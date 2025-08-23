@@ -42,13 +42,14 @@ func (parser *Parser) parseObjectCreationExpression() (ast.IExpression, phpError
 
 	pos := parser.eat().Position
 
-	if !parser.isTokenType(lexer.NameToken, false) {
-		return ast.NewEmptyExpr(), phpError.NewParseError("parseObjectCreationExpression: Only qualified name as designator allowed")
+	designatorPos := parser.at().GetPosString()
+	designator, err := parser.getQualifiedName(true)
+	if err != nil {
+		return ast.NewEmptyExpr(), err
 	}
-	if !common.IsQualifiedName(parser.at().Value) {
-		return ast.NewEmptyExpr(), phpError.NewParseError("parseObjectCreationExpression: Only qualified name as designator allowed")
+	if !common.IsQualifiedName(designator) {
+		return ast.NewEmptyExpr(), phpError.NewParseError("parseObjectCreationExpression: Only qualified name as designator allowed at %s", designatorPos)
 	}
-	designator := parser.eat().Value
 
 	hasParenthese := parser.isToken(lexer.OpOrPuncToken, "(", true)
 

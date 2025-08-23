@@ -171,3 +171,38 @@ func (parser *Parser) getTypesWithOffset(eat bool, offset int) ([]string, int, p
 
 	return types, offset, nil
 }
+
+func (parser *Parser) getQualifiedName(eat bool) (string, phpError.Error) {
+	offset := 0
+	name := ""
+
+	token := func() *lexer.Token {
+		return parser.next(offset - 1)
+	}
+
+	nextMustBeSeparator := false
+	for {
+		if token().TokenType == lexer.OpOrPuncToken {
+			if token().Value == `\` {
+				name += token().Value
+				offset++
+				nextMustBeSeparator = false
+			}
+		}
+
+		if !nextMustBeSeparator && (token().TokenType == lexer.NameToken || token().TokenType == lexer.KeywordToken) {
+			name += token().Value
+			offset++
+			nextMustBeSeparator = true
+			continue
+		}
+
+		break
+	}
+
+	if eat {
+		parser.eatN(offset)
+	}
+
+	return name, nil
+}
