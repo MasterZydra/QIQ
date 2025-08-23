@@ -387,7 +387,7 @@ func (interpreter *Interpreter) validateClass(classDecl *ast.ClassDeclarationSta
 	}
 
 	// Check if all interfaces are implemented
-	if len(classDecl.Interfaces) > 0 {
+	if !classDecl.IsAbstract && len(classDecl.Interfaces) > 0 {
 		for _, interfaceName := range classDecl.Interfaces {
 			// Check if interface exists
 			interfaceDecl, found := interpreter.GetInterface(interfaceName)
@@ -421,10 +421,17 @@ func (interpreter *Interpreter) validateClass(classDecl *ast.ClassDeclarationSta
 				}
 			}
 			if len(missingMethods) > 0 {
+				if len(missingMethods) > 1 {
+					return phpError.NewError(
+						"Class %s contains %d abstract methods and must therefore be declared abstract or implement the remaining methods (%s) in %s",
+						classDecl.Name, len(missingMethods), common.ImplodeSlice(missingMethods, ", "), classDecl.GetPosString(),
+					)
+				}
 				return phpError.NewError(
-					"Class %s contains %d abstract methods and must therefore be declared abstract or implement the remaining methods (%s) in %s",
+					"Class %s contains %d abstract method and must therefore be declared abstract or implement the remaining method (%s) in %s",
 					classDecl.Name, len(missingMethods), common.ImplodeSlice(missingMethods, ", "), classDecl.GetPosString(),
 				)
+
 			}
 		}
 	}
