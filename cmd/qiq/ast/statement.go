@@ -62,6 +62,7 @@ type MethodDefinitionStatement struct {
 	Params     []FunctionParameter
 	Body       *CompoundStatement
 	ReturnType []string
+	Class      *ClassDeclarationStatement
 }
 
 func NewMethodDefinitionStmt(id int64, pos *position.Position, name string, modifiers []string, params []FunctionParameter, body *CompoundStatement, returnType []string) *MethodDefinitionStatement {
@@ -394,10 +395,16 @@ func (stmt *ClassDeclarationStatement) AddConst(constStmt *ClassConstDeclaration
 }
 
 func (stmt *ClassDeclarationStatement) AddMethod(method *MethodDefinitionStatement) {
+	method.Class = stmt
 	if !slices.Contains(stmt.MethodNames, method.Name) {
 		stmt.MethodNames = append(stmt.MethodNames, method.Name)
 	}
 	stmt.Methods[strings.ToLower(method.Name)] = method
+}
+
+func (stmt *ClassDeclarationStatement) GetMethod(methodName string) (*MethodDefinitionStatement, bool) {
+	methodDecl, found := stmt.Methods[strings.ToLower(methodName)]
+	return methodDecl, found
 }
 
 func (stmt *ClassDeclarationStatement) AddProperty(property *PropertyDeclarationStatement) {

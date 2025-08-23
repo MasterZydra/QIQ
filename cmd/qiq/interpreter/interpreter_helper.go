@@ -74,7 +74,7 @@ func (interpreter *Interpreter) destructObject(object *values.Object, env *Envir
 	if object.IsDestructed {
 		return nil
 	}
-	_, found := object.GetMethod("__destruct")
+	_, found := interpreter.getObjectMethod(object, "__destruct")
 	if found {
 		_, err := interpreter.CallMethod(object, "__destruct", []ast.IExpression{}, env)
 		if err != nil {
@@ -83,6 +83,21 @@ func (interpreter *Interpreter) destructObject(object *values.Object, env *Envir
 		object.IsDestructed = true
 	}
 	return nil
+}
+
+func (interpreter *Interpreter) getObjectMethod(object *values.Object, methodName string) (*ast.MethodDefinitionStatement, bool) {
+	classDecl := object.Class
+	for classDecl != nil {
+		MethodDecl, found := classDecl.GetMethod(methodName)
+		if found {
+			return MethodDecl, true
+		}
+		if classDecl.BaseClass == "" {
+			return nil, false
+		}
+		classDecl, _ = interpreter.GetClass(classDecl.BaseClass)
+	}
+	return nil, false
 }
 
 func (interpreter *Interpreter) destructAllObjects(env *Environment) {
@@ -928,7 +943,7 @@ func calculateString(operand1 *values.Str, operator string, operand2 *values.Str
 // -------------------------------------- class-object -------------------------------------- MARK: class-object
 
 func (interpreter *Interpreter) CallMethod(object *values.Object, method string, args []ast.IExpression, env *Environment) (values.RuntimeValue, phpError.Error) {
-	methodDefinition, found := object.GetMethod(method)
+	methodDefinition, found := interpreter.getObjectMethod(object, method)
 	if !found {
 		return values.NewNull(), phpError.NewError("Class %s does not have a function \"%s\"", object.Class.Name, method)
 	}

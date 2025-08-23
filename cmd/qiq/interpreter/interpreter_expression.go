@@ -523,9 +523,14 @@ func (interpreter *Interpreter) ProcessUnsetIntrinsicExpr(expr *ast.UnsetIntrins
 	// This statement unsets the variables designated by each variable in variable-list. No value is returned.
 	// An attempt to unset a non-existent variable (such as a non-existent element in an array) is ignored.
 
+	environment := env.(*Environment)
 	for _, arg := range expr.Arguments {
-		variableName := mustOrVoid(interpreter.varExprToVarName(arg, env.(*Environment)))
-		env.(*Environment).unsetVariable(variableName)
+		variableName := mustOrVoid(interpreter.varExprToVarName(arg, environment))
+		value, _ := env.(*Environment).LookupVariable(variableName)
+		if value.GetType() == values.ObjectValue {
+			interpreter.destructObject(value.(*values.Object), environment)
+		}
+		environment.unsetVariable(variableName)
 	}
 	return values.NewVoid(), nil
 }
@@ -586,7 +591,7 @@ func (interpreter *Interpreter) ProcessConstantAccessExpr(expr *ast.ConstantAcce
 			return values.NewStr(environment.CurrentFunction.FunctionName), nil
 		}
 		if environment.CurrentMethod != nil {
-			return values.NewStr(environment.CurrentObject.Class.Name + "::" + environment.CurrentMethod.Name), nil
+			return values.NewStr(environment.CurrentMethod.Class.GetQualifiedName() + "::" + environment.CurrentMethod.Name), nil
 		}
 		return values.NewStr(""), nil
 	}
@@ -891,7 +896,7 @@ func (interpreter *Interpreter) ProcessObjectCreationExpr(stmt *ast.ObjectCreati
 }
 
 func (interpreter *Interpreter) initObject(object *values.Object, constructorArgs []ast.IExpression, env any) phpError.Error {
-	initializeProperties := func(properties map[string]*ast.PropertyDeclarationStatement) phpError.Error {
+	initializeProperties := func(properties map[string]*ast.PropertyDeclarationStatement, isParent bool) phpError.Error {
 		// Initialize properties
 		for _, property := range properties {
 			if property.InitialValue == nil {
@@ -906,9 +911,11 @@ func (interpreter *Interpreter) initObject(object *values.Object, constructorArg
 		}
 
 		// Call constructor
-		if _, found := object.GetMethod("__construct"); found {
-			if _, err := interpreter.CallMethod(object, "__construct", constructorArgs, env.(*Environment)); err != nil {
-				return err
+		if !isParent {
+			if _, found := interpreter.getObjectMethod(object, "__construct"); found {
+				if _, err := interpreter.CallMethod(object, "__construct", constructorArgs, env.(*Environment)); err != nil {
+					return err
+				}
 			}
 		}
 
@@ -925,14 +932,14 @@ func (interpreter *Interpreter) initObject(object *values.Object, constructorArg
 		// TODO initialize parent class
 
 		// Initialize parent properties
-		if err := initializeProperties(baseClassDecl.Properties); err != nil {
+		if err := initializeProperties(baseClassDecl.Properties, true); err != nil {
 			return err
 		}
 
 		baseClass = baseClassDecl.BaseClass
 	}
 
-	if err := initializeProperties(object.Class.Properties); err != nil {
+	if err := initializeProperties(object.Class.Properties, false); err != nil {
 		return err
 	}
 

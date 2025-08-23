@@ -183,6 +183,7 @@ func TestConstants(t *testing.T) {
 	testInputOutput(t, "<?php var_dump(__LINE__);\nvar_dump(__LINE__);", "int(1)\nint(2)\n")
 	testInputOutput(t, "<?php var_dump(__CLASS__); class c { function __construct() { var_dump(__CLASS__); } }; new c;", "string(0) \"\"\nstring(1) \"c\"\n")
 	testInputOutput(t, "<?php class c { function __construct() { var_dump(__FUNCTION__); var_dump(__METHOD__); } }; new c;", "string(11) \"__construct\"\nstring(14) \"c::__construct\"\n")
+	testInputOutput(t, "<?php namespace Space; class c { function __construct() { var_dump(__FUNCTION__); var_dump(__METHOD__); } }; new c;", "string(11) \"__construct\"\nstring(20) \"Space\\c::__construct\"\n")
 
 	// Userdefined constants
 	testInputOutput(t, `<?php const TRUTH = 42; const PI = "3.141";echo TRUTH, PI;`, "423.141")
@@ -1396,6 +1397,14 @@ func TestClasses(t *testing.T) {
 		interface I { public function F(null|string $p): ?string; }
 		class C implements I { function F($p) {} }`,
 		phpError.NewError(`Declaration of Space\C::F($p) must be compatible with Space\I::F(?string $p): ?string in %s:3:3`, TEST_FILE_NAME),
+	)
+
+	// Class with functions implemented in parent
+	testInputOutput(t, `<?php
+		class A { public function __construct() { echo __METHOD__; } }
+		class B extends A { }
+		new B;`,
+		"A::__construct",
 	)
 }
 
