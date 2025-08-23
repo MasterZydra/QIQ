@@ -7,7 +7,7 @@ import (
 )
 
 // QIQ version
-const QIQVersion string = "0.1.0"
+const QIQVersion string = "0.4.0"
 
 var SoftwareVersion string = softwareVersion()
 
@@ -17,7 +17,7 @@ func softwareVersion() string {
 
 // PHP version
 const MajorVersion int64 = 8
-const MinorVersion int64 = 3
+const MinorVersion int64 = 4
 const ReleaseVersion int64 = 0
 const ExtraVersion string = ""
 

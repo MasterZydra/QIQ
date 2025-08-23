@@ -32,6 +32,11 @@ func main() {
 
 	flag.Parse()
 
+	if len(os.Args) > 1 && os.Args[1] == "version" {
+		fmt.Printf("QIQ %s (PHP %s)\n", config.QIQVersion, config.Version)
+		os.Exit(0)
+	}
+
 	config.IsDevMode = *isDev
 	config.ShowStats = *showStats
 	if *debugMode {
@@ -119,8 +124,8 @@ func webServer() {
 		mode = "Production"
 	}
 
-	fmt.Printf("[%s] QIQ %s %s Server (%s) started\n",
-		time.Now().Format("Mon Jan 02 15:04:05 2006"), config.Version, mode, serverAddr,
+	fmt.Printf("[%s] QIQ %s (PHP %s) %s Server (%s) started\n",
+		time.Now().Format("Mon Jan 02 15:04:05 2006"), config.QIQVersion, config.Version, mode, serverAddr,
 	)
 	fmt.Println("Document root is " + documentRoot)
 	fmt.Println("Press Ctrl-C to quit")
