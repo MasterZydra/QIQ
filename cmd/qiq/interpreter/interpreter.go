@@ -19,7 +19,9 @@ var _ ast.Visitor = &Interpreter{}
 type Interpreter struct {
 	filename              string
 	includedFiles         []string
+	classNames            []string
 	classDeclarations     map[string]*ast.ClassDeclarationStatement
+	interfaceNames        []string
 	interfaceDeclarations map[string]*ast.InterfaceDeclarationStatement
 	ini                   *ini.Ini
 	request               *request.Request
@@ -39,7 +41,9 @@ func NewInterpreter(ini *ini.Ini, r *request.Request, filename string) (*Interpr
 	interpreter := &Interpreter{
 		filename:              filename,
 		includedFiles:         []string{},
+		classNames:            []string{},
 		classDeclarations:     map[string]*ast.ClassDeclarationStatement{},
+		interfaceNames:        []string{},
 		interfaceDeclarations: map[string]*ast.InterfaceDeclarationStatement{},
 		ini:                   ini,
 		request:               r,

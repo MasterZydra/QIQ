@@ -16,6 +16,8 @@ func Register(environment runtime.Environment) {
 	environment.AddNativeFunction("get_class", nativeFn_get_class)
 	environment.AddNativeFunction("get_class_methods", nativeFn_get_class_methods)
 	environment.AddNativeFunction("get_class_vars", nativeFn_get_class_vars)
+	environment.AddNativeFunction("get_declared_classes", nativeFn_get_declared_classes)
+	environment.AddNativeFunction("get_declared_interfaces", nativeFn_get_declared_interfaces)
 	environment.AddNativeFunction("get_parent_class", nativeFn_get_parent_class)
 	environment.AddNativeFunction("is_a", nativeFn_is_a)
 	environment.AddNativeFunction("is_subclass_of", nativeFn_is_subclass_of)
@@ -167,7 +169,43 @@ func nativeFn_get_class_vars(args []values.RuntimeValue, context runtime.Context
 	return array, nil
 }
 
-// -------------------------------------- get_parent_class -------------------------------------- MARK: get_class
+// -------------------------------------- get_declared_classes -------------------------------------- MARK: get_declared_classes
+
+func nativeFn_get_declared_classes(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
+	// Spec: https://www.php.net/manual/en/function.get-declared-classes.php
+
+	_, err := funcParamValidator.NewValidator("get_declared_classes").Validate(args)
+	if err != nil {
+		return values.NewVoid(), err
+	}
+
+	classes := values.NewArray()
+	for _, className := range context.Interpreter.GetClasses() {
+		classes.SetElement(nil, values.NewStr(className))
+	}
+
+	return classes, nil
+}
+
+// -------------------------------------- get_declared_interfaces -------------------------------------- MARK: get_declared_interfaces
+
+func nativeFn_get_declared_interfaces(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
+	// Spec: https://www.php.net/manual/en/function.get-declared-interfaces.php
+
+	_, err := funcParamValidator.NewValidator("get_declared_interfaces").Validate(args)
+	if err != nil {
+		return values.NewVoid(), err
+	}
+
+	interfaces := values.NewArray()
+	for _, interfaceName := range context.Interpreter.GetInterfaces() {
+		interfaces.SetElement(nil, values.NewStr(interfaceName))
+	}
+
+	return interfaces, nil
+}
+
+// -------------------------------------- get_parent_class -------------------------------------- MARK: get_parent_class
 
 func nativeFn_get_parent_class(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.get-parent-class.php
@@ -358,8 +396,6 @@ func nativeFn_property_exists(args []values.RuntimeValue, context runtime.Contex
 
 // TODO enum_exists
 // TODO get_called_class
-// TODO get_declared_classes
-// TODO get_declared_interfaces
 // TODO get_declared_traits
 // TODO get_mangled_object_vars
 // TODO get_object_vars

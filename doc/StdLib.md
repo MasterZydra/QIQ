@@ -17,6 +17,8 @@
 - get_class
 - get_class_methods
 - get_class_vars
+- get_declared_classes
+- get_declared_interfaces
 - get_parent_class
 - is_a
 - is_subclass_of

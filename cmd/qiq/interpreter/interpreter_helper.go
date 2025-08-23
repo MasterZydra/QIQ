@@ -353,6 +353,8 @@ func ParamTypesToSignature(paramTypes []string) string {
 // -------------------------------------- Classes and Interfaces -------------------------------------- MARK: Classes and Interfaces
 
 func (interpreter *Interpreter) AddClass(class string, classDecl *ast.ClassDeclarationStatement) {
+	interpreter.classNames = append(interpreter.classNames, class)
+	// TODO check if class already exists and return error that re-declaration is not possible
 	interpreter.classDeclarations[strings.ToLower(class)] = classDecl
 }
 
@@ -364,7 +366,13 @@ func (interpreter *Interpreter) GetClass(class string) (*ast.ClassDeclarationSta
 	return classDeclaration, true
 }
 
+func (interpreter *Interpreter) GetClasses() []string {
+	return interpreter.classNames
+}
+
 func (interpreter *Interpreter) AddInterface(interfaceName string, interfaceDecl *ast.InterfaceDeclarationStatement) {
+	interpreter.interfaceNames = append(interpreter.interfaceNames, interfaceName)
+	// TODO check if class already exists and return error that re-declaration is not possible
 	interpreter.interfaceDeclarations[strings.ToLower(interfaceName)] = interfaceDecl
 }
 
@@ -374,6 +382,10 @@ func (interpreter *Interpreter) GetInterface(interfaceName string) (*ast.Interfa
 		return nil, false
 	}
 	return interfaceDecl, true
+}
+
+func (interpreter *Interpreter) GetInterfaces() []string {
+	return interpreter.interfaceNames
 }
 
 func (interpreter *Interpreter) validateClass(classDecl *ast.ClassDeclarationStatement) phpError.Error {
