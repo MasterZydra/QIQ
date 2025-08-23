@@ -4,6 +4,7 @@ import (
 	"QIQ/cmd/qiq/ast"
 	"QIQ/cmd/qiq/common"
 	"QIQ/cmd/qiq/ini"
+	"QIQ/cmd/qiq/interpreter/interfaces"
 	"QIQ/cmd/qiq/parser"
 	"QIQ/cmd/qiq/phpError"
 	"QIQ/cmd/qiq/request"
@@ -54,6 +55,7 @@ func NewInterpreter(ini *ini.Ini, r *request.Request, filename string) (*Interpr
 	}
 
 	interpreter.AddClass("stdclass", ast.NewClassDeclarationStmt(0, nil, "stdClass", false, false))
+	interfaces.RegisterDefaultInterfaces(interpreter)
 
 	if ini.GetBool("register_argc_argv") {
 		server := interpreter.env.predefinedVariables["$_SERVER"].(*values.Array)

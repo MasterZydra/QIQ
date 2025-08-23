@@ -22,6 +22,8 @@ flowchart LR
     QIQ_cmd_qiq_interpreter[QIQ/cmd/qiq/interpreter] --> QIQ_cmd_qiq_common_os[QIQ/cmd/qiq/common/os]
     QIQ_cmd_qiq_interpreter[QIQ/cmd/qiq/interpreter] --> QIQ_cmd_qiq_config[QIQ/cmd/qiq/config]
     QIQ_cmd_qiq_interpreter[QIQ/cmd/qiq/interpreter] --> QIQ_cmd_qiq_ini[QIQ/cmd/qiq/ini]
+    QIQ_cmd_qiq_interpreter[QIQ/cmd/qiq/interpreter] --> QIQ_cmd_qiq_interpreter_classes[QIQ/cmd/qiq/interpreter/classes]
+    QIQ_cmd_qiq_interpreter[QIQ/cmd/qiq/interpreter] --> QIQ_cmd_qiq_interpreter_interfaces[QIQ/cmd/qiq/interpreter/interfaces]
     QIQ_cmd_qiq_interpreter[QIQ/cmd/qiq/interpreter] --> QIQ_cmd_qiq_parser[QIQ/cmd/qiq/parser]
     QIQ_cmd_qiq_interpreter[QIQ/cmd/qiq/interpreter] --> QIQ_cmd_qiq_phpError[QIQ/cmd/qiq/phpError]
     QIQ_cmd_qiq_interpreter[QIQ/cmd/qiq/interpreter] --> QIQ_cmd_qiq_request[QIQ/cmd/qiq/request]
@@ -32,6 +34,12 @@ flowchart LR
     QIQ_cmd_qiq_interpreter[QIQ/cmd/qiq/interpreter] --> QIQ_cmd_qiq_runtime_stdlib_variableHandling[QIQ/cmd/qiq/runtime/stdlib/variableHandling]
     QIQ_cmd_qiq_interpreter[QIQ/cmd/qiq/interpreter] --> QIQ_cmd_qiq_runtime_values[QIQ/cmd/qiq/runtime/values]
     QIQ_cmd_qiq_interpreter[QIQ/cmd/qiq/interpreter] --> QIQ_cmd_qiq_stats[QIQ/cmd/qiq/stats]
+
+    QIQ_cmd_qiq_interpreter_classes[QIQ/cmd/qiq/interpreter/classes] --> QIQ_cmd_qiq_ast[QIQ/cmd/qiq/ast]
+    QIQ_cmd_qiq_interpreter_classes[QIQ/cmd/qiq/interpreter/classes] --> QIQ_cmd_qiq_runtime[QIQ/cmd/qiq/runtime]
+
+    QIQ_cmd_qiq_interpreter_interfaces[QIQ/cmd/qiq/interpreter/interfaces] --> QIQ_cmd_qiq_ast[QIQ/cmd/qiq/ast]
+    QIQ_cmd_qiq_interpreter_interfaces[QIQ/cmd/qiq/interpreter/interfaces] --> QIQ_cmd_qiq_runtime[QIQ/cmd/qiq/runtime]
 
     QIQ_cmd_qiq_lexer[QIQ/cmd/qiq/lexer] --> QIQ_cmd_qiq_common[QIQ/cmd/qiq/common]
     QIQ_cmd_qiq_lexer[QIQ/cmd/qiq/lexer] --> QIQ_cmd_qiq_ini[QIQ/cmd/qiq/ini]
@@ -147,6 +155,13 @@ flowchart LR
     QIQ_cmd_qiq_runtime_values[QIQ/cmd/qiq/runtime/values] --> QIQ_cmd_qiq_phpError[QIQ/cmd/qiq/phpError]
 
     QIQ_cmd_qiq_stats[QIQ/cmd/qiq/stats] --> QIQ_cmd_qiq_config[QIQ/cmd/qiq/config]
+
+    QIQ_cmd_qiqAstGenerator[QIQ/cmd/qiqAstGenerator] --> QIQ_cmd_qiqAstGenerator_astGenerator[QIQ/cmd/qiqAstGenerator/astGenerator]
+
+    QIQ_cmd_qiqAstGenerator_astGenerator[QIQ/cmd/qiqAstGenerator/astGenerator] --> QIQ_cmd_qiq_ast[QIQ/cmd/qiq/ast]
+    QIQ_cmd_qiqAstGenerator_astGenerator[QIQ/cmd/qiqAstGenerator/astGenerator] --> QIQ_cmd_qiq_ini[QIQ/cmd/qiq/ini]
+    QIQ_cmd_qiqAstGenerator_astGenerator[QIQ/cmd/qiqAstGenerator/astGenerator] --> QIQ_cmd_qiq_parser[QIQ/cmd/qiq/parser]
+    QIQ_cmd_qiqAstGenerator_astGenerator[QIQ/cmd/qiqAstGenerator/astGenerator] --> QIQ_cmd_qiq_phpError[QIQ/cmd/qiq/phpError]
 
     QIQ_cmd_qiqTester[QIQ/cmd/qiqTester] --> QIQ_cmd_qiq_common[QIQ/cmd/qiq/common]
     QIQ_cmd_qiqTester[QIQ/cmd/qiqTester] --> QIQ_cmd_qiq_common_os[QIQ/cmd/qiq/common/os]

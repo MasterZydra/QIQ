@@ -18,6 +18,8 @@ type Interpreter interface {
 	// Class declarations
 	AddClass(class string, classDecl *ast.ClassDeclarationStatement)
 	GetClass(class string) (*ast.ClassDeclarationStatement, bool)
+	// Interface declarations
+	AddInterface(interfaceName string, interfaceDecl *ast.InterfaceDeclarationStatement)
 	// Output
 	GetOutputBufferStack() *outputBuffer.Stack
 	Print(str string)
