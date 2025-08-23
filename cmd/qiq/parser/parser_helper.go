@@ -145,7 +145,8 @@ func (parser *Parser) getTypesWithOffset(eat bool, offset int) ([]string, int, p
 	}
 
 	if !parser.isPhpType(token()) {
-		return types, offset, phpError.NewParseError("Expected a type. Got \"%s\"s at %s", token().Value, token().GetPosString())
+		types = append(types, token().Value)
+		offset++
 	}
 
 	for parser.isPhpType(token()) {
