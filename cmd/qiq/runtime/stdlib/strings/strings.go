@@ -26,6 +26,38 @@ func Register(environment runtime.Environment) {
 	environment.AddNativeFunction("strtolower", nativeFn_strtolower)
 	environment.AddNativeFunction("strtoupper", nativeFn_strtoupper)
 	environment.AddNativeFunction("ucfirst", nativeFn_ucfirst)
+
+	// Const Category: String Constants
+	// Spec: https://www.php.net/manual/en/string.constants.php
+	environment.AddPredefinedConstant("CRYPT_SALT_LENGTH", values.NewInt(1))
+	environment.AddPredefinedConstant("CRYPT_STD_DES", values.NewInt(1))
+	environment.AddPredefinedConstant("CRYPT_EXT_DES", values.NewInt(1))
+	environment.AddPredefinedConstant("CRYPT_MD5", values.NewInt(1))
+	environment.AddPredefinedConstant("CRYPT_BLOWFISH", values.NewInt(1))
+	environment.AddPredefinedConstant("CRYPT_SHA256", values.NewInt(1))
+	environment.AddPredefinedConstant("CRYPT_SHA512", values.NewInt(0))
+	environment.AddPredefinedConstant("HTML_SPECIALCHARS", values.NewInt(1))
+	environment.AddPredefinedConstant("HTML_ENTITIES", values.NewInt(2))
+	environment.AddPredefinedConstant("ENT_COMPAT", values.NewInt(3))
+	environment.AddPredefinedConstant("ENT_QUOTES", values.NewInt(0))
+	environment.AddPredefinedConstant("ENT_NOQUOTES", values.NewInt(4))
+	environment.AddPredefinedConstant("ENT_IGNORE", values.NewInt(8))
+	environment.AddPredefinedConstant("ENT_SUBSTITUTE", values.NewInt(128))
+	environment.AddPredefinedConstant("ENT_DISALLOWED", values.NewInt(0))
+	environment.AddPredefinedConstant("ENT_HTML401", values.NewInt(16))
+	environment.AddPredefinedConstant("ENT_XML1", values.NewInt(32))
+	environment.AddPredefinedConstant("ENT_XHTML", values.NewInt(48))
+	environment.AddPredefinedConstant("ENT_HTML5", values.NewInt(127))
+	environment.AddPredefinedConstant("CHAR_MAX", values.NewInt(0))
+	environment.AddPredefinedConstant("LC_CTYPE", values.NewInt(1))
+	environment.AddPredefinedConstant("LC_NUMERIC", values.NewInt(2))
+	environment.AddPredefinedConstant("LC_TIME", values.NewInt(3))
+	environment.AddPredefinedConstant("LC_COLLATE", values.NewInt(4))
+	environment.AddPredefinedConstant("LC_MONETARY", values.NewInt(6))
+	environment.AddPredefinedConstant("LC_ALL", values.NewInt(5))
+	environment.AddPredefinedConstant("LC_MESSAGES", values.NewInt(0))
+	environment.AddPredefinedConstant("STR_PAD_LEFT", values.NewInt(1))
+	environment.AddPredefinedConstant("STR_PAD_RIGHT", values.NewInt(2))
 }
 
 // -------------------------------------- bin2hex -------------------------------------- MARK: bin2hex
