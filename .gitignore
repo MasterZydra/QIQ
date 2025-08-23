@@ -3,8 +3,12 @@
 /doc-gen.exe
 /qiq
 /qiq.exe
+/qiqAstGenerator
+/qiqAstGenerator.exe
 /qiqTester
 /qiqTester.exe
 
 # PHP files
-*.php
+/*.php
+/test-suits/*
+*.php.ast
