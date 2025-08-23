@@ -6,37 +6,6 @@ import (
 )
 
 func RegisterDefaultInterfaces(interpreter runtime.Interpreter) {
-	// -------------------------------------- Stringable -------------------------------------- MARK: Stringable
-
-	// Spec: https://www.php.net/manual/en/class.stringable.php
-	Stringable := ast.NewInterfaceDeclarationStmt(0, nil, "Stringable")
-	Stringable.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "__toString", []string{"public"}, []ast.FunctionParameter{}, nil, []string{"string"}))
-
-	interpreter.AddInterface(Stringable.Name, Stringable)
-
-	// -------------------------------------- Throwable -------------------------------------- MARK: Throwable
-
-	// Spec: https://www.php.net/manual/en/class.throwable.php
-	Throwable := ast.NewInterfaceDeclarationStmt(0, nil, "Throwable")
-	Throwable.Parents = append(Throwable.Parents, "Stringable")
-	Throwable.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "getMessage", []string{"public"}, []ast.FunctionParameter{}, nil, []string{"string"}))
-	Throwable.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "getCode", []string{"public"}, []ast.FunctionParameter{}, nil, []string{"int"}))
-	Throwable.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "getFile", []string{"public"}, []ast.FunctionParameter{}, nil, []string{"string"}))
-	Throwable.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "getLine", []string{"public"}, []ast.FunctionParameter{}, nil, []string{"int"}))
-	Throwable.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "getTrace", []string{"public"}, []ast.FunctionParameter{}, nil, []string{"array"}))
-	Throwable.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "getTraceAsString", []string{"public"}, []ast.FunctionParameter{}, nil, []string{"string"}))
-	Throwable.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "getPrevious", []string{"public"}, []ast.FunctionParameter{}, nil, []string{"null", "Throwable"}))
-
-	interpreter.AddInterface(Throwable.Name, Throwable)
-
-	// -------------------------------------- Countable -------------------------------------- MARK: Countable
-
-	// Spec: https://www.php.net/manual/en/class.countable.php
-	Countable := ast.NewInterfaceDeclarationStmt(0, nil, "Countable")
-	Countable.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "count", []string{"public"}, []ast.FunctionParameter{}, nil, []string{"int"}))
-
-	interpreter.AddInterface(Countable.Name, Countable)
-
 	// -------------------------------------- Traversable -------------------------------------- MARK: Traversable
 
 	// Spec: https://www.php.net/manual/en/class.traversable.php
@@ -66,6 +35,15 @@ func RegisterDefaultInterfaces(interpreter runtime.Interpreter) {
 
 	interpreter.AddInterface(Iterator.Name, Iterator)
 
+	// -------------------------------------- Serializable -------------------------------------- MARK: Serializable
+
+	// https://www.php.net/manual/en/class.serializable.php
+	Serializable := ast.NewInterfaceDeclarationStmt(0, nil, "Serializable")
+	Serializable.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "serialize", []string{"public"}, []ast.FunctionParameter{}, nil, []string{"null", "string"}))
+	Serializable.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "unserialize", []string{"public"}, []ast.FunctionParameter{{Name: "$data", Type: []string{"string"}}}, nil, []string{"void"}))
+
+	interpreter.AddInterface(Serializable.Name, Serializable)
+
 	// -------------------------------------- ArrayAccess -------------------------------------- MARK: ArrayAccess
 
 	// Spec: https://www.php.net/manual/en/class.arrayaccess.php
@@ -77,14 +55,36 @@ func RegisterDefaultInterfaces(interpreter runtime.Interpreter) {
 
 	interpreter.AddInterface(ArrayAccess.Name, ArrayAccess)
 
-	// -------------------------------------- Serializable -------------------------------------- MARK: Serializable
+	// -------------------------------------- Countable -------------------------------------- MARK: Countable
 
-	// https://www.php.net/manual/en/class.serializable.php
-	Serializable := ast.NewInterfaceDeclarationStmt(0, nil, "Serializable")
-	Serializable.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "serialize", []string{"public"}, []ast.FunctionParameter{}, nil, []string{"null", "string"}))
-	Serializable.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "unserialize", []string{"public"}, []ast.FunctionParameter{{Name: "$data", Type: []string{"string"}}}, nil, []string{"void"}))
+	// Spec: https://www.php.net/manual/en/class.countable.php
+	Countable := ast.NewInterfaceDeclarationStmt(0, nil, "Countable")
+	Countable.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "count", []string{"public"}, []ast.FunctionParameter{}, nil, []string{"int"}))
 
-	interpreter.AddInterface(Serializable.Name, Serializable)
+	interpreter.AddInterface(Countable.Name, Countable)
+
+	// -------------------------------------- Stringable -------------------------------------- MARK: Stringable
+
+	// Spec: https://www.php.net/manual/en/class.stringable.php
+	Stringable := ast.NewInterfaceDeclarationStmt(0, nil, "Stringable")
+	Stringable.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "__toString", []string{"public"}, []ast.FunctionParameter{}, nil, []string{"string"}))
+
+	interpreter.AddInterface(Stringable.Name, Stringable)
+
+	// -------------------------------------- Throwable -------------------------------------- MARK: Throwable
+
+	// Spec: https://www.php.net/manual/en/class.throwable.php
+	Throwable := ast.NewInterfaceDeclarationStmt(0, nil, "Throwable")
+	Throwable.Parents = append(Throwable.Parents, "Stringable")
+	Throwable.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "getMessage", []string{"public"}, []ast.FunctionParameter{}, nil, []string{"string"}))
+	Throwable.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "getCode", []string{"public"}, []ast.FunctionParameter{}, nil, []string{"int"}))
+	Throwable.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "getFile", []string{"public"}, []ast.FunctionParameter{}, nil, []string{"string"}))
+	Throwable.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "getLine", []string{"public"}, []ast.FunctionParameter{}, nil, []string{"int"}))
+	Throwable.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "getTrace", []string{"public"}, []ast.FunctionParameter{}, nil, []string{"array"}))
+	Throwable.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "getTraceAsString", []string{"public"}, []ast.FunctionParameter{}, nil, []string{"string"}))
+	Throwable.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "getPrevious", []string{"public"}, []ast.FunctionParameter{}, nil, []string{"null", "Throwable"}))
+
+	interpreter.AddInterface(Throwable.Name, Throwable)
 
 	// -------------------------------------- UnitEnum -------------------------------------- MARK: UnitEnum
 

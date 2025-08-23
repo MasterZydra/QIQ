@@ -1,29 +1,5 @@
 <?php
 
-// Spec: https://www.php.net/manual/en/class.stringable.php
-interface Stringable {
-    /* Methods */
-    public function __toString(): string;
-}
-
-// Spec: https://www.php.net/manual/en/class.throwable.php
-interface Throwable extends Stringable {
-    /* Methods */
-    public function getMessage(): string;
-    public function getCode(): int;
-    public function getFile(): string;
-    public function getLine(): int;
-    public function getTrace(): array;
-    public function getTraceAsString(): string;
-    public function getPrevious(): ?Throwable;
-}
-
-// Spec: https://www.php.net/manual/en/class.countable.php
-interface Countable {
-    /* Methods */
-    public function count(): int;
-}
-
 // Spec: https://www.php.net/manual/en/class.traversable.php
 interface Traversable {
 }
@@ -44,6 +20,13 @@ interface Iterator extends Traversable {
     public function valid(): bool;
 }
 
+// Spec: https://www.php.net/manual/en/class.serializable.php
+interface Serializable {
+    /* Methods */
+    public function serialize(): ?string;
+    public function unserialize(string $data): void;
+}
+
 // Spec: https://www.php.net/manual/en/class.arrayaccess.php
 interface ArrayAccess {
     /* Methods */
@@ -53,11 +36,28 @@ interface ArrayAccess {
     public function offsetUnset(mixed $offset): void;
 }
 
-// Spec: https://www.php.net/manual/en/class.serializable.php
-interface Serializable {
+// Spec: https://www.php.net/manual/en/class.countable.php
+interface Countable {
     /* Methods */
-    public function serialize(): ?string;
-    public function unserialize(string $data): void;
+    public function count(): int;
+}
+
+// Spec: https://www.php.net/manual/en/class.stringable.php
+interface Stringable {
+    /* Methods */
+    public function __toString(): string;
+}
+
+// Spec: https://www.php.net/manual/en/class.throwable.php
+interface Throwable extends Stringable {
+    /* Methods */
+    public function getMessage(): string;
+    public function getCode(): int;
+    public function getFile(): string;
+    public function getLine(): int;
+    public function getTrace(): array;
+    public function getTraceAsString(): string;
+    public function getPrevious(): ?Throwable;
 }
 
 // Spec: https://www.php.net/manual/en/class.unitenum.php
