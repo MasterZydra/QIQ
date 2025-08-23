@@ -1392,3 +1392,27 @@ func TestClasses(t *testing.T) {
 		phpError.NewError("Declaration of C::F($p) must be compatible with I::F(?string $p): ?string in %s:2:3", TEST_FILE_NAME),
 	)
 }
+
+// TODO Add interface test cases
+/*
+
+OK: <?php interface I { public function F(null|string $p): void; }
+		class C implements I { function F($p): void {} }
+
+OK: <?php interface I { public function F(null|string $p); }
+		class C implements I { function F($p): void {} }
+
+	testForError(t,
+		`<?php interface I { public function F(null|string $p): null|string|int; }
+		class C implements I { function F($p) {} }`,
+		phpError.NewError("Declaration of C::F($p) must be compatible with I::F(?string $p): string|int|null in %s:1:2", TEST_FILE_NAME),
+	)
+
+<?php
+
+interface I { public function F(null|string $p): null|string|int;}
+class C implements I { public function F() { } }
+
+
+Declaration of C::F() must be compatible with I::F(?string $p): string|int|null in
+*/
