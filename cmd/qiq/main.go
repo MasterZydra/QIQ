@@ -219,7 +219,7 @@ func processContent(w http.ResponseWriter, r *http.Request, content string, file
 	}
 	result, err := interpreter.Process(content)
 	if err != nil {
-		result += interpreter.ErrorToString(err)
+		result += "\n" + interpreter.ErrorToString(err)
 		return result, 500
 	}
 	if err := common.DeleteFiles(request.UploadedFiles); err != nil {
