@@ -2,6 +2,7 @@ package ast
 
 type Visitor interface {
 	// Statements
+	ProcessAnonymousFunctionCreationExpr(stmt *AnonymousFunctionCreationExpression, context any) (any, error)
 	ProcessBreakStmt(stmt *BreakStatement, context any) (any, error)
 	ProcessClassDeclarationStmt(stmt *ClassDeclarationStatement, context any) (any, error)
 	ProcessCompoundStmt(stmt *CompoundStatement, context any) (any, error)

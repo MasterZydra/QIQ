@@ -80,6 +80,13 @@ func (visitor DumpVisitor) getKindAndPos(stmt IStatement) string {
 	return fmt.Sprintf("%s, \"pos\": \"%s\"", kind, stmt.GetPosString())
 }
 
+// ProcessAnonymousFunctionCreationExpr implements Visitor.
+func (visitor DumpVisitor) ProcessAnonymousFunctionCreationExpr(stmt *AnonymousFunctionCreationExpression, _ any) (any, error) {
+	return fmt.Sprintf("{ %s, \"params\": %s, \"body\": %s, \"returnType\": \"%s\"}",
+		visitor.getKindAndPos(stmt), stmt.Params, visitor.toString(stmt.Body), stmt.ReturnType,
+	), nil
+}
+
 // ProcessArrayLiteralExpr implements Visitor.
 func (visitor DumpVisitor) ProcessArrayLiteralExpr(stmt *ArrayLiteralExpression, _ any) (any, error) {
 	elements := "["

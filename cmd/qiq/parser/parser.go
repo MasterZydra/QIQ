@@ -1285,6 +1285,72 @@ func (parser *Parser) parseFunctionParameters() ([]ast.FunctionParameter, phpErr
 	return parameters, nil
 }
 
+func (parser *Parser) parseAnonymousFunctionCreationExpression() (ast.IExpression, phpError.Error) {
+	// -------------------------------------- anonymous-function-creation-expression -------------------------------------- MARK: anonymous-function-creation-expression
+
+	// Spec: https://phplang.org/spec/10-expressions.html#anonymous-function-creation
+
+	// anonymous-function-creation-expression:
+	//    static(opt)   function   &(opt)   (   parameter-declaration-list(opt)   )   anonymous-function-use-clause(opt)   return-type(opt)   compound-statement
+
+	// anonymous-function-use-clause:
+	//    use   (   use-variable-name-list   )
+
+	// use-variable-name-list:
+	//    &(opt)   variable-name
+	//    use-variable-name-list   ,   &(opt)   variable-name
+
+	// Spec: https://phplang.org/spec/10-expressions.html#anonymous-function-creation
+	// This operator returns an object of type Closure, or a derived type thereof, that encapsulates the anonymous function defined within.
+
+	// TODO anonymous-function-creation-expression - static
+	// Supported statement: anonymous function creation: `function ($param1) { ... }`
+	PrintParserCallstack("anonymous-function-creation", parser)
+	if !parser.isToken(lexer.KeywordToken, "function", false) {
+		return ast.NewEmptyStmt(), NewExpectedError("function", parser.at())
+	}
+
+	pos := parser.eat().Position
+
+	// TODO anonymous-function-creation-expression - &(opt)
+
+	if !parser.isToken(lexer.OpOrPuncToken, "(", true) {
+		return ast.NewEmptyStmt(), NewExpectedError("(", parser.at())
+	}
+
+	parameters, err := parser.parseFunctionParameters()
+	if err != nil {
+		return ast.NewEmptyStmt(), err
+	}
+
+	if !parser.isToken(lexer.OpOrPuncToken, ")", true) {
+		return ast.NewEmptyStmt(), NewExpectedError(")", parser.at())
+	}
+
+	// TODO anonymous-function-creation-expression - anonymous-function-use-clause(opt)
+
+	returnTypes := []string{}
+	if parser.isToken(lexer.OpOrPuncToken, ":", true) {
+		for parser.at().TokenType == lexer.KeywordToken && common.IsReturnTypeKeyword(parser.at().Value) {
+			returnTypes = append(returnTypes, strings.ToLower(parser.eat().Value))
+			if parser.isToken(lexer.OpOrPuncToken, "|", true) {
+				continue
+			}
+			break
+		}
+	}
+
+	body, err := parser.parseStmt()
+	if err != nil {
+		return ast.NewEmptyStmt(), err
+	}
+	if body.GetKind() != ast.CompoundStmt {
+		return ast.NewEmptyStmt(), phpError.NewParseError("Expected compound statement. Got %s", body.GetKind())
+	}
+
+	return ast.NewAnonymousFunctionCreationExpr(parser.nextId(), pos, parameters, body.(*ast.CompoundStatement), returnTypes), nil
+}
+
 func (parser *Parser) parseExpr() (ast.IExpression, phpError.Error) {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-expression
 
@@ -2285,24 +2351,11 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, phpError.Error) {
 	if parser.isToken(lexer.KeywordToken, "new", false) {
 		return parser.parseObjectCreationExpression()
 	}
-	// -------------------------------------- anonymous-function-creation-expression -------------------------------------- MARK: anonymous-function-creation-expression
 
-	// Spec: https://phplang.org/spec/10-expressions.html#anonymous-function-creation
-
-	// anonymous-function-creation-expression:
-	//    static(opt)   function   &(opt)   (   parameter-declaration-list(opt)   )   anonymous-function-use-clause(opt)   return-type(opt)   compound-statement
-
-	// anonymous-function-use-clause:
-	//    use   (   use-variable-name-list   )
-
-	// use-variable-name-list:
-	//    &(opt)   variable-name
-	//    use-variable-name-list   ,   &(opt)   variable-name
-
-	// Spec: https://phplang.org/spec/10-expressions.html#anonymous-function-creation
-	// This operator returns an object of type Closure, or a derived type thereof, that encapsulates the anonymous function defined within.
-
-	// TODO anonymous-function-creation-expression
+	// anonymous-function-creation-expression
+	if parser.isToken(lexer.KeywordToken, "function", false) {
+		return parser.parseAnonymousFunctionCreationExpression()
+	}
 
 	// -------------------------------------- postfix-increment-expression -------------------------------------- MARK: postfix-increment-expression
 

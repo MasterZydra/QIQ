@@ -2,6 +2,11 @@ package astGenerator
 
 import "QIQ/cmd/qiq/ast"
 
+// ProcessAnonymousFunctionCreationExpr implements ast.Visitor.
+func (generator *AstGenerator) ProcessAnonymousFunctionCreationExpr(stmt *ast.AnonymousFunctionCreationExpression, _ any) (any, error) {
+	panic("ProcessAnonymousFunctionCreationExpr unimplemented")
+}
+
 // ProcessArrayLiteralExpr implements ast.Visitor.
 func (generator *AstGenerator) ProcessArrayLiteralExpr(stmt *ast.ArrayLiteralExpression, _ any) (any, error) {
 	panic("ProcessArrayLiteralExpr unimplemented")

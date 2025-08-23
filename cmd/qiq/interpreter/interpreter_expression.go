@@ -970,3 +970,8 @@ func (interpreter *Interpreter) ProcessMemberAccessExpr(stmt *ast.MemberAccessEx
 
 	return value, nil
 }
+
+// ProcessAnonymousFunctionCreationExpr implements Visitor.
+func (interpreter *Interpreter) ProcessAnonymousFunctionCreationExpr(stmt *ast.AnonymousFunctionCreationExpression, _ any) (any, error) {
+	return values.NewVoid(), phpError.NewError("ProcessAnonymousFunctionCreationExpr not implemented")
+}

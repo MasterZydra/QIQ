@@ -593,3 +593,23 @@ func TestInterfaceDeclaration(t *testing.T) {
 	interfaceDecl.AddConst(ast.NewClassConstDeclarationStmt(0, nil, "c", ast.NewIntegerLiteralExpr(0, nil, 3), "private"))
 	testStmt(t, `<?php interface i { const a="a"; private const b="b", c=3; }`, interfaceDecl)
 }
+
+// -------------------------------------- Anonymous functions -------------------------------------- MARK: Anonymous functions
+
+func TestAnonymousFunctions(t *testing.T) {
+	// Empty anonymous functions
+	stmt := ast.NewExpressionStmt(0, ast.NewSimpleAssignmentExpr(0,
+		ast.NewSimpleVariableExpr(0, ast.NewVariableNameExpr(0, nil, "$f")),
+		ast.NewAnonymousFunctionCreationExpr(0, nil, []ast.FunctionParameter{}, ast.NewCompoundStmt(0, []ast.IStatement{}), []string{}),
+	))
+	testStmt(t, `<?php $f = function() {};`, stmt)
+
+	// Anonymous functions
+	stmt = ast.NewExpressionStmt(0, ast.NewSimpleAssignmentExpr(0,
+		ast.NewSimpleVariableExpr(0, ast.NewVariableNameExpr(0, nil, "$f")),
+		ast.NewAnonymousFunctionCreationExpr(0, nil, []ast.FunctionParameter{}, ast.NewCompoundStmt(0, []ast.IStatement{
+			ast.NewExpressionStmt(0, ast.NewFunctionCallExpr(0, nil, ast.NewStringLiteralExpr(0, nil, "do_smth", ast.SingleQuotedString), []ast.IExpression{})),
+		}), []string{}),
+	))
+	testStmt(t, `<?php $f = function() { do_smth(); };`, stmt)
+}

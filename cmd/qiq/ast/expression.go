@@ -693,3 +693,22 @@ func NewMemberAccessExpr(id int64, pos *position.Position, object, member IExpre
 func (stmt *MemberAccessExpression) Process(visitor Visitor, context any) (any, error) {
 	return visitor.ProcessMemberAccessExpr(stmt, context)
 }
+
+// -------------------------------------- AnonymousFunctionCreationExpression -------------------------------------- MARK: AnonymousFunctionCreationExpression
+
+type AnonymousFunctionCreationExpression struct {
+	*Statement
+	Params     []FunctionParameter
+	Body       *CompoundStatement
+	ReturnType []string
+}
+
+func NewAnonymousFunctionCreationExpr(id int64, pos *position.Position, params []FunctionParameter, body *CompoundStatement, returnType []string) *AnonymousFunctionCreationExpression {
+	return &AnonymousFunctionCreationExpression{Statement: NewStmt(id, AnonymousFunctionCreationExpr, pos),
+		Params: params, Body: body, ReturnType: returnType,
+	}
+}
+
+func (stmt *AnonymousFunctionCreationExpression) Process(visitor Visitor, context any) (any, error) {
+	return visitor.ProcessAnonymousFunctionCreationExpr(stmt, context)
+}
