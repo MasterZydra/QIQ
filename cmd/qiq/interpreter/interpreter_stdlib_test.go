@@ -307,6 +307,9 @@ func TestLibVarDump(t *testing.T) {
 	testInputOutput(t, `<?php var_dump([]);`, "array(0) {\n}\n")
 	testInputOutput(t, `<?php var_dump([1,2]);`, "array(2) {\n  [0]=>\n  int(1)\n  [1]=>\n  int(2)\n}\n")
 	testInputOutput(t, `<?php var_dump([1, [1]]);`, "array(2) {\n  [0]=>\n  int(1)\n  [1]=>\n  array(1) {\n    [0]=>\n    int(1)\n  }\n}\n")
+	testInputOutput(t, `<?php class C {}; $c = new C; var_dump($c);`, "object(C)#1 (0) {\n}\n")
+	testInputOutput(t, `<?php class C { private $p;}; $c = new C; var_dump($c);`, "object(C)#1 (1) {\n  [\"p\":\"C\":private]=>\n  NULL\n}\n")
+	testInputOutput(t, `<?php namespace Space; class C {}; $c = new C; var_dump($c);`, "object(Space\\C)#1 (0) {\n}\n")
 }
 
 // -------------------------------------- var_export -------------------------------------- MARK: var_export

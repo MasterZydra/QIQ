@@ -675,6 +675,25 @@ func lib_var_dump_var(context runtime.Context, value values.RuntimeValue, depth 
 	case values.StrValue:
 		strVal := value.(*values.Str).Value
 		context.Interpreter.Println(fmt.Sprintf("string(%d) \"%s\"", len(strVal), strVal))
+	case values.ObjectValue:
+		object := value.(*values.Object)
+		// TODO var_dump - object: dynamic counter of instaces
+		context.Interpreter.Println(fmt.Sprintf("object(%s)#1 (%d) {",
+			object.Class.GetQualifiedName(), len(object.Class.PropertieNames),
+		))
+		for _, propertyName := range object.PropertyNames {
+			property := object.Class.Properties[propertyName]
+			propertyValue := object.Properties[propertyName]
+
+			context.Interpreter.Println(fmt.Sprintf(`%s["%s":"%s":%s]=>`,
+				strings.Repeat(" ", depth), propertyName[1:], object.Class.GetQualifiedName(), property.Visibility,
+			))
+			context.Interpreter.Print(strings.Repeat(" ", depth))
+			if err := lib_var_dump_var(context, propertyValue, depth+2); err != nil {
+				return err
+			}
+		}
+		context.Interpreter.Println(strings.Repeat(" ", depth-2) + "}")
 	default:
 		return phpError.NewError("lib_var_dump_var: Unsupported runtime value %s", value.GetType())
 	}
