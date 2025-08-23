@@ -125,13 +125,13 @@ func doTest(path string, info goOs.FileInfo, err error) error {
 	if phpErr != nil {
 		result = phpErr.GetMessage()
 	} else {
-		interpr, phpErr := interpreter.NewInterpreter(devIni, request, testFile.Filename)
+		interpr, phpErr := interpreter.NewInterpreter(devIni, request, testFile.Filename[:len(testFile.Filename)-1])
 		if phpErr != nil {
 			result = phpErr.GetMessage()
 		} else {
 			result, phpErr = interpr.Process(testFile.File)
 			if phpErr != nil {
-				result += phpErr.GetMessage()
+				result += "\n" + phpErr.GetMessage()
 			}
 		}
 		if err := common.DeleteFiles(request.UploadedFiles); err != nil {
@@ -173,8 +173,8 @@ func doTest(path string, info goOs.FileInfo, err error) error {
 			// e.g. "... in tests/basic/025.phpt:2:18"
 			// PHP only returns the line:
 			// e.g. "... in tests/basic/025.phpt on line 2"
-			if strings.Contains(testFile.Expect, "in %s on line %d") {
-				testFile.Expect = strings.ReplaceAll(testFile.Expect, "in %s on line %d", "in %s")
+			if strings.Contains(testFile.Expect, " on line %d") {
+				testFile.Expect = strings.ReplaceAll(testFile.Expect, " on line %d", ":%d:%d")
 			}
 			if matched, _ := regexp.MatchString(`in %s on line \d+`, testFile.Expect); matched {
 				testFile.Expect = regexp.MustCompile(`in %s on line \d+`).ReplaceAllString(testFile.Expect, "in %s")
