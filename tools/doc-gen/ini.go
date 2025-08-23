@@ -8,10 +8,10 @@ import (
 	"strings"
 )
 
-var iniDirectives = map[string]string{}
+var iniDirectives = map[string][]string{}
 
 func docIniDirectives() {
-	err := readGoFileIni("./cmd/qiq/ini/ini.go")
+	err := readGoFileIni("./cmd/qiq/ini/ini_directives.go")
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -32,12 +32,27 @@ func generateMarkdownIni(directives []string) string {
 
 	markdown.WriteString("# Ini directives\n")
 
-	for _, directive := range directives {
-		markdown.WriteString("- ")
-		markdown.WriteString(directive)
-		markdown.WriteString(" (Default: \"")
-		markdown.WriteString(iniDirectives[directive])
-		markdown.WriteString("\")\n")
+	// Get and sort categories
+	categories := []string{}
+	for category := range iniDirectives {
+		categories = append(categories, category)
+	}
+	slices.Sort(categories)
+	for _, category := range categories {
+		if category != "" {
+			markdown.WriteString("\n## ")
+			markdown.WriteString(category)
+			markdown.WriteString("\n")
+		}
+
+		directives := iniDirectives[category]
+		slices.Sort(directives)
+
+		for _, directive := range directives {
+			markdown.WriteString("- ")
+			markdown.WriteString(directive)
+			markdown.WriteString("\n")
+		}
 	}
 
 	return markdown.String()
@@ -50,6 +65,7 @@ func readGoFileIni(path string) error {
 	}
 	defer file.Close()
 
+	category := ""
 	scanner := bufio.NewScanner(file)
 	isIniSection := false
 	for scanner.Scan() {
@@ -67,8 +83,17 @@ func readGoFileIni(path string) error {
 			continue
 		}
 
+		if strings.HasPrefix(line, "// Category: ") {
+			category = strings.Replace(line, "// Category: ", "", 1)
+			continue
+		}
+
 		// Only process lines that look like: '"key": "value",'
 		if !strings.HasPrefix(line, "\"") {
+			continue
+		}
+
+		if line == "}" {
 			break
 		}
 
@@ -85,7 +110,11 @@ func readGoFileIni(path string) error {
 		defaultValue = strings.TrimSuffix(defaultValue, ",")
 		defaultValue = strings.Trim(defaultValue, "\"")
 
-		iniDirectives[directiveName] = defaultValue
+		if _, found := iniDirectives[category]; !found {
+			iniDirectives[category] = []string{}
+		}
+
+		iniDirectives[category] = append(iniDirectives[category], directiveName)
 	}
 	return nil
 }
