@@ -1377,7 +1377,7 @@ func TestClasses(t *testing.T) {
 	testForError(t,
 		`<?php interface I { public function F($p); }
 		class C implements I { }`,
-		phpError.NewError("Class C contains 1 abstract methods and must therefore be declared abstract or implement the remaining methods (I::F) in %s:2:3", TEST_FILE_NAME),
+		phpError.NewError("Class C contains 1 abstract method and must therefore be declared abstract or implement the remaining method (I::F) in %s:2:3", TEST_FILE_NAME),
 	)
 	testForError(t,
 		`<?php interface I { public function F($p); function G(); }
@@ -1390,6 +1390,12 @@ func TestClasses(t *testing.T) {
 		`<?php interface I { public function F(null|string $p): ?string; }
 		class C implements I { function F($p) {} }`,
 		phpError.NewError("Declaration of C::F($p) must be compatible with I::F(?string $p): ?string in %s:2:3", TEST_FILE_NAME),
+	)
+	testForError(t,
+		`<?php namespace Space;
+		interface I { public function F(null|string $p): ?string; }
+		class C implements I { function F($p) {} }`,
+		phpError.NewError(`Declaration of Space\C::F($p) must be compatible with Space\I::F(?string $p): ?string in %s:3:3`, TEST_FILE_NAME),
 	)
 }
 

@@ -390,7 +390,7 @@ func (interpreter *Interpreter) validateClass(classDecl *ast.ClassDeclarationSta
 	if !classDecl.IsAbstract && len(classDecl.Interfaces) > 0 {
 		for _, interfaceName := range classDecl.Interfaces {
 			// Check if interface exists
-			interfaceDecl, found := interpreter.GetInterface(interfaceName)
+			interfaceDecl, found := interpreter.GetInterface(classDecl.GetPosition().File.GetNamespaceStr() + interfaceName)
 			if !found {
 				return phpError.NewError("Interface \"%s\" not found in %s", interfaceName, classDecl.GetPosString())
 			}
@@ -414,8 +414,8 @@ func (interpreter *Interpreter) validateClass(classDecl *ast.ClassDeclarationSta
 				if classMethodSignature != interfaceMethodSignature {
 					return phpError.NewError(
 						"Declaration of %s::%s must be compatible with %s::%s in %s",
-						classDecl.Name, classMethodSignature,
-						interfaceDecl.Name, interfaceMethodSignature,
+						classDecl.GetQualifiedName(), classMethodSignature,
+						interfaceDecl.GetQualifiedName(), interfaceMethodSignature,
 						classDecl.GetPosString(),
 					)
 				}
@@ -424,12 +424,12 @@ func (interpreter *Interpreter) validateClass(classDecl *ast.ClassDeclarationSta
 				if len(missingMethods) > 1 {
 					return phpError.NewError(
 						"Class %s contains %d abstract methods and must therefore be declared abstract or implement the remaining methods (%s) in %s",
-						classDecl.Name, len(missingMethods), common.ImplodeSlice(missingMethods, ", "), classDecl.GetPosString(),
+						classDecl.GetQualifiedName(), len(missingMethods), common.ImplodeSlice(missingMethods, ", "), classDecl.GetPosString(),
 					)
 				}
 				return phpError.NewError(
 					"Class %s contains %d abstract method and must therefore be declared abstract or implement the remaining method (%s) in %s",
-					classDecl.Name, len(missingMethods), common.ImplodeSlice(missingMethods, ", "), classDecl.GetPosString(),
+					classDecl.GetQualifiedName(), len(missingMethods), common.ImplodeSlice(missingMethods, ", "), classDecl.GetPosString(),
 				)
 
 			}
