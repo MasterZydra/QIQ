@@ -242,7 +242,6 @@ func nativeFn_gettype(args []values.RuntimeValue, _ runtime.Context) (values.Run
 func GetType(runtimeValue values.RuntimeValue) (string, phpError.Error) {
 	// Spec: https://www.php.net/manual/en/function.gettype.php
 
-	// TODO GetType - object
 	// TODO GetType - resource
 	// TODO GetType - resource (closed)
 	switch runtimeValue.GetType() {
@@ -258,6 +257,8 @@ func GetType(runtimeValue values.RuntimeValue) (string, phpError.Error) {
 		return "NULL", nil
 	case values.StrValue:
 		return "string", nil
+	case values.ObjectValue:
+		return "object", nil
 	default:
 		return "unknown type", nil
 	}
