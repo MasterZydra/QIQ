@@ -33,21 +33,6 @@ Usage of ./qiq:
 `./qiq -S localhost:8080 -dev` - Web server in developer mode  
 `./qiq -S localhost:8080 -t /srv/www/html` - Document root is `/srv/www/html`
 
-## Development
-
-**Compile and run**  
-`go run ./...`
-
-**Build executable**  
-`go build -o . ./...`
-
-**Run all tests**  
-`go test -v ./...`
-
-**See test coverage**  
-`go test -coverprofile=coverage.out ./...`  
-`go tool cover -html=coverage.out`
-
 ## Run official PHP `phpt` test cases
 There are a lot of test cases in the source repository for PHP under the folder [tests](https://github.com/php/php-src/tree/master/tests).  
 In order to test the QIQ implementation against this cases the binary `qiqTester` can be used.
@@ -65,3 +50,21 @@ For some part of this project, the following resources were used as a guide, ins
 - YouTube playlist [Build a Custom Scripting Language In Typescript](https://www.youtube.com/playlist?list=PL_2VhOvlMk4UHGqYCLWc6GO8FaPl8fQTh) by [tylerlaceby](https://www.youtube.com/@tylerlaceby)
 - Book [Crafting Interpreters](https://craftinginterpreters.com/) by Robert Nystorm
 - Book [Writing An Interpreter In Go](https://interpreterbook.com/) by Thorsten Ball
+
+## Development
+
+**Compile and run**  
+`go run ./...`
+
+**Build executable**  
+`go build -o . ./...`
+
+**Run all tests**  
+`go test -v ./...`
+
+**See test coverage**  
+`go test -coverprofile=coverage.out ./...`  
+`go tool cover -html=coverage.out`
+
+**Build docker image**
+`docker build -t qiq:dev .`
