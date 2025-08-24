@@ -11,7 +11,9 @@ import (
 
 type Interpreter interface {
 	ProcessStatement(stmt ast.IStatement, env any) (values.RuntimeValue, phpError.Error)
+	// Context
 	GetIni() *ini.Ini
+	GetExectionContext() *ExecutionContext
 	// Request
 	GetRequest() *request.Request
 	GetResponse() *request.Response

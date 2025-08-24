@@ -6,6 +6,7 @@ import (
 	"QIQ/cmd/qiq/ini"
 	"QIQ/cmd/qiq/phpError"
 	"QIQ/cmd/qiq/request"
+	"QIQ/cmd/qiq/runtime"
 	"QIQ/cmd/qiq/runtime/values"
 	"fmt"
 	"testing"
@@ -36,7 +37,7 @@ func TestVariableExprToVariableName(t *testing.T) {
 	// simple-variable-expression
 
 	// $var
-	interpreter, err := NewInterpreter(ini.NewDevIni(), &request.Request{}, "test.php")
+	interpreter, err := NewInterpreter(runtime.NewExecutionContext(), ini.NewDevIni(), &request.Request{}, "test.php")
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -52,7 +53,7 @@ func TestVariableExprToVariableName(t *testing.T) {
 	}
 
 	// $$var
-	interpreter, err = NewInterpreter(ini.NewDevIni(), &request.Request{}, "test.php")
+	interpreter, err = NewInterpreter(runtime.NewExecutionContext(), ini.NewDevIni(), &request.Request{}, "test.php")
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -71,7 +72,7 @@ func TestVariableExprToVariableName(t *testing.T) {
 	}
 
 	// $$$var
-	interpreter, err = NewInterpreter(ini.NewDevIni(), &request.Request{}, "test.php")
+	interpreter, err = NewInterpreter(runtime.NewExecutionContext(), ini.NewDevIni(), &request.Request{}, "test.php")
 	if err != nil {
 		t.Errorf("Unexpected error: \"%s\"", err)
 		return
@@ -99,7 +100,7 @@ func TestVariableExprToVariableName(t *testing.T) {
 // -------------------------------------- input output tests -------------------------------------- MARK: input output tests
 
 func testForError(t *testing.T, php string, expected phpError.Error) {
-	interpreter, err := NewInterpreter(ini.NewDevIni(), &request.Request{}, TEST_FILE_NAME)
+	interpreter, err := NewInterpreter(runtime.NewExecutionContext(), ini.NewDevIni(), &request.Request{}, TEST_FILE_NAME)
 	if err != nil {
 		t.Errorf("\nCode: \"%s\"\nUnexpected error: \"%s\"", php, err)
 		return
@@ -117,7 +118,7 @@ func testForError(t *testing.T, php string, expected phpError.Error) {
 func testInputOutput(t *testing.T, php string, output string) *Interpreter {
 	// Always use "\n" for tests so that they also pass on Windows
 	os.EOL = "\n"
-	interpreter, err := NewInterpreter(ini.NewDevIni(), &request.Request{}, TEST_FILE_NAME)
+	interpreter, err := NewInterpreter(runtime.NewExecutionContext(), ini.NewDevIni(), &request.Request{}, TEST_FILE_NAME)
 	if err != nil {
 		t.Errorf("\nCode: \"%s\"\nUnexpected error: \"%s\"", php, err)
 		return interpreter

@@ -6,6 +6,7 @@ import (
 	"QIQ/cmd/qiq/ini"
 	"QIQ/cmd/qiq/interpreter"
 	"QIQ/cmd/qiq/request"
+	"QIQ/cmd/qiq/runtime"
 	"QIQ/cmd/qiq/stats"
 	"bufio"
 	"flag"
@@ -209,7 +210,7 @@ func processContent(w http.ResponseWriter, r *http.Request, content string, file
 	}
 
 	request := request.NewRequestFromGoRequest(r, documentRoot, serverAddr, filename)
-	interpreter, err := interpreter.NewInterpreter(initIni, request, filename)
+	interpreter, err := interpreter.NewInterpreter(runtime.NewExecutionContext(), initIni, request, filename)
 
 	if w != nil {
 		// TODO content-type returned from interpreter?

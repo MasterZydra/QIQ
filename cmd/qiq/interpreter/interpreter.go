@@ -7,6 +7,7 @@ import (
 	"QIQ/cmd/qiq/parser"
 	"QIQ/cmd/qiq/phpError"
 	"QIQ/cmd/qiq/request"
+	"QIQ/cmd/qiq/runtime"
 	"QIQ/cmd/qiq/runtime/classes"
 	"QIQ/cmd/qiq/runtime/interfaces"
 	"QIQ/cmd/qiq/runtime/outputBuffer"
@@ -17,40 +18,34 @@ import (
 var _ ast.Visitor = &Interpreter{}
 
 type Interpreter struct {
-	filename              string
-	includedFiles         []string
-	classNames            []string
-	classDeclarations     map[string]*ast.ClassDeclarationStatement
-	interfaceNames        []string
-	interfaceDeclarations map[string]*ast.InterfaceDeclarationStatement
-	ini                   *ini.Ini
-	request               *request.Request
-	response              *request.Response
-	parser                *parser.Parser
-	env                   *Environment
-	cache                 map[int64]values.RuntimeValue
-	outputBufferStack     *outputBuffer.Stack
-	result                string
-	resultRuntimeValue    values.RuntimeValue
+	executionContext   *runtime.ExecutionContext
+	filename           string
+	includedFiles      []string
+	ini                *ini.Ini
+	request            *request.Request
+	response           *request.Response
+	parser             *parser.Parser
+	env                *Environment
+	cache              map[int64]values.RuntimeValue
+	outputBufferStack  *outputBuffer.Stack
+	result             string
+	resultRuntimeValue values.RuntimeValue
 	// Status
 	suppressWarning bool
 	exitCalled      bool
 }
 
-func NewInterpreter(ini *ini.Ini, r *request.Request, filename string) (*Interpreter, phpError.Error) {
+func NewInterpreter(executionContext *runtime.ExecutionContext, ini *ini.Ini, r *request.Request, filename string) (*Interpreter, phpError.Error) {
 	interpreter := &Interpreter{
-		filename:              filename,
-		includedFiles:         []string{},
-		classNames:            []string{},
-		classDeclarations:     map[string]*ast.ClassDeclarationStatement{},
-		interfaceNames:        []string{},
-		interfaceDeclarations: map[string]*ast.InterfaceDeclarationStatement{},
-		ini:                   ini,
-		request:               r,
-		response:              request.NewResponse(),
-		parser:                parser.NewParser(ini),
-		cache:                 map[int64]values.RuntimeValue{},
-		outputBufferStack:     outputBuffer.NewStack(),
+		executionContext:  executionContext,
+		filename:          filename,
+		includedFiles:     []string{},
+		ini:               ini,
+		request:           r,
+		response:          request.NewResponse(),
+		parser:            parser.NewParser(ini),
+		cache:             map[int64]values.RuntimeValue{},
+		outputBufferStack: outputBuffer.NewStack(),
 	}
 
 	var err phpError.Error
@@ -71,6 +66,10 @@ func NewInterpreter(ini *ini.Ini, r *request.Request, filename string) (*Interpr
 	}
 
 	return interpreter, nil
+}
+
+func (interpreter *Interpreter) GetExectionContext() *runtime.ExecutionContext {
+	return interpreter.executionContext
 }
 
 func (interpreter *Interpreter) GetIni() *ini.Ini {

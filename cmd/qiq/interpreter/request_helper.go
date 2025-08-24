@@ -357,7 +357,7 @@ func parseQueryKey(key string, value string, result *values.Array, curIni *ini.I
 	}
 	php += " = '" + value + "';"
 
-	interpreter, err := NewInterpreter(ini.NewDefaultIni(), &request.Request{}, "")
+	interpreter, err := NewInterpreter(runtime.NewExecutionContext(), ini.NewDefaultIni(), &request.Request{}, "")
 	if err != nil {
 		return nil, err
 	}

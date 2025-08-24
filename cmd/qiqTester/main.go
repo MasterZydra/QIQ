@@ -6,13 +6,14 @@ import (
 	"QIQ/cmd/qiq/ini"
 	"QIQ/cmd/qiq/interpreter"
 	"QIQ/cmd/qiq/request"
+	"QIQ/cmd/qiq/runtime"
 	"QIQ/cmd/qiqTester/phpt"
 	"flag"
 	"fmt"
 	goOs "os"
 	"path/filepath"
 	"regexp"
-	"runtime"
+	goRuntime "runtime"
 	"strings"
 )
 
@@ -125,7 +126,7 @@ func doTest(path string, info goOs.FileInfo, err error) error {
 	if phpErr != nil {
 		result = phpErr.GetMessage()
 	} else {
-		interpr, phpErr := interpreter.NewInterpreter(devIni, request, testFile.Filename[:len(testFile.Filename)-1])
+		interpr, phpErr := interpreter.NewInterpreter(runtime.NewExecutionContext(), devIni, request, testFile.Filename[:len(testFile.Filename)-1])
 		if phpErr != nil {
 			result = phpErr.GetMessage()
 		} else {
@@ -139,7 +140,7 @@ func doTest(path string, info goOs.FileInfo, err error) error {
 		}
 	}
 
-	if runtime.GOOS == "windows" {
+	if goRuntime.GOOS == "windows" {
 		testFile.Expect = strings.ReplaceAll(testFile.Expect, "\r", "")
 		result = strings.ReplaceAll(result, "\r", "")
 	}

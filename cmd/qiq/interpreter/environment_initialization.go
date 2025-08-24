@@ -225,7 +225,7 @@ func paramToArray(params [][]string, interpreter runtime.Interpreter) (*values.A
 		env.declareVariable("$"+paramName, arrayValue)
 
 		// Execute PHP to store new array values in env
-		interp, err := NewInterpreter(interpreter.GetIni(), request.NewRequest(), "")
+		interp, err := NewInterpreter(interpreter.GetExectionContext(), interpreter.GetIni(), request.NewRequest(), "")
 		if err != nil {
 			return result, err
 		}

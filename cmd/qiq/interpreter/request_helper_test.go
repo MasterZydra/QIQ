@@ -3,13 +3,14 @@ package interpreter
 import (
 	"QIQ/cmd/qiq/ini"
 	"QIQ/cmd/qiq/request"
+	"QIQ/cmd/qiq/runtime"
 	"QIQ/cmd/qiq/runtime/stdlib/variableHandling"
 	"QIQ/cmd/qiq/runtime/values"
 	"testing"
 )
 
 func TestParsePost(t *testing.T) {
-	interp, phpErr := NewInterpreter(ini.NewDevIni(), request.NewRequest(), TEST_FILE_NAME)
+	interp, phpErr := NewInterpreter(runtime.NewExecutionContext(), ini.NewDevIni(), request.NewRequest(), TEST_FILE_NAME)
 	if phpErr != nil {
 		t.Errorf("Unexpected error: %s", phpErr)
 		return
@@ -110,7 +111,7 @@ Value: {StrValue: testname}
 
 func TestParseQuery(t *testing.T) {
 	runTest := func(t *testing.T, input string, expected *values.Array) {
-		interp, phpErr := NewInterpreter(ini.NewDefaultIni(), request.NewRequest(), TEST_FILE_NAME)
+		interp, phpErr := NewInterpreter(runtime.NewExecutionContext(), ini.NewDefaultIni(), request.NewRequest(), TEST_FILE_NAME)
 		if phpErr != nil {
 			t.Errorf("Unexpected error: \"%s\"", phpErr)
 			return

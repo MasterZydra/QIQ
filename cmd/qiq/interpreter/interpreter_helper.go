@@ -368,39 +368,27 @@ func ParamTypesToSignature(paramTypes []string) string {
 // -------------------------------------- Classes and Interfaces -------------------------------------- MARK: Classes and Interfaces
 
 func (interpreter *Interpreter) AddClass(class string, classDecl *ast.ClassDeclarationStatement) {
-	interpreter.classNames = append(interpreter.classNames, class)
-	// TODO check if class already exists and return error that re-declaration is not possible
-	interpreter.classDeclarations[strings.ToLower(class)] = classDecl
+	interpreter.executionContext.AddClass(class, classDecl)
 }
 
 func (interpreter *Interpreter) GetClass(class string) (*ast.ClassDeclarationStatement, bool) {
-	classDeclaration, found := interpreter.classDeclarations[strings.ToLower(class)]
-	if !found {
-		return nil, false
-	}
-	return classDeclaration, true
+	return interpreter.executionContext.GetClass(class)
 }
 
 func (interpreter *Interpreter) GetClasses() []string {
-	return interpreter.classNames
+	return interpreter.executionContext.GetClasses()
 }
 
 func (interpreter *Interpreter) AddInterface(interfaceName string, interfaceDecl *ast.InterfaceDeclarationStatement) {
-	interpreter.interfaceNames = append(interpreter.interfaceNames, interfaceName)
-	// TODO check if class already exists and return error that re-declaration is not possible
-	interpreter.interfaceDeclarations[strings.ToLower(interfaceName)] = interfaceDecl
+	interpreter.executionContext.AddInterface(interfaceName, interfaceDecl)
 }
 
 func (interpreter *Interpreter) GetInterface(interfaceName string) (*ast.InterfaceDeclarationStatement, bool) {
-	interfaceDecl, found := interpreter.interfaceDeclarations[strings.ToLower(interfaceName)]
-	if !found {
-		return nil, false
-	}
-	return interfaceDecl, true
+	return interpreter.executionContext.GetInterface(interfaceName)
 }
 
 func (interpreter *Interpreter) GetInterfaces() []string {
-	return interpreter.interfaceNames
+	return interpreter.executionContext.GetInterfaces()
 }
 
 func (interpreter *Interpreter) validateClass(classDecl *ast.ClassDeclarationStatement) phpError.Error {
@@ -543,7 +531,7 @@ func (interpreter *Interpreter) exprToRuntimeValue(expr ast.IExpression, env *En
 				}
 				// TODO Find better solution for code evaluation
 				exprStr := "<?= " + varExpr + ";"
-				interp, err := NewInterpreter(interpreter.ini, interpreter.request, "__file_name__")
+				interp, err := NewInterpreter(interpreter.GetExectionContext(), interpreter.ini, interpreter.request, "__file_name__")
 				if err != nil {
 					return values.NewVoid(), err
 				}

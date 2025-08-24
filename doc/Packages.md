@@ -7,6 +7,7 @@ flowchart LR
     QIQ_cmd_qiq[QIQ/cmd/qiq] --> QIQ_cmd_qiq_ini[QIQ/cmd/qiq/ini]
     QIQ_cmd_qiq[QIQ/cmd/qiq] --> QIQ_cmd_qiq_interpreter[QIQ/cmd/qiq/interpreter]
     QIQ_cmd_qiq[QIQ/cmd/qiq] --> QIQ_cmd_qiq_request[QIQ/cmd/qiq/request]
+    QIQ_cmd_qiq[QIQ/cmd/qiq] --> QIQ_cmd_qiq_runtime[QIQ/cmd/qiq/runtime]
     QIQ_cmd_qiq[QIQ/cmd/qiq] --> QIQ_cmd_qiq_stats[QIQ/cmd/qiq/stats]
 
     QIQ_cmd_qiq_ast[QIQ/cmd/qiq/ast] --> QIQ_cmd_qiq_common[QIQ/cmd/qiq/common]
@@ -169,6 +170,7 @@ flowchart LR
     QIQ_cmd_qiqTester[QIQ/cmd/qiqTester] --> QIQ_cmd_qiq_ini[QIQ/cmd/qiq/ini]
     QIQ_cmd_qiqTester[QIQ/cmd/qiqTester] --> QIQ_cmd_qiq_interpreter[QIQ/cmd/qiq/interpreter]
     QIQ_cmd_qiqTester[QIQ/cmd/qiqTester] --> QIQ_cmd_qiq_request[QIQ/cmd/qiq/request]
+    QIQ_cmd_qiqTester[QIQ/cmd/qiqTester] --> QIQ_cmd_qiq_runtime[QIQ/cmd/qiq/runtime]
     QIQ_cmd_qiqTester[QIQ/cmd/qiqTester] --> QIQ_cmd_qiqTester_phpt[QIQ/cmd/qiqTester/phpt]
 
     QIQ_cmd_qiqTester_phpt[QIQ/cmd/qiqTester/phpt] --> QIQ_cmd_qiq_common[QIQ/cmd/qiq/common]
