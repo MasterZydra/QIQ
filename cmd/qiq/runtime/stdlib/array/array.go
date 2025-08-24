@@ -1,6 +1,7 @@
 package array
 
 import (
+	"QIQ/cmd/qiq/common"
 	"QIQ/cmd/qiq/phpError"
 	"QIQ/cmd/qiq/runtime"
 	"QIQ/cmd/qiq/runtime/funcParamValidator"
@@ -17,6 +18,7 @@ func Register(environment runtime.Environment) {
 	environment.AddNativeFunction("array_last", nativeFn_array_last)
 	environment.AddNativeFunction("array_pop", nativeFn_array_pop)
 	environment.AddNativeFunction("array_push", nativeFn_array_push)
+	environment.AddNativeFunction("array_rand", nativeFn_array_rand)
 	environment.AddNativeFunction("count", nativeFn_count)
 	environment.AddNativeFunction("key_exists", nativeFn_array_key_exists)
 }
@@ -182,6 +184,48 @@ func nativeFn_array_push(args []values.RuntimeValue, _ runtime.Context) (values.
 	return values.NewInt(int64(len(array.Keys))), nil
 }
 
+// -------------------------------------- array_rand -------------------------------------- MARK: array_rand
+
+func nativeFn_array_rand(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
+	// Spec: https://www.php.net/manual/en/function.array-rand.php
+	args, err := funcParamValidator.NewValidator("array_rand").
+		AddParam("$array", []string{"array"}, nil).
+		AddParam("$values", []string{"int"}, values.NewInt(1)).
+		Validate(args)
+	if err != nil {
+		return values.NewVoid(), err
+	}
+
+	array := args[0].(*values.Array)
+	arrayLen := len(array.Keys)
+	if arrayLen == 0 {
+		return values.NewVoid(), phpError.NewError("Uncaught ValueError: array_rand(): Argument #1 ($array) must not be empty in %s", context.Stmt.GetPosString())
+	}
+
+	num := int(args[1].(*values.Int).Value)
+
+	if num < 1 || num > arrayLen {
+		return values.NewVoid(), phpError.NewError("Uncaught ValueError: array_rand(): Argument #2 ($num) must be between 1 and the number of elements in argument #1 ($array) in %s", context.Stmt.GetPosString())
+	}
+
+	if num == arrayLen {
+		return values.NewArrayFromSlice(array.Keys), nil
+	}
+
+	random := common.NewUniqueRand(arrayLen)
+
+	if num == 1 {
+		return array.Keys[random.Int()], nil
+	}
+
+	result := values.NewArray()
+	for i := 0; i < int(num); i++ {
+		result.SetElement(nil, array.Keys[random.Int()])
+	}
+
+	return result, nil
+}
+
 // -------------------------------------- count -------------------------------------- MARK: count
 
 func nativeFn_count(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
@@ -230,7 +274,6 @@ func nativeFn_count(args []values.RuntimeValue, _ runtime.Context) (values.Runti
 // TODO array_multisort
 // TODO array_pad
 // TODO array_product
-// TODO array_rand
 // TODO array_reduce
 // TODO array_replace
 // TODO array_replace_recursive

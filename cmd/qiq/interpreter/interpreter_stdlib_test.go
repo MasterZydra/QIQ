@@ -446,3 +446,15 @@ func TestLibClassesObject(t *testing.T) {
 	testInputOutput(t, `<?php class C { static private $prop; } var_dump(property_exists('C', 'prop'));`, "bool(true)\n")
 	testInputOutput(t, `<?php class C { protected $prop; } var_dump(property_exists('C', 'prop'));`, "bool(true)\n")
 }
+
+// -------------------------------------- array -------------------------------------- MARK: array
+
+func TestLibArray(t *testing.T) {
+	// array_rand
+	testForError(t, `<?php $a = []; array_rand($a);`, phpError.NewError("Uncaught ValueError: array_rand(): Argument #1 ($array) must not be empty in %s:1:16", TEST_FILE_NAME))
+	testForError(t, `<?php $a = [1]; array_rand($a, 0);`, phpError.NewError("Uncaught ValueError: array_rand(): Argument #2 ($num) must be between 1 and the number of elements in argument #1 ($array) in %s:1:17", TEST_FILE_NAME))
+	testForError(t, `<?php $a = [1]; array_rand($a, 2);`, phpError.NewError("Uncaught ValueError: array_rand(): Argument #2 ($num) must be between 1 and the number of elements in argument #1 ($array) in %s:1:17", TEST_FILE_NAME))
+	testInputOutput(t, `<?php $a = [1,2,3]; var_dump(array_rand($a, 3));`, "array(3) {\n  [0]=>\n  int(0)\n  [1]=>\n  int(1)\n  [2]=>\n  int(2)\n}\n")
+	testInputOutput(t, `<?php $a = [1,2,3]; echo gettype(array_rand($a, 1));`, "integer")
+	testInputOutput(t, `<?php $a = ["a" => 1, "b" => 2, "c" => 3]; echo gettype(array_rand($a, 1));`, "string")
+}

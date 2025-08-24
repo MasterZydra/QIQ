@@ -34,6 +34,16 @@ func NewArrayFromMap(elements map[RuntimeValue]RuntimeValue) *Array {
 	return array
 }
 
+func NewArrayFromSlice(elements []RuntimeValue) *Array {
+	array := NewArray()
+	for _, value := range elements {
+		if err := array.SetElement(nil, value); err != nil && config.IsDevMode {
+			fmt.Println("NewArrayFromSlice: " + err.Error())
+		}
+	}
+	return array
+}
+
 func keyToMapKey(key RuntimeValue) (string, phpError.Error) {
 	if key.GetType() == IntValue {
 		return fmt.Sprintf("i_%d", key.(*Int).Value), nil

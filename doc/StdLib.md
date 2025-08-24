@@ -8,6 +8,7 @@
 - array_last
 - array_pop
 - array_push
+- array_rand
 - count
 - key_exists
 
