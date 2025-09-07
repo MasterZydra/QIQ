@@ -82,9 +82,21 @@ func (visitor DumpVisitor) getKindAndPos(stmt IStatement) string {
 
 // ProcessAnonymousFunctionCreationExpr implements Visitor.
 func (visitor DumpVisitor) ProcessAnonymousFunctionCreationExpr(stmt *AnonymousFunctionCreationExpression, _ any) (any, error) {
-	return fmt.Sprintf("{ %s, \"params\": %s, \"body\": %s, \"returnType\": \"%s\"}",
-		visitor.getKindAndPos(stmt), stmt.Params, visitor.toString(stmt.Body), stmt.ReturnType,
+	return fmt.Sprintf("{ %s, \"params\": %s, \"body\": %s, \"returnType\": [%s] }",
+		visitor.getKindAndPos(stmt), visitor.ProcessFunctionParameterSlice(stmt.Params), visitor.toString(stmt.Body), common.ImplodeStrSlice(stmt.ReturnType),
 	), nil
+}
+
+func (visitor DumpVisitor) ProcessFunctionParameterSlice(parameters []FunctionParameter) string {
+	params := "["
+	for _, param := range parameters {
+		if len(params) > 1 {
+			params += ", "
+		}
+		params += fmt.Sprintf("{ \"byRef\": %v, \"name\": \"%s\", \"type\": [%s] }", param.ByRef, param.Name, common.ImplodeStrSlice(param.Type))
+	}
+	params += "]"
+	return params
 }
 
 // ProcessArrayLiteralExpr implements Visitor.
@@ -151,17 +163,8 @@ func (visitor DumpVisitor) ProcessInterfaceDeclarationStmt(stmt *InterfaceDeclar
 
 		method := stmt.Methods[key]
 
-		params := "["
-		for _, param := range method.Params {
-			if len(params) > 1 {
-				params += ", "
-			}
-			params += fmt.Sprintf("{ \"name\": \"%s\", \"type\": [%s] }", param.Name, common.ImplodeStrSlice(param.Type))
-		}
-		params += "]"
-
 		methods += fmt.Sprintf("{ \"name\": \"%s\", \"modifiers\": [%s], \"returnType\": [%s], \"parameters\": %s }",
-			method.Name, common.ImplodeStrSlice(method.Modifiers), common.ImplodeStrSlice(method.ReturnType), params,
+			method.Name, common.ImplodeStrSlice(method.Modifiers), common.ImplodeStrSlice(method.ReturnType), visitor.ProcessFunctionParameterSlice(method.Params),
 		)
 	}
 	methods += "]"
@@ -197,17 +200,8 @@ func (visitor DumpVisitor) ProcessClassDeclarationStmt(stmt *ClassDeclarationSta
 
 		method := stmt.Methods[key]
 
-		params := "["
-		for _, param := range method.Params {
-			if len(params) > 1 {
-				params += ", "
-			}
-			params += fmt.Sprintf("{ \"name\": \"%s\", \"type\": [%s] }", param.Name, common.ImplodeStrSlice(param.Type))
-		}
-		params += "]"
-
 		methods += fmt.Sprintf("{ \"name\": \"%s\", \"modifiers\": [%s], \"returnType\": [%s], \"parameters\": %s, \"body\": %s }",
-			method.Name, common.ImplodeStrSlice(method.Modifiers), common.ImplodeStrSlice(method.ReturnType), params, visitor.toString(method.Body),
+			method.Name, common.ImplodeStrSlice(method.Modifiers), common.ImplodeStrSlice(method.ReturnType), visitor.ProcessFunctionParameterSlice(method.Params), visitor.toString(method.Body),
 		)
 	}
 	methods += "]"
@@ -386,8 +380,8 @@ func (visitor DumpVisitor) ProcessFunctionCallExpr(stmt *FunctionCallExpression,
 
 // ProcessFunctionDefinitionStmt implements Visitor.
 func (visitor DumpVisitor) ProcessFunctionDefinitionStmt(stmt *FunctionDefinitionStatement, _ any) (any, error) {
-	return fmt.Sprintf("{ %s, \"name\": \"%s\", \"params\": %s, \"body\": %s, \"returnType\": \"%s\"}",
-		visitor.getKindAndPos(stmt), stmt.FunctionName, stmt.Params, visitor.toString(stmt.Body), stmt.ReturnType,
+	return fmt.Sprintf("{ %s, \"name\": \"%s\", \"params\": %v, \"body\": %s, \"returnType\": [%s]}",
+		visitor.getKindAndPos(stmt), stmt.FunctionName, visitor.ProcessFunctionParameterSlice(stmt.Params), visitor.toString(stmt.Body), common.ImplodeStrSlice(stmt.ReturnType),
 	), nil
 }
 
