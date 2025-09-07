@@ -316,7 +316,7 @@ func TestConditionals(t *testing.T) {
 		"2 100\n4 90\n6 80\n8 70\n10 60\n",
 	)
 
-	// Foreach statment
+	// Foreach statement
 	testInputOutput(t,
 		`<?php foreach([1,2,3] as $i) { echo $i; } echo $i;`,
 		"1233",
@@ -324,6 +324,37 @@ func TestConditionals(t *testing.T) {
 	testInputOutput(t,
 		`<?php foreach([2, 4, 8] as $k => $v) { echo $k . ":" . $v . ","; } echo $k . ":" . $v;`,
 		"0:2,1:4,2:8,2:8",
+	)
+	// byRef
+	testInputOutput(t,
+		`<?php $a = [1,2,3]; foreach($a as &$i) { $i++; } echo implode(',',$a);`,
+		"2,3,4",
+	)
+	// TODO foreach byRef
+	// testInputOutput(t,
+	// 	`<?php $a = [1,2,3]; foreach($a as &$i) { $i++; } var_dump($a);`,
+	// 	"array(3) {\n  [0]=>\n  int(2)\n  [1]=>\n  int(3)\n  [2]=>\n  &int(4)\n}\n",
+	// )
+	// Foreach loop with object
+	testInputOutput(t,
+		`<?php class MyData { public $a = 1; public $b = 2; public $c = 3; }
+		$data = new MyData();
+		foreach ($data as $value) { echo $value . ','; }`,
+		"1,2,3,",
+	)
+	testInputOutput(t,
+		`<?php class MyData { public $a = 1; public $b = 2; public $c = 3; }
+		$data = new MyData();
+		foreach ($data as $key => $value) { echo $key . ' => ' . $value . ','; }`,
+		"a => 1,b => 2,c => 3,",
+	)
+	// Foreach loop with object by ref
+	testInputOutput(t,
+		`<?php class MyData { public $a = 1; public $b = 2; public $c = 3; }
+		$data = new MyData();
+		foreach ($data as &$value) { $value *= 10; }
+		print_r($data);`,
+		"MyData Object\n(\n    [a] => 10\n    [b] => 20\n    [c] => 30\n)\n",
 	)
 }
 

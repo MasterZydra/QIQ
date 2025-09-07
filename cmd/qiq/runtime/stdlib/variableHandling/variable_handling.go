@@ -526,8 +526,9 @@ func lib_print_r_var(value values.RuntimeValue, depth int) (string, phpError.Err
 	case values.ObjectValue:
 		object := value.(*values.Object)
 		result = fmt.Sprintf("%s Object\n%s(\n", object.Class.Name, strings.Repeat(" ", depth-4))
-		for name, value := range object.Properties {
-			valueStr, err := lib_print_r_var(value, depth+8)
+		for _, name := range object.PropertyNames {
+			value := object.Properties[name]
+			valueStr, err := lib_print_r_var(value.Value, depth+8)
 			if err != nil {
 				return "", err
 			}
@@ -690,7 +691,7 @@ func lib_var_dump_var(context runtime.Context, value values.RuntimeValue, depth 
 				strings.Repeat(" ", depth), propertyName[1:], object.Class.GetQualifiedName(), property.Visibility,
 			))
 			context.Interpreter.Print(strings.Repeat(" ", depth))
-			if err := lib_var_dump_var(context, propertyValue, depth+2); err != nil {
+			if err := lib_var_dump_var(context, propertyValue.Value, depth+2); err != nil {
 				return err
 			}
 		}

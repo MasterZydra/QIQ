@@ -412,6 +412,7 @@ func TestLoops(t *testing.T) {
 			ast.NewArrayLiteralExpr(0, nil),
 			nil,
 			ast.NewSimpleVariableExpr(0, ast.NewVariableNameExpr(0, nil, "$value")),
+			false,
 			ast.NewCompoundStmt(0, []ast.IStatement{}),
 		),
 	)
@@ -420,9 +421,30 @@ func TestLoops(t *testing.T) {
 			ast.NewArrayLiteralExpr(0, nil),
 			ast.NewSimpleVariableExpr(0, ast.NewVariableNameExpr(0, nil, "$key")),
 			ast.NewSimpleVariableExpr(0, ast.NewVariableNameExpr(0, nil, "$value")),
+			false,
 			ast.NewCompoundStmt(0, []ast.IStatement{ast.NewExpressionStmt(0, ast.NewFunctionCallExpr(0, nil, ast.NewStringLiteralExpr(0, nil, "func", ast.SingleQuotedString), []ast.IExpression{}))}),
 		),
 	)
+	// byRef
+	testStmt(t, `<?php foreach ([] as &$value) {}`,
+		ast.NewForeachStmt(0, nil,
+			ast.NewArrayLiteralExpr(0, nil),
+			nil,
+			ast.NewSimpleVariableExpr(0, ast.NewVariableNameExpr(0, nil, "$value")),
+			true,
+			ast.NewCompoundStmt(0, []ast.IStatement{}),
+		),
+	)
+	testStmt(t, `<?php foreach ([] as $key => &$value) { func(); }`,
+		ast.NewForeachStmt(0, nil,
+			ast.NewArrayLiteralExpr(0, nil),
+			ast.NewSimpleVariableExpr(0, ast.NewVariableNameExpr(0, nil, "$key")),
+			ast.NewSimpleVariableExpr(0, ast.NewVariableNameExpr(0, nil, "$value")),
+			true,
+			ast.NewCompoundStmt(0, []ast.IStatement{ast.NewExpressionStmt(0, ast.NewFunctionCallExpr(0, nil, ast.NewStringLiteralExpr(0, nil, "func", ast.SingleQuotedString), []ast.IExpression{}))}),
+		),
+	)
+	testForError(t, `<?php foreach ([] as &$key => $value) { }`, phpError.NewParseError("Syntax error, key cannot be by reference at /home/admin/test.php:1:22"))
 }
 
 // -------------------------------------- Class -------------------------------------- MARK: Class

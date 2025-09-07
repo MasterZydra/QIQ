@@ -10,7 +10,7 @@ import (
 type Array struct {
 	*abstractValue
 	Keys     []RuntimeValue
-	Elements map[string]RuntimeValue
+	Elements map[string]*Slot
 	// Keeping track of next key
 	nextKey    int64
 	nextKeySet bool
@@ -20,7 +20,7 @@ func NewArray() *Array {
 	return &Array{
 		abstractValue: newAbstractValue(ArrayValue),
 		Keys:          []RuntimeValue{},
-		Elements:      map[string]RuntimeValue{},
+		Elements:      map[string]*Slot{},
 	}
 }
 
@@ -165,7 +165,7 @@ func (array *Array) SetElement(key RuntimeValue, value RuntimeValue) phpError.Er
 	if !found {
 		array.Keys = append(array.Keys, key)
 	}
-	array.Elements[mapKey] = value
+	array.Elements[mapKey] = NewSlot(value)
 
 	return nil
 }
@@ -202,13 +202,18 @@ func (array *Array) Contains(key RuntimeValue) bool {
 	return found
 }
 
-func (array *Array) GetElement(key RuntimeValue) (RuntimeValue, bool) {
+func (array *Array) GetElementSlot(key RuntimeValue) (*Slot, bool) {
 	mapKey, found, err := array.GetMapKey(key, true)
-	if err != nil {
-		return NewVoid(), false
-	}
-	if !found {
-		return NewVoid(), false
+	if err != nil || !found {
+		return nil, false
 	}
 	return array.Elements[mapKey], true
+}
+
+func (array *Array) GetElement(key RuntimeValue) (RuntimeValue, bool) {
+	slot, found := array.GetElementSlot(key)
+	if slot == nil || !found {
+		return NewVoid(), false
+	}
+	return slot.Value, true
 }

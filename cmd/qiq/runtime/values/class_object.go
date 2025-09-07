@@ -8,7 +8,7 @@ type Object struct {
 	*abstractValue
 	Class         *ast.ClassDeclarationStatement
 	PropertyNames []string
-	Properties    map[string]RuntimeValue
+	Properties    map[string]*Slot
 	// TODO methods
 	// TODO parent
 	// Status
@@ -20,20 +20,32 @@ func NewObject(class *ast.ClassDeclarationStatement) *Object {
 	return &Object{abstractValue: newAbstractValue(ObjectValue),
 		Class:         class,
 		PropertyNames: append([]string(nil), class.PropertieNames...),
-		Properties:    map[string]RuntimeValue{},
+		Properties:    map[string]*Slot{},
 	}
 }
 
 func (object *Object) SetProperty(name string, value RuntimeValue) {
-	object.Properties[name] = value
+	if _, found := object.Properties[name]; found {
+		object.Properties[name].Value = value
+	} else {
+		object.Properties[name] = NewSlot(value)
+	}
+}
+
+func (object *Object) GetPropertySlot(name string) (*Slot, bool) {
+	slot, found := object.Properties[name]
+	if slot == nil || !found {
+		return nil, false
+	}
+	return slot, true
 }
 
 func (object *Object) GetProperty(name string) (RuntimeValue, bool) {
-	value, found := object.Properties[name]
-	if !found {
+	slot, found := object.GetPropertySlot(name)
+	if slot == nil || !found {
 		return NewNull(), false
 	}
-	return value, true
+	return slot.Value, true
 }
 
 func (object *Object) GetMethod(name string) (*ast.MethodDefinitionStatement, bool) {

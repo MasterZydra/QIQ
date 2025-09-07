@@ -456,15 +456,17 @@ type ForeachStatement struct {
 	Collection IExpression
 	Key        IExpression
 	Value      IExpression
+	ByRef      bool
 	Block      IStatement
 }
 
-func NewForeachStmt(id int64, pos *position.Position, collection, key, value IExpression, block IStatement) *ForeachStatement {
+func NewForeachStmt(id int64, pos *position.Position, collection, key, value IExpression, byRef bool, block IStatement) *ForeachStatement {
 	return &ForeachStatement{
 		Statement:  NewStmt(id, ForeachStmt, pos),
 		Collection: collection,
 		Key:        key,
 		Value:      value,
+		ByRef:      byRef,
 		Block:      block,
 	}
 }

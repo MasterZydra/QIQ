@@ -924,6 +924,12 @@ func (parser *Parser) parseIterationStmt() (ast.IStatement, phpError.Error) {
 			return ast.NewEmptyStmt(), NewExpectedError("as", parser.at())
 		}
 
+		byRef := parser.isToken(lexer.OpOrPuncToken, "&", false)
+		var byRefPos *position.Position = nil
+		if byRef {
+			byRefPos = parser.eat().Position
+		}
+
 		valuePos := parser.at().GetPosString()
 		value, err := parser.parseExpr()
 		if err != nil {
@@ -936,6 +942,11 @@ func (parser *Parser) parseIterationStmt() (ast.IStatement, phpError.Error) {
 
 		var key ast.IExpression = nil
 		if parser.isToken(lexer.OpOrPuncToken, "=>", true) {
+			if byRef {
+				return ast.NewEmptyStmt(), phpError.NewParseError("Syntax error, key cannot be by reference at %s", byRefPos.ToPosString())
+			}
+			byRef = parser.isToken(lexer.OpOrPuncToken, "&", true)
+
 			key = value
 			valuePos = parser.at().GetPosString()
 			value, err = parser.parseExpr()
@@ -979,7 +990,7 @@ func (parser *Parser) parseIterationStmt() (ast.IStatement, phpError.Error) {
 			return ast.NewEmptyStmt(), NewExpectedError(";", parser.at())
 		}
 
-		return ast.NewForeachStmt(parser.nextId(), pos, collection, key, value, block), nil
+		return ast.NewForeachStmt(parser.nextId(), pos, collection, key, value, byRef, block), nil
 	}
 
 	return ast.NewEmptyStmt(), phpError.NewParseError("Unsupported iteration statement '%s' at %s", parser.at().Value, parser.at().GetPosString())

@@ -59,8 +59,21 @@ func (env *Environment) declareVariable(variableName string, value values.Runtim
 		return env.parent.declareVariable(variableName, value)
 	}
 
-	env.variables[variableName] = values.NewSlot(values.DeepCopy(value))
+	if _, found := env.variables[variableName]; found {
+		env.variables[variableName].Value = value
+	} else {
+		env.variables[variableName] = values.NewSlot(values.DeepCopy(value))
+	}
 	return value, nil
+}
+
+func (env *Environment) declareVariableByRef(variableName string, slot *values.Slot) (values.RuntimeValue, phpError.Error) {
+	if slices.Contains(env.globalVariables, variableName) {
+		return env.parent.declareVariableByRef(variableName, slot)
+	}
+
+	env.variables[variableName] = slot
+	return slot.Value, nil
 }
 
 func (env *Environment) resolvePredefinedVariable(variableName string) (*Environment, phpError.Error) {

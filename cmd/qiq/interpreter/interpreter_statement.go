@@ -330,9 +330,14 @@ func (interpreter *Interpreter) ProcessForeachStmt(stmt *ast.ForeachStatement, e
 				keyName := mustOrVoid(interpreter.varExprToVarName(stmt.Key, environment))
 				environment.declareVariable(keyName, keyValue)
 			}
-			value, _ := runtimeArray.GetElement(keyValue)
 			valueName := mustOrVoid(interpreter.varExprToVarName(stmt.Value, environment))
-			environment.declareVariable(valueName, value)
+			if stmt.ByRef {
+				slot, _ := runtimeArray.GetElementSlot(keyValue)
+				environment.declareVariableByRef(valueName, slot)
+			} else {
+				value, _ := runtimeArray.GetElement(keyValue)
+				environment.declareVariable(valueName, value)
+			}
 
 			// Execute body
 			runtimeValue, err := interpreter.processStmt(stmt.Block, env)
@@ -372,7 +377,13 @@ func (interpreter *Interpreter) ProcessForeachStmt(stmt *ast.ForeachStatement, e
 				environment.declareVariable(keyName, values.NewStr(propertyName[1:]))
 			}
 			valueName := mustOrVoid(interpreter.varExprToVarName(stmt.Value, environment))
-			environment.declareVariable(valueName, runtimeObject.Properties[propertyName])
+			if stmt.ByRef {
+				slot, _ := runtimeObject.GetPropertySlot(propertyName)
+				environment.declareVariableByRef(valueName, slot)
+			} else {
+				value, _ := runtimeObject.GetProperty(propertyName)
+				environment.declareVariable(valueName, value)
+			}
 
 			// Execute body
 			runtimeValue, err := interpreter.processStmt(stmt.Block, env)
