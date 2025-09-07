@@ -561,7 +561,7 @@ func TestClassDeclaration(t *testing.T) {
 
 	// Class with method with parameters
 	class = ast.NewClassDeclarationStmt(0, nil, "c", false, false)
-	class.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "myFunction", []string{}, []ast.FunctionParameter{{Name: "$name", Type: []string{"string"}}}, ast.NewCompoundStmt(0, []ast.IStatement{}), []string{"void"}))
+	class.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "myFunction", []string{}, []ast.FunctionParameter{ast.NewFunctionParam(false, "$name", []string{"string"})}, ast.NewCompoundStmt(0, []ast.IStatement{}), []string{"void"}))
 	testStmt(t, `<?php class c { function myFunction(string $name): void {} }`, class)
 
 	// Class with method with return type
@@ -629,14 +629,14 @@ func TestInterfaceDeclaration(t *testing.T) {
 // -------------------------------------- Anonymous functions -------------------------------------- MARK: Anonymous functions
 
 func TestAnonymousFunctions(t *testing.T) {
-	// Empty anonymous functions
+	// Empty anonymous function
 	stmt := ast.NewExpressionStmt(0, ast.NewSimpleAssignmentExpr(0,
 		ast.NewSimpleVariableExpr(0, ast.NewVariableNameExpr(0, nil, "$f")),
 		ast.NewAnonymousFunctionCreationExpr(0, nil, []ast.FunctionParameter{}, ast.NewCompoundStmt(0, []ast.IStatement{}), []string{}),
 	))
 	testStmt(t, `<?php $f = function() {};`, stmt)
 
-	// Anonymous functions
+	// Anonymous function
 	stmt = ast.NewExpressionStmt(0, ast.NewSimpleAssignmentExpr(0,
 		ast.NewSimpleVariableExpr(0, ast.NewVariableNameExpr(0, nil, "$f")),
 		ast.NewAnonymousFunctionCreationExpr(0, nil, []ast.FunctionParameter{}, ast.NewCompoundStmt(0, []ast.IStatement{
@@ -644,4 +644,11 @@ func TestAnonymousFunctions(t *testing.T) {
 		}), []string{}),
 	))
 	testStmt(t, `<?php $f = function() { do_smth(); };`, stmt)
+
+	// Anonymous function with byRef param
+	stmt = ast.NewExpressionStmt(0, ast.NewSimpleAssignmentExpr(0,
+		ast.NewSimpleVariableExpr(0, ast.NewVariableNameExpr(0, nil, "$f")),
+		ast.NewAnonymousFunctionCreationExpr(0, nil, []ast.FunctionParameter{ast.NewFunctionParam(true, "$a", []string{})}, ast.NewCompoundStmt(0, []ast.IStatement{}), []string{}),
+	))
+	testStmt(t, `<?php $f = function(&$a) {};`, stmt)
 }

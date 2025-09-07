@@ -510,6 +510,12 @@ func TestUserFunctions(t *testing.T) {
 		"func called: abc",
 	)
 
+	// By reference parameter
+	testInputOutput(t,
+		`<?php $a = 42; function inc(&$num) { $num++; }  inc($a); var_dump($a);`,
+		"int(43)\n",
+	)
+
 	// function_exists
 	testInputOutput(t, "<?php var_dump(function_exists('intval'));", "bool(true)\n")
 	testInputOutput(t, "<?php var_dump(function_exists('someUndefinedFunc'));", "bool(false)\n")

@@ -1272,12 +1272,12 @@ func (parser *Parser) parseFunctionParameters() ([]ast.FunctionParameter, phpErr
 				}
 			}
 
-			// TODO byRef: function-definition - parameter-declaration - &(opt)
+			byRef := parser.isToken(lexer.OpOrPuncToken, "&", true)
 
 			if parser.at().TokenType != lexer.VariableNameToken {
 				return parameters, phpError.NewParseError("Expected variable. Got \"%s\" (%s) at %s", parser.at().Value, parser.at().TokenType, parser.at().GetPosString())
 			}
-			parameters = append(parameters, ast.FunctionParameter{Name: parser.eat().Value, Type: paramTypes})
+			parameters = append(parameters, ast.NewFunctionParam(byRef, parser.eat().Value, paramTypes))
 
 			if parser.isToken(lexer.OpOrPuncToken, ",", true) {
 				continue
