@@ -444,7 +444,7 @@ func TestLoops(t *testing.T) {
 			ast.NewCompoundStmt(0, []ast.IStatement{ast.NewExpressionStmt(0, ast.NewFunctionCallExpr(0, nil, ast.NewStringLiteralExpr(0, nil, "func", ast.SingleQuotedString), []ast.IExpression{}))}),
 		),
 	)
-	testForError(t, `<?php foreach ([] as &$key => $value) { }`, phpError.NewParseError("Syntax error, key cannot be by reference at /home/admin/test.php:1:22"))
+	testForError(t, `<?php foreach ([] as &$key => $value) { }`, phpError.NewParseError("Syntax error, key cannot be by reference at %s:1:22", TEST_FILE_NAME))
 }
 
 // -------------------------------------- Class -------------------------------------- MARK: Class
