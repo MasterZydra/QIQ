@@ -28,7 +28,7 @@ func Register(environment runtime.Environment) {
 // -------------------------------------- class_alias -------------------------------------- MARK: class_alias
 
 func nativeFn_class_alias(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
-	// https://www.php.net/manual/en/function.class-alias.php
+	// Spec: https://www.php.net/manual/en/function.class-alias.php
 
 	args, err := funcParamValidator.NewValidator("class_alias").
 		AddParam("$class", []string{"string"}, nil).
@@ -55,7 +55,7 @@ func nativeFn_class_alias(args []values.RuntimeValue, context runtime.Context) (
 // -------------------------------------- class_exists -------------------------------------- MARK: class_exists
 
 func nativeFn_class_exists(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
-	// https://www.php.net/manual/en/function.class-exists.php
+	// Spec: https://www.php.net/manual/en/function.class-exists.php
 
 	args, err := funcParamValidator.NewValidator("class_exists").
 		AddParam("$class", []string{"string"}, nil).

@@ -37,7 +37,7 @@ func RegisterDefaultInterfaces(interpreter runtime.Interpreter) {
 
 	// -------------------------------------- Serializable -------------------------------------- MARK: Serializable
 
-	// https://www.php.net/manual/en/class.serializable.php
+	// Spec: https://www.php.net/manual/en/class.serializable.php
 	Serializable := ast.NewInterfaceDeclarationStmt(0, nil, "Serializable")
 	Serializable.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "serialize", []string{"public"}, []ast.FunctionParameter{}, nil, []string{"null", "string"}))
 	Serializable.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "unserialize", []string{"public"}, []ast.FunctionParameter{{Name: "$data", Type: []string{"string"}}}, nil, []string{"void"}))
@@ -88,7 +88,7 @@ func RegisterDefaultInterfaces(interpreter runtime.Interpreter) {
 
 	// -------------------------------------- UnitEnum -------------------------------------- MARK: UnitEnum
 
-	// https://www.php.net/manual/en/class.unitenum.php
+	// Spec: https://www.php.net/manual/en/class.unitenum.php
 	UnitEnum := ast.NewInterfaceDeclarationStmt(0, nil, "UnitEnum")
 	UnitEnum.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "cases", []string{"public", "static"}, []ast.FunctionParameter{}, nil, []string{"array"}))
 
