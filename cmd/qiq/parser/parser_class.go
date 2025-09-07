@@ -417,6 +417,7 @@ func (parser *Parser) parseClassConstrutorDeclaration(class *ast.ClassDeclaratio
 		return isConstructor, phpError.NewParseError("Expected compound statement. Got %s", body.GetKind())
 	}
 
+	// TODO byRef: &(opt)
 	class.AddMethod(ast.NewMethodDefinitionStmt(
 		parser.nextId(), pos,
 		"__construct", modifiers, parameters, body.(*ast.CompoundStatement), []string{},
@@ -483,6 +484,7 @@ func (parser *Parser) parseClassDestrutorDeclaration(class *ast.ClassDeclaration
 		return isDestructor, phpError.NewParseError("Expected compound statement. Got %s", body.GetKind())
 	}
 
+	// TODO byRef: &(opt)
 	class.AddMethod(ast.NewMethodDefinitionStmt(
 		parser.nextId(), pos,
 		"__destruct", modifiers, []ast.FunctionParameter{}, body.(*ast.CompoundStatement), []string{},
@@ -527,6 +529,8 @@ func (parser *Parser) parseClassMethodDeclaration(class ast.AddMethod, isClass b
 
 	// Eat all tokens to get the name token
 	parser.eatN(offset + 1)
+
+	// TODO byRef: &(opt)
 
 	// Store position of name token
 	name := parser.at().Value
@@ -736,7 +740,7 @@ func (parser *Parser) isMethod(name string) (
 			continue
 		}
 
-		// TODO &(opt)
+		// TODO byRef: &(opt)
 		// Check if it is a function with the given name
 		if token.TokenType == lexer.KeywordToken && token.Value == "function" &&
 			((name == "" && parser.next(offset+1).TokenType == lexer.NameToken) ||

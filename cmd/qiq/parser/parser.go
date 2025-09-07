@@ -1203,7 +1203,7 @@ func (parser *Parser) parseFunctionDefinition() (ast.IStatement, phpError.Error)
 
 	pos := parser.eat().Position
 
-	// TODO function-definition - &(opt)
+	// TODO byRef: function-definition - &(opt)
 
 	if parser.at().TokenType != lexer.NameToken {
 		return ast.NewEmptyStmt(), phpError.NewParseError("Function name expected. Got %s", parser.at().TokenType)
@@ -1272,7 +1272,7 @@ func (parser *Parser) parseFunctionParameters() ([]ast.FunctionParameter, phpErr
 				}
 			}
 
-			// TODO function-definition - parameter-declaration - &(opt)
+			// TODO byRef: function-definition - parameter-declaration - &(opt)
 
 			if parser.at().TokenType != lexer.VariableNameToken {
 				return parameters, phpError.NewParseError("Expected variable. Got \"%s\" (%s) at %s", parser.at().Value, parser.at().TokenType, parser.at().GetPosString())
@@ -1323,7 +1323,7 @@ func (parser *Parser) parseAnonymousFunctionCreationExpression() (ast.IExpressio
 
 	pos := parser.eat().Position
 
-	// TODO anonymous-function-creation-expression - &(opt)
+	// TODO byRef: anonymous-function-creation-expression - &(opt)
 
 	if !parser.isToken(lexer.OpOrPuncToken, "(", true) {
 		return ast.NewEmptyStmt(), NewExpectedError("(", parser.at())
@@ -2560,6 +2560,9 @@ func (parser *Parser) parseArrayCreationExpr() (ast.IExpression, phpError.Error)
 			(isShortSyntax && parser.isToken(lexer.OpOrPuncToken, "]", true)) {
 			break
 		}
+
+		// TODO byRef: &(opt)   element-value
+		// TODO byRef: element-key   =>   &(opt)   element-value
 
 		keyOrValue, err := parser.parseExpr()
 		var value ast.IExpression
