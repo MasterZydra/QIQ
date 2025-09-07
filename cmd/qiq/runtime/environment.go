@@ -7,7 +7,7 @@ import (
 
 type Environment interface {
 	// Variables
-	LookupVariable(variableName string) (values.RuntimeValue, phpError.Error)
+	LookupVariable(variableName string) (*values.Slot, phpError.Error)
 	// Functions
 	AddNativeFunction(functionName string, function NativeFunction)
 	FunctionExists(functionName string) bool

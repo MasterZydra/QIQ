@@ -9,7 +9,7 @@ import (
 
 // -------------------------------------- CompareRelation -------------------------------------- MARK: CompareRelation
 
-func CompareRelation(lhs values.RuntimeValue, operator string, rhs values.RuntimeValue, leadingNumeric bool) (values.RuntimeValue, phpError.Error) {
+func CompareRelation(lhs values.RuntimeValue, operator string, rhs values.RuntimeValue, leadingNumeric bool) (*values.Slot, phpError.Error) {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-relational-expression
 
 	// Note that greater-than semantics is implemented as the reverse of less-than, i.e. "$a > $b" is the same as "$b < $a".
@@ -80,12 +80,12 @@ func CompareRelation(lhs values.RuntimeValue, operator string, rhs values.Runtim
 	case values.ObjectValue:
 		return compareRelationObject(lhs.(*values.Object), operator, rhs)
 	default:
-		return values.NewVoid(), phpError.NewError("compareRelation: Type \"%s\" not implemented", lhs.GetType())
+		return values.NewVoidSlot(), phpError.NewError("compareRelation: Type \"%s\" not implemented", lhs.GetType())
 	}
 
 }
 
-func compareRelationArray(lhs *values.Array, operator string, rhs values.RuntimeValue, leadingNumeric bool) (values.RuntimeValue, phpError.Error) {
+func compareRelationArray(lhs *values.Array, operator string, rhs values.RuntimeValue, leadingNumeric bool) (*values.Slot, phpError.Error) {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-relational-expression
 
 	//        NULL  bool  int  float  string  array  object  resource
@@ -107,7 +107,7 @@ func compareRelationArray(lhs *values.Array, operator string, rhs values.Runtime
 		var err phpError.Error
 		rhs, err = ArrayVal(rhs)
 		if err != nil {
-			return values.NewVoid(), err
+			return values.NewVoidSlot(), err
 		}
 	}
 
@@ -126,26 +126,26 @@ func compareRelationArray(lhs *values.Array, operator string, rhs values.Runtime
 				lhsValue, _ := lhs.GetElement(key)
 				rhsValue, found := rhsArray.GetElement(key)
 				if found {
-					equal, err := Compare(lhsValue, "===", rhsValue)
+					equal, err := Compare(lhsValue.Value, "===", rhsValue.Value)
 					if err != nil {
-						return values.NewVoid(), err
+						return values.NewVoidSlot(), err
 					}
-					if equal.Value {
+					if equal.Value.(*values.Bool).Value {
 						continue
 					}
-					lessThan, err := CompareRelation(lhsValue, operator, rhsValue, leadingNumeric)
+					lessThan, err := CompareRelation(lhsValue.Value, operator, rhsValue.Value, leadingNumeric)
 					if err != nil {
-						return values.NewVoid(), err
+						return values.NewVoidSlot(), err
 					}
 					if lessThan.GetType() == values.BoolValue {
-						if lessThan.(*values.Bool).Value {
+						if lessThan.Value.(*values.Bool).Value {
 							result = -1
 						} else {
 							result = 1
 						}
 					}
 					if lessThan.GetType() == values.IntValue {
-						result = lessThan.(*values.Int).Value
+						result = lessThan.Value.(*values.Int).Value
 					}
 				}
 			}
@@ -153,38 +153,38 @@ func compareRelationArray(lhs *values.Array, operator string, rhs values.Runtime
 
 		switch operator {
 		case "<":
-			return values.NewBool(result == -1), nil
+			return values.NewBoolSlot(result == -1), nil
 		case "<=":
-			return values.NewBool(result < 1), nil
+			return values.NewBoolSlot(result < 1), nil
 		case "<=>":
-			return values.NewInt(result), nil
+			return values.NewIntSlot(result), nil
 		default:
-			return values.NewVoid(), phpError.NewError("compareRelationArray: Operator \"%s\" not implemented", operator)
+			return values.NewVoidSlot(), phpError.NewError("compareRelationArray: Operator \"%s\" not implemented", operator)
 		}
 
 	case values.BoolValue:
 		lhsBoolean, err := BoolVal(lhs)
 		if err != nil {
-			return values.NewVoid(), err
+			return values.NewVoidSlot(), err
 		}
 		return compareRelationBoolean(values.NewBool(lhsBoolean), operator, rhs)
 
 	case values.FloatValue, values.IntValue, values.StrValue:
 		switch operator {
 		case "<", "<=":
-			return values.NewBool(false), nil
+			return values.NewBoolSlot(false), nil
 		case "<=>":
-			return values.NewInt(1), nil
+			return values.NewIntSlot(1), nil
 		default:
-			return values.NewVoid(), phpError.NewError("compareRelationArray: Operator \"%s\" not implemented", operator)
+			return values.NewVoidSlot(), phpError.NewError("compareRelationArray: Operator \"%s\" not implemented", operator)
 		}
 
 	default:
-		return values.NewVoid(), phpError.NewError("compareRelationArray: Type \"%s\" not implemented", rhs.GetType())
+		return values.NewVoidSlot(), phpError.NewError("compareRelationArray: Type \"%s\" not implemented", rhs.GetType())
 	}
 }
 
-func compareRelationBoolean(lhs *values.Bool, operator string, rhs values.RuntimeValue) (values.RuntimeValue, phpError.Error) {
+func compareRelationBoolean(lhs *values.Bool, operator string, rhs values.RuntimeValue) (*values.Slot, phpError.Error) {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-relational-expression
 
 	//       NULL  bool  int  float  string  array  object  resource
@@ -195,40 +195,40 @@ func compareRelationBoolean(lhs *values.Bool, operator string, rhs values.Runtim
 
 	rhsBoolean, err := BoolVal(rhs)
 	if err != nil {
-		return values.NewVoid(), err
+		return values.NewVoidSlot(), err
 	}
 	// TODO compareRelationBoolean - object - implement in variableHandling.BoolVal(	// TODO compareRelationBoolean - resource - implement in variableHandling.BoolVal(
 	lhsInt, err := IntVal(lhs, false)
 	if err != nil {
-		return values.NewVoid(), err
+		return values.NewVoidSlot(), err
 	}
 	rhsInt, err := IntVal(values.NewBool(rhsBoolean), false)
 	if err != nil {
-		return values.NewVoid(), err
+		return values.NewVoidSlot(), err
 	}
 
 	switch operator {
 	case "<":
-		return values.NewBool(lhsInt < rhsInt), nil
+		return values.NewBoolSlot(lhsInt < rhsInt), nil
 
 	case "<=":
-		return values.NewBool(lhsInt <= rhsInt), nil
+		return values.NewBoolSlot(lhsInt <= rhsInt), nil
 
 	case "<=>":
 		if lhsInt > rhsInt {
-			return values.NewInt(1), nil
+			return values.NewIntSlot(1), nil
 		}
 		if lhsInt == rhsInt {
-			return values.NewInt(0), nil
+			return values.NewIntSlot(0), nil
 		}
-		return values.NewInt(-1), nil
+		return values.NewIntSlot(-1), nil
 
 	default:
-		return values.NewVoid(), phpError.NewError("compareRelationBoolean: Operator \"%s\" not implemented", operator)
+		return values.NewVoidSlot(), phpError.NewError("compareRelationBoolean: Operator \"%s\" not implemented", operator)
 	}
 }
 
-func compareRelationFloating(lhs *values.Float, operator string, rhs values.RuntimeValue, leadingNumeric bool) (values.RuntimeValue, phpError.Error) {
+func compareRelationFloating(lhs *values.Float, operator string, rhs values.RuntimeValue, leadingNumeric bool) (*values.Slot, phpError.Error) {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-relational-expression
 
 	//        NULL  bool  int  float  string  array  object  resource
@@ -242,21 +242,21 @@ func compareRelationFloating(lhs *values.Float, operator string, rhs values.Runt
 		if strings.Trim(rhsStr, " \t") == "" {
 			switch operator {
 			case "<", "<=":
-				return values.NewBool(false), nil
+				return values.NewBoolSlot(false), nil
 			case "<=>":
-				return values.NewInt(1), nil
+				return values.NewIntSlot(1), nil
 			default:
-				return values.NewVoid(), phpError.NewError("compareRelationFloating: Operator \"%s\" not implemented for type string", operator)
+				return values.NewVoidSlot(), phpError.NewError("compareRelationFloating: Operator \"%s\" not implemented for type string", operator)
 			}
 		}
 		if !leadingNumeric && !common.IsIntegerLiteralWithSign(rhsStr, !leadingNumeric) && !common.IsFloatingLiteralWithSign(rhsStr, !leadingNumeric) {
 			switch operator {
 			case "<", "<=":
-				return values.NewBool(true), nil
+				return values.NewBoolSlot(true), nil
 			case "<=>":
-				return values.NewInt(-1), nil
+				return values.NewIntSlot(-1), nil
 			default:
-				return values.NewVoid(), phpError.NewError("compareRelationFloating: Operator \"%s\" not implemented for type string", operator)
+				return values.NewVoidSlot(), phpError.NewError("compareRelationFloating: Operator \"%s\" not implemented for type string", operator)
 			}
 		}
 	}
@@ -265,7 +265,7 @@ func compareRelationFloating(lhs *values.Float, operator string, rhs values.Runt
 		var err phpError.Error
 		rhs, err = ToValueType(values.FloatValue, rhs, leadingNumeric)
 		if err != nil {
-			return values.NewVoid(), err
+			return values.NewVoidSlot(), err
 		}
 	}
 
@@ -273,17 +273,17 @@ func compareRelationFloating(lhs *values.Float, operator string, rhs values.Runt
 	case values.ArrayValue:
 		switch operator {
 		case "<", "<=":
-			return values.NewBool(true), nil
+			return values.NewBoolSlot(true), nil
 		case "<=>":
-			return values.NewInt(-1), nil
+			return values.NewIntSlot(-1), nil
 		default:
-			return values.NewVoid(), phpError.NewError("compareRelationFloating: Operator \"%s\" not implemented for type array", operator)
+			return values.NewVoidSlot(), phpError.NewError("compareRelationFloating: Operator \"%s\" not implemented for type array", operator)
 		}
 
 	case values.BoolValue:
 		lhsBoolean, err := BoolVal(lhs)
 		if err != nil {
-			return values.NewVoid(), err
+			return values.NewVoidSlot(), err
 		}
 		return compareRelationBoolean(values.NewBool(lhsBoolean), operator, rhs)
 
@@ -291,27 +291,27 @@ func compareRelationFloating(lhs *values.Float, operator string, rhs values.Runt
 		rhsFloat := rhs.(*values.Float).Value
 		switch operator {
 		case "<":
-			return values.NewBool(lhs.Value < rhsFloat), nil
+			return values.NewBoolSlot(lhs.Value < rhsFloat), nil
 		case "<=":
-			return values.NewBool(lhs.Value <= rhsFloat), nil
+			return values.NewBoolSlot(lhs.Value <= rhsFloat), nil
 		case "<=>":
 			if lhs.Value > rhsFloat {
-				return values.NewInt(1), nil
+				return values.NewIntSlot(1), nil
 			}
 			if lhs.Value == rhsFloat {
-				return values.NewInt(0), nil
+				return values.NewIntSlot(0), nil
 			}
-			return values.NewInt(-1), nil
+			return values.NewIntSlot(-1), nil
 		default:
-			return values.NewVoid(), phpError.NewError("compareRelationFloating: Operator \"%s\" not implemented", operator)
+			return values.NewVoidSlot(), phpError.NewError("compareRelationFloating: Operator \"%s\" not implemented", operator)
 		}
 
 	default:
-		return values.NewVoid(), phpError.NewError("compareRelationFloating: Type \"%s\" not implemented", rhs.GetType())
+		return values.NewVoidSlot(), phpError.NewError("compareRelationFloating: Type \"%s\" not implemented", rhs.GetType())
 	}
 }
 
-func compareRelationInteger(lhs *values.Int, operator string, rhs values.RuntimeValue, leadingNumeric bool) (values.RuntimeValue, phpError.Error) {
+func compareRelationInteger(lhs *values.Int, operator string, rhs values.RuntimeValue, leadingNumeric bool) (*values.Slot, phpError.Error) {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-relational-expression
 
 	//      NULL  bool  int  float  string  array  object  resource
@@ -325,21 +325,21 @@ func compareRelationInteger(lhs *values.Int, operator string, rhs values.Runtime
 		if strings.Trim(rhsStr, " \t") == "" {
 			switch operator {
 			case "<", "<=":
-				return values.NewBool(false), nil
+				return values.NewBoolSlot(false), nil
 			case "<=>":
-				return values.NewInt(1), nil
+				return values.NewIntSlot(1), nil
 			default:
-				return values.NewVoid(), phpError.NewError("compareRelationInteger: Operator \"%s\" not implemented for type string", operator)
+				return values.NewVoidSlot(), phpError.NewError("compareRelationInteger: Operator \"%s\" not implemented for type string", operator)
 			}
 		}
 		if !leadingNumeric && !common.IsIntegerLiteralWithSign(rhsStr, leadingNumeric) && !common.IsFloatingLiteralWithSign(rhsStr, leadingNumeric) {
 			switch operator {
 			case "<", "<=":
-				return values.NewBool(true), nil
+				return values.NewBoolSlot(true), nil
 			case "<=>":
-				return values.NewInt(-1), nil
+				return values.NewIntSlot(-1), nil
 			default:
-				return values.NewVoid(), phpError.NewError("compareRelationInteger: Operator \"%s\" not implemented for type string", operator)
+				return values.NewVoidSlot(), phpError.NewError("compareRelationInteger: Operator \"%s\" not implemented for type string", operator)
 			}
 		}
 	}
@@ -348,7 +348,7 @@ func compareRelationInteger(lhs *values.Int, operator string, rhs values.Runtime
 		var err phpError.Error
 		rhs, err = ToValueType(values.IntValue, rhs, leadingNumeric)
 		if err != nil {
-			return values.NewVoid(), err
+			return values.NewVoidSlot(), err
 		}
 	}
 
@@ -356,24 +356,24 @@ func compareRelationInteger(lhs *values.Int, operator string, rhs values.Runtime
 	case values.ArrayValue:
 		switch operator {
 		case "<", "<=":
-			return values.NewBool(true), nil
+			return values.NewBoolSlot(true), nil
 		case "<=>":
-			return values.NewInt(-1), nil
+			return values.NewIntSlot(-1), nil
 		default:
-			return values.NewVoid(), phpError.NewError("compareRelationInteger: Operator \"%s\" not implemented for type array", operator)
+			return values.NewVoidSlot(), phpError.NewError("compareRelationInteger: Operator \"%s\" not implemented for type array", operator)
 		}
 
 	case values.BoolValue:
 		lhsBoolean, err := BoolVal(lhs)
 		if err != nil {
-			return values.NewVoid(), err
+			return values.NewVoidSlot(), err
 		}
 		return compareRelationBoolean(values.NewBool(lhsBoolean), operator, rhs)
 
 	case values.FloatValue:
 		lhsFloat, err := FloatVal(lhs, true)
 		if err != nil {
-			return values.NewVoid(), err
+			return values.NewVoidSlot(), err
 		}
 		return compareRelationFloating(values.NewFloat(lhsFloat), operator, rhs, leadingNumeric)
 
@@ -381,27 +381,27 @@ func compareRelationInteger(lhs *values.Int, operator string, rhs values.Runtime
 		rhsInt := rhs.(*values.Int).Value
 		switch operator {
 		case "<":
-			return values.NewBool(lhs.Value < rhsInt), nil
+			return values.NewBoolSlot(lhs.Value < rhsInt), nil
 		case "<=":
-			return values.NewBool(lhs.Value <= rhsInt), nil
+			return values.NewBoolSlot(lhs.Value <= rhsInt), nil
 		case "<=>":
 			if lhs.Value > rhsInt {
-				return values.NewInt(1), nil
+				return values.NewIntSlot(1), nil
 			}
 			if lhs.Value == rhsInt {
-				return values.NewInt(0), nil
+				return values.NewIntSlot(0), nil
 			}
-			return values.NewInt(-1), nil
+			return values.NewIntSlot(-1), nil
 		default:
-			return values.NewVoid(), phpError.NewError("compareRelationInteger: Operator \"%s\" not implemented", operator)
+			return values.NewVoidSlot(), phpError.NewError("compareRelationInteger: Operator \"%s\" not implemented", operator)
 		}
 
 	default:
-		return values.NewVoid(), phpError.NewError("compareRelationInteger: Type \"%s\" not implemented", rhs.GetType())
+		return values.NewVoidSlot(), phpError.NewError("compareRelationInteger: Type \"%s\" not implemented", rhs.GetType())
 	}
 }
 
-func compareRelationNull(operator string, rhs values.RuntimeValue, leadingNumeric bool) (values.RuntimeValue, phpError.Error) {
+func compareRelationNull(operator string, rhs values.RuntimeValue, leadingNumeric bool) (*values.Slot, phpError.Error) {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-relational-expression
 
 	//       NULL  bool  int  float  string  array  object  resource
@@ -413,41 +413,41 @@ func compareRelationNull(operator string, rhs values.RuntimeValue, leadingNumeri
 	case values.ArrayValue:
 		lhs, err := ArrayVal(values.NewNull())
 		if err != nil {
-			return values.NewVoid(), err
+			return values.NewVoidSlot(), err
 		}
 		return compareRelationArray(lhs, operator, rhs, leadingNumeric)
 
 	case values.BoolValue:
 		lhs, err := BoolVal(values.NewNull())
 		if err != nil {
-			return values.NewVoid(), err
+			return values.NewVoidSlot(), err
 		}
 		return compareRelationBoolean(values.NewBool(lhs), operator, rhs)
 
 	case values.FloatValue:
 		lhs, err := FloatVal(values.NewNull(), false)
 		if err != nil {
-			return values.NewVoid(), err
+			return values.NewVoidSlot(), err
 		}
 		return compareRelationFloating(values.NewFloat(lhs), operator, rhs, leadingNumeric)
 
 	case values.IntValue:
 		lhs, err := IntVal(values.NewNull(), false)
 		if err != nil {
-			return values.NewVoid(), err
+			return values.NewVoidSlot(), err
 		}
 		return compareRelationInteger(values.NewInt(lhs), operator, rhs, leadingNumeric)
 
 	case values.NullValue:
 		switch operator {
 		case "<":
-			return values.NewBool(false), nil
+			return values.NewBoolSlot(false), nil
 		case "<=":
-			return values.NewBool(true), nil
+			return values.NewBoolSlot(true), nil
 		case "<=>":
-			return values.NewInt(0), nil
+			return values.NewIntSlot(0), nil
 		}
-		return values.NewVoid(), phpError.NewError("compareRelationNull: Operator \"%s\" not implemented for type NULL", operator)
+		return values.NewVoidSlot(), phpError.NewError("compareRelationNull: Operator \"%s\" not implemented for type NULL", operator)
 
 		// TODO compareRelationNull - object
 		// TODO compareRelationNull - resource
@@ -455,16 +455,16 @@ func compareRelationNull(operator string, rhs values.RuntimeValue, leadingNumeri
 	case values.StrValue:
 		lhs, err := StrVal(values.NewNull())
 		if err != nil {
-			return values.NewVoid(), err
+			return values.NewVoidSlot(), err
 		}
 		return compareRelationString(values.NewStr(lhs), operator, rhs, leadingNumeric)
 
 	default:
-		return values.NewVoid(), phpError.NewError("compareRelationNull: Type \"%s\" not implemented", rhs.GetType())
+		return values.NewVoidSlot(), phpError.NewError("compareRelationNull: Type \"%s\" not implemented", rhs.GetType())
 	}
 }
 
-func compareRelationString(lhs *values.Str, operator string, rhs values.RuntimeValue, leadingNumeric bool) (values.RuntimeValue, phpError.Error) {
+func compareRelationString(lhs *values.Str, operator string, rhs values.RuntimeValue, leadingNumeric bool) (*values.Slot, phpError.Error) {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-relational-expression
 
 	//         NULL  bool  int  float  string  array  object  resource
@@ -478,21 +478,21 @@ func compareRelationString(lhs *values.Str, operator string, rhs values.RuntimeV
 		if strings.Trim(lhsStr, " \t") == "" {
 			switch operator {
 			case "<", "<=":
-				return values.NewBool(true), nil
+				return values.NewBoolSlot(true), nil
 			case "<=>":
-				return values.NewInt(-1), nil
+				return values.NewIntSlot(-1), nil
 			default:
-				return values.NewVoid(), phpError.NewError("compareRelationInteger: Operator \"%s\" not implemented for type array", operator)
+				return values.NewVoidSlot(), phpError.NewError("compareRelationInteger: Operator \"%s\" not implemented for type array", operator)
 			}
 		}
 		if !leadingNumeric && !common.IsIntegerLiteralWithSign(lhsStr, leadingNumeric) && !common.IsFloatingLiteralWithSign(lhsStr, leadingNumeric) {
 			switch operator {
 			case "<", "<=":
-				return values.NewBool(false), nil
+				return values.NewBoolSlot(false), nil
 			case "<=>":
-				return values.NewInt(1), nil
+				return values.NewIntSlot(1), nil
 			default:
-				return values.NewVoid(), phpError.NewError("compareRelationInteger: Operator \"%s\" not implemented for type array", operator)
+				return values.NewVoidSlot(), phpError.NewError("compareRelationInteger: Operator \"%s\" not implemented for type array", operator)
 			}
 		}
 	}
@@ -501,7 +501,7 @@ func compareRelationString(lhs *values.Str, operator string, rhs values.RuntimeV
 		var err phpError.Error
 		rhs, err = ToValueType(values.StrValue, rhs, true)
 		if err != nil {
-			return values.NewVoid(), err
+			return values.NewVoidSlot(), err
 		}
 	}
 
@@ -509,31 +509,31 @@ func compareRelationString(lhs *values.Str, operator string, rhs values.RuntimeV
 	case values.ArrayValue:
 		switch operator {
 		case "<", "<=":
-			return values.NewBool(true), nil
+			return values.NewBoolSlot(true), nil
 		case "<=>":
-			return values.NewInt(-1), nil
+			return values.NewIntSlot(-1), nil
 		default:
-			return values.NewVoid(), phpError.NewError("compareRelationArray: Operator \"%s\" not implemented", operator)
+			return values.NewVoidSlot(), phpError.NewError("compareRelationArray: Operator \"%s\" not implemented", operator)
 		}
 
 	case values.BoolValue:
 		lhs, err := BoolVal(lhs)
 		if err != nil {
-			return values.NewVoid(), err
+			return values.NewVoidSlot(), err
 		}
 		return compareRelationBoolean(values.NewBool(lhs), operator, rhs)
 
 	case values.FloatValue:
 		lhs, err := FloatVal(lhs, true)
 		if err != nil {
-			return values.NewVoid(), err
+			return values.NewVoidSlot(), err
 		}
 		return compareRelationFloating(values.NewFloat(lhs), operator, rhs, leadingNumeric)
 
 	case values.IntValue:
 		lhs, err := IntVal(lhs, true)
 		if err != nil {
-			return values.NewVoid(), err
+			return values.NewVoidSlot(), err
 		}
 		return compareRelationInteger(values.NewInt(lhs), operator, rhs, leadingNumeric)
 
@@ -547,14 +547,14 @@ func compareRelationString(lhs *values.Str, operator string, rhs values.RuntimeV
 		if common.IsFloatingLiteralWithSign(lhs.Value, false) && (common.IsIntegerLiteralWithSign(rhsStr, false) || common.IsFloatingLiteralWithSign(rhsStr, false)) {
 			lhs, err := FloatVal(lhs, false)
 			if err != nil {
-				return values.NewVoid(), err
+				return values.NewVoidSlot(), err
 			}
 			return compareRelationFloating(values.NewFloat(lhs), operator, rhs, leadingNumeric)
 		}
 		if common.IsIntegerLiteralWithSign(lhs.Value, false) && (common.IsIntegerLiteralWithSign(rhsStr, false) || common.IsFloatingLiteralWithSign(rhsStr, false)) {
 			lhs, err := IntVal(lhs, false)
 			if err != nil {
-				return values.NewVoid(), err
+				return values.NewVoidSlot(), err
 			}
 			return compareRelationInteger(values.NewInt(lhs), operator, rhs, leadingNumeric)
 		}
@@ -587,21 +587,21 @@ func compareRelationString(lhs *values.Str, operator string, rhs values.RuntimeV
 		}
 		switch operator {
 		case "<":
-			return values.NewBool(result == -1), nil
+			return values.NewBoolSlot(result == -1), nil
 		case "<=":
-			return values.NewBool(result < 1), nil
+			return values.NewBoolSlot(result < 1), nil
 		case "<=>":
-			return values.NewInt(result), nil
+			return values.NewIntSlot(result), nil
 		default:
-			return values.NewVoid(), phpError.NewError("compareRelationString: Operator \"%s\" not implemented", operator)
+			return values.NewVoidSlot(), phpError.NewError("compareRelationString: Operator \"%s\" not implemented", operator)
 		}
 
 	default:
-		return values.NewVoid(), phpError.NewError("compareRelationString: Type \"%s\" not implemented", rhs.GetType())
+		return values.NewVoidSlot(), phpError.NewError("compareRelationString: Type \"%s\" not implemented", rhs.GetType())
 	}
 }
 
-func compareRelationObject(lhs *values.Object, operator string, rhs values.RuntimeValue) (values.RuntimeValue, phpError.Error) {
+func compareRelationObject(lhs *values.Object, operator string, rhs values.RuntimeValue) (*values.Slot, phpError.Error) {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-relational-expression
 	//         NULL  bool  int  float  string  array  object  resource
 	// object   >     ->    3    3      3       3      6       3
@@ -610,11 +610,11 @@ func compareRelationObject(lhs *values.Object, operator string, rhs values.Runti
 	case values.NullValue:
 		switch operator {
 		case "<", "<=":
-			return values.NewBool(false), nil
+			return values.NewBoolSlot(false), nil
 		case "<=>":
-			return values.NewInt(1), nil
+			return values.NewIntSlot(1), nil
 		default:
-			return values.NewVoid(), phpError.NewError("compareRelationObject: Operator \"%s\" not implemented for type null", operator)
+			return values.NewVoidSlot(), phpError.NewError("compareRelationObject: Operator \"%s\" not implemented for type null", operator)
 		}
 
 	case values.ObjectValue:
@@ -622,11 +622,11 @@ func compareRelationObject(lhs *values.Object, operator string, rhs values.Runti
 		switch operator {
 		case "<=>":
 			if lhs == rhs.(*values.Object) {
-				return values.NewInt(0), nil
+				return values.NewIntSlot(0), nil
 			}
-			return values.NewInt(-1), nil
+			return values.NewIntSlot(-1), nil
 		default:
-			return values.NewVoid(), phpError.NewError("compareRelationObject: Operator \"%s\" not implemented", operator)
+			return values.NewVoidSlot(), phpError.NewError("compareRelationObject: Operator \"%s\" not implemented", operator)
 		}
 
 	// TODO compareRelationObject - int
@@ -636,7 +636,7 @@ func compareRelationObject(lhs *values.Object, operator string, rhs values.Runti
 	// TODO compareRelationObject - resource
 
 	default:
-		return values.NewVoid(), phpError.NewError("compareRelationObject: Type \"%s\" not implemented", rhs.GetType())
+		return values.NewVoidSlot(), phpError.NewError("compareRelationObject: Type \"%s\" not implemented", rhs.GetType())
 	}
 }
 
@@ -647,7 +647,7 @@ func compareRelationObject(lhs *values.Object, operator string, rhs values.Runti
 
 // -------------------------------------- comparison -------------------------------------- MARK: comparison
 
-func Compare(lhs values.RuntimeValue, operator string, rhs values.RuntimeValue) (*values.Bool, phpError.Error) {
+func Compare(lhs values.RuntimeValue, operator string, rhs values.RuntimeValue) (*values.Slot, phpError.Error) {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-equality-expression
 
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-equality-expression
@@ -660,14 +660,14 @@ func Compare(lhs values.RuntimeValue, operator string, rhs values.RuntimeValue) 
 	if operator == "==" || operator == "!=" {
 		resultRuntimeValue, err := CompareRelation(lhs, "<=>", rhs, false)
 		if err != nil {
-			return values.NewBool(false), err
+			return values.NewSlot(values.NewBool(false)), err
 		}
-		result := resultRuntimeValue.(*values.Int).Value == 0
+		result := resultRuntimeValue.Value.(*values.Int).Value == 0
 
 		if operator == "!=" {
-			return values.NewBool(!result), nil
+			return values.NewSlot(values.NewBool(!result)), nil
 		} else {
-			return values.NewBool(result), nil
+			return values.NewSlot(values.NewBool(result)), nil
 		}
 	}
 
@@ -700,11 +700,11 @@ func Compare(lhs values.RuntimeValue, operator string, rhs values.RuntimeValue) 
 							result = false
 							break
 						}
-						equal, err := Compare(lhsValue, "===", rhsValue)
+						equal, err := Compare(lhsValue.Value, "===", rhsValue.Value)
 						if err != nil {
-							return values.NewBool(false), err
+							return values.NewSlot(values.NewBool(false)), err
 						}
-						if !equal.Value {
+						if !equal.Value.(*values.Bool).Value {
 							result = false
 							break
 						}
@@ -723,16 +723,16 @@ func Compare(lhs values.RuntimeValue, operator string, rhs values.RuntimeValue) 
 			case values.ObjectValue:
 				result = lhs.(*values.Object) == rhs.(*values.Object)
 			default:
-				return values.NewBool(false), phpError.NewError("compare: Runtime type %s for operator \"===\" not implemented", lhs.GetType())
+				return values.NewSlot(values.NewBool(false)), phpError.NewError("compare: Runtime type %s for operator \"===\" not implemented", lhs.GetType())
 			}
 		}
 
 		if operator == "!==" {
-			return values.NewBool(!result), nil
+			return values.NewSlot(values.NewBool(!result)), nil
 		} else {
-			return values.NewBool(result), nil
+			return values.NewSlot(values.NewBool(result)), nil
 		}
 	}
 
-	return values.NewBool(false), phpError.NewError("compare: Operator \"%s\" not implemented", operator)
+	return values.NewSlot(values.NewBool(false)), phpError.NewError("compare: Operator \"%s\" not implemented", operator)
 }

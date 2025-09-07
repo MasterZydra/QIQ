@@ -110,27 +110,28 @@ func (interpreter *Interpreter) process(sourceCode string, env *Environment, res
 	parser.PrintParserCallstack("---------------------", nil)
 
 	interpreter.resultRuntimeValue = nil
-	interpreter.resultRuntimeValue, err = interpreter.processProgram(program, env)
+	slot, err := interpreter.processProgram(program, env)
+	interpreter.resultRuntimeValue = slot.Value
 
 	return interpreter.result, err
 }
 
-func (interpreter *Interpreter) processProgram(program *ast.Program, env *Environment) (values.RuntimeValue, phpError.Error) {
+func (interpreter *Interpreter) processProgram(program *ast.Program, env *Environment) (*values.Slot, phpError.Error) {
 	err := interpreter.scanForFunctionDefinition(program.GetStatements(), env)
 	if err != nil {
-		return values.NewVoid(), err
+		return values.NewVoidSlot(), err
 	}
 
 	defer interpreter.flushOutputBuffers()
 
-	var runtimeValue values.RuntimeValue = values.NewVoid()
+	var slot *values.Slot = nil
 	for _, stmt := range program.GetStatements() {
-		if runtimeValue, err = interpreter.processStmt(stmt, env); err != nil {
+		if slot, err = interpreter.processStmt(stmt, env); err != nil {
 			// Handle exit event - Stop code execution
 			if err.GetErrorType() == phpError.EventError && err.GetMessage() == phpError.ExitEvent {
 				break
 			}
-			return runtimeValue, err
+			return slot, err
 		}
 	}
 
@@ -138,26 +139,27 @@ func (interpreter *Interpreter) processProgram(program *ast.Program, env *Enviro
 		interpreter.ProcessExitIntrinsicExpr(ast.NewExitIntrinsic(0, nil, ast.NewIntegerLiteralExpr(0, nil, 0)), interpreter.env)
 	}
 
-	return runtimeValue, nil
+	return slot, nil
 }
 
-func (interperter *Interpreter) ProcessStatement(stmt ast.IStatement, env any) (values.RuntimeValue, phpError.Error) {
+func (interperter *Interpreter) ProcessStatement(stmt ast.IStatement, env any) (*values.Slot, phpError.Error) {
 	return interperter.processStmt(stmt, env)
 }
 
-func (interpreter *Interpreter) processStmt(stmt ast.IStatement, env any) (value values.RuntimeValue, phpErr phpError.Error) {
+func (interpreter *Interpreter) processStmt(stmt ast.IStatement, env any) (slot *values.Slot, phpErr phpError.Error) {
 	defer func() {
 		if r := recover(); r != nil {
-			value = r.(ValueOrError).Value
-			phpErr = r.(ValueOrError).Error.(phpError.Error)
+			slot = r.(SlotOrError).Slot
+			phpErr = r.(SlotOrError).Error.(phpError.Error)
 		}
 	}()
 
 	ast.PrintInterpreterCallstack(stmt)
-	runtimeValue, err := stmt.Process(interpreter, env)
+	result, err := stmt.Process(interpreter, env)
 	if err != nil {
 		phpErr = err.(phpError.Error)
 	}
+	slot = result.(*values.Slot)
 
 	// Destruct unused objects
 	if stmt.GetKind() != ast.ObjectCreationExpr {
@@ -172,25 +174,25 @@ func (interpreter *Interpreter) processStmt(stmt ast.IStatement, env any) (value
 		}
 	}
 
-	return runtimeValue.(values.RuntimeValue), phpErr
+	return
 }
 
-type ValueOrError struct {
-	Value values.RuntimeValue
+type SlotOrError struct {
+	Slot  *values.Slot
 	Error error
 }
 
-func must(value values.RuntimeValue, err error) values.RuntimeValue {
+func must(slot *values.Slot, err error) *values.Slot {
 	if err != nil {
-		panic(ValueOrError{Value: value, Error: err})
+		panic(SlotOrError{Slot: slot, Error: err})
 	}
-	return value
+	return slot
 }
 
 // Return Void if error is not nil
 func mustOrVoid[V any](value V, err error) V {
 	if err != nil {
-		panic(ValueOrError{Value: values.NewVoid(), Error: err})
+		panic(SlotOrError{Slot: values.NewVoidSlot(), Error: err})
 	}
 	return value
 }

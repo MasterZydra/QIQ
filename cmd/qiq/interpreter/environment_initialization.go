@@ -81,7 +81,7 @@ func registerPredefinedVariables(environment *Environment, request *request.Requ
 func mergeArrays(a, b *values.Array) {
 	for _, key := range b.Keys {
 		value, _ := b.GetElement(key)
-		a.SetElement(key, values.DeepCopy(value))
+		a.SetElement(key, values.DeepCopy(value).Value)
 	}
 }
 
@@ -89,7 +89,7 @@ func registerPredefinedVariableEnv(environment *Environment, request *request.Re
 	if init {
 		environment.predefinedVariables["$_ENV"] = values.NewSlot(stringMapToArray(request.Env))
 	} else {
-		environment.predefinedVariables["$_ENV"] = values.NewSlot(values.NewArray())
+		environment.predefinedVariables["$_ENV"] = values.NewArraySlot()
 	}
 }
 
@@ -97,7 +97,7 @@ func registerPredefinedVariableCookie(environment *Environment, request *request
 	if init {
 		environment.predefinedVariables["$_COOKIE"] = values.NewSlot(parseCookies(request.Cookie, interpreter))
 	} else {
-		environment.predefinedVariables["$_COOKIE"] = values.NewSlot(values.NewArray())
+		environment.predefinedVariables["$_COOKIE"] = values.NewArraySlot()
 	}
 }
 
@@ -109,7 +109,7 @@ func registerPredefinedVariableGet(environment *Environment, request *request.Re
 		}
 		environment.predefinedVariables["$_GET"] = values.NewSlot(array)
 	} else {
-		environment.predefinedVariables["$_GET"] = values.NewSlot(values.NewArray())
+		environment.predefinedVariables["$_GET"] = values.NewArraySlot()
 	}
 }
 
@@ -122,14 +122,14 @@ func registerPredefinedVariablePost(environment *Environment, request *request.R
 		environment.predefinedVariables["$_POST"] = values.NewSlot(post)
 		environment.predefinedVariables["$_FILES"] = values.NewSlot(file)
 	} else {
-		environment.predefinedVariables["$_POST"] = values.NewSlot(values.NewArray())
-		environment.predefinedVariables["$_FILES"] = values.NewSlot(values.NewArray())
+		environment.predefinedVariables["$_POST"] = values.NewArraySlot()
+		environment.predefinedVariables["$_FILES"] = values.NewArraySlot()
 	}
 	return nil
 }
 
 func registerPredefinedVariableServer(environment *Environment, request *request.Request, interpreter runtime.Interpreter, init bool) phpError.Error {
-	environment.predefinedVariables["$_SERVER"] = values.NewSlot(values.NewArray())
+	environment.predefinedVariables["$_SERVER"] = values.NewArraySlot()
 	if init {
 		server := environment.predefinedVariables["$_SERVER"].Value.(*values.Array)
 		if len(request.Args) > 0 {
@@ -205,7 +205,7 @@ func paramToArray(params [][]string, interpreter runtime.Interpreter) (*values.A
 		// Check if array is already in params
 		arrayValue, found := result.GetElement(values.NewStr(paramName))
 		if !found || arrayValue.GetType() != values.ArrayValue {
-			arrayValue = values.NewArray()
+			arrayValue = values.NewArraySlot()
 		}
 
 		// Wrap keys that are strings in double quotes
@@ -222,7 +222,7 @@ func paramToArray(params [][]string, interpreter runtime.Interpreter) (*values.A
 		if err != nil {
 			return result, err
 		}
-		env.declareVariable("$"+paramName, arrayValue)
+		env.declareVariable("$"+paramName, arrayValue.Value)
 
 		// Execute PHP to store new array values in env
 		interp, err := NewInterpreter(interpreter.GetExectionContext(), interpreter.GetIni(), request.NewRequest(), "")
@@ -232,9 +232,9 @@ func paramToArray(params [][]string, interpreter runtime.Interpreter) (*values.A
 		interp.process(fmt.Sprintf(`<?php $%s = "%s";`, key, value), env, true)
 
 		// Extract array from environment
-		arrayValue = env.variables["$"+paramName].Value
+		arrayValue = env.variables["$"+paramName]
 
-		result.SetElement(values.NewStr(paramName), arrayValue)
+		result.SetElement(values.NewStr(paramName), arrayValue.Value)
 		continue
 	}
 	return result, nil

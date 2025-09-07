@@ -13,7 +13,7 @@ func ToString(value RuntimeValue) string {
 			result += ToString(key)
 			result += "Value: "
 			value, _ := arrayValue.GetElement(key)
-			result += ToString(value)
+			result += ToString(value.Value)
 		}
 		result += "}\n"
 	case BoolValue:
@@ -60,16 +60,17 @@ func ToPhpType(value RuntimeValue) string {
 	}
 }
 
-func DeepCopy(value RuntimeValue) RuntimeValue {
+func DeepCopy(slot *Slot) *Slot {
+	value := slot.Value
 	if value.GetType() != ArrayValue {
-		return value
+		return NewSlot(slot.Value)
 	}
 
 	array := value.(*Array)
 	copy := NewArray()
 	for _, key := range array.Keys {
 		value, _ := array.GetElement(key)
-		copy.SetElement(key, DeepCopy(value))
+		copy.SetElement(key, DeepCopy(value).Value)
 	}
-	return copy
+	return NewSlot(copy)
 }

@@ -10,7 +10,7 @@ import (
 )
 
 type Interpreter interface {
-	ProcessStatement(stmt ast.IStatement, env any) (values.RuntimeValue, phpError.Error)
+	ProcessStatement(stmt ast.IStatement, env any) (*values.Slot, phpError.Error)
 	// Context
 	GetIni() *ini.Ini
 	GetExectionContext() *ExecutionContext

@@ -15,23 +15,24 @@ func (interpreter *Interpreter) ProcessStmt(stmt *ast.Statement, _ any) (any, er
 // ProcessInterfaceDeclarationStmt implements Visitor.
 func (visitor *Interpreter) ProcessInterfaceDeclarationStmt(stmt *ast.InterfaceDeclarationStatement, _ any) (any, error) {
 	visitor.AddInterface(stmt.GetQualifiedName(), stmt)
-	return values.NewVoid(), nil
+	return values.NewVoidSlot(), nil
 }
 
 // ProcessClassDeclarationStmt implements Visitor.
 func (visitor *Interpreter) ProcessClassDeclarationStmt(stmt *ast.ClassDeclarationStatement, _ any) (any, error) {
 	if err := visitor.validateClass(stmt); err != nil {
-		return values.NewVoid(), err
+		return values.NewVoidSlot(), err
 	}
 
 	visitor.AddClass(stmt.GetQualifiedName(), stmt)
-	return values.NewVoid(), nil
+	return values.NewVoidSlot(), nil
 }
 
 // ProcessConstDeclarationStmt implements Visitor.
 func (interpreter *Interpreter) ProcessConstDeclarationStmt(stmt *ast.ConstDeclarationStatement, env any) (any, error) {
-	value := must(interpreter.processStmt(stmt.Value, env))
-	return env.(*Environment).declareConstant(stmt.Name, value)
+	slot := must(interpreter.processStmt(stmt.Value, env))
+	runtimeValue, err := env.(*Environment).declareConstant(stmt.Name, slot.Value)
+	return values.NewSlot(runtimeValue), err
 }
 
 // ProcessCompoundStmt implements Visitor.
@@ -39,7 +40,7 @@ func (interpreter *Interpreter) ProcessCompoundStmt(stmt *ast.CompoundStatement,
 	for _, statement := range stmt.Statements {
 		must(interpreter.processStmt(statement, env))
 	}
-	return values.NewVoid(), nil
+	return values.NewVoidSlot(), nil
 }
 
 // ProcessEchoStmt implements Visitor.
@@ -47,10 +48,10 @@ func (interpreter *Interpreter) ProcessEchoStmt(stmt *ast.EchoStatement, env any
 	for _, expr := range stmt.Expressions {
 		runtimeValue := must(interpreter.processStmt(expr, env))
 
-		str := mustOrVoid(variableHandling.StrVal(runtimeValue))
+		str := mustOrVoid(variableHandling.StrVal(runtimeValue.Value))
 		interpreter.Print(str)
 	}
-	return values.NewVoid(), nil
+	return values.NewVoidSlot(), nil
 }
 
 // ProcessExpressionStmt implements Visitor.
@@ -62,18 +63,18 @@ func (interpreter *Interpreter) ProcessExpressionStmt(stmt *ast.ExpressionStatem
 func (interpreter *Interpreter) ProcessFunctionDefinitionStmt(stmt *ast.FunctionDefinitionStatement, env any) (any, error) {
 	// Check if this function definition was already processed before interpreting the code
 	if interpreter.isCached(stmt) {
-		return values.NewVoid(), nil
+		return values.NewVoidSlot(), nil
 	}
 
 	mustOrVoid(0, env.(*Environment).defineUserFunction(stmt))
 
-	return interpreter.writeCache(stmt, values.NewVoid()), nil
+	return values.NewSlot(interpreter.writeCache(stmt, values.NewVoid())), nil
 }
 
 // ProcessReturnStmt implements Visitor.
 func (interpreter *Interpreter) ProcessReturnStmt(stmt *ast.ReturnStatement, env any) (any, error) {
 	if stmt.Expr == nil {
-		return values.NewVoid(), phpError.NewEvent(phpError.ReturnEvent)
+		return values.NewVoidSlot(), phpError.NewEvent(phpError.ReturnEvent)
 	}
 	runtimeValue := must(interpreter.processStmt(stmt.Expr, env))
 	return runtimeValue, phpError.NewEvent(phpError.ReturnEvent)
@@ -82,7 +83,7 @@ func (interpreter *Interpreter) ProcessReturnStmt(stmt *ast.ReturnStatement, env
 // ProcessContinueStmt implements Visitor.
 func (interpreter *Interpreter) ProcessContinueStmt(stmt *ast.ContinueStatement, env any) (any, error) {
 	if stmt.Expr == nil {
-		return values.NewVoid(), phpError.NewEvent(phpError.ReturnEvent)
+		return values.NewVoidSlot(), phpError.NewEvent(phpError.ReturnEvent)
 	}
 	runtimeValue := must(interpreter.processStmt(stmt.Expr, env))
 
@@ -90,13 +91,13 @@ func (interpreter *Interpreter) ProcessContinueStmt(stmt *ast.ContinueStatement,
 		return runtimeValue, phpError.NewError("Breakout level must be an integer value. Got %s", runtimeValue.GetType())
 	}
 
-	return runtimeValue, phpError.NewContinueEvent(runtimeValue.(*values.Int).Value)
+	return runtimeValue, phpError.NewContinueEvent(runtimeValue.Value.(*values.Int).Value)
 }
 
 // ProcessBreakStmt implements Visitor.
 func (interpreter *Interpreter) ProcessBreakStmt(stmt *ast.BreakStatement, env any) (any, error) {
 	if stmt.Expr == nil {
-		return values.NewVoid(), phpError.NewEvent(phpError.ReturnEvent)
+		return values.NewVoidSlot(), phpError.NewEvent(phpError.ReturnEvent)
 	}
 	runtimeValue := must(interpreter.processStmt(stmt.Expr, env))
 
@@ -104,7 +105,7 @@ func (interpreter *Interpreter) ProcessBreakStmt(stmt *ast.BreakStatement, env a
 		return runtimeValue, phpError.NewError("Breakout level must be an integer value. Got %s", runtimeValue.GetType())
 	}
 
-	return runtimeValue, phpError.NewBreakEvent(runtimeValue.(*values.Int).Value)
+	return runtimeValue, phpError.NewBreakEvent(runtimeValue.Value.(*values.Int).Value)
 }
 
 // ProcessForStmt implements Visitor.
@@ -128,11 +129,11 @@ func (interpreter *Interpreter) ProcessForStmt(stmt *ast.ForStatement, env any) 
 		// Then the group of expressions in for-control is evaluated left-to-right (with all but the right-most one for their side
 		// effects only), with the right-most expression’s value being converted to type bool.
 		if stmt.Control != nil {
-			var conditionRuntimeValue values.RuntimeValue
+			var conditionRuntimeValue *values.Slot
 			for _, statement := range stmt.Control.Statements {
 				conditionRuntimeValue = mustOrVoid(interpreter.processStmt(statement, env))
 			}
-			condition = mustOrVoid(variableHandling.BoolVal(conditionRuntimeValue))
+			condition = mustOrVoid(variableHandling.BoolVal(conditionRuntimeValue.Value))
 		}
 
 		executeEndOfLoop := func() phpError.Error {
@@ -159,7 +160,7 @@ func (interpreter *Interpreter) ProcessForStmt(stmt *ast.ForStatement, env any) 
 					if breakoutLevel == 1 {
 						break
 					}
-					return values.NewVoid(), phpError.NewBreakEvent(breakoutLevel - 1)
+					return values.NewVoidSlot(), phpError.NewBreakEvent(breakoutLevel - 1)
 				}
 				if err.GetErrorType() == phpError.EventError && err.GetMessage() == "continue" {
 					breakoutLevel := err.(*phpError.ContinueEventError).GetBreakoutLevel()
@@ -168,9 +169,9 @@ func (interpreter *Interpreter) ProcessForStmt(stmt *ast.ForStatement, env any) 
 						mustOrVoid(0, executeEndOfLoop())
 						continue
 					}
-					return values.NewVoid(), phpError.NewContinueEvent(breakoutLevel - 1)
+					return values.NewVoidSlot(), phpError.NewContinueEvent(breakoutLevel - 1)
 				}
-				return values.NewVoid(), err
+				return values.NewVoidSlot(), err
 			}
 		}
 
@@ -185,44 +186,44 @@ func (interpreter *Interpreter) ProcessForStmt(stmt *ast.ForStatement, env any) 
 		}
 	}
 
-	return values.NewVoid(), nil
+	return values.NewVoidSlot(), nil
 }
 
 // ProcessIfStmt implements Visitor.
 func (interpreter *Interpreter) ProcessIfStmt(stmt *ast.IfStatement, env any) (any, error) {
 	conditionRuntimeValue := must(interpreter.processStmt(stmt.Condition, env))
-	condition := mustOrVoid(variableHandling.BoolVal(conditionRuntimeValue))
+	condition := mustOrVoid(variableHandling.BoolVal(conditionRuntimeValue.Value))
 	if condition {
 		must(interpreter.processStmt(stmt.IfBlock, env))
-		return values.NewVoid(), nil
+		return values.NewVoidSlot(), nil
 	}
 
 	if len(stmt.ElseIf) > 0 {
 		for _, elseIf := range stmt.ElseIf {
 			conditionRuntimeValue := must(interpreter.processStmt(elseIf.Condition, env))
-			condition := mustOrVoid(variableHandling.BoolVal(conditionRuntimeValue))
+			condition := mustOrVoid(variableHandling.BoolVal(conditionRuntimeValue.Value))
 			if !condition {
 				continue
 			}
 
 			must(interpreter.processStmt(elseIf.IfBlock, env))
-			return values.NewVoid(), nil
+			return values.NewVoidSlot(), nil
 		}
 	}
 
 	if stmt.ElseBlock != nil {
 		must(interpreter.processStmt(stmt.ElseBlock, env))
-		return values.NewVoid(), nil
+		return values.NewVoidSlot(), nil
 	}
 
-	return values.NewVoid(), nil
+	return values.NewVoidSlot(), nil
 }
 
 // ProcessWhileStmt implements Visitor.
 func (interpreter *Interpreter) ProcessWhileStmt(stmt *ast.WhileStatement, env any) (any, error) {
 	for {
 		conditionRuntimeValue := must(interpreter.processStmt(stmt.Condition, env))
-		condition := mustOrVoid(variableHandling.BoolVal(conditionRuntimeValue))
+		condition := mustOrVoid(variableHandling.BoolVal(conditionRuntimeValue.Value))
 		if !condition {
 			break
 		}
@@ -232,21 +233,21 @@ func (interpreter *Interpreter) ProcessWhileStmt(stmt *ast.WhileStatement, env a
 			if err.GetErrorType() == phpError.EventError && err.GetMessage() == "break" {
 				breakoutLevel := err.(*phpError.ContinueEventError).GetBreakoutLevel()
 				if breakoutLevel == 1 {
-					return values.NewVoid(), nil
+					return values.NewVoidSlot(), nil
 				}
-				return values.NewVoid(), phpError.NewBreakEvent(breakoutLevel - 1)
+				return values.NewVoidSlot(), phpError.NewBreakEvent(breakoutLevel - 1)
 			}
 			if err.GetErrorType() == phpError.EventError && err.GetMessage() == "continue" {
 				breakoutLevel := err.(*phpError.ContinueEventError).GetBreakoutLevel()
 				if breakoutLevel == 1 {
 					continue
 				}
-				return values.NewVoid(), phpError.NewContinueEvent(breakoutLevel - 1)
+				return values.NewVoidSlot(), phpError.NewContinueEvent(breakoutLevel - 1)
 			}
 			return runtimeValue, err
 		}
 	}
-	return values.NewVoid(), nil
+	return values.NewVoidSlot(), nil
 }
 
 // ProcessDoStmt implements Visitor.
@@ -258,27 +259,27 @@ func (interpreter *Interpreter) ProcessDoStmt(stmt *ast.DoStatement, env any) (a
 			if err.GetErrorType() == phpError.EventError && err.GetMessage() == "break" {
 				breakoutLevel := err.(*phpError.ContinueEventError).GetBreakoutLevel()
 				if breakoutLevel == 1 {
-					return values.NewVoid(), nil
+					return values.NewVoidSlot(), nil
 				}
-				return values.NewVoid(), phpError.NewBreakEvent(breakoutLevel - 1)
+				return values.NewVoidSlot(), phpError.NewBreakEvent(breakoutLevel - 1)
 			}
 			if err.GetErrorType() == phpError.EventError && err.GetMessage() == "continue" {
 				breakoutLevel := err.(*phpError.ContinueEventError).GetBreakoutLevel()
 				if breakoutLevel == 1 {
 					continue
 				}
-				return values.NewVoid(), phpError.NewContinueEvent(breakoutLevel - 1)
+				return values.NewVoidSlot(), phpError.NewContinueEvent(breakoutLevel - 1)
 			}
 			return runtimeValue, err
 		}
 
 		conditionRuntimeValue := must(interpreter.processStmt(stmt.Condition, env))
-		condition = mustOrVoid(variableHandling.BoolVal(conditionRuntimeValue))
+		condition = mustOrVoid(variableHandling.BoolVal(conditionRuntimeValue.Value))
 		if !condition {
 			break
 		}
 	}
-	return values.NewVoid(), nil
+	return values.NewVoidSlot(), nil
 }
 
 // ProcessGlobalDeclarationStmt implements Visitor.
@@ -286,16 +287,16 @@ func (interpreter *Interpreter) ProcessGlobalDeclarationStmt(stmt *ast.GlobalDec
 	for _, variable := range stmt.Variables {
 		variableName, err := interpreter.varExprToVarName(variable, env.(*Environment))
 		if err != nil {
-			return values.NewVoid(), err
+			return values.NewVoidSlot(), err
 		}
 		env.(*Environment).addGlobalVariable(variableName)
 	}
-	return values.NewVoid(), nil
+	return values.NewVoidSlot(), nil
 }
 
 // ProcessThrowStmt implements Visitor.
 func (interpreter *Interpreter) ProcessThrowStmt(stmt *ast.ThrowStatement, env any) (any, error) {
-	return values.NewVoid(), phpError.NewError("ProcessThrowStmt is not implemented")
+	return values.NewVoidSlot(), phpError.NewError("ProcessThrowStmt is not implemented")
 }
 
 // ProcessDeclareStmt implements Visitor.
@@ -306,24 +307,24 @@ func (interpreter *Interpreter) ProcessDeclareStmt(stmt *ast.DeclareStatement, e
 		} else {
 			stmt.GetPosition().File.IsStrictType = false
 		}
-		return values.NewVoid(), nil
+		return values.NewVoidSlot(), nil
 	}
 
-	return values.NewVoid(), phpError.NewError("ProcessDeclareStmt: Directive '%s' is not implemented", stmt.Directive)
+	return values.NewVoidSlot(), phpError.NewError("ProcessDeclareStmt: Directive '%s' is not implemented", stmt.Directive)
 }
 
 // ProcessForeachStmt implements Visitor.
 func (interpreter *Interpreter) ProcessForeachStmt(stmt *ast.ForeachStatement, env any) (any, error) {
 	runtimeValue, err := interpreter.processStmt(stmt.Collection, env)
 	if err != nil {
-		return values.NewVoid(), err
+		return values.NewVoidSlot(), err
 	}
 
 	environment := env.(*Environment)
 
 	// Array
 	if runtimeValue.GetType() == values.ArrayValue {
-		runtimeArray := runtimeValue.(*values.Array)
+		runtimeArray := runtimeValue.Value.(*values.Array)
 		for _, keyValue := range runtimeArray.Keys {
 			// Set key and value variable
 			if stmt.Key != nil {
@@ -331,12 +332,11 @@ func (interpreter *Interpreter) ProcessForeachStmt(stmt *ast.ForeachStatement, e
 				environment.declareVariable(keyName, keyValue)
 			}
 			valueName := mustOrVoid(interpreter.varExprToVarName(stmt.Value, environment))
+			slot, _ := runtimeArray.GetElement(keyValue)
 			if stmt.ByRef {
-				slot, _ := runtimeArray.GetElementSlot(keyValue)
 				environment.declareVariableByRef(valueName, slot)
 			} else {
-				value, _ := runtimeArray.GetElement(keyValue)
-				environment.declareVariable(valueName, value)
+				environment.declareVariable(valueName, slot.Value)
 			}
 
 			// Execute body
@@ -345,26 +345,26 @@ func (interpreter *Interpreter) ProcessForeachStmt(stmt *ast.ForeachStatement, e
 				if err.GetErrorType() == phpError.EventError && err.GetMessage() == "break" {
 					breakoutLevel := err.(*phpError.ContinueEventError).GetBreakoutLevel()
 					if breakoutLevel == 1 {
-						return values.NewVoid(), nil
+						return values.NewVoidSlot(), nil
 					}
-					return values.NewVoid(), phpError.NewBreakEvent(breakoutLevel - 1)
+					return values.NewVoidSlot(), phpError.NewBreakEvent(breakoutLevel - 1)
 				}
 				if err.GetErrorType() == phpError.EventError && err.GetMessage() == "continue" {
 					breakoutLevel := err.(*phpError.ContinueEventError).GetBreakoutLevel()
 					if breakoutLevel == 1 {
 						continue
 					}
-					return values.NewVoid(), phpError.NewContinueEvent(breakoutLevel - 1)
+					return values.NewVoidSlot(), phpError.NewContinueEvent(breakoutLevel - 1)
 				}
 				return runtimeValue, err
 			}
 		}
-		return values.NewVoid(), nil
+		return values.NewVoidSlot(), nil
 	}
 
 	// Object
 	if runtimeValue.GetType() == values.ObjectValue {
-		runtimeObject := runtimeValue.(*values.Object)
+		runtimeObject := runtimeValue.Value.(*values.Object)
 
 		for _, propertyName := range runtimeObject.PropertyNames {
 			if runtimeObject.Class.Properties[propertyName].Visibility != "public" {
@@ -391,26 +391,26 @@ func (interpreter *Interpreter) ProcessForeachStmt(stmt *ast.ForeachStatement, e
 				if err.GetErrorType() == phpError.EventError && err.GetMessage() == "break" {
 					breakoutLevel := err.(*phpError.ContinueEventError).GetBreakoutLevel()
 					if breakoutLevel == 1 {
-						return values.NewVoid(), nil
+						return values.NewVoidSlot(), nil
 					}
-					return values.NewVoid(), phpError.NewBreakEvent(breakoutLevel - 1)
+					return values.NewVoidSlot(), phpError.NewBreakEvent(breakoutLevel - 1)
 				}
 				if err.GetErrorType() == phpError.EventError && err.GetMessage() == "continue" {
 					breakoutLevel := err.(*phpError.ContinueEventError).GetBreakoutLevel()
 					if breakoutLevel == 1 {
 						continue
 					}
-					return values.NewVoid(), phpError.NewContinueEvent(breakoutLevel - 1)
+					return values.NewVoidSlot(), phpError.NewContinueEvent(breakoutLevel - 1)
 				}
 				return runtimeValue, err
 			}
 		}
-		return values.NewVoid(), nil
+		return values.NewVoidSlot(), nil
 	}
 
-	givenType := values.ToPhpType(runtimeValue)
+	givenType := values.ToPhpType(runtimeValue.Value)
 	if runtimeValue.GetType() == values.BoolValue {
-		if runtimeValue.(*values.Bool).Value {
+		if runtimeValue.Value.(*values.Bool).Value {
 			givenType = "true"
 		} else {
 			givenType = "false"
@@ -421,5 +421,5 @@ func (interpreter *Interpreter) ProcessForeachStmt(stmt *ast.ForeachStatement, e
 	}
 	interpreter.PrintError(phpError.NewWarning("foreach() argument must be of type array|object, %s given in %s", givenType, stmt.Collection.GetPosString()))
 
-	return values.NewVoid(), nil
+	return values.NewVoidSlot(), nil
 }

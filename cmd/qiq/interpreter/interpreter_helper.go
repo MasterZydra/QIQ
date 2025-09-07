@@ -48,26 +48,26 @@ func (interpreter *Interpreter) flushOutputBuffers() {
 }
 
 func (interpreter *Interpreter) processCondition(expr ast.IExpression, env *Environment) (values.RuntimeValue, bool, phpError.Error) {
-	runtimeValue, err := interpreter.processStmt(expr, env)
+	slot, err := interpreter.processStmt(expr, env)
 	if err != nil {
-		return runtimeValue, false, err
+		return slot.Value, false, err
 	}
 
-	boolean, err := variableHandling.BoolVal(runtimeValue)
-	return runtimeValue, boolean, err
+	boolean, err := variableHandling.BoolVal(slot.Value)
+	return slot.Value, boolean, err
 }
 
-func (interpreter *Interpreter) lookupVariable(expr ast.IExpression, env *Environment) (values.RuntimeValue, phpError.Error) {
+func (interpreter *Interpreter) lookupVariable(expr ast.IExpression, env *Environment) (*values.Slot, phpError.Error) {
 	variableName, err := interpreter.varExprToVarName(expr, env)
 	if err != nil {
-		return values.NewVoid(), err
+		return values.NewVoidSlot(), err
 	}
 
-	runtimeValue, err := env.LookupVariable(variableName)
+	slot, err := env.LookupVariable(variableName)
 	if !interpreter.suppressWarning && err != nil {
 		interpreter.PrintError(phpError.NewWarning("%s in %s", strings.TrimPrefix(err.Error(), "Warning: "), expr.GetPosString()))
 	}
-	return runtimeValue, nil
+	return slot, nil
 }
 
 func (interpreter *Interpreter) destructObject(object *values.Object, env *Environment) phpError.Error {
@@ -124,22 +124,22 @@ func (interpreter *Interpreter) varExprToVarName(expr ast.IExpression, env *Envi
 			if err != nil {
 				return "", err
 			}
-			runtimeValue, err := env.LookupVariable(variableName)
+			slot, err := env.LookupVariable(variableName)
 			if err != nil {
 				interpreter.PrintError(err)
 			}
-			valueStr, err := variableHandling.StrVal(runtimeValue)
+			valueStr, err := variableHandling.StrVal(slot.Value)
 			if err != nil {
 				return "", err
 			}
 			return "$" + valueStr, nil
 		}
 
-		variableName, err := interpreter.processStmt(variableNameExpr, env)
+		variableNameSlot, err := interpreter.processStmt(variableNameExpr, env)
 		if err != nil {
 			return "", err
 		}
-		valueStr, err := variableHandling.StrVal(variableName)
+		valueStr, err := variableHandling.StrVal(variableNameSlot.Value)
 		if err != nil {
 			return "", err
 		}
@@ -222,28 +222,28 @@ func checkParameterTypes(runtimeValue values.RuntimeValue, expectedTypes []strin
 	return phpError.NewError("Types do not match")
 }
 
-func (interpreter *Interpreter) includeFile(filepathExpr ast.IExpression, env *Environment, include bool, once bool) (values.RuntimeValue, phpError.Error) {
-	runtimeValue, err := interpreter.processStmt(filepathExpr, env)
+func (interpreter *Interpreter) includeFile(filepathExpr ast.IExpression, env *Environment, include bool, once bool) (*values.Slot, phpError.Error) {
+	slot, err := interpreter.processStmt(filepathExpr, env)
 	if err != nil {
-		return runtimeValue, err
+		return slot, err
 	}
-	if runtimeValue.GetType() == values.NullValue {
-		return runtimeValue, phpError.NewError("Uncaught ValueError: Path cannot be empty in %s", filepathExpr.GetPosString())
+	if slot.GetType() == values.NullValue {
+		return slot, phpError.NewError("Uncaught ValueError: Path cannot be empty in %s", filepathExpr.GetPosString())
 	}
 
-	filename, err := variableHandling.StrVal(runtimeValue)
+	filename, err := variableHandling.StrVal(slot.Value)
 	if err != nil {
-		return runtimeValue, err
+		return slot, err
 	}
 
 	// Spec: https://phplang.org/spec/10-expressions.html#the-require-operator
 	// Once an include file has been included, a subsequent use of require_once on that include file
 	// results in a return value of TRUE but nothing else happens.
 	if once && slices.Contains(interpreter.includedFiles, filename) && !os.IS_WIN {
-		return values.NewBool(true), nil
+		return values.NewBoolSlot(true), nil
 	}
 	if once && slices.Contains(interpreter.includedFiles, strings.ToLower(filename)) && os.IS_WIN {
-		return values.NewBool(true), nil
+		return values.NewBoolSlot(true), nil
 	}
 
 	absFilename := filename
@@ -261,14 +261,14 @@ func (interpreter *Interpreter) includeFile(filepathExpr ast.IExpression, env *E
 	// Spec: https://phplang.org/spec/10-expressions.html#the-require-operator
 	// This operator is identical to operator include except that in the case of require,
 	// failure to find/open the designated include file produces a fatal error.
-	getError := func() (values.RuntimeValue, phpError.Error) {
+	getError := func() (*values.Slot, phpError.Error) {
 		if include {
-			return values.NewVoid(), phpError.NewWarning(
+			return values.NewVoidSlot(), phpError.NewWarning(
 				"%s(): Failed opening '%s' for inclusion (include_path='%s') in %s",
 				functionName, filename, common.ExtractPath(filepathExpr.GetPosition().File.Filename), filepathExpr.GetPosString(),
 			)
 		} else {
-			return values.NewVoid(), phpError.NewError(
+			return values.NewVoidSlot(), phpError.NewError(
 				"Uncaught Error: Failed opening required '%s' (include_path='%s') in %s",
 				filename, common.ExtractPath(filepathExpr.GetPosition().File.Filename), filepathExpr.GetPosString(),
 			)
@@ -295,7 +295,7 @@ func (interpreter *Interpreter) includeFile(filepathExpr ast.IExpression, env *E
 		interpreter.includedFiles = append(interpreter.includedFiles, strings.ToLower(absFilename))
 	}
 	if parserErr != nil {
-		return runtimeValue, parserErr
+		return slot, parserErr
 	}
 	return interpreter.processProgram(program, env)
 }
@@ -486,32 +486,32 @@ func (interpreter *Interpreter) writeCache(stmt ast.IStatement, value values.Run
 
 // -------------------------------------- RuntimeValue -------------------------------------- MARK: RuntimeValue
 
-func (interpreter *Interpreter) exprToRuntimeValue(expr ast.IExpression, env *Environment) (values.RuntimeValue, phpError.Error) {
+func (interpreter *Interpreter) exprToRuntimeValue(expr ast.IExpression, env *Environment) (*values.Slot, phpError.Error) {
 	switch expr.GetKind() {
 	case ast.ArrayLiteralExpr:
-		Array := values.NewArray()
+		array := values.NewArray()
 		for _, key := range expr.(*ast.ArrayLiteralExpression).Keys {
-			var keyValue values.RuntimeValue
+			keyValueSlot := values.NewSlot(nil)
 			var err phpError.Error
 			if key.GetKind() != ast.ArrayNextKeyExpr {
-				keyValue, err = interpreter.processStmt(key, env)
+				keyValueSlot, err = interpreter.processStmt(key, env)
 				if err != nil {
-					return values.NewVoid(), err
+					return values.NewVoidSlot(), err
 				}
 			}
-			elementValue, err := interpreter.processStmt(expr.(*ast.ArrayLiteralExpression).Elements[key], env)
+			elementValueSlot, err := interpreter.processStmt(expr.(*ast.ArrayLiteralExpression).Elements[key], env)
 			if err != nil {
-				return values.NewVoid(), err
+				return values.NewVoidSlot(), err
 			}
-			if err = Array.SetElement(keyValue, elementValue); err != nil {
-				return values.NewVoid(), err
+			if err = array.SetElement(keyValueSlot.Value, elementValueSlot.Value); err != nil {
+				return values.NewVoidSlot(), err
 			}
 		}
-		return Array, nil
+		return values.NewSlot(array), nil
 	case ast.IntegerLiteralExpr:
-		return values.NewInt(expr.(*ast.IntegerLiteralExpression).Value), nil
+		return values.NewIntSlot(expr.(*ast.IntegerLiteralExpression).Value), nil
 	case ast.FloatingLiteralExpr:
-		return values.NewFloat(expr.(*ast.FloatingLiteralExpression).Value), nil
+		return values.NewFloatSlot(expr.(*ast.FloatingLiteralExpression).Value), nil
 	case ast.StringLiteralExpr:
 		str := expr.(*ast.StringLiteralExpression).Value
 		strType := expr.(*ast.StringLiteralExpression).StringType
@@ -533,11 +533,11 @@ func (interpreter *Interpreter) exprToRuntimeValue(expr ast.IExpression, env *En
 				exprStr := "<?= " + varExpr + ";"
 				interp, err := NewInterpreter(interpreter.GetExectionContext(), interpreter.ini, interpreter.request, "__file_name__")
 				if err != nil {
-					return values.NewVoid(), err
+					return values.NewVoidSlot(), err
 				}
 				result, err := interp.process(exprStr, env, true)
 				if err != nil {
-					return values.NewVoid(), err
+					return values.NewVoidSlot(), err
 				}
 				// TODO Improve bad fix so that the warning is above the possible string output
 				if strings.Contains(result, "Warning: Undefined variable") {
@@ -559,25 +559,25 @@ func (interpreter *Interpreter) exprToRuntimeValue(expr ast.IExpression, env *En
 			for _, match := range matches {
 				unicodeChar, err := strconv.ParseInt(match[3:len(match)-1], 16, 32)
 				if err != nil {
-					return values.NewVoid(), phpError.NewError("%s", err.Error())
+					return values.NewVoidSlot(), phpError.NewError("%s", err.Error())
 				}
 				str = strings.Replace(str, match, string(rune(unicodeChar)), 1)
 			}
 		}
-		return values.NewStr(str), nil
+		return values.NewStrSlot(str), nil
 	default:
-		return values.NewVoid(), phpError.NewError("exprToRuntimeValue: Unsupported expression: %s", expr)
+		return values.NewVoidSlot(), phpError.NewError("exprToRuntimeValue: Unsupported expression: %s", expr)
 	}
 }
 
 // -------------------------------------- inc-dec-calculation -------------------------------------- MARK: inc-dec-calculation
 
-func calculateIncDec(operator string, operand values.RuntimeValue) (values.RuntimeValue, phpError.Error) {
+func calculateIncDec(operator string, operand values.RuntimeValue) (*values.Slot, phpError.Error) {
 	switch operand.GetType() {
 	case values.BoolValue:
 		// Spec: https://phplang.org/spec/10-expressions.html#prefix-increment-and-decrement-operators
 		// For a prefix ++ or -- operator used with a Boolean-valued operand, there is no side effect, and the result is the operand’s value.
-		return operand, nil
+		return values.NewSlot(operand), nil
 	case values.FloatValue:
 		return calculateIncDecFloating(operator, operand.(*values.Float))
 	case values.IntValue:
@@ -587,7 +587,7 @@ func calculateIncDec(operator string, operand values.RuntimeValue) (values.Runti
 	case values.StrValue:
 		return calculateIncDecString(operator, operand.(*values.Str))
 	default:
-		return values.NewVoid(), phpError.NewError("calculateIncDec: Type \"%s\" not implemented", operand.GetType())
+		return values.NewVoidSlot(), phpError.NewError("calculateIncDec: Type \"%s\" not implemented", operand.GetType())
 	}
 
 	// TODO calculateIncDec - object
@@ -595,7 +595,7 @@ func calculateIncDec(operator string, operand values.RuntimeValue) (values.Runti
 	// If the operand has an object type supporting the operation, then the object semantics defines the result. Otherwise, the operation has no effect and the result is the operand.
 }
 
-func calculateIncDecInteger(operator string, operand *values.Int) (values.RuntimeValue, phpError.Error) {
+func calculateIncDecInteger(operator string, operand *values.Int) (*values.Slot, phpError.Error) {
 	switch operator {
 	case "++":
 		// Spec: https://phplang.org/spec/10-expressions.html#prefix-increment-and-decrement-operators
@@ -618,11 +618,11 @@ func calculateIncDecInteger(operator string, operand *values.Int) (values.Runtim
 		return calculateInteger(operand, "-", values.NewInt(1))
 
 	default:
-		return values.NewInt(0), phpError.NewError("calculateIncDecInteger: Operator \"%s\" not implemented", operator)
+		return values.NewIntSlot(0), phpError.NewError("calculateIncDecInteger: Operator \"%s\" not implemented", operator)
 	}
 }
 
-func calculateIncDecFloating(operator string, operand *values.Float) (values.RuntimeValue, phpError.Error) {
+func calculateIncDecFloating(operator string, operand *values.Float) (*values.Slot, phpError.Error) {
 	switch operator {
 	case "++":
 		// Spec: https://phplang.org/spec/10-expressions.html#prefix-increment-and-decrement-operators
@@ -645,30 +645,30 @@ func calculateIncDecFloating(operator string, operand *values.Float) (values.Run
 		return calculateFloating(operand, "-", values.NewFloat(1))
 
 	default:
-		return values.NewInt(0), phpError.NewError("calculateIncDecFloating: Operator \"%s\" not implemented", operator)
+		return values.NewIntSlot(0), phpError.NewError("calculateIncDecFloating: Operator \"%s\" not implemented", operator)
 	}
 }
 
-func calculateIncDecNull(operator string) (values.RuntimeValue, phpError.Error) {
+func calculateIncDecNull(operator string) (*values.Slot, phpError.Error) {
 	switch operator {
 	case "++":
 		// Spec: https://phplang.org/spec/10-expressions.html#prefix-increment-and-decrement-operators
 		// For a prefix ++ operator used with a NULL-valued operand, the side effect is that the operand’s type is changed to int,
 		// the operand’s value is set to zero, and that value is incremented by 1.
 		// The result is the value of the operand after it has been incremented.
-		return values.NewInt(1), nil
+		return values.NewIntSlot(1), nil
 
 	case "--":
 		// Spec: https://phplang.org/spec/10-expressions.html#prefix-increment-and-decrement-operators
 		// For a prefix – operator used with a NULL-valued operand, there is no side effect, and the result is the operand’s value.
-		return values.NewNull(), nil
+		return values.NewNullSlot(), nil
 
 	default:
-		return values.NewInt(0), phpError.NewError("calculateIncDecNull: Operator \"%s\" not implemented", operator)
+		return values.NewIntSlot(0), phpError.NewError("calculateIncDecNull: Operator \"%s\" not implemented", operator)
 	}
 }
 
-func calculateIncDecString(operator string, operand *values.Str) (values.RuntimeValue, phpError.Error) {
+func calculateIncDecString(operator string, operand *values.Str) (*values.Slot, phpError.Error) {
 	switch operator {
 	case "++":
 		// Spec: https://phplang.org/spec/10-expressions.html#prefix-increment-and-decrement-operators
@@ -676,9 +676,9 @@ func calculateIncDecString(operator string, operand *values.Str) (values.Runtime
 		// the side effect is that the operand’s value is changed to the string “1”. The type of the operand is unchanged.
 		// The result is the new value of the operand.
 		if operand.Value == "" {
-			return values.NewStr("1"), nil
+			return values.NewStrSlot("1"), nil
 		}
-		return values.NewVoid(), phpError.NewError("TODO calculateIncDecString")
+		return values.NewVoidSlot(), phpError.NewError("TODO calculateIncDecString")
 
 	case "--":
 		// Spec: https://phplang.org/spec/10-expressions.html#prefix-increment-and-decrement-operators
@@ -686,12 +686,12 @@ func calculateIncDecString(operator string, operand *values.Str) (values.Runtime
 		// the side effect is that the operand’s type is changed to int, the operand’s value is set to zero,
 		// and that value is decremented by 1. The result is the value of the operand after it has been incremented.
 		if operand.Value == "" {
-			return values.NewInt(-1), nil
+			return values.NewIntSlot(-1), nil
 		}
-		return values.NewVoid(), phpError.NewError("TODO calculateIncDecString")
+		return values.NewVoidSlot(), phpError.NewError("TODO calculateIncDecString")
 
 	default:
-		return values.NewInt(0), phpError.NewError("calculateIncDecNull: Operator \"%s\" not implemented", operator)
+		return values.NewIntSlot(0), phpError.NewError("calculateIncDecNull: Operator \"%s\" not implemented", operator)
 	}
 
 	// TODO calculateIncDecString
@@ -711,7 +711,7 @@ func calculateIncDecString(operator string, operand *values.Str) (values.Runtime
 
 // -------------------------------------- unary-op-calculation -------------------------------------- MARK: unary-op-calculation
 
-func calculateUnary(operator string, operand values.RuntimeValue) (values.RuntimeValue, phpError.Error) {
+func calculateUnary(operator string, operand values.RuntimeValue) (*values.Slot, phpError.Error) {
 	switch operand.GetType() {
 	case values.BoolValue:
 		return calculateUnaryBoolean(operator, operand.(*values.Bool))
@@ -722,9 +722,9 @@ func calculateUnary(operator string, operand values.RuntimeValue) (values.Runtim
 	case values.NullValue:
 		// Spec: https://phplang.org/spec/10-expressions.html#unary-arithmetic-operators
 		// For a unary + or unary - operator used with a NULL-valued operand, the value of the result is zero and the type is int.
-		return values.NewInt(0), nil
+		return values.NewIntSlot(0), nil
 	default:
-		return values.NewVoid(), phpError.NewError("calculateUnary: Type \"%s\" not implemented", operand.GetType())
+		return values.NewVoidSlot(), phpError.NewError("calculateUnary: Type \"%s\" not implemented", operand.GetType())
 	}
 
 	// TODO calculateUnary - string
@@ -736,87 +736,87 @@ func calculateUnary(operator string, operand values.RuntimeValue) (values.Runtim
 	// If the operand has an object type supporting the operation, then the object semantics defines the result. Otherwise, for ~ the fatal error is issued and for + and - the object is converted to int.
 }
 
-func calculateUnaryBoolean(operator string, operand *values.Bool) (*values.Int, phpError.Error) {
+func calculateUnaryBoolean(operator string, operand *values.Bool) (*values.Slot, phpError.Error) {
 	switch operator {
 	case "+":
 		// Spec: https://phplang.org/spec/10-expressions.html#unary-arithmetic-operators
 		// For a unary "+" operator used with a TRUE-valued operand, the value of the result is 1 and the type is int.
 		// When used with a FALSE-valued operand, the value of the result is zero and the type is int.
 		if operand.Value {
-			return values.NewInt(1), nil
+			return values.NewIntSlot(1), nil
 		}
-		return values.NewInt(0), nil
+		return values.NewIntSlot(0), nil
 
 	case "-":
 		// Spec: https://phplang.org/spec/10-expressions.html#unary-arithmetic-operators
 		// For a unary "-" operator used with a TRUE-valued operand, the value of the result is -1 and the type is int.
 		// When used with a FALSE-valued operand, the value of the result is zero and the type is int.
 		if operand.Value {
-			return values.NewInt(-1), nil
+			return values.NewIntSlot(-1), nil
 		}
-		return values.NewInt(0), nil
+		return values.NewIntSlot(0), nil
 
 	default:
-		return values.NewInt(0), phpError.NewError("calculateUnaryBoolean: Operator \"%s\" not implemented", operator)
+		return values.NewIntSlot(0), phpError.NewError("calculateUnaryBoolean: Operator \"%s\" not implemented", operator)
 	}
 }
 
-func calculateUnaryFloating(operator string, operand *values.Float) (values.RuntimeValue, phpError.Error) {
+func calculateUnaryFloating(operator string, operand *values.Float) (*values.Slot, phpError.Error) {
 	switch operator {
 	case "+":
 		// Spec: https://phplang.org/spec/10-expressions.html#unary-arithmetic-operators
 		// For a unary "+" operator used with an arithmetic operand, the type and value of the result is the type and value of the operand.
-		return operand, nil
+		return values.NewSlot(operand), nil
 
 	case "-":
 		// Spec: https://phplang.org/spec/10-expressions.html#unary-arithmetic-operators
 		// For a unary - operator used with an arithmetic operand, the value of the result is the negated value of the operand.
 		// However, if an int operand’s original value is the smallest representable for that type,
 		// the operand is treated as if it were float and the result will be float.
-		return values.NewFloat(-operand.Value), nil
+		return values.NewFloatSlot(-operand.Value), nil
 
 	case "~":
 		// Spec: https://phplang.org/spec/10-expressions.html#unary-arithmetic-operators
 		// For a unary ~ operator used with a float operand, the value of the operand is first converted to int before the bitwise complement is computed.
 		intRuntimeValue, err := variableHandling.ToValueType(values.IntValue, operand, false)
 		if err != nil {
-			return values.NewFloat(0), err
+			return values.NewFloatSlot(0), err
 		}
 		return calculateUnaryInteger(operator, intRuntimeValue.(*values.Int))
 
 	default:
-		return values.NewFloat(0), phpError.NewError("calculateUnaryFloating: Operator \"%s\" not implemented", operator)
+		return values.NewFloatSlot(0), phpError.NewError("calculateUnaryFloating: Operator \"%s\" not implemented", operator)
 	}
 }
 
-func calculateUnaryInteger(operator string, operand *values.Int) (*values.Int, phpError.Error) {
+func calculateUnaryInteger(operator string, operand *values.Int) (*values.Slot, phpError.Error) {
 	switch operator {
 	case "+":
 		// Spec: https://phplang.org/spec/10-expressions.html#unary-arithmetic-operators
 		// For a unary "+" operator used with an arithmetic operand, the type and value of the result is the type and value of the operand.
-		return operand, nil
+		return values.NewSlot(operand), nil
 
 	case "-":
 		// Spec: https://phplang.org/spec/10-expressions.html#unary-arithmetic-operators
 		// For a unary - operator used with an arithmetic operand, the value of the result is the negated value of the operand.
 		// However, if an int operand’s original value is the smallest representable for that type,
 		// the operand is treated as if it were float and the result will be float.
-		return values.NewInt(-operand.Value), nil
+		return values.NewIntSlot(-operand.Value), nil
 
 	case "~":
 		// Spec: https://phplang.org/spec/10-expressions.html#unary-arithmetic-operators
 		// For a unary ~ operator used with an int operand, the type of the result is int.
 		// The value of the result is the bitwise complement of the value of the operand
 		// (that is, each bit in the result is set if and only if the corresponding bit in the operand is clear).
-		return values.NewInt(^operand.Value), nil
+		return values.NewIntSlot(^operand.Value), nil
 	default:
-		return values.NewInt(0), phpError.NewError("calculateUnaryInteger: Operator \"%s\" not implemented", operator)
+		return values.NewIntSlot(0), phpError.NewError("calculateUnaryInteger: Operator \"%s\" not implemented", operator)
 	}
 }
 
 // -------------------------------------- binary-op-calculation -------------------------------------- MARK: binary-op-calculation
 
-func calculate(operand1 values.RuntimeValue, operator string, operand2 values.RuntimeValue) (values.RuntimeValue, phpError.Error) {
+func calculate(operand1 values.RuntimeValue, operator string, operand2 values.RuntimeValue) (*values.Slot, phpError.Error) {
 	resultType := values.VoidValue
 	if slices.Contains([]string{"."}, operator) {
 		resultType = values.StrValue
@@ -832,11 +832,11 @@ func calculate(operand1 values.RuntimeValue, operator string, operand2 values.Ru
 	var err phpError.Error
 	operand1, err = variableHandling.ToValueType(resultType, operand1, false)
 	if err != nil {
-		return values.NewVoid(), err
+		return values.NewVoidSlot(), err
 	}
 	operand2, err = variableHandling.ToValueType(resultType, operand2, false)
 	if err != nil {
-		return values.NewVoid(), err
+		return values.NewVoidSlot(), err
 	}
 	// TODO testing how PHP behavious: var_dump(1.0 + 2); var_dump(1 + 2.0); var_dump("1" + 2);
 	// var_dump("1" + "2"); => int
@@ -855,138 +855,138 @@ func calculate(operand1 values.RuntimeValue, operator string, operand2 values.Ru
 	case values.StrValue:
 		return calculateString(operand1.(*values.Str), operator, operand2.(*values.Str))
 	default:
-		return values.NewVoid(), phpError.NewError("calculate: Type \"%s\" not implemented", resultType)
+		return values.NewVoidSlot(), phpError.NewError("calculate: Type \"%s\" not implemented", resultType)
 	}
 }
 
-func calculateFloating(operand1 *values.Float, operator string, operand2 *values.Float) (values.RuntimeValue, phpError.Error) {
+func calculateFloating(operand1 *values.Float, operator string, operand2 *values.Float) (*values.Slot, phpError.Error) {
 	switch operator {
 	case "+":
-		return values.NewFloat(operand1.Value + operand2.Value), nil
+		return values.NewFloatSlot(operand1.Value + operand2.Value), nil
 	case "-":
-		return values.NewFloat(operand1.Value - operand2.Value), nil
+		return values.NewFloatSlot(operand1.Value - operand2.Value), nil
 	case "*":
-		return values.NewFloat(operand1.Value * operand2.Value), nil
+		return values.NewFloatSlot(operand1.Value * operand2.Value), nil
 	case "/":
-		return values.NewFloat(operand1.Value / operand2.Value), nil
+		return values.NewFloatSlot(operand1.Value / operand2.Value), nil
 	case "**":
-		return values.NewFloat(math.Pow(operand1.Value, operand2.Value)), nil
+		return values.NewFloatSlot(math.Pow(operand1.Value, operand2.Value)), nil
 	case "%":
 		op1, err := variableHandling.IntVal(operand1, false)
 		if err != nil {
-			return values.NewFloat(0), err
+			return values.NewFloatSlot(0), err
 		}
 		op2, err := variableHandling.IntVal(operand2, false)
 		if err != nil {
-			return values.NewFloat(0), err
+			return values.NewFloatSlot(0), err
 		}
-		return values.NewInt(op1 % op2), nil
+		return values.NewIntSlot(op1 % op2), nil
 	default:
-		return values.NewFloat(0), phpError.NewError("calculateFloating: Operator \"%s\" not implemented", operator)
+		return values.NewFloatSlot(0), phpError.NewError("calculateFloating: Operator \"%s\" not implemented", operator)
 	}
 }
 
-func calculateInteger(operand1 *values.Int, operator string, operand2 *values.Int) (*values.Int, phpError.Error) {
+func calculateInteger(operand1 *values.Int, operator string, operand2 *values.Int) (*values.Slot, phpError.Error) {
 	switch operator {
 	case "<<":
-		return values.NewInt(operand1.Value << operand2.Value), nil
+		return values.NewIntSlot(operand1.Value << operand2.Value), nil
 	case ">>":
-		return values.NewInt(operand1.Value >> operand2.Value), nil
+		return values.NewIntSlot(operand1.Value >> operand2.Value), nil
 	case "^":
-		return values.NewInt(operand1.Value ^ operand2.Value), nil
+		return values.NewIntSlot(operand1.Value ^ operand2.Value), nil
 	case "|":
-		return values.NewInt(operand1.Value | operand2.Value), nil
+		return values.NewIntSlot(operand1.Value | operand2.Value), nil
 	case "&":
-		return values.NewInt(operand1.Value & operand2.Value), nil
+		return values.NewIntSlot(operand1.Value & operand2.Value), nil
 	case "+":
-		return values.NewInt(operand1.Value + operand2.Value), nil
+		return values.NewIntSlot(operand1.Value + operand2.Value), nil
 	case "-":
-		return values.NewInt(operand1.Value - operand2.Value), nil
+		return values.NewIntSlot(operand1.Value - operand2.Value), nil
 	case "*":
-		return values.NewInt(operand1.Value * operand2.Value), nil
+		return values.NewIntSlot(operand1.Value * operand2.Value), nil
 	case "/":
 		if operand2.Value == 0 {
 			// TODO Add position in output: Fatal error: Uncaught DivisionByZeroError: Division by zero in /home/user/scripts/code.php:3
-			return values.NewInt(0), phpError.NewError("Uncaught DivisionByZeroError: Division by zero")
+			return values.NewIntSlot(0), phpError.NewError("Uncaught DivisionByZeroError: Division by zero")
 		}
-		return values.NewInt(operand1.Value / operand2.Value), nil
+		return values.NewIntSlot(operand1.Value / operand2.Value), nil
 	case "%":
-		return values.NewInt(operand1.Value % operand2.Value), nil
+		return values.NewIntSlot(operand1.Value % operand2.Value), nil
 	case "**":
-		return values.NewInt(int64(math.Pow(float64(operand1.Value), float64(operand2.Value)))), nil
+		return values.NewIntSlot(int64(math.Pow(float64(operand1.Value), float64(operand2.Value)))), nil
 	default:
-		return values.NewInt(0), phpError.NewError("calculateInteger: Operator \"%s\" not implemented", operator)
+		return values.NewIntSlot(0), phpError.NewError("calculateInteger: Operator \"%s\" not implemented", operator)
 	}
 }
 
-func calculateString(operand1 *values.Str, operator string, operand2 *values.Str) (*values.Str, phpError.Error) {
+func calculateString(operand1 *values.Str, operator string, operand2 *values.Str) (*values.Slot, phpError.Error) {
 	switch operator {
 	case ".":
-		return values.NewStr(operand1.Value + operand2.Value), nil
+		return values.NewStrSlot(operand1.Value + operand2.Value), nil
 	default:
-		return values.NewStr(""), phpError.NewError("calculateString: Operator \"%s\" not implemented", operator)
+		return values.NewStrSlot(""), phpError.NewError("calculateString: Operator \"%s\" not implemented", operator)
 	}
 }
 
 // -------------------------------------- class-object -------------------------------------- MARK: class-object
 
-func (interpreter *Interpreter) CallMethod(object *values.Object, method string, args []ast.IExpression, env *Environment) (values.RuntimeValue, phpError.Error) {
+func (interpreter *Interpreter) CallMethod(object *values.Object, method string, args []ast.IExpression, env *Environment) (*values.Slot, phpError.Error) {
 	methodDefinition, found := interpreter.getObjectMethod(object, method)
 	if !found {
-		return values.NewNull(), phpError.NewError("Class %s does not have a function \"%s\"", object.Class.Name, method)
+		return values.NewNullSlot(), phpError.NewError("Class %s does not have a function \"%s\"", object.Class.Name, method)
 	}
 
 	methodEnv, err := NewEnvironment(env, nil, interpreter)
 	if err != nil {
-		return values.NewVoid(), err
+		return values.NewVoidSlot(), err
 	}
 	methodEnv.CurrentObject = object
 	methodEnv.CurrentMethod = methodDefinition
 
 	if len(methodDefinition.Params) != len(args) {
-		return values.NewVoid(), phpError.NewError(
+		return values.NewVoidSlot(), phpError.NewError(
 			"Uncaught ArgumentCountError: %s::%s() expects exactly %d arguments, %d given",
 			object.Class.BaseClass, methodDefinition.Name, len(methodDefinition.Params), len(args),
 		)
 	}
 
 	for index, param := range methodDefinition.Params {
-		runtimeValue := must(interpreter.processStmt(args[index], env))
+		slot := must(interpreter.processStmt(args[index], env))
 
 		// Check if the parameter types match
-		err = checkParameterTypes(runtimeValue, param.Type)
+		err = checkParameterTypes(slot.Value, param.Type)
 		if err != nil && err.GetMessage() == "Types do not match" {
-			givenType, err := variableHandling.GetType(runtimeValue)
+			givenType, err := variableHandling.GetType(slot.Value)
 			if err != nil {
-				return values.NewVoid(), err
+				return values.NewVoidSlot(), err
 			}
-			return values.NewVoid(), phpError.NewError(
+			return values.NewVoidSlot(), phpError.NewError(
 				"Uncaught TypeError: %s::%s(): Argument #%d (%s) must be of type %s, %s given",
 				object.Class.BaseClass, methodDefinition.Name, index+1, param.Name, strings.Join(param.Type, "|"), givenType,
 			)
 		}
 		// Declare parameter in method environment
-		methodEnv.declareVariable(param.Name, values.DeepCopy(runtimeValue))
+		methodEnv.declareVariable(param.Name, values.DeepCopy(slot).Value)
 	}
 
-	runtimeValue, err := interpreter.processStmt(methodDefinition.Body, methodEnv)
+	slot, err := interpreter.processStmt(methodDefinition.Body, methodEnv)
 	if err != nil && !(err.GetErrorType() == phpError.EventError && err.GetMessage() == phpError.ReturnEvent) {
-		return runtimeValue, err
+		return slot, err
 	}
-	err = checkParameterTypes(runtimeValue, methodDefinition.ReturnType)
+	err = checkParameterTypes(slot.Value, methodDefinition.ReturnType)
 	if err != nil && err.GetMessage() == "Types do not match" {
-		givenType, err := variableHandling.GetType(runtimeValue)
-		if runtimeValue.GetType() == values.VoidValue {
+		givenType, err := variableHandling.GetType(slot.Value)
+		if slot.GetType() == values.VoidValue {
 			givenType = "void"
 		}
 		if err != nil {
-			return runtimeValue, err
+			return slot, err
 		}
-		return runtimeValue, phpError.NewError(
+		return slot, phpError.NewError(
 			"Uncaught TypeError: %s::%s(): Return value must be of type %s, %s given",
 			object.Class.BaseClass, methodDefinition.Name, strings.Join(methodDefinition.ReturnType, "|"), givenType,
 		)
 	}
 
-	return runtimeValue, nil
+	return slot, nil
 }

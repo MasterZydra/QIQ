@@ -24,6 +24,10 @@ func NewArray() *Array {
 	}
 }
 
+func NewArraySlot() *Slot {
+	return NewSlot(NewArray())
+}
+
 func NewArrayFromMap(elements map[RuntimeValue]RuntimeValue) *Array {
 	array := NewArray()
 	for key, value := range elements {
@@ -202,18 +206,10 @@ func (array *Array) Contains(key RuntimeValue) bool {
 	return found
 }
 
-func (array *Array) GetElementSlot(key RuntimeValue) (*Slot, bool) {
+func (array *Array) GetElement(key RuntimeValue) (*Slot, bool) {
 	mapKey, found, err := array.GetMapKey(key, true)
 	if err != nil || !found {
 		return nil, false
 	}
 	return array.Elements[mapKey], true
-}
-
-func (array *Array) GetElement(key RuntimeValue) (RuntimeValue, bool) {
-	slot, found := array.GetElementSlot(key)
-	if slot == nil || !found {
-		return NewVoid(), false
-	}
-	return slot.Value, true
 }

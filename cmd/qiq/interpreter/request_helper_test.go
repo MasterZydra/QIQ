@@ -128,7 +128,7 @@ func TestParseQuery(t *testing.T) {
 			t.Errorf("Unexpected error while comparing: \"%s\"", err)
 			return
 		}
-		if !equal.Value {
+		if !equal.Value.(*values.Bool).Value {
 			t.Errorf("Wrong result for query \"%s\"", input)
 		}
 	}

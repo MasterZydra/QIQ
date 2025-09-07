@@ -40,7 +40,7 @@ func RegisterDefaultInterfaces(interpreter runtime.Interpreter) {
 	// Spec: https://www.php.net/manual/en/class.serializable.php
 	Serializable := ast.NewInterfaceDeclarationStmt(0, nil, "Serializable")
 	Serializable.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "serialize", []string{"public"}, []ast.FunctionParameter{}, nil, []string{"null", "string"}))
-	Serializable.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "unserialize", []string{"public"}, []ast.FunctionParameter{{Name: "$data", Type: []string{"string"}}}, nil, []string{"void"}))
+	Serializable.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "unserialize", []string{"public"}, []ast.FunctionParameter{ast.NewFunctionParam(false, "$data", []string{"string"})}, nil, []string{"void"}))
 
 	interpreter.AddInterface(Serializable.Name, Serializable)
 
@@ -48,10 +48,10 @@ func RegisterDefaultInterfaces(interpreter runtime.Interpreter) {
 
 	// Spec: https://www.php.net/manual/en/class.arrayaccess.php
 	ArrayAccess := ast.NewInterfaceDeclarationStmt(0, nil, "ArrayAccess")
-	ArrayAccess.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "offsetExists", []string{"public"}, []ast.FunctionParameter{{Name: "$offset", Type: []string{"mixed"}}}, nil, []string{"bool"}))
-	ArrayAccess.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "offsetGet", []string{"public"}, []ast.FunctionParameter{{Name: "$offset", Type: []string{"mixed"}}}, nil, []string{"mixed"}))
-	ArrayAccess.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "offsetSet", []string{"public"}, []ast.FunctionParameter{{Name: "$offset", Type: []string{"mixed"}}, {Name: "$value", Type: []string{"mixed"}}}, nil, []string{"void"}))
-	ArrayAccess.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "offsetUnset", []string{"public"}, []ast.FunctionParameter{{Name: "$offset", Type: []string{"mixed"}}}, nil, []string{"void"}))
+	ArrayAccess.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "offsetExists", []string{"public"}, []ast.FunctionParameter{ast.NewFunctionParam(false, "$offset", []string{"mixed"})}, nil, []string{"bool"}))
+	ArrayAccess.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "offsetGet", []string{"public"}, []ast.FunctionParameter{ast.NewFunctionParam(false, "$offset", []string{"mixed"})}, nil, []string{"mixed"}))
+	ArrayAccess.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "offsetSet", []string{"public"}, []ast.FunctionParameter{ast.NewFunctionParam(false, "$offset", []string{"mixed"}), {Name: "$value", Type: []string{"mixed"}}}, nil, []string{"void"}))
+	ArrayAccess.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "offsetUnset", []string{"public"}, []ast.FunctionParameter{ast.NewFunctionParam(false, "$offset", []string{"mixed"})}, nil, []string{"void"}))
 
 	interpreter.AddInterface(ArrayAccess.Name, ArrayAccess)
 

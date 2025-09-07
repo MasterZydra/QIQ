@@ -40,7 +40,7 @@ func nativeFn_array_first(args []values.RuntimeValue, _ runtime.Context) (values
 	}
 
 	value, _ := array.GetElement(FirstKey(array))
-	return value, nil
+	return value.Value, nil
 }
 
 // -------------------------------------- array_key_exists -------------------------------------- MARK: array_key_exists
@@ -132,7 +132,7 @@ func nativeFn_array_last(args []values.RuntimeValue, _ runtime.Context) (values.
 	}
 
 	value, _ := array.GetElement(LastKey(array))
-	return value, nil
+	return value.Value, nil
 }
 
 // -------------------------------------- array_pop -------------------------------------- MARK: array_pop
@@ -157,7 +157,7 @@ func nativeFn_array_pop(args []values.RuntimeValue, _ runtime.Context) (values.R
 		return values.NewVoid(), err
 	}
 
-	return value, nil
+	return value.Value, nil
 }
 
 // -------------------------------------- array_push -------------------------------------- MARK: array_push
@@ -176,7 +176,7 @@ func nativeFn_array_push(args []values.RuntimeValue, _ runtime.Context) (values.
 	arrayValues := args[1].(*values.Array)
 	for _, key := range arrayValues.Keys {
 		argValue, _ := arrayValues.GetElement(key)
-		if err := array.SetElement(nil, argValue); err != nil {
+		if err := array.SetElement(nil, argValue.Value); err != nil {
 			return values.NewVoid(), err
 		}
 	}

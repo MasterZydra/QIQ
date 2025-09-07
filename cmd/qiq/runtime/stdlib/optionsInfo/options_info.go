@@ -40,19 +40,20 @@ func nativeFn_getenv(args []values.RuntimeValue, context runtime.Context) (value
 	}
 
 	if args[0].GetType() == values.NullValue {
-		return context.Env.LookupVariable("$_ENV")
+		slot, err := context.Env.LookupVariable("$_ENV")
+		return slot.Value, err
 	}
 
 	envVars, err := context.Env.LookupVariable("$_ENV")
 	if err != nil {
-		return envVars, err
+		return envVars.Value, err
 	}
-	envArray := envVars.(*values.Array)
+	envArray := envVars.Value.(*values.Array)
 	value, found := envArray.GetElement(args[0])
 	if !found {
 		return values.NewBool(false), nil
 	}
-	return value, nil
+	return value.Value, nil
 }
 
 // -------------------------------------- ini_get -------------------------------------- MARK: ini_get

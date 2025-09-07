@@ -22,7 +22,7 @@ func RemoveByKey(array *values.Array, key values.RuntimeValue) phpError.Error {
 	delete(array.Elements, mapKey)
 	array.Keys = slices.DeleteFunc(array.Keys, func(k values.RuntimeValue) bool {
 		match, _ := variableHandling.Compare(k, "===", key)
-		return match.Value
+		return match.Value.(*values.Bool).Value
 	})
 	return nil
 }

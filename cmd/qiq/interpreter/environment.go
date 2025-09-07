@@ -54,7 +54,7 @@ func NewEnvironment(parentEnv *Environment, request *request.Request, interprete
 
 // -------------------------------------- Variables -------------------------------------- MARK: Variables
 
-func (env *Environment) declareVariable(variableName string, value values.RuntimeValue) (values.RuntimeValue, phpError.Error) {
+func (env *Environment) declareVariable(variableName string, value values.RuntimeValue) (*values.Slot, phpError.Error) {
 	if slices.Contains(env.globalVariables, variableName) {
 		return env.parent.declareVariable(variableName, value)
 	}
@@ -62,18 +62,18 @@ func (env *Environment) declareVariable(variableName string, value values.Runtim
 	if _, found := env.variables[variableName]; found {
 		env.variables[variableName].Value = value
 	} else {
-		env.variables[variableName] = values.NewSlot(values.DeepCopy(value))
+		env.variables[variableName] = values.DeepCopy(values.NewSlot(value))
 	}
-	return value, nil
+	return env.variables[variableName], nil
 }
 
-func (env *Environment) declareVariableByRef(variableName string, slot *values.Slot) (values.RuntimeValue, phpError.Error) {
+func (env *Environment) declareVariableByRef(variableName string, slot *values.Slot) (*values.Slot, phpError.Error) {
 	if slices.Contains(env.globalVariables, variableName) {
 		return env.parent.declareVariableByRef(variableName, slot)
 	}
 
 	env.variables[variableName] = slot
-	return slot.Value, nil
+	return slot, nil
 }
 
 func (env *Environment) resolvePredefinedVariable(variableName string) (*Environment, phpError.Error) {
@@ -109,25 +109,25 @@ func (env *Environment) resolveVariable(variableName string) (*Environment, phpE
 	return nil, err
 }
 
-func (env *Environment) LookupVariable(variableName string) (values.RuntimeValue, phpError.Error) {
+func (env *Environment) LookupVariable(variableName string) (*values.Slot, phpError.Error) {
 	environment, err := env.resolveVariable(variableName)
 	if err != nil {
-		return values.NewNull(), err
+		return values.NewNullSlot(), err
 	}
 	if slot, ok := environment.predefinedVariables[variableName]; ok {
-		return slot.Value, nil
+		return slot, nil
 	}
 	if slices.Contains(env.globalVariables, variableName) {
 		slot, ok := environment.variables[variableName]
 		if ok {
-			return slot.Value, nil
+			return slot, nil
 		}
-		return values.NewNull(), nil
+		return values.NewNullSlot(), nil
 	}
 	if slot, ok := environment.variables[variableName]; ok {
-		return slot.Value, nil
+		return slot, nil
 	}
-	return values.NewNull(), phpError.NewWarning("Undefined variable %s", variableName)
+	return values.NewNullSlot(), phpError.NewWarning("Undefined variable %s", variableName)
 }
 
 func (env *Environment) unsetVariable(variableName string) {
@@ -151,7 +151,7 @@ func (env *Environment) addGlobalVariable(variableName string) {
 func (env *Environment) getAllObjects() []*values.Object {
 	objects := []*values.Object{}
 	for _, variable := range env.variables {
-		if variable.Value.GetType() != values.ObjectValue {
+		if variable.GetType() != values.ObjectValue {
 			continue
 		}
 		objects = append(objects, variable.Value.(*values.Object))
@@ -183,7 +183,7 @@ func (env *Environment) declareConstant(constantName string, value values.Runtim
 	}
 
 	if _, err := environment.LookupConstant(constantName); err == nil {
-		return values.NewVoid(), phpError.NewWarning("Constant %s already defined", constantName)
+		return values.NewVoidSlot(), phpError.NewWarning("Constant %s already defined", constantName)
 	}
 
 	environment.constants[constantName] = values.NewSlot(value)
@@ -204,7 +204,7 @@ func (env *Environment) LookupConstant(constantName string) (values.RuntimeValue
 	if slot, ok := environment.constants[constantName]; ok {
 		return slot.Value, nil
 	}
-	return values.NewVoid(), phpError.NewError("Undefined constant \"%s\"", constantName)
+	return values.NewVoidSlot(), phpError.NewError("Undefined constant \"%s\"", constantName)
 }
 
 // -------------------------------------- Functions -------------------------------------- MARK: Functions

@@ -36,6 +36,10 @@ func NewVoid() *Void {
 	return void
 }
 
+func NewVoidSlot() *Slot {
+	return NewSlot(NewVoid())
+}
+
 // MARK: Null
 
 type Null struct {
@@ -46,6 +50,10 @@ var null = &Null{abstractValue: newAbstractValue(NullValue)}
 
 func NewNull() *Null {
 	return null
+}
+
+func NewNullSlot() *Slot {
+	return NewSlot(NewNull())
 }
 
 // MARK: Bool
@@ -65,6 +73,10 @@ func NewBool(value bool) *Bool {
 	return falseRuntimeValue
 }
 
+func NewBoolSlot(value bool) *Slot {
+	return NewSlot(NewBool(value))
+}
+
 // MARK: Int
 
 type Int struct {
@@ -76,6 +88,10 @@ func NewInt(value int64) *Int {
 	return &Int{abstractValue: newAbstractValue(IntValue), Value: value}
 }
 
+func NewIntSlot(value int64) *Slot {
+	return NewSlot(NewInt(value))
+}
+
 // MARK: Float
 
 type Float struct {
@@ -85,6 +101,10 @@ type Float struct {
 
 func NewFloat(value float64) *Float {
 	return &Float{abstractValue: newAbstractValue(FloatValue), Value: value}
+}
+
+func NewFloatSlot(value float64) *Slot {
+	return NewSlot(NewFloat(value))
 }
 
 func (value *Float) ToPhpString() string {
@@ -100,4 +120,8 @@ type Str struct {
 
 func NewStr(value string) *Str {
 	return &Str{abstractValue: newAbstractValue(StrValue), Value: value}
+}
+
+func NewStrSlot(value string) *Slot {
+	return NewSlot(NewStr(value))
 }

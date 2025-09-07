@@ -159,11 +159,11 @@ func nativeFn_get_class_vars(args []values.RuntimeValue, context runtime.Context
 			continue
 		}
 
-		value, err := context.Interpreter.ProcessStatement(class.Properties[propertyName].InitialValue, context.Env)
+		slot, err := context.Interpreter.ProcessStatement(class.Properties[propertyName].InitialValue, context.Env)
 		if err != nil {
 			return array, err
 		}
-		array.SetElement(values.NewStr(propertyName[1:]), value)
+		array.SetElement(values.NewStr(propertyName[1:]), slot.Value)
 	}
 
 	return array, nil

@@ -151,7 +151,7 @@ func nativeFn_implode(args []values.RuntimeValue, _ runtime.Context) (values.Run
 	var result goStrings.Builder
 	for i, key := range array.Keys {
 		value, _ := array.GetElement(key)
-		strValue, err := variableHandling.StrVal(value)
+		strValue, err := variableHandling.StrVal(value.Value)
 		if err != nil {
 			return values.NewStr(result.String()), err
 		}

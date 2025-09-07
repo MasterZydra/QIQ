@@ -500,7 +500,7 @@ func lib_print_r_var(value values.RuntimeValue, depth int) (string, phpError.Err
 				return "", err
 			}
 			elementValue, _ := array.GetElement(key)
-			valueStr, err := lib_print_r_var(elementValue, depth+8)
+			valueStr, err := lib_print_r_var(elementValue.Value, depth+8)
 			if err != nil {
 				return "", err
 			}
@@ -622,7 +622,7 @@ func nativeFn_var_dump(args []values.RuntimeValue, context runtime.Context) (val
 		arrayValues := args[1].(*values.Array)
 		for _, key := range arrayValues.Keys {
 			argValue, _ := arrayValues.GetElement(key)
-			if err := lib_var_dump_var(context, argValue, 2); err != nil {
+			if err := lib_var_dump_var(context, argValue.Value, 2); err != nil {
 				return values.NewVoid(), err
 			}
 		}
@@ -649,7 +649,7 @@ func lib_var_dump_var(context runtime.Context, value values.RuntimeValue, depth 
 			}
 			context.Interpreter.Print(strings.Repeat(" ", depth))
 			elementValue, _ := array.GetElement(key)
-			if err := lib_var_dump_var(context, elementValue, depth+2); err != nil {
+			if err := lib_var_dump_var(context, elementValue.Value, depth+2); err != nil {
 				return err
 			}
 		}
@@ -745,7 +745,7 @@ func lib_var_export_var(value values.RuntimeValue, depth int) (string, phpError.
 				return "", err
 			}
 			elementValue, _ := array.GetElement(key)
-			valueStr, err := lib_var_export_var(elementValue, depth+2)
+			valueStr, err := lib_var_export_var(elementValue.Value, depth+2)
 			if err != nil {
 				return "", err
 			}
