@@ -58,10 +58,10 @@ func NewInterpreter(executionContext *runtime.ExecutionContext, ini *ini.Ini, r 
 	classes.RegisterDefaultClasses(interpreter)
 
 	if ini.GetBool("register_argc_argv") {
-		server := interpreter.env.predefinedVariables["$_SERVER"].(*values.Array)
+		server := interpreter.env.predefinedVariables["$_SERVER"].Value.(*values.Array)
 		if !server.Contains(values.NewStr("argc")) && !server.Contains(values.NewStr("argv")) {
-			server.SetElement(values.NewStr("argv"), interpreter.env.predefinedVariables["$_GET"])
-			server.SetElement(values.NewStr("argc"), values.NewInt(int64(len(interpreter.env.predefinedVariables["$_GET"].(*values.Array).Keys))))
+			server.SetElement(values.NewStr("argv"), interpreter.env.predefinedVariables["$_GET"].Value)
+			server.SetElement(values.NewStr("argc"), values.NewInt(int64(len(interpreter.env.predefinedVariables["$_GET"].Value.(*values.Array).Keys))))
 		}
 	}
 

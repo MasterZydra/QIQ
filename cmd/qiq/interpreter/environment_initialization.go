@@ -69,10 +69,10 @@ func registerPredefinedVariables(environment *Environment, request *request.Requ
 	}
 
 	requestVar := values.NewArray()
-	mergeArrays(requestVar, environment.predefinedVariables["$_GET"].(*values.Array))
-	mergeArrays(requestVar, environment.predefinedVariables["$_POST"].(*values.Array))
-	mergeArrays(requestVar, environment.predefinedVariables["$_COOKIE"].(*values.Array))
-	environment.predefinedVariables["$_REQUEST"] = requestVar
+	mergeArrays(requestVar, environment.predefinedVariables["$_GET"].Value.(*values.Array))
+	mergeArrays(requestVar, environment.predefinedVariables["$_POST"].Value.(*values.Array))
+	mergeArrays(requestVar, environment.predefinedVariables["$_COOKIE"].Value.(*values.Array))
+	environment.predefinedVariables["$_REQUEST"] = values.NewSlot(requestVar)
 
 	return nil
 }
@@ -87,17 +87,17 @@ func mergeArrays(a, b *values.Array) {
 
 func registerPredefinedVariableEnv(environment *Environment, request *request.Request, init bool) {
 	if init {
-		environment.predefinedVariables["$_ENV"] = stringMapToArray(request.Env)
+		environment.predefinedVariables["$_ENV"] = values.NewSlot(stringMapToArray(request.Env))
 	} else {
-		environment.predefinedVariables["$_ENV"] = values.NewArray()
+		environment.predefinedVariables["$_ENV"] = values.NewSlot(values.NewArray())
 	}
 }
 
 func registerPredefinedVariableCookie(environment *Environment, request *request.Request, interpreter runtime.Interpreter, init bool) {
 	if init {
-		environment.predefinedVariables["$_COOKIE"] = parseCookies(request.Cookie, interpreter)
+		environment.predefinedVariables["$_COOKIE"] = values.NewSlot(parseCookies(request.Cookie, interpreter))
 	} else {
-		environment.predefinedVariables["$_COOKIE"] = values.NewArray()
+		environment.predefinedVariables["$_COOKIE"] = values.NewSlot(values.NewArray())
 	}
 }
 
@@ -107,9 +107,9 @@ func registerPredefinedVariableGet(environment *Environment, request *request.Re
 		if err != nil {
 			println(err.Error())
 		}
-		environment.predefinedVariables["$_GET"] = array
+		environment.predefinedVariables["$_GET"] = values.NewSlot(array)
 	} else {
-		environment.predefinedVariables["$_GET"] = values.NewArray()
+		environment.predefinedVariables["$_GET"] = values.NewSlot(values.NewArray())
 	}
 }
 
@@ -119,19 +119,19 @@ func registerPredefinedVariablePost(environment *Environment, request *request.R
 		if err != nil {
 			return phpError.NewError("%s", err)
 		}
-		environment.predefinedVariables["$_POST"] = post
-		environment.predefinedVariables["$_FILES"] = file
+		environment.predefinedVariables["$_POST"] = values.NewSlot(post)
+		environment.predefinedVariables["$_FILES"] = values.NewSlot(file)
 	} else {
-		environment.predefinedVariables["$_POST"] = values.NewArray()
-		environment.predefinedVariables["$_FILES"] = values.NewArray()
+		environment.predefinedVariables["$_POST"] = values.NewSlot(values.NewArray())
+		environment.predefinedVariables["$_FILES"] = values.NewSlot(values.NewArray())
 	}
 	return nil
 }
 
 func registerPredefinedVariableServer(environment *Environment, request *request.Request, interpreter runtime.Interpreter, init bool) phpError.Error {
-	environment.predefinedVariables["$_SERVER"] = values.NewArray()
+	environment.predefinedVariables["$_SERVER"] = values.NewSlot(values.NewArray())
 	if init {
-		server := environment.predefinedVariables["$_SERVER"].(*values.Array)
+		server := environment.predefinedVariables["$_SERVER"].Value.(*values.Array)
 		if len(request.Args) > 0 {
 			server.SetElement(values.NewStr("argc"), values.NewInt(int64(len(request.Args))))
 			argv, err := paramToArray(request.Args, interpreter)
@@ -232,7 +232,7 @@ func paramToArray(params [][]string, interpreter runtime.Interpreter) (*values.A
 		interp.process(fmt.Sprintf(`<?php $%s = "%s";`, key, value), env, true)
 
 		// Extract array from environment
-		arrayValue = env.variables["$"+paramName]
+		arrayValue = env.variables["$"+paramName].Value
 
 		result.SetElement(values.NewStr(paramName), arrayValue)
 		continue

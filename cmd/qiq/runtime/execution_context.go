@@ -2,22 +2,31 @@ package runtime
 
 import (
 	"QIQ/cmd/qiq/ast"
+	"QIQ/cmd/qiq/runtime/values"
 	"strings"
 )
 
 type ExecutionContext struct {
-	classNames            []string
-	classDeclarations     map[string]*ast.ClassDeclarationStatement
+	// Classes
+	classNames        []string
+	classDeclarations map[string]*ast.ClassDeclarationStatement
+	// Interfaces
 	interfaceNames        []string
 	interfaceDeclarations map[string]*ast.InterfaceDeclarationStatement
+	// Objects
+	objects map[string][]*values.Object
 }
 
 func NewExecutionContext() *ExecutionContext {
 	return &ExecutionContext{
-		classNames:            []string{},
-		classDeclarations:     map[string]*ast.ClassDeclarationStatement{},
+		// Classes
+		classNames:        []string{},
+		classDeclarations: map[string]*ast.ClassDeclarationStatement{},
+		// Interfaces
 		interfaceNames:        []string{},
 		interfaceDeclarations: map[string]*ast.InterfaceDeclarationStatement{},
+		// Objects
+		objects: map[string][]*values.Object{},
 	}
 }
 
@@ -41,7 +50,7 @@ func (executionContext *ExecutionContext) GetClasses() []string {
 	return executionContext.classNames
 }
 
-// -------------------------------------- Interface -------------------------------------- MARK: Interface
+// -------------------------------------- Interfaces -------------------------------------- MARK: Interfaces
 
 func (executionContext *ExecutionContext) AddInterface(interfaceName string, interfaceDecl *ast.InterfaceDeclarationStatement) {
 	executionContext.interfaceNames = append(executionContext.interfaceNames, interfaceName)
@@ -59,4 +68,23 @@ func (executionContext *ExecutionContext) GetInterface(interfaceName string) (*a
 
 func (executionContext *ExecutionContext) GetInterfaces() []string {
 	return executionContext.interfaceNames
+}
+
+// -------------------------------------- Objects -------------------------------------- MARK: Objects
+
+func (executionContext *ExecutionContext) AddObject(className string, object *values.Object) {
+	_, found := executionContext.objects[className]
+	if !found {
+		executionContext.objects[className] = []*values.Object{object}
+		return
+	}
+	executionContext.objects[className] = append(executionContext.objects[className], object)
+}
+
+func (executionContext *ExecutionContext) CountObjects(className string) int {
+	_, found := executionContext.objects[className]
+	if !found {
+		return 0
+	}
+	return len(executionContext.objects[className])
 }

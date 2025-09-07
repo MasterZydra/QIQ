@@ -14,13 +14,13 @@ import (
 type Environment struct {
 	parent          *Environment
 	globalVariables []string
-	variables       map[string]values.RuntimeValue
-	constants       map[string]values.RuntimeValue
+	variables       map[string]*values.Slot
+	constants       map[string]*values.Slot
 	functions       map[string]*ast.FunctionDefinitionStatement
 	objects         []*values.Object
 	// StdLib
-	predefinedVariables map[string]values.RuntimeValue
-	predefinedConstants map[string]values.RuntimeValue
+	predefinedVariables map[string]*values.Slot
+	predefinedConstants map[string]*values.Slot
 	nativeFunctions     map[string]runtime.NativeFunction
 	// Context
 	CurrentFunction *ast.FunctionDefinitionStatement
@@ -31,13 +31,13 @@ type Environment struct {
 func NewEnvironment(parentEnv *Environment, request *request.Request, interpreter runtime.Interpreter) (*Environment, phpError.Error) {
 	env := &Environment{
 		parent:    parentEnv,
-		variables: map[string]values.RuntimeValue{},
-		constants: map[string]values.RuntimeValue{},
+		variables: map[string]*values.Slot{},
+		constants: map[string]*values.Slot{},
 		functions: map[string]*ast.FunctionDefinitionStatement{},
 		objects:   []*values.Object{},
 		// StdLib
-		predefinedVariables: map[string]values.RuntimeValue{},
-		predefinedConstants: map[string]values.RuntimeValue{},
+		predefinedVariables: map[string]*values.Slot{},
+		predefinedConstants: map[string]*values.Slot{},
 		nativeFunctions:     map[string]runtime.NativeFunction{},
 	}
 
@@ -59,7 +59,7 @@ func (env *Environment) declareVariable(variableName string, value values.Runtim
 		return env.parent.declareVariable(variableName, value)
 	}
 
-	env.variables[variableName] = values.DeepCopy(value)
+	env.variables[variableName] = values.NewSlot(values.DeepCopy(value))
 	return value, nil
 }
 
@@ -101,18 +101,18 @@ func (env *Environment) LookupVariable(variableName string) (values.RuntimeValue
 	if err != nil {
 		return values.NewNull(), err
 	}
-	if value, ok := environment.predefinedVariables[variableName]; ok {
-		return value, nil
+	if slot, ok := environment.predefinedVariables[variableName]; ok {
+		return slot.Value, nil
 	}
 	if slices.Contains(env.globalVariables, variableName) {
-		value, ok := environment.variables[variableName]
+		slot, ok := environment.variables[variableName]
 		if ok {
-			return value, nil
+			return slot.Value, nil
 		}
 		return values.NewNull(), nil
 	}
-	if value, ok := environment.variables[variableName]; ok {
-		return value, nil
+	if slot, ok := environment.variables[variableName]; ok {
+		return slot.Value, nil
 	}
 	return values.NewNull(), phpError.NewWarning("Undefined variable %s", variableName)
 }
@@ -138,10 +138,10 @@ func (env *Environment) addGlobalVariable(variableName string) {
 func (env *Environment) getAllObjects() []*values.Object {
 	objects := []*values.Object{}
 	for _, variable := range env.variables {
-		if variable.GetType() != values.ObjectValue {
+		if variable.Value.GetType() != values.ObjectValue {
 			continue
 		}
-		objects = append(objects, variable.(*values.Object))
+		objects = append(objects, variable.Value.(*values.Object))
 	}
 	return objects
 }
@@ -155,11 +155,11 @@ func (env *Environment) AddObject(object *values.Object) {
 // -------------------------------------- Constants -------------------------------------- MARK: Constants
 
 func (env *Environment) AddConstant(name string, value values.RuntimeValue) {
-	env.constants[name] = value
+	env.constants[name] = values.NewSlot(value)
 }
 
 func (env *Environment) AddPredefinedConstant(name string, value values.RuntimeValue) {
-	env.predefinedConstants[name] = value
+	env.predefinedConstants[name] = values.NewSlot(value)
 }
 
 func (env *Environment) declareConstant(constantName string, value values.RuntimeValue) (values.RuntimeValue, phpError.Error) {
@@ -173,7 +173,7 @@ func (env *Environment) declareConstant(constantName string, value values.Runtim
 		return values.NewVoid(), phpError.NewWarning("Constant %s already defined", constantName)
 	}
 
-	environment.constants[constantName] = value
+	environment.constants[constantName] = values.NewSlot(value)
 
 	return value, nil
 }
@@ -185,11 +185,11 @@ func (env *Environment) LookupConstant(constantName string) (values.RuntimeValue
 		environment = environment.parent
 	}
 
-	if value, ok := environment.predefinedConstants[constantName]; ok {
-		return value, nil
+	if slot, ok := environment.predefinedConstants[constantName]; ok {
+		return slot.Value, nil
 	}
-	if value, ok := environment.constants[constantName]; ok {
-		return value, nil
+	if slot, ok := environment.constants[constantName]; ok {
+		return slot.Value, nil
 	}
 	return values.NewVoid(), phpError.NewError("Undefined constant \"%s\"", constantName)
 }

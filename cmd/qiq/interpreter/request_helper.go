@@ -364,7 +364,7 @@ func parseQueryKey(key string, value string, result *values.Array, curIni *ini.I
 	interpreter.env.declareVariable("$array", result)
 	_, err = interpreter.Process(php)
 
-	return interpreter.env.variables["$array"].(*values.Array), err
+	return interpreter.env.variables["$array"].Value.(*values.Array), err
 }
 
 // This fix is required because "url.QueryUnescape()" cannot handle an unescaped percent
