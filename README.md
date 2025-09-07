@@ -40,7 +40,7 @@ In order to test the QIQ implementation against this cases the binary `qiqTester
 
 **Usage:**
 ```bash
-./qiqTester [-v(1|2)] [-only-failed] <list of directory or phpt-file>
+./qiqTester [-h] [-v(1|2)] [-only-failed] [-no-color] <list of directory or phpt-file>
 ```
 
 **Examples:**

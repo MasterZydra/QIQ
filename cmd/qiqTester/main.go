@@ -24,20 +24,23 @@ var skipped int = 0
 var verbosity1 bool
 var verbosity2 bool
 var onlyFailed bool
+var noColor bool
 
 func main() {
 	verbosity1Flag := flag.Bool("v1", false, "Verbosity level 1: Show all tests")
 	verbosity2Flag := flag.Bool("v2", false, "Verbosity level 2: Show all tests and failure reason")
 	onlyFailedFlag := flag.Bool("only-failed", false, "Show only failed tests")
+	noColorFlag := flag.Bool("no-color", false, "Do not use color in output")
 	flag.Parse()
 	verbosity1 = *verbosity1Flag
 	verbosity2 = *verbosity2Flag
 	onlyFailed = *onlyFailedFlag
+	noColor = *noColorFlag
 
 	args := goOs.Args[1:]
 
 	if len(args) == 0 {
-		fmt.Println("Usage: qiqTester [-v(1|2)] [-only-failed] [list of folders or files]")
+		fmt.Println("Usage: qiqTester [-v(1|2)] [-only-failed] [-no-color] [list of folders or files]")
 		goOs.Exit(1)
 	}
 
@@ -49,7 +52,7 @@ func main() {
 		println("Running test...")
 	}
 	for _, arg := range args {
-		if arg == "-v1" || arg == "-v2" || arg == "-only-failed" {
+		if arg == "-v1" || arg == "-v2" || arg == "-only-failed" || arg == "-no-color" {
 			continue
 		}
 
@@ -59,7 +62,11 @@ func main() {
 		}
 	}
 
-	fmt.Printf("\n%d Tests succeeded.\n%d Tests failed.\n%d Tests skipped.\n", succeeded, failed, skipped)
+	if noColor {
+		fmt.Printf("%5d Tests succeeded.\n%5d Tests failed.\n%5d Tests skipped.\n", succeeded, failed, skipped)
+	} else {
+		fmt.Printf("\n\033[32m%5d\033[0m Tests succeeded.\n\033[31m%5d\033[0m Tests failed.\n\033[33m%5d\033[0m Tests skipped.\n", succeeded, failed, skipped)
+	}
 }
 
 func process(path string) error {
@@ -92,7 +99,7 @@ func doTest(path string, info goOs.FileInfo, err error) error {
 	reader, err := phpt.NewReader(path)
 	if err != nil {
 		if verbosity1 || verbosity2 {
-			fmt.Println("FAIL ", path)
+			printFail(path)
 		}
 		if verbosity2 {
 			fmt.Println("     ", err)
@@ -103,7 +110,7 @@ func doTest(path string, info goOs.FileInfo, err error) error {
 	testFile, err := reader.GetTestFile()
 	if err != nil {
 		if verbosity1 || verbosity2 {
-			fmt.Println("FAIL ", path)
+			printFail(path)
 		}
 		if verbosity2 {
 			fmt.Println("     ", err)
@@ -149,7 +156,11 @@ func doTest(path string, info goOs.FileInfo, err error) error {
 		strings.HasPrefix(result, "skip only") || strings.HasPrefix(result, "skip this") ||
 		strings.HasPrefix(result, "skip.. ") || strings.HasPrefix(result, "skip ") {
 		if !onlyFailed && (verbosity1 || verbosity2) {
-			fmt.Println("SKIP ", path)
+			if noColor {
+				fmt.Println("SKIP ", path)
+			} else {
+				fmt.Println("\033[33mSKIP\033[0m ", path)
+			}
 		}
 		if !onlyFailed && (verbosity2) {
 			reason := strings.TrimPrefix(result, "skip ")
@@ -185,7 +196,7 @@ func doTest(path string, info goOs.FileInfo, err error) error {
 		equal, err = regexp.MatchString(pattern, common.TrimLineBreaks(result))
 		if err != nil {
 			if verbosity1 || verbosity2 {
-				fmt.Println("FAIL ", path)
+				printFail(path)
 			}
 			if verbosity2 {
 				fmt.Printf("      %s\n", err)
@@ -196,7 +207,7 @@ func doTest(path string, info goOs.FileInfo, err error) error {
 
 	default:
 		if verbosity1 || verbosity2 {
-			fmt.Println("FAIL ", path)
+			printFail(path)
 		}
 		if verbosity2 {
 			fmt.Printf("      Unsupported expect section: %s\n", testFile.ExpectType)
@@ -207,13 +218,17 @@ func doTest(path string, info goOs.FileInfo, err error) error {
 
 	if equal {
 		if !onlyFailed && (verbosity1 || verbosity2) {
-			fmt.Println("OK   ", path)
+			if noColor {
+				fmt.Println("OK   ", path)
+			} else {
+				fmt.Println("\033[32mOK\033[0m   ", path)
+			}
 		}
 		succeeded++
 		return nil
 	} else {
 		if verbosity1 || verbosity2 {
-			fmt.Println("FAIL ", path)
+			printFail(path)
 		}
 		if verbosity2 {
 			fmt.Println("--------------- Expected ---------------")
@@ -255,4 +270,12 @@ func replaceExpectfTags(value string) string {
 	value = re.ReplaceAllString(value, `($1)`)
 
 	return value
+}
+
+func printFail(path string) {
+	if noColor {
+		fmt.Println("FAIL ", path)
+	} else {
+		fmt.Println("\033[31mFAIL\033[0m ", path)
+	}
 }
