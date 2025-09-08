@@ -1,0 +1,102 @@
+name: Official PHP Tests
+
+on:
+  push:
+    branches:
+      - '*'
+    paths-ignore:
+      - '**.md'
+  pull_request:
+    branches:
+      - '*'
+    paths-ignore:
+      - '**.md'
+
+jobs:
+  test-linux:
+    name: Build & Run official PHP Tests on Linux
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Set up Go 1.24
+      uses: actions/setup-go@v6
+      with:
+        go-version: ^1.24
+
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v5
+
+    - name: Download php-src repository
+      run: git clone https://github.com/php/php-src.git --depth 1
+
+    - name: Building
+      run: go build -v -o . ./...
+
+    - name: Testing against official PHP Tests
+      run: ./qiqTester -v2 -no-color php-src/tests | tee test_output.txt
+
+    - name: Configure Git
+      if: github.ref == 'refs/heads/main'
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+    - name: Fetch stats branch
+      if: github.ref == 'refs/heads/main'
+      run: |
+        git fetch origin stats:stats || echo "No stats branch yet"
+
+    - name: Check out stats branch or create it
+      if: github.ref == 'refs/heads/main'
+      run: |
+        git checkout stats || git checkout --orphan stats
+
+    - name: Restore succeeded_history.txt if exists
+      if: github.ref == 'refs/heads/main'
+      run: |
+        [ -f succeeded_history.txt ] || touch succeeded_history.txt
+
+    - name: Run tests and append succeeded count
+      if: github.ref == 'refs/heads/main'
+      run: |
+        current=$(grep -a "Tests succeeded" test_output.txt | awk '{print $1}')
+        last=$(tail -n 1 succeeded_history.txt 2>/dev/null || echo "")
+        if [ "$current" != "$last" ]; then
+          echo "$current" >> succeeded_history.txt
+        fi
+
+    - name: Generate succeeded chart
+      if: github.ref == 'refs/heads/main'
+      run: |
+        echo '```' > chart.txt
+        awk '{for(i=0;i<$1/20;i++) printf "▇"; print " ("$1")"}' succeeded_history.txt >> chart.txt
+        echo '```' >> chart.txt
+
+    - name: Commit and push history to stats branch
+      if: github.ref == 'refs/heads/main'
+      run: |
+        git add succeeded_history.txt chart.txt
+        git commit -m "Update succeeded history [skip ci]" || echo "No changes to commit"
+        git push origin stats
+
+  windows-linux:
+    name: Build & Run official PHP Tests on Windows
+    runs-on: windows-latest
+    steps:
+
+    - name: Set up Go 1.24
+      uses: actions/setup-go@v6
+      with:
+        go-version: ^1.24
+
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v5
+
+    - name: Download php-src repository
+      run: git clone https://github.com/php/php-src.git --depth 1
+
+    - name: Building
+      run: go build -v -o . ./...
+
+    - name: Testing against official PHP Tests
+      run: .\qiqTester.exe -v2 -no-color php-src\tests

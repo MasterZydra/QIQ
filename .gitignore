@@ -1,0 +1,14 @@
+# Binaries
+/doc-gen
+/doc-gen.exe
+/qiq
+/qiq.exe
+/qiqAstGenerator
+/qiqAstGenerator.exe
+/qiqTester
+/qiqTester.exe
+
+# PHP files
+/*.php
+/test-suits/*
+*.php.ast
