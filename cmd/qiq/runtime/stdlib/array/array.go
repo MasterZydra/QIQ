@@ -45,13 +45,17 @@ func nativeFn_array_first(args []values.RuntimeValue, _ runtime.Context) (values
 
 // -------------------------------------- array_key_exists -------------------------------------- MARK: array_key_exists
 
-func nativeFn_array_key_exists(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
+func nativeFn_array_key_exists(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
 	args, err := funcParamValidator.NewValidator("array_key_exists").
 		AddParam("$key", []string{"string", "int", "float", "bool", "resource", "null"}, nil).
 		AddParam("$array", []string{"array"}, nil).
 		Validate(args)
 	if err != nil {
 		return values.NewVoid(), err
+	}
+
+	if args[0].GetType() == values.NullValue {
+		context.Interpreter.PrintError(phpError.NewDeprecatedError("Using null as the key parameter for array_key_exists() is deprecated, use an empty string instead in %s", context.Stmt.GetPosString()))
 	}
 
 	boolean, err := lib_array_key_exists(args[0], args[1].(*values.Array))

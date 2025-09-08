@@ -81,6 +81,8 @@ func (err *PhpError) String() string {
 		return "Fatal error: " + err.message
 	case ParsePhpError:
 		return "Parse error: " + err.message
+	case DeprecatedPhpError:
+		return "Deprecated: " + err.message
 	default:
 		return err.message
 	}
@@ -108,6 +110,10 @@ func NewNotice(format string, a ...any) Error {
 
 func NewEvent(event string) Error {
 	return &PhpError{errorType: EventError, message: event}
+}
+
+func NewDeprecatedError(format string, a ...any) Error {
+	return &PhpError{errorType: DeprecatedPhpError, message: fmt.Sprintf(format, a...)}
 }
 
 // MARK: ContinueEventError
