@@ -3,8 +3,8 @@ package common
 import (
 	"fmt"
 	"os"
-	"path"
 	"path/filepath"
+	"runtime"
 	"strings"
 )
 
@@ -19,7 +19,7 @@ func GetAbsPathForWorkingDir(workingDir string, subPath string) string {
 	if IsAbsPath(subPath) {
 		return subPath
 	}
-	return path.Join(workingDir, subPath)
+	return filepath.Join(workingDir, subPath)
 }
 
 func ToAbsPath(path string) string {
@@ -90,4 +90,12 @@ func DeleteFiles(files []string) error {
 		}
 	}
 	return result
+}
+
+func GetCurrentFilePath(skip int) string {
+	_, filename, _, ok := runtime.Caller(1 + skip)
+	if !ok {
+		return ""
+	}
+	return filepath.Dir(filename)
 }

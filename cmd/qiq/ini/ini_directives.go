@@ -92,6 +92,8 @@ var allowedDirectives = map[string]int{
 	"zlib.output_compression":       INI_ALL,
 	"zlib.output_compression_level": INI_ALL,
 	"zlib.output_handler":           INI_ALL,
+	// QIQ
+	"qiq.case_sensitive_include": INI_SYSTEM,
 }
 
 var defaultValues = map[string]string{
@@ -187,6 +189,8 @@ var defaultValues = map[string]string{
 	"zlib.output_compression":       "0",
 	"zlib.output_compression_level": "-1",
 	"zlib.output_handler":           "",
+	// Category: QIQ
+	"qiq.case_sensitive_include": "0",
 }
 
 var boolDirectives = []string{
@@ -212,6 +216,8 @@ var boolDirectives = []string{
 	"short_open_tag",
 	"zend.enable_gc",
 	"zlib.output_compression",
+	// QIQ
+	"qiq.case_sensitive_include",
 }
 
 var intDirectives = []string{

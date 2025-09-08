@@ -13,7 +13,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"path"
+	"path/filepath"
 	"strings"
 	"time"
 )
@@ -151,7 +151,7 @@ func getNotFoundText(resource string) string {
 }
 
 func requestHandler(w http.ResponseWriter, r *http.Request) {
-	absFilePath := path.Join(documentRoot, r.URL.Path)
+	absFilePath := filepath.Join(documentRoot, r.URL.Path)
 	_, err := os.Stat(absFilePath)
 	if err != nil {
 		fmt.Println("404", absFilePath)
@@ -161,10 +161,10 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if common.IsDir(absFilePath) {
-		index := path.Join(absFilePath, "index.html")
+		index := filepath.Join(absFilePath, "index.html")
 		if common.PathExists(index) && !common.IsDir(index) {
 			absFilePath = index
-		} else if index = path.Join(absFilePath, "index.php"); common.PathExists(index) && !common.IsDir(index) {
+		} else if index = filepath.Join(absFilePath, "index.php"); common.PathExists(index) && !common.IsDir(index) {
 			absFilePath = index
 		} else {
 			fmt.Println("404", absFilePath)
