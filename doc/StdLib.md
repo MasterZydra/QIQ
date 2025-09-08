@@ -92,6 +92,7 @@
 - strlen
 - strtolower
 - strtoupper
+- substr
 - ucfirst
 
 ## Variable Handling Functions
