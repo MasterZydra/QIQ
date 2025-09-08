@@ -50,7 +50,7 @@ func (reader *Reader) GetTestFile() (*TestFile, error) {
 			continue
 		}
 
-		if reader.at() == "--CREDITS--" || reader.at() == "--EXTENSIONS--" {
+		if slices.Contains([]string{"--CREDITS--", "--EXTENSIONS--", "--DESCRIPTION--"}, reader.at()) {
 			reader.eat()
 			for !reader.isEof() && !reader.isSection(reader.at()) {
 				reader.eat()
