@@ -33,7 +33,53 @@ jobs:
       run: go build -v -o . ./...
 
     - name: Testing against official PHP Tests
-      run: ./qiqTester -v2 php-src/tests
+      run: ./qiqTester -v2 -no-color php-src/tests | tee test_output.txt
+
+    - name: Configure Git
+      if: github.ref == 'refs/heads/main'
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+    - name: Fetch stats branch
+      if: github.ref == 'refs/heads/main'
+      run: |
+        git fetch origin stats:stats || echo "No stats branch yet"
+
+    - name: Check out stats branch or create it
+      if: github.ref == 'refs/heads/main'
+      run: |
+        git checkout stats || git checkout --orphan stats
+
+    - name: Restore succeeded_history.txt if exists
+      if: github.ref == 'refs/heads/main'
+      run: |
+        [ -f succeeded_history.txt ] || touch succeeded_history.txt
+
+    - name: Append succeeded count with timestamp
+      if: github.ref == 'refs/heads/main'
+      run: |
+        current=$(grep -a "Tests succeeded" test_output.txt | awk '{print $1}')
+        last=$(awk 'END{print $NF}' succeeded_history.txt 2>/dev/null || echo "")
+        timestamp=$(date +"%d.%m.%Y %H:%M")
+        if [ "$current" != "$last" ]; then
+          echo "$timestamp $current" >> succeeded_history.txt
+        fi
+
+    - name: Generate succeeded chart
+      if: github.ref == 'refs/heads/main'
+      run: |
+        echo '# php-src succeeding Tests (Linux)' > README.md
+        echo '```' >> README.md
+        awk '{for(i=0;i<$NF/20;i++) printf "▇"; print " ("$NF") " $1 " " $2}' succeeded_history.txt >> README.md
+        echo '```' >> README.md
+
+    - name: Commit and push history to stats branch
+      if: github.ref == 'refs/heads/main'
+      run: |
+        git add succeeded_history.txt README.md
+        git commit -m "Update succeeded history [skip ci]" || echo "No changes to commit"
+        git push origin stats
 
   windows-linux:
     name: Build & Run official PHP Tests on Windows
@@ -55,4 +101,4 @@ jobs:
       run: go build -v -o . ./...
 
     - name: Testing against official PHP Tests
-      run: .\qiqTester.exe -v2 php-src\tests
+      run: .\qiqTester.exe -v2 -no-color php-src\tests
