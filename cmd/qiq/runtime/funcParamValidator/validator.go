@@ -48,11 +48,13 @@ func (validator *Validator) AddVariableLenParam(name string, paramType []string)
 
 // Validate the given arguments
 func (validator *Validator) Validate(args []values.RuntimeValue) ([]values.RuntimeValue, phpError.Error) {
-
 	typeMatches := func(param funcParam, arg values.RuntimeValue) bool {
 		typeStr := values.ToPhpType(arg)
 		if typeStr == "" {
 			return false
+		}
+		if typeStr == "NULL" {
+			typeStr = "null"
 		}
 		return len(param.paramType) == 0 || slices.Contains(param.paramType, "mixed") || slices.Contains(param.paramType, typeStr)
 	}
