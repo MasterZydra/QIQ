@@ -14,6 +14,15 @@ func (interpreter *Interpreter) ProcessStmt(stmt *ast.Statement, _ any) (any, er
 
 // ProcessInterfaceDeclarationStmt implements Visitor.
 func (visitor *Interpreter) ProcessInterfaceDeclarationStmt(stmt *ast.InterfaceDeclarationStatement, _ any) (any, error) {
+	interfaceDecl, found := visitor.GetInterface(stmt.GetQualifiedName())
+	if found {
+		return values.NewVoidSlot(),
+			phpError.NewError(
+				"Cannot redeclare interface %s (previously declared in %s) in %s",
+				interfaceDecl.GetQualifiedName(), interfaceDecl.GetPosString(), stmt.GetPosString(),
+			)
+	}
+
 	visitor.AddInterface(stmt.GetQualifiedName(), stmt)
 	return values.NewVoidSlot(), nil
 }
@@ -22,6 +31,15 @@ func (visitor *Interpreter) ProcessInterfaceDeclarationStmt(stmt *ast.InterfaceD
 func (visitor *Interpreter) ProcessClassDeclarationStmt(stmt *ast.ClassDeclarationStatement, _ any) (any, error) {
 	if err := visitor.validateClass(stmt); err != nil {
 		return values.NewVoidSlot(), err
+	}
+
+	classDecl, found := visitor.GetClass(stmt.GetQualifiedName())
+	if found {
+		return values.NewVoidSlot(),
+			phpError.NewError(
+				"Cannot redeclare class %s (previously declared in %s) in %s",
+				classDecl.GetQualifiedName(), classDecl.GetPosString(), stmt.GetPosString(),
+			)
 	}
 
 	visitor.AddClass(stmt.GetQualifiedName(), stmt)

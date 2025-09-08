@@ -1464,6 +1464,22 @@ func TestClasses(t *testing.T) {
 		new B;`,
 		"A::__construct",
 	)
+
+	// Class redeclaration
+	testForError(t, `<?php class C { } class c { }`,
+		phpError.NewError(`Cannot redeclare class C (previously declared in %s:1:7) in %s:1:19`, TEST_FILE_NAME, TEST_FILE_NAME),
+	)
+	testForError(t, `<?php class C { } class C { }`,
+		phpError.NewError(`Cannot redeclare class C (previously declared in %s:1:7) in %s:1:19`, TEST_FILE_NAME, TEST_FILE_NAME),
+	)
+
+	// Interface redeclaration
+	testForError(t, `<?php interface I { } interface i { }`,
+		phpError.NewError(`Cannot redeclare interface I (previously declared in %s:1:7) in %s:1:23`, TEST_FILE_NAME, TEST_FILE_NAME),
+	)
+	testForError(t, `<?php interface I { } interface I { }`,
+		phpError.NewError(`Cannot redeclare interface I (previously declared in %s:1:7) in %s:1:23`, TEST_FILE_NAME, TEST_FILE_NAME),
+	)
 }
 
 // TODO Add interface test cases
