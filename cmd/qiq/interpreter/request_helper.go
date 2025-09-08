@@ -13,7 +13,7 @@ import (
 	"math/rand"
 	"net/url"
 	"os"
-	"path"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -189,9 +189,9 @@ func parsePost(query string, interpreter runtime.Interpreter) (*values.Array, *v
 						if fileError == 0 {
 							tmpDir := interpreter.GetIni().GetStr("upload_tmp_dir")
 							if tmpDir == "" {
-								tmpDir = path.Join(os.TempDir(), "qiq", "uploads")
+								tmpDir = filepath.Join(os.TempDir(), "qiq", "uploads")
 							}
-							tmpFile = path.Join(tmpDir, randomFilename())
+							tmpFile = filepath.Join(tmpDir, randomFilename())
 							interpreter.GetRequest().UploadedFiles = append(interpreter.GetRequest().UploadedFiles, tmpFile)
 							err := common.WriteFile(tmpFile, content)
 							if err != nil {

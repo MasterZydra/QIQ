@@ -2,6 +2,7 @@ package interpreter
 
 import (
 	"QIQ/cmd/qiq/ast"
+	"QIQ/cmd/qiq/common"
 	"QIQ/cmd/qiq/common/os"
 	"QIQ/cmd/qiq/ini"
 	"QIQ/cmd/qiq/phpError"
@@ -13,21 +14,13 @@ import (
 )
 
 var TEST_FILE_NAME string = getTestFileName()
-var TEST_FILE_PATH string = getTestFilePath()
+var TEST_FILE_PATH string = common.GetCurrentFilePath(0)
 
 func getTestFileName() string {
 	if os.IS_WIN {
-		return `C:\Users\admin\test.php`
+		return common.GetCurrentFilePath(0) + `\test.php`
 	} else {
-		return "/home/admin/test.php"
-	}
-}
-
-func getTestFilePath() string {
-	if os.IS_WIN {
-		return `C:\Users\admin`
-	} else {
-		return "/home/admin"
+		return common.GetCurrentFilePath(0) + "/test.php"
 	}
 }
 
@@ -99,8 +92,8 @@ func TestVariableExprToVariableName(t *testing.T) {
 
 // -------------------------------------- input output tests -------------------------------------- MARK: input output tests
 
-func testForError(t *testing.T, php string, expected phpError.Error) {
-	interpreter, err := NewInterpreter(runtime.NewExecutionContext(), ini.NewDevIni(), &request.Request{}, TEST_FILE_NAME)
+func testForErrorCustomIni(t *testing.T, ini *ini.Ini, php string, expected phpError.Error) {
+	interpreter, err := NewInterpreter(runtime.NewExecutionContext(), ini, &request.Request{}, TEST_FILE_NAME)
 	if err != nil {
 		t.Errorf("\nCode: \"%s\"\nUnexpected error: \"%s\"", php, err)
 		return
@@ -113,6 +106,10 @@ func testForError(t *testing.T, php string, expected phpError.Error) {
 	if err.GetErrorType() != expected.GetErrorType() || err.GetMessage() != expected.GetMessage() {
 		t.Errorf("\nCode: \"%s\"\nExpected: %s\nGot:      %s", php, expected, err)
 	}
+}
+
+func testForError(t *testing.T, php string, expected phpError.Error) {
+	testForErrorCustomIni(t, ini.NewDevIni(), php, expected)
 }
 
 func testInputOutput(t *testing.T, php string, output string) *Interpreter {
@@ -191,17 +188,34 @@ func TestConstants(t *testing.T) {
 }
 
 func TestFileIncludes(t *testing.T) {
-	testForError(t, `<?php require "include.php"; ?>`,
+	testInputOutput(t, `<?php include "../../../test/include.php"; includedFunc();`, "includedFunc")
+	if os.IS_WIN {
+		testInputOutput(t, `<?php include "..\\..\\..\\test\\include.php"; includedFunc();`, "includedFunc")
+	}
+
+	testForError(t, `<?php require "include.php";`,
 		phpError.NewError("Uncaught Error: Failed opening required 'include.php' (include_path='%s') in %s:1:15", TEST_FILE_PATH, TEST_FILE_NAME),
 	)
-	testForError(t, `<?php require_once "include.php"; ?>`,
+	testForError(t, `<?php require_once "include.php";`,
 		phpError.NewError("Uncaught Error: Failed opening required 'include.php' (include_path='%s') in %s:1:20", TEST_FILE_PATH, TEST_FILE_NAME),
 	)
-	testForError(t, `<?php include "include.php"; ?>`,
+	testForError(t, `<?php include "include.php";`,
 		phpError.NewWarning("include(): Failed opening 'include.php' for inclusion (include_path='%s') in %s:1:15", TEST_FILE_PATH, TEST_FILE_NAME),
 	)
-	testForError(t, `<?php include_once "include.php"; ?>`,
+	testForError(t, `<?php include_once "include.php";`,
 		phpError.NewWarning("include(): Failed opening 'include.php' for inclusion (include_path='%s') in %s:1:20", TEST_FILE_PATH, TEST_FILE_NAME),
+	)
+
+	// QIQ feature: case-sensitive include (on Windows)
+	devIni := ini.NewDevIni()
+	devIni.Set("qiq.case_sensitive_include", "1", ini.INI_SYSTEM)
+	testForErrorCustomIni(t, devIni,
+		`<?php include "../../../test/Include.php";`,
+		phpError.NewWarning("include(): Failed opening '../../../test/Include.php' for inclusion (include_path='%s') in %s:1:15", TEST_FILE_PATH, TEST_FILE_NAME),
+	)
+	testForErrorCustomIni(t, devIni,
+		`<?php include "../../../Test/Include.php";`,
+		phpError.NewWarning("include(): Failed opening '../../../Test/Include.php' for inclusion (include_path='%s') in %s:1:15", TEST_FILE_PATH, TEST_FILE_NAME),
 	)
 }
 

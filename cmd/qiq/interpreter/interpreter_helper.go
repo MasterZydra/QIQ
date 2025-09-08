@@ -283,16 +283,32 @@ func (interpreter *Interpreter) includeFile(filepathExpr ast.IExpression, env *E
 		return getError()
 	}
 
+	isCaseSensitiveInclude := interpreter.ini.GetBool("qiq.case_sensitive_include")
+
+	if isCaseSensitiveInclude && os.IS_WIN {
+		foundExact, err := common.FileExistsCaseSensitive(absFilename)
+		if err != nil {
+			return slot, phpError.NewError("%s", err.Error())
+		}
+		if !foundExact {
+			interpreter.PrintError(phpError.NewWarning(
+				"%s(%s): Failed to open stream: No such file or directory in %s",
+				functionName, filename, filepathExpr.GetPosString(),
+			))
+			return getError()
+		}
+	}
+
 	content, fileErr := GoOs.ReadFile(absFilename)
 	if fileErr != nil {
 		return getError()
 	}
 	program, parserErr := interpreter.parser.ProduceAST(string(content), absFilename)
 
-	if !os.IS_WIN {
-		interpreter.includedFiles = append(interpreter.includedFiles, absFilename)
-	} else {
+	if os.IS_WIN {
 		interpreter.includedFiles = append(interpreter.includedFiles, strings.ToLower(absFilename))
+	} else {
+		interpreter.includedFiles = append(interpreter.includedFiles, absFilename)
 	}
 	if parserErr != nil {
 		return slot, parserErr

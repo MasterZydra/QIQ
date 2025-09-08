@@ -49,6 +49,9 @@
 - include_path
 - open_basedir
 
+## QIQ
+- qiq.case_sensitive_include
+
 ## Resource Limits
 - memory_limit
 
