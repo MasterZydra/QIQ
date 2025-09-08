@@ -89,6 +89,14 @@ You can also mount a local project into the container:
 docker run -p 8080:8080 -v $(pwd):/var/www/html:z ghcr.io/masterzydra/qiq:latest
 ```
 
+## Special features
+
+In addition to supporting official PHP syntax and features, QIQ offers some unique capabilities:
+
+### Case Sensitive Files Include/Require
+
+QIQ provides the `qiq.case_sensitive_include` INI directive, which enforces case-sensitive behavior for `include` and `require` statements even on Windows systems. This helps catch issues where file or path casing does not match, which would otherwise only cause problems in Linux environments.
+
 ## Used resources
 For some part of this project, the following resources were used as a guide, inspiration, or concept:
 - [PHP Language Specification](https://phplang.org/)
