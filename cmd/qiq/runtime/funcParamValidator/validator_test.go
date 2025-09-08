@@ -112,4 +112,18 @@ func TestCorrectParamType(t *testing.T) {
 	if err != nil {
 		t.Errorf("\nExpected: nil\nGot: \"%s\"", err)
 	}
+
+	validator = NewValidator("testFn").
+		AddVariableLenParam("paramA", []string{"null", "int"})
+	_, err = validator.Validate([]values.RuntimeValue{values.NewInt(42)})
+	if err != nil {
+		t.Errorf("\nExpected: nil\nGot: \"%s\"", err)
+	}
+
+	validator = NewValidator("testFn").
+		AddVariableLenParam("paramA", []string{"null", "int"})
+	_, err = validator.Validate([]values.RuntimeValue{values.NewNull()})
+	if err != nil {
+		t.Errorf("\nExpected: nil\nGot: \"%s\"", err)
+	}
 }
