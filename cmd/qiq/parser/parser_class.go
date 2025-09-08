@@ -246,7 +246,7 @@ func (parser *Parser) parseClassMemberDeclaration(class *ast.ClassDeclarationSta
 	}
 }
 
-func (parser *Parser) parseClassConstDeclaration(class ast.AddConst) phpError.Error {
+func (parser *Parser) parseClassConstDeclaration(class ast.AddGetConst) phpError.Error {
 	// -------------------------------------- class-const-declaration -------------------------------------- MARK: class-const-declaration
 
 	// Spec: https://phplang.org/spec/14-classes.html#grammar-class-const-declaration
@@ -283,6 +283,14 @@ func (parser *Parser) parseClassConstDeclaration(class ast.AddConst) phpError.Er
 		value, err := parser.parseExpr()
 		if err != nil {
 			return err
+		}
+
+		constDecl, found := class.GetConst(name)
+		if found {
+			return phpError.NewError(
+				"Cannot redefine class constant %s::%s (previously declared in %s) in %s",
+				class.GetQualifiedName(), constDecl.Name, constDecl.GetPosString(), pos.ToPosString(),
+			)
 		}
 
 		class.AddConst(ast.NewClassConstDeclarationStmt(parser.nextId(), pos, name, value, visibility))

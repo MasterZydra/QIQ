@@ -594,6 +594,10 @@ func TestClassDeclaration(t *testing.T) {
 	// Class with redeclared functions
 	testForError(t, `<?php class C { function f1() {} function f1() {} }`, phpError.NewError(`Cannot redeclare C:f1() (previously declared in %s:1:26) in %s:1:43`, TEST_FILE_NAME, TEST_FILE_NAME))
 	testForError(t, `<?php namespace My\Space; class C { function f1() {} function f1() {} }`, phpError.NewError(`Cannot redeclare My\Space\C:f1() (previously declared in %s:1:46) in %s:1:63`, TEST_FILE_NAME, TEST_FILE_NAME))
+
+	// Class with redefined constants
+	testForError(t, `<?php class C { const C = 1; const C = 2; }`, phpError.NewError(`Cannot redefine class constant C::C (previously declared in %s:1:17) in %s:1:30`, TEST_FILE_NAME, TEST_FILE_NAME))
+	testForError(t, `<?php namespace My\Space; class C { const C = 1; const C = 2; }`, phpError.NewError(`Cannot redefine class constant My\Space\C::C (previously declared in %s:1:37) in %s:1:50`, TEST_FILE_NAME, TEST_FILE_NAME))
 }
 
 // -------------------------------------- Interface -------------------------------------- MARK: Interface
@@ -632,6 +636,10 @@ func TestInterfaceDeclaration(t *testing.T) {
 	// Interface with redeclared function
 	testForError(t, `<?php interface I { function f1(); function f1(); }`, phpError.NewError(`Cannot redeclare I:f1() (previously declared in %s:1:30) in %s:1:45`, TEST_FILE_NAME, TEST_FILE_NAME))
 	testForError(t, `<?php namespace My\Space; interface I { function f1(); function f1(); }`, phpError.NewError(`Cannot redeclare My\Space\I:f1() (previously declared in %s:1:50) in %s:1:65`, TEST_FILE_NAME, TEST_FILE_NAME))
+
+	// Interface with redefined constants
+	testForError(t, `<?php interface C { const C = 1; const C = 2; }`, phpError.NewError(`Cannot redefine class constant C::C (previously declared in %s:1:21) in %s:1:34`, TEST_FILE_NAME, TEST_FILE_NAME))
+	testForError(t, `<?php namespace My\Space; interface C { const C = 1; const C = 2; }`, phpError.NewError(`Cannot redefine class constant My\Space\C::C (previously declared in %s:1:41) in %s:1:54`, TEST_FILE_NAME, TEST_FILE_NAME))
 }
 
 // -------------------------------------- Functions -------------------------------------- MARK: Functions

@@ -7,6 +7,9 @@ type AddGetMethod interface {
 	GetQualifiedName() string
 }
 
-type AddConst interface {
+type AddGetConst interface {
 	AddConst(constStmt *ClassConstDeclarationStatement)
+	GetConst(name string) (*ClassConstDeclarationStatement, bool)
+	// Required for error messages
+	GetQualifiedName() string
 }

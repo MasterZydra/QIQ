@@ -400,6 +400,11 @@ func (stmt *ClassDeclarationStatement) AddConst(constStmt *ClassConstDeclaration
 	stmt.Constants[constStmt.Name] = constStmt
 }
 
+func (stmt *ClassDeclarationStatement) GetConst(name string) (*ClassConstDeclarationStatement, bool) {
+	classDecl, found := stmt.Constants[name]
+	return classDecl, found
+}
+
 func (stmt *ClassDeclarationStatement) AddMethod(method *MethodDefinitionStatement) {
 	method.Class = stmt
 	if !slices.Contains(stmt.MethodNames, method.Name) {
@@ -408,8 +413,8 @@ func (stmt *ClassDeclarationStatement) AddMethod(method *MethodDefinitionStateme
 	stmt.Methods[strings.ToLower(method.Name)] = method
 }
 
-func (stmt *ClassDeclarationStatement) GetMethod(methodName string) (*MethodDefinitionStatement, bool) {
-	methodDecl, found := stmt.Methods[strings.ToLower(methodName)]
+func (stmt *ClassDeclarationStatement) GetMethod(name string) (*MethodDefinitionStatement, bool) {
+	methodDecl, found := stmt.Methods[strings.ToLower(name)]
 	return methodDecl, found
 }
 
@@ -518,6 +523,11 @@ func (stmt *InterfaceDeclarationStatement) AddConst(constStmt *ClassConstDeclara
 	stmt.Constants[constStmt.Name] = constStmt
 }
 
+func (stmt *InterfaceDeclarationStatement) GetConst(name string) (*ClassConstDeclarationStatement, bool) {
+	classDecl, found := stmt.Constants[name]
+	return classDecl, found
+}
+
 func (stmt *InterfaceDeclarationStatement) AddMethod(method *MethodDefinitionStatement) {
 	if !slices.Contains(stmt.MethodNames, method.Name) {
 		stmt.MethodNames = append(stmt.MethodNames, method.Name)
@@ -525,8 +535,8 @@ func (stmt *InterfaceDeclarationStatement) AddMethod(method *MethodDefinitionSta
 	stmt.Methods[strings.ToLower(method.Name)] = method
 }
 
-func (stmt *InterfaceDeclarationStatement) GetMethod(methodName string) (*MethodDefinitionStatement, bool) {
-	methodDef, found := stmt.Methods[strings.ToLower(methodName)]
+func (stmt *InterfaceDeclarationStatement) GetMethod(name string) (*MethodDefinitionStatement, bool) {
+	methodDef, found := stmt.Methods[strings.ToLower(name)]
 	if !found {
 		return nil, false
 	}
