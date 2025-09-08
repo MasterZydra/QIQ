@@ -493,7 +493,7 @@ func (parser *Parser) parseClassDestrutorDeclaration(class *ast.ClassDeclaration
 	return isDestructor, nil
 }
 
-func (parser *Parser) parseClassMethodDeclaration(class ast.AddMethod, isClass bool) (bool, phpError.Error) {
+func (parser *Parser) parseClassMethodDeclaration(class ast.AddGetMethod, isClass bool) (bool, phpError.Error) {
 	// -------------------------------------- method-declaration -------------------------------------- MARK: method-declaration
 
 	// Spec: https://phplang.org/spec/14-classes.html#grammar-method-declaration
@@ -575,6 +575,14 @@ func (parser *Parser) parseClassMethodDeclaration(class ast.AddMethod, isClass b
 			return isMethod, NewExpectedError(";", parser.at())
 		}
 
+		methodDef, found := class.GetMethod(name)
+		if found {
+			return isMethod, phpError.NewError(
+				"Cannot redeclare %s:%s() (previously declared in %s) in %s",
+				class.GetQualifiedName(), methodDef.Name, methodDef.GetPosString(), pos.ToPosString(),
+			)
+		}
+
 		class.AddMethod(ast.NewMethodDefinitionStmt(
 			parser.nextId(), pos,
 			name, modifiers, parameters, nil, returnTypes,
@@ -590,6 +598,14 @@ func (parser *Parser) parseClassMethodDeclaration(class ast.AddMethod, isClass b
 	}
 	if body.GetKind() != ast.CompoundStmt {
 		return isMethod, phpError.NewParseError("Expected compound statement. Got %s", body.GetKind())
+	}
+
+	methodDef, found := class.GetMethod(name)
+	if found {
+		return isMethod, phpError.NewError(
+			"Cannot redeclare %s:%s() (previously declared in %s) in %s",
+			class.GetQualifiedName(), methodDef.Name, methodDef.GetPosString(), pos.ToPosString(),
+		)
 	}
 
 	class.AddMethod(ast.NewMethodDefinitionStmt(
@@ -853,7 +869,7 @@ func (parser *Parser) parseInterfaceMemberDeclaration(interfaceDecl *ast.Interfa
 
 		// method-declaration
 		isMethodDeclaration, err := parser.parseClassMethodDeclaration(interfaceDecl, false)
-		if isMethodDeclaration && err != nil {
+		if err != nil {
 			return err
 		}
 		if isMethodDeclaration {

@@ -1,7 +1,10 @@
 package ast
 
-type AddMethod interface {
+type AddGetMethod interface {
 	AddMethod(method *MethodDefinitionStatement)
+	GetMethod(name string) (*MethodDefinitionStatement, bool)
+	// Required for error messages
+	GetQualifiedName() string
 }
 
 type AddConst interface {
