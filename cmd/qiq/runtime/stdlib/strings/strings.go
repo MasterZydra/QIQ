@@ -25,6 +25,7 @@ func Register(environment runtime.Environment) {
 	environment.AddNativeFunction("strlen", nativeFn_strlen)
 	environment.AddNativeFunction("strtolower", nativeFn_strtolower)
 	environment.AddNativeFunction("strtoupper", nativeFn_strtoupper)
+	environment.AddNativeFunction("substr", nativeFn_substr)
 	environment.AddNativeFunction("ucfirst", nativeFn_ucfirst)
 
 	// Const Category: String Constants
@@ -361,6 +362,63 @@ func nativeFn_strtoupper(args []values.RuntimeValue, _ runtime.Context) (values.
 	return values.NewStr(input), nil
 }
 
+// -------------------------------------- substr -------------------------------------- MARK: substr
+
+func nativeFn_substr(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
+	// Spec: https://www.php.net/manual/en/function.substr.php
+
+	args, err := funcParamValidator.NewValidator("substr").
+		AddParam("$string", []string{"string"}, nil).
+		AddParam("$offset", []string{"int"}, nil).
+		AddParam("$length", []string{"null", "int"}, values.NewNull()).
+		Validate(args)
+	if err != nil {
+		return values.NewVoid(), err
+	}
+
+	input := args[0].(*values.Str).Value
+	offset := int(args[1].(*values.Int).Value)
+	lengthVal := args[2]
+
+	strLen := len(input)
+
+	// Handle negative offset
+	if offset < 0 {
+		offset = strLen + offset
+		if offset < 0 {
+			offset = 0
+		}
+	}
+	if offset > strLen {
+		return values.NewStr(""), nil
+	}
+
+	// Determine length
+	var length int
+	if lengthVal.GetType() == values.NullValue {
+		length = strLen - offset
+	} else {
+		length = int(lengthVal.(*values.Int).Value)
+		if length < 0 {
+			length = (strLen - offset) + length
+			if length < 0 {
+				return values.NewStr(""), nil
+			}
+		}
+	}
+
+	// Clamp length to available string
+	end := offset + length
+	if end > strLen {
+		end = strLen
+	}
+	if end < offset {
+		return values.NewStr(""), nil
+	}
+
+	return values.NewStr(input[offset:end]), nil
+}
+
 // -------------------------------------- ucfirst -------------------------------------- MARK: ucfirst
 
 func nativeFn_ucfirst(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
@@ -464,7 +522,6 @@ func nativeFn_ucfirst(args []values.RuntimeValue, _ runtime.Context) (values.Run
 // TODO strstr
 // TODO strtok
 // TODO strtr
-// TODO substr
 // TODO substr_compare
 // TODO substr_count
 // TODO substr_replace

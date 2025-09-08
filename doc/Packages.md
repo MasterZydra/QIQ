@@ -14,6 +14,8 @@ flowchart LR
     QIQ_cmd_qiq_ast[QIQ/cmd/qiq/ast] --> QIQ_cmd_qiq_config[QIQ/cmd/qiq/config]
     QIQ_cmd_qiq_ast[QIQ/cmd/qiq/ast] --> QIQ_cmd_qiq_position[QIQ/cmd/qiq/position]
 
+    QIQ_cmd_qiq_common[QIQ/cmd/qiq/common] --> QIQ_cmd_qiq_common_os[QIQ/cmd/qiq/common/os]
+
     QIQ_cmd_qiq_ini[QIQ/cmd/qiq/ini] --> QIQ_cmd_qiq_common[QIQ/cmd/qiq/common]
     QIQ_cmd_qiq_ini[QIQ/cmd/qiq/ini] --> QIQ_cmd_qiq_config[QIQ/cmd/qiq/config]
     QIQ_cmd_qiq_ini[QIQ/cmd/qiq/ini] --> QIQ_cmd_qiq_phpError[QIQ/cmd/qiq/phpError]

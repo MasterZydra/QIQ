@@ -200,6 +200,18 @@ func TestLibStrings(t *testing.T) {
 	testInputOutput(t, `<?php var_dump(strtoupper(''));`, "string(0) \"\"\n")
 	testInputOutput(t, `<?php var_dump(strtoupper('aäoöuüsß'));`, "string(12) \"AäOöUüSß\"\n")
 
+	// substr
+	// Spec: https://www.php.net/manual/en/function.substr.php
+	testInputOutput(t, `<?php var_dump(substr("abcdef", 1));`, "string(5) \"bcdef\"\n")
+	testInputOutput(t, `<?php var_dump(substr("abcdef", 1, null));`, "string(5) \"bcdef\"\n")
+	testInputOutput(t, `<?php var_dump(substr("abcdef", -1));`, "string(1) \"f\"\n")
+	testInputOutput(t, `<?php var_dump(substr("abcdef", -2));`, "string(2) \"ef\"\n")
+	testInputOutput(t, `<?php var_dump(substr("abcdef", -3, 1));`, "string(1) \"d\"\n")
+	testInputOutput(t, `<?php var_dump(substr("abcdef", 0, -1));`, "string(5) \"abcde\"\n")
+	testInputOutput(t, `<?php var_dump(substr("abcdef", 2, -1));`, "string(3) \"cde\"\n")
+	testInputOutput(t, `<?php var_dump(substr("abcdef", 4, -4));`, "string(0) \"\"\n")
+	testInputOutput(t, `<?php var_dump(substr("abcdef", -3, -1));`, "string(2) \"de\"\n")
+
 	// ucfirst
 	testInputOutput(t, `<?php var_dump(ucfirst('ABC'));`, "string(3) \"ABC\"\n")
 	testInputOutput(t, `<?php var_dump(ucfirst('abc'));`, "string(3) \"Abc\"\n")
