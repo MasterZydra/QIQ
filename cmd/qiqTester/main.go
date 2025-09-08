@@ -193,7 +193,7 @@ func doTest(path string, info goOs.FileInfo, err error) error {
 			}
 			pattern = replaceExpectfTags(testFile.Expect)
 		}
-		equal, err = regexp.MatchString(pattern, common.TrimLineBreaks(result))
+		equal, err = regexp.MatchString(common.TrimLineBreaks(pattern), common.TrimLineBreaks(result))
 		if err != nil {
 			if verbosity1 || verbosity2 {
 				printFail(path)
