@@ -350,19 +350,41 @@ func (interpreter *Interpreter) ProcessFunctionCallExpr(expr *ast.FunctionCallEx
 	}
 	functionEnv.CurrentFunction = userFunction
 
-	if len(userFunction.Params) != len(expr.Arguments) {
+	requiredParams := len(userFunction.Params)
+	for i := len(userFunction.Params) - 1; i >= 0; i-- {
+		if userFunction.Params[i].DefaultValue != nil {
+			requiredParams--
+		} else {
+			break
+		}
+	}
+
+	if requiredParams > len(expr.Arguments) {
+		if len(userFunction.Params) == requiredParams {
+			return values.NewVoidSlot(), phpError.NewError(
+				"Uncaught ArgumentCountError: %s() expects exactly %d arguments, %d given",
+				userFunction.FunctionName, len(userFunction.Params), len(expr.Arguments),
+			)
+		}
 		return values.NewVoidSlot(), phpError.NewError(
-			"Uncaught ArgumentCountError: %s() expects exactly %d arguments, %d given",
-			userFunction.FunctionName, len(userFunction.Params), len(expr.Arguments),
+			"Uncaught ArgumentCountError: %s() expects at least %d arguments, %d given",
+			userFunction.FunctionName, requiredParams, len(expr.Arguments),
 		)
 	}
 	for index, param := range userFunction.Params {
-		runtimeValue := must(interpreter.processStmt(expr.Arguments[index], env))
+		var slot *values.Slot = nil
+		if len(expr.Arguments) > index {
+			slot = must(interpreter.processStmt(expr.Arguments[index], env))
+		} else if param.DefaultValue != nil {
+			slot = must(interpreter.processStmt(param.DefaultValue, env))
+		} else {
+			return values.NewVoidSlot(), phpError.NewError("Too few arguments... in %s", expr.Arguments[index].GetPosString())
+		}
 
 		// Check if the parameter types match
-		err = checkParameterTypes(runtimeValue.Value, param.Type)
+		err = checkParameterTypes(slot.Value, param.Type)
 		if err != nil && err.GetMessage() == "Types do not match" {
-			givenType, err := variableHandling.GetType(runtimeValue.Value)
+			givenType, err := variableHandling.GetType(slot.Value)
 			if err != nil {
 				return values.NewVoidSlot(), err
 			}
@@ -373,9 +395,9 @@ func (interpreter *Interpreter) ProcessFunctionCallExpr(expr *ast.FunctionCallEx
 		}
 		// Declare parameter in function environment
 		if param.ByRef {
-			functionEnv.declareVariableByRef(param.Name, runtimeValue)
+			functionEnv.declareVariableByRef(param.Name, slot)
 		} else {
-			functionEnv.declareVariable(param.Name, values.DeepCopy(runtimeValue).Value)
+			functionEnv.declareVariable(param.Name, values.DeepCopy(slot).Value)
 		}
 	}
 

@@ -561,7 +561,7 @@ func TestClassDeclaration(t *testing.T) {
 
 	// Class with method with parameters
 	class = ast.NewClassDeclarationStmt(0, nil, "c", false, false)
-	class.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "myFunction", []string{}, []ast.FunctionParameter{ast.NewFunctionParam(false, "$name", []string{"string"})}, ast.NewCompoundStmt(0, []ast.IStatement{}), []string{"void"}))
+	class.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "myFunction", []string{}, []ast.FunctionParameter{ast.NewFunctionParam(false, "$name", []string{"string"}, nil)}, ast.NewCompoundStmt(0, []ast.IStatement{}), []string{"void"}))
 	testStmt(t, `<?php class c { function myFunction(string $name): void {} }`, class)
 
 	// Class with method with return type
@@ -626,7 +626,7 @@ func TestInterfaceDeclaration(t *testing.T) {
 	testStmt(t, `<?php interface i { const a="a"; private const b="b", c=3; }`, interfaceDecl)
 }
 
-// -------------------------------------- Anonymous functions -------------------------------------- MARK: Anonymous functions
+// -------------------------------------- Functions -------------------------------------- MARK: Functions
 
 func TestAnonymousFunctions(t *testing.T) {
 	// Empty anonymous function
@@ -648,7 +648,23 @@ func TestAnonymousFunctions(t *testing.T) {
 	// Anonymous function with byRef param
 	stmt = ast.NewExpressionStmt(0, ast.NewSimpleAssignmentExpr(0,
 		ast.NewSimpleVariableExpr(0, ast.NewVariableNameExpr(0, nil, "$f")),
-		ast.NewAnonymousFunctionCreationExpr(0, nil, []ast.FunctionParameter{ast.NewFunctionParam(true, "$a", []string{})}, ast.NewCompoundStmt(0, []ast.IStatement{}), []string{}),
+		ast.NewAnonymousFunctionCreationExpr(0, nil, []ast.FunctionParameter{ast.NewFunctionParam(true, "$a", []string{}, nil)}, ast.NewCompoundStmt(0, []ast.IStatement{}), []string{}),
 	))
 	testStmt(t, `<?php $f = function(&$a) {};`, stmt)
+}
+
+func TestFunctions(t *testing.T) {
+	// Empty function
+	stmt := ast.NewFunctionDefinitionStmt(0, nil, "func1", []ast.FunctionParameter{}, ast.NewCompoundStmt(0, []ast.IStatement{}), []string{})
+	testStmt(t, `<?php function func1() {};`, stmt)
+
+	// Function with parameters
+	stmt = ast.NewFunctionDefinitionStmt(0, nil, "func1", []ast.FunctionParameter{ast.NewFunctionParam(false, "$a", []string{}, nil)}, ast.NewCompoundStmt(0, []ast.IStatement{}), []string{"null", "string"})
+	testStmt(t, `<?php function func1($a): null|string {};`, stmt)
+	stmt = ast.NewFunctionDefinitionStmt(0, nil, "func1", []ast.FunctionParameter{ast.NewFunctionParam(false, "$a", []string{"null", "string"}, nil)}, ast.NewCompoundStmt(0, []ast.IStatement{}), []string{})
+	testStmt(t, `<?php function func1(?string $a) {};`, stmt)
+	stmt = ast.NewFunctionDefinitionStmt(0, nil, "func1", []ast.FunctionParameter{ast.NewFunctionParam(true, "$a", []string{"null", "string"}, nil)}, ast.NewCompoundStmt(0, []ast.IStatement{}), []string{})
+	testStmt(t, `<?php function func1(?string &$a) {};`, stmt)
+	stmt = ast.NewFunctionDefinitionStmt(0, nil, "func1", []ast.FunctionParameter{ast.NewFunctionParam(true, "$a", []string{"null", "string"}, ast.NewNullLiteralExpr(0, nil))}, ast.NewCompoundStmt(0, []ast.IStatement{}), []string{})
+	testStmt(t, `<?php function func1(?string &$a = null) {};`, stmt)
 }

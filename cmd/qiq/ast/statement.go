@@ -82,13 +82,14 @@ func (stmt *MethodDefinitionStatement) Process(visitor Visitor, context any) (an
 // -------------------------------------- FunctionDefinitionStatement -------------------------------------- MARK: FunctionDefinitionStatement
 
 type FunctionParameter struct {
-	Type  []string
-	Name  string
-	ByRef bool
+	Type         []string
+	Name         string
+	ByRef        bool
+	DefaultValue IExpression
 }
 
-func NewFunctionParam(byRef bool, name string, paramType []string) FunctionParameter {
-	return FunctionParameter{ByRef: byRef, Name: name, Type: paramType}
+func NewFunctionParam(byRef bool, name string, paramType []string, defaultValue IExpression) FunctionParameter {
+	return FunctionParameter{ByRef: byRef, Name: name, Type: paramType, DefaultValue: defaultValue}
 }
 
 type FunctionDefinitionStatement struct {

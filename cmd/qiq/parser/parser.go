@@ -1277,7 +1277,20 @@ func (parser *Parser) parseFunctionParameters() ([]ast.FunctionParameter, phpErr
 			if parser.at().TokenType != lexer.VariableNameToken {
 				return parameters, phpError.NewParseError("Expected variable. Got \"%s\" (%s) at %s", parser.at().Value, parser.at().TokenType, parser.at().GetPosString())
 			}
-			parameters = append(parameters, ast.NewFunctionParam(byRef, parser.eat().Value, paramTypes))
+
+			paramName := parser.eat().Value
+
+			// TODO parse constant-expression
+			var defaultValue ast.IExpression = nil
+			if parser.isToken(lexer.OpOrPuncToken, "=", true) {
+				var err phpError.Error
+				defaultValue, err = parser.parseExpr()
+				if err != nil {
+					return parameters, err
+				}
+			}
+
+			parameters = append(parameters, ast.NewFunctionParam(byRef, paramName, paramTypes, defaultValue))
 
 			if parser.isToken(lexer.OpOrPuncToken, ",", true) {
 				continue
@@ -1287,8 +1300,6 @@ func (parser *Parser) parseFunctionParameters() ([]ast.FunctionParameter, phpErr
 			}
 			return parameters, phpError.NewParseError("Expected \",\" or \")\". Got %s", parser.at())
 		}
-
-		// TODO function-definition - parameter-declaration - default-argument-specifier(opt)
 
 		// TODO function-definition - variadic-parameter
 	}

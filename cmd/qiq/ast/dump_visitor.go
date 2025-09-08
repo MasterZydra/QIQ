@@ -93,7 +93,7 @@ func (visitor DumpVisitor) ProcessFunctionParameterSlice(parameters []FunctionPa
 		if len(params) > 1 {
 			params += ", "
 		}
-		params += fmt.Sprintf("{ \"byRef\": %v, \"name\": \"%s\", \"type\": [%s] }", param.ByRef, param.Name, common.ImplodeStrSlice(param.Type))
+		params += fmt.Sprintf("{ \"byRef\": %v, \"name\": \"%s\", \"type\": [%s], \"defaultValue\": %s }", param.ByRef, param.Name, common.ImplodeStrSlice(param.Type), visitor.toString(param.DefaultValue))
 	}
 	params += "]"
 	return params

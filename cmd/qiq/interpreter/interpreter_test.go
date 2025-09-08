@@ -425,117 +425,6 @@ func TestIntrinsic(t *testing.T) {
 	testInputOutput(t, `<?php echo isset($a) ? "y" : "n"; unset($a); echo isset($a) ? "y" : "n";`, "nn")
 }
 
-func TestUserFunctions(t *testing.T) {
-	// Simple user defined function without types, params, ...
-	// Check if function definition can be after the function call
-	testInputOutput(t,
-		`<?php
-			echo "a";
-			helloWorld();
-			echo "b";
-			function helloWorld() { echo "Hello World"; }
-			echo "c";
-		`,
-		"aHello Worldbc",
-	)
-	testInputOutput(t,
-		`<?php
-			echo "a";
-			helloWorld();
-			echo "b";
-			{{{ function helloWorld() { echo "Hello World"; } }}}
-			echo "c";
-		`,
-		"aHello Worldbc",
-	)
-
-	// Test correct scoping: $a is available in the function body
-	testInputOutput(t,
-		`<?php
-			$a = 1;
-			func();
-			function func() {
-				echo isset($a) ? "y" : "n";
-				$b = 2;
-			}
-			echo isset($b) ? "y" : "n";
-		`,
-		"nn",
-	)
-
-	// Parameters
-	testInputOutput(t,
-		`<?php
-			$a = 1;
-			func($a);
-			func(2);
-			function func($param) {
-				echo $param;
-			}
-		`,
-		"12",
-	)
-	testInputOutput(t,
-		`<?php
-			$a = 1;
-			func($a, 2);
-			func(1, 1+1);
-			function func($param1, $param2) {
-				echo $param1 + $param2;
-			}
-		`,
-		"33",
-	)
-	// Typed parameters
-	testInputOutput(t,
-		`<?php
-			$a = 1;
-			func($a, 2);
-			func(1, 1+1);
-			function func(int|float $param1, int|float $param2) {
-				echo $param1 + $param2;
-			}
-		`,
-		"33",
-	)
-
-	// Return type
-	testInputOutput(t,
-		`<?php
-			$a = 1;
-			echo func($a, 2);
-			echo func(1, 1+1);
-			function func(int|float $param1, int|float $param2,): int|float {
-				return $param1 + $param2;
-			}
-		`,
-		"33",
-	)
-
-	// Dynamic function names
-	testInputOutput(t,
-		`<?php
-			$a = "func";
-			$a("abc");
-			function func(string $str): void {
-				echo "func called: $str";
-			}
-		`,
-		"func called: abc",
-	)
-
-	// By reference parameter
-	testInputOutput(t,
-		`<?php $a = 42; function inc(&$num) { $num++; }  inc($a); var_dump($a);`,
-		"int(43)\n",
-	)
-
-	// function_exists
-	testInputOutput(t, "<?php var_dump(function_exists('intval'));", "bool(true)\n")
-	testInputOutput(t, "<?php var_dump(function_exists('someUndefinedFunc'));", "bool(false)\n")
-	testInputOutput(t, "<?php function myUserFunc() {} var_dump(function_exists('myUserFunc'));", "bool(true)\n")
-}
-
 func TestString(t *testing.T) {
 	// Heredoc string
 	testInputOutput(t, "<?php $v = 123; $s = <<< ID\n"+`S'o'me "\"t e\txt; v = $v"`+"\nSome more text\nID; echo \">$s<\";", `>S'o'me "\"t e`+"\t"+`xt; v = 123"`+"\nSome more text<")
@@ -1359,6 +1248,123 @@ func TestCompareRelation(t *testing.T) {
 	testInputOutput(t, `<?php class c {} $c1 = new c; var_dump($c1 < NULL);`, "bool(false)\n")
 	testInputOutput(t, `<?php class c {} $c1 = new c; var_dump($c1 <= NULL);`, "bool(false)\n")
 	testInputOutput(t, `<?php class c {} $c1 = new c; var_dump($c1 <=> null);`, "int(1)\n")
+}
+
+// -------------------------------------- functions -------------------------------------- MARK: functions
+
+func TestUserFunctions(t *testing.T) {
+	// Simple user defined function without types, params, ...
+	// Check if function definition can be after the function call
+	testInputOutput(t,
+		`<?php
+			echo "a";
+			helloWorld();
+			echo "b";
+			function helloWorld() { echo "Hello World"; }
+			echo "c";
+		`,
+		"aHello Worldbc",
+	)
+	testInputOutput(t,
+		`<?php
+			echo "a";
+			helloWorld();
+			echo "b";
+			{{{ function helloWorld() { echo "Hello World"; } }}}
+			echo "c";
+		`,
+		"aHello Worldbc",
+	)
+
+	// Test correct scoping: $a is available in the function body
+	testInputOutput(t,
+		`<?php
+			$a = 1;
+			func();
+			function func() {
+				echo isset($a) ? "y" : "n";
+				$b = 2;
+			}
+			echo isset($b) ? "y" : "n";
+		`,
+		"nn",
+	)
+
+	// Parameters
+	testInputOutput(t,
+		`<?php
+			$a = 1;
+			func($a);
+			func(2);
+			function func($param) {
+				echo $param;
+			}
+		`,
+		"12",
+	)
+	testInputOutput(t,
+		`<?php
+			$a = 1;
+			func($a, 2);
+			func(1, 1+1);
+			function func($param1, $param2) {
+				echo $param1 + $param2;
+			}
+		`,
+		"33",
+	)
+	// Typed parameters
+	testInputOutput(t,
+		`<?php
+			$a = 1;
+			func($a, 2);
+			func(1, 1+1);
+			function func(int|float $param1, int|float $param2) {
+				echo $param1 + $param2;
+			}
+		`,
+		"33",
+	)
+
+	// Return type
+	testInputOutput(t,
+		`<?php
+			$a = 1;
+			echo func($a, 2);
+			echo func(1, 1+1);
+			function func(int|float $param1, int|float $param2,): int|float {
+				return $param1 + $param2;
+			}
+		`,
+		"33",
+	)
+
+	// Dynamic function names
+	testInputOutput(t,
+		`<?php
+			$a = "func";
+			$a("abc");
+			function func(string $str): void {
+				echo "func called: $str";
+			}
+		`,
+		"func called: abc",
+	)
+
+	// By reference parameter
+	testInputOutput(t,
+		`<?php $a = 42; function inc(&$num) { $num++; }  inc($a); var_dump($a);`,
+		"int(43)\n",
+	)
+
+	// Default value
+	testInputOutput(t, `<?php function f($a = 2) { echo $a; } f();`, "2")
+	testInputOutput(t, `<?php function f($a = 2) { echo $a; } f(42);`, "42")
+
+	// function_exists
+	testInputOutput(t, "<?php var_dump(function_exists('intval'));", "bool(true)\n")
+	testInputOutput(t, "<?php var_dump(function_exists('someUndefinedFunc'));", "bool(false)\n")
+	testInputOutput(t, "<?php function myUserFunc() {} var_dump(function_exists('myUserFunc'));", "bool(true)\n")
 }
 
 // -------------------------------------- classes and objects -------------------------------------- MARK: classes and objects
