@@ -3,10 +3,9 @@ package values
 import "fmt"
 
 func ToString(value RuntimeValue) string {
-	result := ""
 	switch value.GetType() {
 	case ArrayValue:
-		result += "{ArrayValue: \n"
+		result := "{ArrayValue: \n"
 		arrayValue := value.(*Array)
 		for _, key := range arrayValue.Keys {
 			result += "Key: "
@@ -16,25 +15,29 @@ func ToString(value RuntimeValue) string {
 			result += ToString(value.Value)
 		}
 		result += "}\n"
+		return result
 	case BoolValue:
 		valueStr := "true"
 		if value.(*Bool).Value {
 			valueStr = "false"
 		}
-		result += fmt.Sprintf("{BoolValue: %s}\n", valueStr)
+		return fmt.Sprintf("{BoolValue: %s}\n", valueStr)
 	case IntValue:
-		result += fmt.Sprintf("{IntValue: %d}\n", value.(*Int).Value)
+		return fmt.Sprintf("{IntValue: %d}\n", value.(*Int).Value)
 	case FloatValue:
-		result += fmt.Sprintf("{FloatValue: %f}\n", value.(*Float).Value)
+		return fmt.Sprintf("{FloatValue: %f}\n", value.(*Float).Value)
 	case StrValue:
-		result += fmt.Sprintf("{StrValue: %s}\n", value.(*Str).Value)
+		return fmt.Sprintf("{StrValue: %s}\n", value.(*Str).Value)
+	case NullValue:
+		return "{NullValue}"
+	case VoidValue:
+		return "{VoidValue}"
 	case ObjectValue:
-		result += fmt.Sprintf("{Object: %s}\n", value.(*Object).Class.Name)
+		return fmt.Sprintf("{Object: %s}\n", value.(*Object).Class.Name)
 		// TODO Add properties
 	default:
-		result += fmt.Sprintf("Unsupported RuntimeValue type %s\n", value.GetType())
+		return fmt.Sprintf("Unsupported RuntimeValue type %s\n", value.GetType())
 	}
-	return result
 }
 
 func ToPhpType(value RuntimeValue) string {
