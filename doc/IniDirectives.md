@@ -53,6 +53,7 @@
 - qiq.case_sensitive_include
 
 ## Resource Limits
+- max_memory_limit
 - memory_limit
 
 ## Session

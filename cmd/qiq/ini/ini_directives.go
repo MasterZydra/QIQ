@@ -52,7 +52,8 @@ var allowedDirectives = map[string]int{
 	"open_basedir": INI_ALL,
 	// Resource Limits
 	// Spec: https://www.php.net/manual/en/ini.core.php#ini.sect.resource-limits
-	"memory_limit": INI_ALL,
+	"max_memory_limit": INI_SYSTEM,
+	"memory_limit":     INI_ALL,
 	// Session
 	// Spec: https://www.php.net/manual/en/session.configuration.php
 	"session.save_path":                INI_ALL,
@@ -149,7 +150,8 @@ var defaultValues = map[string]string{
 	"open_basedir": "",
 	// Category: Resource Limits
 	// Spec: https://www.php.net/manual/en/ini.core.php#ini.sect.resource-limits
-	"memory_limit": "128M",
+	"max_memory_limit": "-1",
+	"memory_limit":     "128M",
 	// Category: Session
 	// Spec: https://www.php.net/manual/en/session.configuration.php
 	"session.save_path":                "",
@@ -228,7 +230,8 @@ var intDirectives = []string{
 	"max_input_nesting_level",
 	"max_input_time",
 	"max_input_vars",
-	"memory_limit",
+	// "max_memory_limit", // TODO Fix ini logic because this can also be "128M"
+	// "memory_limit", // TODO Fix ini logic because this can also be "128M"
 	"precision",
 	"serialize_precision",
 	"session.cache_expire",
