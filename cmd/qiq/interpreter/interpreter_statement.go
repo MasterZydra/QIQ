@@ -27,6 +27,19 @@ func (visitor *Interpreter) ProcessInterfaceDeclarationStmt(stmt *ast.InterfaceD
 			)
 	}
 
+	classDecl, found := visitor.GetClass(stmt.GetQualifiedName())
+	if found {
+		if classDecl.GetPosition().File == nil {
+			return values.NewVoidSlot(),
+				phpError.NewError("Cannot redeclare class %s in %s", classDecl.GetQualifiedName(), stmt.GetPosString())
+		}
+		return values.NewVoidSlot(),
+			phpError.NewError(
+				"Cannot redeclare class %s (previously declared in %s) in %s",
+				classDecl.GetQualifiedName(), classDecl.GetPosString(), stmt.GetPosString(),
+			)
+	}
+
 	visitor.AddInterface(stmt.GetQualifiedName(), stmt)
 	return values.NewVoidSlot(), nil
 }
@@ -35,6 +48,19 @@ func (visitor *Interpreter) ProcessInterfaceDeclarationStmt(stmt *ast.InterfaceD
 func (visitor *Interpreter) ProcessClassDeclarationStmt(stmt *ast.ClassDeclarationStatement, _ any) (any, error) {
 	if err := visitor.validateClass(stmt); err != nil {
 		return values.NewVoidSlot(), err
+	}
+
+	interfaceDecl, found := visitor.GetInterface(stmt.GetQualifiedName())
+	if found {
+		if interfaceDecl.GetPosition().File == nil {
+			return values.NewVoidSlot(),
+				phpError.NewError("Cannot redeclare interface %s in %s", interfaceDecl.GetQualifiedName(), stmt.GetPosString())
+		}
+		return values.NewVoidSlot(),
+			phpError.NewError(
+				"Cannot redeclare interface %s (previously declared in %s) in %s",
+				interfaceDecl.GetQualifiedName(), interfaceDecl.GetPosString(), stmt.GetPosString(),
+			)
 	}
 
 	classDecl, found := visitor.GetClass(stmt.GetQualifiedName())
