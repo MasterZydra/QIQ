@@ -16,6 +16,10 @@ func (interpreter *Interpreter) ProcessStmt(stmt *ast.Statement, _ any) (any, er
 func (visitor *Interpreter) ProcessInterfaceDeclarationStmt(stmt *ast.InterfaceDeclarationStatement, _ any) (any, error) {
 	interfaceDecl, found := visitor.GetInterface(stmt.GetQualifiedName())
 	if found {
+		if interfaceDecl.GetPosition().File == nil {
+			return values.NewVoidSlot(),
+				phpError.NewError("Cannot redeclare interface %s in %s", interfaceDecl.GetQualifiedName(), stmt.GetPosString())
+		}
 		return values.NewVoidSlot(),
 			phpError.NewError(
 				"Cannot redeclare interface %s (previously declared in %s) in %s",
@@ -35,6 +39,10 @@ func (visitor *Interpreter) ProcessClassDeclarationStmt(stmt *ast.ClassDeclarati
 
 	classDecl, found := visitor.GetClass(stmt.GetQualifiedName())
 	if found {
+		if classDecl.GetPosition().File == nil {
+			return values.NewVoidSlot(),
+				phpError.NewError("Cannot redeclare class %s in %s", classDecl.GetQualifiedName(), stmt.GetPosString())
+		}
 		return values.NewVoidSlot(),
 			phpError.NewError(
 				"Cannot redeclare class %s (previously declared in %s) in %s",

@@ -1480,6 +1480,7 @@ func TestClasses(t *testing.T) {
 	testForError(t, `<?php class C { } class C { }`,
 		phpError.NewError(`Cannot redeclare class C (previously declared in %s:1:7) in %s:1:19`, TEST_FILE_NAME, TEST_FILE_NAME),
 	)
+	testForError(t, `<?php class stdClass { }`, phpError.NewError(`Cannot redeclare class stdClass in %s:1:7`, TEST_FILE_NAME))
 
 	// Interface redeclaration
 	testForError(t, `<?php interface I { } interface i { }`,
@@ -1488,6 +1489,7 @@ func TestClasses(t *testing.T) {
 	testForError(t, `<?php interface I { } interface I { }`,
 		phpError.NewError(`Cannot redeclare interface I (previously declared in %s:1:7) in %s:1:23`, TEST_FILE_NAME, TEST_FILE_NAME),
 	)
+	testForError(t, "<?php interface Traversable { }", phpError.NewError(`Cannot redeclare interface Traversable in %s:1:7`, TEST_FILE_NAME))
 }
 
 // TODO Add interface test cases
