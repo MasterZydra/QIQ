@@ -11,4 +11,5 @@
 # PHP files
 /*.php
 /test-suits/*
+/php-src/*
 *.php.ast

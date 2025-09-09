@@ -1,0 +1,16 @@
+{
+    "replace": [
+        {
+            "file": "php-src/tests/classes/constants_error_001.phpt",
+            "section": "--EXPECTF--",
+            "search": "in %s on line 5",
+            "replace": "(previously declared in %s:%d:%d) in %s:%d:%d"
+        },
+        {
+            "file": "php-src/tests/classes/bug29446.phpt",
+            "section": "--EXPECTF--",
+            "search": "in %s on line 5",
+            "replace": "(previously declared in %s:%d:%d) in %s:%d:%d"
+        }
+    ]
+}

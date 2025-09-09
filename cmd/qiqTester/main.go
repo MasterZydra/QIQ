@@ -119,7 +119,7 @@ func doTest(path string, info goOs.FileInfo, err error) error {
 		return nil
 	}
 
-	replaceEntry, _ := replaceData.GetEntry(path)
+	replaceEntry, hasReplaceEntry := replaceData.GetEntry(path)
 	reader, err := phpt.NewReader(path, replaceEntry)
 	if err != nil {
 		if verbosity1 || verbosity2 {
@@ -204,16 +204,18 @@ func doTest(path string, info goOs.FileInfo, err error) error {
 	case "--EXPECTF--", "--EXPECTREGEX--":
 		pattern := testFile.Expect
 		if testFile.ExpectType == "--EXPECTF--" {
-			// Special case for QIQ:
-			// The location of the error is given with line and column:
-			// e.g. "... in tests/basic/025.phpt:2:18"
-			// PHP only returns the line:
-			// e.g. "... in tests/basic/025.phpt on line 2"
-			if strings.Contains(testFile.Expect, " on line %d") {
-				testFile.Expect = strings.ReplaceAll(testFile.Expect, " on line %d", ":%d:%d")
-			}
-			if matched, _ := regexp.MatchString(`in %s on line \d+`, testFile.Expect); matched {
-				testFile.Expect = regexp.MustCompile(`in %s on line \d+`).ReplaceAllString(testFile.Expect, "in %s")
+			if !hasReplaceEntry {
+				// Special case for QIQ:
+				// The location of the error is given with line and column:
+				// e.g. "... in tests/basic/025.phpt:2:18"
+				// PHP only returns the line:
+				// e.g. "... in tests/basic/025.phpt on line 2"
+				if strings.Contains(testFile.Expect, " on line %d") {
+					testFile.Expect = strings.ReplaceAll(testFile.Expect, " on line %d", ":%d:%d")
+				}
+				if matched, _ := regexp.MatchString(`in %s on line \d+`, testFile.Expect); matched {
+					testFile.Expect = regexp.MustCompile(`in %s on line \d+`).ReplaceAllString(testFile.Expect, "in %s")
+				}
 			}
 			pattern = replaceExpectfTags(testFile.Expect)
 		}
