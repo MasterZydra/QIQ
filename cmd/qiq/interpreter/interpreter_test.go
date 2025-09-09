@@ -185,6 +185,9 @@ func TestConstants(t *testing.T) {
 
 	// Userdefined constants
 	testInputOutput(t, `<?php const TRUTH = 42; const PI = "3.141";echo TRUTH, PI;`, "423.141")
+
+	// Already defined constants
+	testForError(t, `<?php const M_PI = 3;`, phpError.NewWarning("Constant M_PI already defined in %s:1:7", TEST_FILE_NAME))
 }
 
 func TestFileIncludes(t *testing.T) {

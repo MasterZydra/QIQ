@@ -480,8 +480,10 @@ func (parser *Parser) parseConstDeclaration() (ast.IStatement, phpError.Error) {
 	// Supported statement: const statement: `const TRUTH = 42;`
 	PrintParserCallstack("const-statement", parser)
 	pos := parser.eat().Position
-	if err := parser.expectTokenType(lexer.NameToken, false); err != nil {
-		return ast.NewEmptyStmt(), err
+	if parser.at().TokenType != lexer.NameToken && parser.at().TokenType != lexer.KeywordToken {
+		if err := parser.expectTokenType(lexer.NameToken, false); err != nil {
+			return ast.NewEmptyStmt(), err
+		}
 	}
 	for {
 		name := parser.eat().Value

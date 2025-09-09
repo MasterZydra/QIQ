@@ -53,6 +53,7 @@ const (
 type Error interface {
 	GetErrorType() ErrorType
 	GetMessage() string
+	GetRawMessage() string
 	Error() string
 }
 
@@ -69,6 +70,10 @@ func (err *PhpError) GetErrorType() ErrorType {
 
 func (err *PhpError) GetMessage() string {
 	return err.String()
+}
+
+func (err *PhpError) GetRawMessage() string {
+	return err.message
 }
 
 func (err *PhpError) String() string {

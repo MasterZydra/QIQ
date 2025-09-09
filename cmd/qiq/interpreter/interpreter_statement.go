@@ -50,6 +50,9 @@ func (visitor *Interpreter) ProcessClassDeclarationStmt(stmt *ast.ClassDeclarati
 func (interpreter *Interpreter) ProcessConstDeclarationStmt(stmt *ast.ConstDeclarationStatement, env any) (any, error) {
 	slot := must(interpreter.processStmt(stmt.Value, env))
 	runtimeValue, err := env.(*Environment).declareConstant(stmt.Name, slot.Value)
+	if err != nil {
+		err = phpError.NewWarning("%s in %s", err.GetRawMessage(), stmt.GetPosString())
+	}
 	return values.NewSlot(runtimeValue), err
 }
 

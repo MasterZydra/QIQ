@@ -271,8 +271,10 @@ func (parser *Parser) parseClassConstDeclaration(class ast.AddGetConst) phpError
 
 	PrintParserCallstack("class-const-statement", parser)
 	pos := parser.eat().Position
-	if err := parser.expectTokenType(lexer.NameToken, false); err != nil {
-		return err
+	if parser.at().TokenType != lexer.NameToken && parser.at().TokenType != lexer.KeywordToken {
+		if err := parser.expectTokenType(lexer.NameToken, false); err != nil {
+			return err
+		}
 	}
 	for {
 		name := parser.eat().Value
