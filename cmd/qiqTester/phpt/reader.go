@@ -2,6 +2,7 @@ package phpt
 
 import (
 	"QIQ/cmd/qiq/common"
+	replacejson "QIQ/cmd/qiqTester/replaceJson"
 	"bufio"
 	"fmt"
 	"os"
@@ -11,13 +12,14 @@ import (
 
 type Reader struct {
 	filename    string
+	replaceJson replacejson.ReplaceEntry
 	sections    []string
 	lines       []string
 	currentLine int
 	testFile    *TestFile
 }
 
-func NewReader(filename string) (*Reader, error) {
+func NewReader(filename string, replaceJson replacejson.ReplaceEntry) (*Reader, error) {
 	lines := []string{}
 
 	file, err := os.Open(filename)
@@ -30,7 +32,7 @@ func NewReader(filename string) (*Reader, error) {
 	for scanner.Scan() {
 		lines = append(lines, scanner.Text())
 	}
-	return &Reader{filename: filename, sections: []string{}, lines: lines, currentLine: 0, testFile: NewTestFile(filename)}, nil
+	return &Reader{filename: filename, replaceJson: replaceJson, sections: []string{}, lines: lines, currentLine: 0, testFile: NewTestFile(filename)}, nil
 }
 
 func (reader *Reader) GetTestFile() (*TestFile, error) {
@@ -151,6 +153,12 @@ func (reader *Reader) GetTestFile() (*TestFile, error) {
 			for !reader.isEof() && !reader.isSection(reader.at()) {
 				expect += reader.eat() + "\n"
 			}
+
+			// Replacements
+			if reader.replaceJson.Section == section {
+				expect = strings.ReplaceAll(expect, reader.replaceJson.Search, reader.replaceJson.Replace)
+			}
+
 			reader.testFile.Expect = common.TrimTrailingLineBreaks(expect)
 			reader.testFile.ExpectType = section
 			reader.sections = append(reader.sections, section)

@@ -5,9 +5,12 @@ import (
 	"QIQ/cmd/qiq/common/os"
 	"QIQ/cmd/qiq/ini"
 	"QIQ/cmd/qiq/interpreter"
+	"QIQ/cmd/qiq/phpError"
 	"QIQ/cmd/qiq/request"
 	"QIQ/cmd/qiq/runtime"
 	"QIQ/cmd/qiqTester/phpt"
+	replacejson "QIQ/cmd/qiqTester/replaceJson"
+	"encoding/json"
 	"flag"
 	"fmt"
 	goOs "os"
@@ -25,23 +28,34 @@ var verbosity1 bool
 var verbosity2 bool
 var onlyFailed bool
 var noColor bool
+var replaceJson string
 
 func main() {
 	verbosity1Flag := flag.Bool("v1", false, "Verbosity level 1: Show all tests")
 	verbosity2Flag := flag.Bool("v2", false, "Verbosity level 2: Show all tests and failure reason")
 	onlyFailedFlag := flag.Bool("only-failed", false, "Show only failed tests")
 	noColorFlag := flag.Bool("no-color", false, "Do not use color in output")
+	replaceJsonFlag := flag.String("replace-json", "", "JSON to replace parts of a test")
+
 	flag.Parse()
 	verbosity1 = *verbosity1Flag
 	verbosity2 = *verbosity2Flag
 	onlyFailed = *onlyFailedFlag
 	noColor = *noColorFlag
+	replaceJson = *replaceJsonFlag
 
 	args := goOs.Args[1:]
 
 	if len(args) == 0 {
-		fmt.Println("Usage: qiqTester [-v(1|2)] [-only-failed] [-no-color] [list of folders or files]")
+		fmt.Println("Usage: qiqTester [-v(1|2)] [-only-failed] [-no-color] [-replace-json <file-name>] [list of folders or files]")
 		goOs.Exit(1)
+	}
+
+	if replaceJson != "" {
+		if err := loadReplaceJson(); err != nil {
+			fmt.Println(err)
+			goOs.Exit(1)
+		}
 	}
 
 	failed = 0
@@ -51,7 +65,16 @@ func main() {
 	if !verbosity1 && !verbosity2 {
 		println("Running test...")
 	}
+	continueNext := false
 	for _, arg := range args {
+		if continueNext {
+			continueNext = false
+			continue
+		}
+		if arg == "-replace-json" {
+			continueNext = true
+			continue
+		}
 		if arg == "-v1" || arg == "-v2" || arg == "-only-failed" || arg == "-no-color" {
 			continue
 		}
@@ -96,7 +119,8 @@ func doTest(path string, info goOs.FileInfo, err error) error {
 		return nil
 	}
 
-	reader, err := phpt.NewReader(path)
+	replaceEntry, _ := replaceData.GetEntry(path)
+	reader, err := phpt.NewReader(path, replaceEntry)
 	if err != nil {
 		if verbosity1 || verbosity2 {
 			printFail(path)
@@ -278,4 +302,25 @@ func printFail(path string) {
 	} else {
 		fmt.Println("\033[31mFAIL\033[0m ", path)
 	}
+}
+
+var replaceData replacejson.ReplaceJson
+
+func loadReplaceJson() phpError.Error {
+	info, err := goOs.Stat(replaceJson)
+	if err != nil {
+		return phpError.NewError("Replace JSON file not found: %s", err)
+	}
+	if info.IsDir() {
+		return phpError.NewError("Replace JSON path is a directory, not a file")
+	}
+	data, err := goOs.ReadFile(replaceJson)
+	if err != nil {
+		return phpError.NewError("Failed to read replace JSON file: %s", err)
+	}
+	err = json.Unmarshal(data, &replaceData)
+	if err != nil {
+		return phpError.NewError("Failed to parse replace JSON: %s", err)
+	}
+	return nil
 }
