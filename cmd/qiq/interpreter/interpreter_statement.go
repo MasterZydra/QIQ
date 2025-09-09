@@ -80,14 +80,16 @@ func (interpreter *Interpreter) ProcessExpressionStmt(stmt *ast.ExpressionStatem
 	return interpreter.processStmt(stmt.Expr, env)
 }
 
-// ProcessFunctionCallExpr implements Visitor.
+// ProcessFunctionDefinitionStmt implements Visitor.
 func (interpreter *Interpreter) ProcessFunctionDefinitionStmt(stmt *ast.FunctionDefinitionStatement, env any) (any, error) {
 	// Check if this function definition was already processed before interpreting the code
 	if interpreter.isCached(stmt) {
 		return values.NewVoidSlot(), nil
 	}
 
-	mustOrVoid(0, env.(*Environment).defineUserFunction(stmt))
+	if err := env.(*Environment).defineUserFunction(stmt); err != nil {
+		return values.NewVoidSlot(), err
+	}
 
 	return values.NewSlot(interpreter.writeCache(stmt, values.NewVoid())), nil
 }

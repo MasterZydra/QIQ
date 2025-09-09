@@ -256,11 +256,11 @@ func (env *Environment) lookupNativeFunction(functionName string) (runtime.Nativ
 func (env *Environment) defineUserFunction(function *ast.FunctionDefinitionStatement) phpError.Error {
 	_, err := env.lookupNativeFunction(function.FunctionName)
 	if err == nil {
-		return phpError.NewError("Cannot redeclare %s()", function.FunctionName)
+		return phpError.NewError("Cannot redeclare function %s() in %s", function.FunctionName, function.GetPosString())
 	}
-	_, err = env.lookupUserFunction(function.FunctionName)
+	userFuncDecl, err := env.lookupUserFunction(function.FunctionName)
 	if err == nil {
-		return phpError.NewError("Cannot redeclare %s()", function.FunctionName)
+		return phpError.NewError("Cannot redeclare function %s() (previously declared in %s) in %s", function.FunctionName, userFuncDecl.GetPosString(), function.GetPosString())
 	}
 
 	functionName := strings.ToLower(function.FunctionName)

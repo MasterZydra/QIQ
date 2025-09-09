@@ -1364,6 +1364,11 @@ func TestUserFunctions(t *testing.T) {
 	testInputOutput(t, `<?php function f($a = 2) { echo $a; } f();`, "2")
 	testInputOutput(t, `<?php function f($a = 2) { echo $a; } f(42);`, "42")
 
+	// Redeclared function
+	testForError(t, "<?php function f1() {} function F1() {}", phpError.NewError("Cannot redeclare function F1() (previously declared in %s:1:7) in %s:1:24", TEST_FILE_NAME, TEST_FILE_NAME))
+	testForError(t, "<?php function f1() {} function f1() {}", phpError.NewError("Cannot redeclare function f1() (previously declared in %s:1:7) in %s:1:24", TEST_FILE_NAME, TEST_FILE_NAME))
+	testForError(t, "<?php function var_dump() {}", phpError.NewError("Cannot redeclare function var_dump() in %s:1:7", TEST_FILE_NAME))
+
 	// function_exists
 	testInputOutput(t, "<?php var_dump(function_exists('intval'));", "bool(true)\n")
 	testInputOutput(t, "<?php var_dump(function_exists('someUndefinedFunc'));", "bool(false)\n")
