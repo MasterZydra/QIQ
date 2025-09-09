@@ -471,3 +471,10 @@ func TestLibArray(t *testing.T) {
 	testInputOutput(t, `<?php $a = [1,2,3]; echo gettype(array_rand($a, 1));`, "integer")
 	testInputOutput(t, `<?php $a = ["a" => 1, "b" => 2, "c" => 3]; echo gettype(array_rand($a, 1));`, "string")
 }
+
+// -------------------------------------- directory -------------------------------------- MARK: directory
+
+func TestLibDirectory(t *testing.T) {
+	// getcwd
+	testInputOutput(t, `<?php echo getcwd();`, TEST_FILE_PATH)
+}

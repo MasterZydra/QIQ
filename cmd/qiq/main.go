@@ -82,7 +82,7 @@ func processStdin() {
 		fmt.Println("Error:", err)
 	}
 
-	output, exitCode := processContent(nil, nil, string(content), "main.php")
+	output, exitCode := processContent(nil, nil, string(content), "")
 	fmt.Print(output)
 	os.Exit(exitCode)
 }

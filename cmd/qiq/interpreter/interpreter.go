@@ -13,6 +13,7 @@ import (
 	"QIQ/cmd/qiq/runtime/outputBuffer"
 	"QIQ/cmd/qiq/runtime/values"
 	"QIQ/cmd/qiq/stats"
+	"path/filepath"
 )
 
 var _ ast.Visitor = &Interpreter{}
@@ -30,6 +31,7 @@ type Interpreter struct {
 	outputBufferStack  *outputBuffer.Stack
 	result             string
 	resultRuntimeValue values.RuntimeValue
+	workingDir         string
 	// Status
 	suppressWarning bool
 	exitCalled      bool
@@ -46,6 +48,10 @@ func NewInterpreter(executionContext *runtime.ExecutionContext, ini *ini.Ini, r 
 		parser:            parser.NewParser(ini),
 		cache:             map[int64]values.RuntimeValue{},
 		outputBufferStack: outputBuffer.NewStack(),
+	}
+
+	if filename != "" {
+		interpreter.workingDir = filepath.Dir(filename)
 	}
 
 	var err phpError.Error

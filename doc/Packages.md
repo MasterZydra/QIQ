@@ -74,6 +74,7 @@ flowchart LR
     QIQ_cmd_qiq_runtime_stdlib[QIQ/cmd/qiq/runtime/stdlib] --> QIQ_cmd_qiq_runtime_stdlib_array[QIQ/cmd/qiq/runtime/stdlib/array]
     QIQ_cmd_qiq_runtime_stdlib[QIQ/cmd/qiq/runtime/stdlib] --> QIQ_cmd_qiq_runtime_stdlib_classes[QIQ/cmd/qiq/runtime/stdlib/classes]
     QIQ_cmd_qiq_runtime_stdlib[QIQ/cmd/qiq/runtime/stdlib] --> QIQ_cmd_qiq_runtime_stdlib_dateTime[QIQ/cmd/qiq/runtime/stdlib/dateTime]
+    QIQ_cmd_qiq_runtime_stdlib[QIQ/cmd/qiq/runtime/stdlib] --> QIQ_cmd_qiq_runtime_stdlib_directory[QIQ/cmd/qiq/runtime/stdlib/directory]
     QIQ_cmd_qiq_runtime_stdlib[QIQ/cmd/qiq/runtime/stdlib] --> QIQ_cmd_qiq_runtime_stdlib_errorHandling[QIQ/cmd/qiq/runtime/stdlib/errorHandling]
     QIQ_cmd_qiq_runtime_stdlib[QIQ/cmd/qiq/runtime/stdlib] --> QIQ_cmd_qiq_runtime_stdlib_filesystem[QIQ/cmd/qiq/runtime/stdlib/filesystem]
     QIQ_cmd_qiq_runtime_stdlib[QIQ/cmd/qiq/runtime/stdlib] --> QIQ_cmd_qiq_runtime_stdlib_functionHandling[QIQ/cmd/qiq/runtime/stdlib/functionHandling]
@@ -101,6 +102,11 @@ flowchart LR
     QIQ_cmd_qiq_runtime_stdlib_dateTime[QIQ/cmd/qiq/runtime/stdlib/dateTime] --> QIQ_cmd_qiq_runtime[QIQ/cmd/qiq/runtime]
     QIQ_cmd_qiq_runtime_stdlib_dateTime[QIQ/cmd/qiq/runtime/stdlib/dateTime] --> QIQ_cmd_qiq_runtime_funcParamValidator[QIQ/cmd/qiq/runtime/funcParamValidator]
     QIQ_cmd_qiq_runtime_stdlib_dateTime[QIQ/cmd/qiq/runtime/stdlib/dateTime] --> QIQ_cmd_qiq_runtime_values[QIQ/cmd/qiq/runtime/values]
+
+    QIQ_cmd_qiq_runtime_stdlib_directory[QIQ/cmd/qiq/runtime/stdlib/directory] --> QIQ_cmd_qiq_phpError[QIQ/cmd/qiq/phpError]
+    QIQ_cmd_qiq_runtime_stdlib_directory[QIQ/cmd/qiq/runtime/stdlib/directory] --> QIQ_cmd_qiq_runtime[QIQ/cmd/qiq/runtime]
+    QIQ_cmd_qiq_runtime_stdlib_directory[QIQ/cmd/qiq/runtime/stdlib/directory] --> QIQ_cmd_qiq_runtime_funcParamValidator[QIQ/cmd/qiq/runtime/funcParamValidator]
+    QIQ_cmd_qiq_runtime_stdlib_directory[QIQ/cmd/qiq/runtime/stdlib/directory] --> QIQ_cmd_qiq_runtime_values[QIQ/cmd/qiq/runtime/values]
 
     QIQ_cmd_qiq_runtime_stdlib_errorHandling[QIQ/cmd/qiq/runtime/stdlib/errorHandling] --> QIQ_cmd_qiq_ini[QIQ/cmd/qiq/ini]
     QIQ_cmd_qiq_runtime_stdlib_errorHandling[QIQ/cmd/qiq/runtime/stdlib/errorHandling] --> QIQ_cmd_qiq_phpError[QIQ/cmd/qiq/phpError]
@@ -171,10 +177,15 @@ flowchart LR
     QIQ_cmd_qiqTester[QIQ/cmd/qiqTester] --> QIQ_cmd_qiq_common_os[QIQ/cmd/qiq/common/os]
     QIQ_cmd_qiqTester[QIQ/cmd/qiqTester] --> QIQ_cmd_qiq_ini[QIQ/cmd/qiq/ini]
     QIQ_cmd_qiqTester[QIQ/cmd/qiqTester] --> QIQ_cmd_qiq_interpreter[QIQ/cmd/qiq/interpreter]
+    QIQ_cmd_qiqTester[QIQ/cmd/qiqTester] --> QIQ_cmd_qiq_phpError[QIQ/cmd/qiq/phpError]
     QIQ_cmd_qiqTester[QIQ/cmd/qiqTester] --> QIQ_cmd_qiq_request[QIQ/cmd/qiq/request]
     QIQ_cmd_qiqTester[QIQ/cmd/qiqTester] --> QIQ_cmd_qiq_runtime[QIQ/cmd/qiq/runtime]
     QIQ_cmd_qiqTester[QIQ/cmd/qiqTester] --> QIQ_cmd_qiqTester_phpt[QIQ/cmd/qiqTester/phpt]
+    QIQ_cmd_qiqTester[QIQ/cmd/qiqTester] --> QIQ_cmd_qiqTester_replaceJson[QIQ/cmd/qiqTester/replaceJson]
 
     QIQ_cmd_qiqTester_phpt[QIQ/cmd/qiqTester/phpt] --> QIQ_cmd_qiq_common[QIQ/cmd/qiq/common]
+    QIQ_cmd_qiqTester_phpt[QIQ/cmd/qiqTester/phpt] --> QIQ_cmd_qiqTester_replaceJson[QIQ/cmd/qiqTester/replaceJson]
+
+    QIQ_cmd_qiqTester_replaceJson[QIQ/cmd/qiqTester/replaceJson] --> QIQ_cmd_qiq_common_os[QIQ/cmd/qiq/common/os]
 
 ```

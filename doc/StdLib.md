@@ -35,6 +35,9 @@
 - mktime
 - time
 
+## Directory Functions
+- getcwd
+
 ## Error Handling Functions
 - error_reporting
 

@@ -14,6 +14,8 @@ type Interpreter interface {
 	// Context
 	GetIni() *ini.Ini
 	GetExectionContext() *ExecutionContext
+	GetFilename() string
+	GetWorkingDir() string
 	// Request
 	GetRequest() *request.Request
 	GetResponse() *request.Response
