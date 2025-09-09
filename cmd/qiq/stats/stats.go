@@ -21,9 +21,7 @@ type Stats struct {
 	afterMem  uint64
 }
 
-func NewStats() *Stats {
-	return &Stats{}
-}
+func NewStats() *Stats { return &Stats{} }
 
 func (stats *Stats) Start() {
 	stats.beforeMem = getUsedMemory()

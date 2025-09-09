@@ -8,9 +8,7 @@ type Namespace struct {
 	namespace []string
 }
 
-func NewNamespace(namespace []string) *Namespace {
-	return &Namespace{namespace: namespace}
-}
+func NewNamespace(namespace []string) *Namespace { return &Namespace{namespace: namespace} }
 
 func (namespace *Namespace) ToString() string {
 	result := ""

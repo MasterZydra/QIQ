@@ -2,6 +2,4 @@
 
 package common
 
-func FileExistsCaseSensitive(path string) (bool, error) {
-	return PathExists(path), nil
-}
+func FileExistsCaseSensitive(path string) (bool, error) { return PathExists(path), nil }

@@ -27,9 +27,7 @@ func ToAbsPath(path string) string {
 	return absFilePath
 }
 
-func IsAbsPath(path string) bool {
-	return strings.HasPrefix(path, "/")
-}
+func IsAbsPath(path string) bool { return strings.HasPrefix(path, "/") }
 
 func PathExists(path string) bool {
 	_, err := os.Stat(path)
@@ -44,13 +42,9 @@ func IsDir(path string) bool {
 	return fileInfo.IsDir()
 }
 
-func ExtractPath(path string) string {
-	return filepath.Dir(path)
-}
+func ExtractPath(path string) string { return filepath.Dir(path) }
 
-func MkDir(path string) error {
-	return os.MkdirAll(path, os.ModePerm)
-}
+func MkDir(path string) error { return os.MkdirAll(path, os.ModePerm) }
 
 func WriteFile(filename, content string) error {
 	path := ExtractPath(filename)
@@ -77,9 +71,7 @@ func ReadFile(filename string) (string, error) {
 	return string(content), err
 }
 
-func DeleteFile(filename string) error {
-	return os.Remove(filename)
-}
+func DeleteFile(filename string) error { return os.Remove(filename) }
 
 func DeleteFiles(files []string) error {
 	var result error = nil

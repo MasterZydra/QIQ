@@ -24,9 +24,7 @@ func NewArray() *Array {
 	}
 }
 
-func NewArraySlot() *Slot {
-	return NewSlot(NewArray())
-}
+func NewArraySlot() *Slot { return NewSlot(NewArray()) }
 
 func NewArrayFromMap(elements map[RuntimeValue]RuntimeValue) *Array {
 	array := NewArray()
@@ -193,9 +191,7 @@ func (array *Array) GetMapKey(key RuntimeValue, shouldConvertKey bool) (string, 
 	return mapKey, found, nil
 }
 
-func (array *Array) IsEmpty() bool {
-	return len(array.Elements) == 0
-}
+func (array *Array) IsEmpty() bool { return len(array.Elements) == 0 }
 
 func (array *Array) Contains(key RuntimeValue) bool {
 	_, found, err := array.GetMapKey(key, true)

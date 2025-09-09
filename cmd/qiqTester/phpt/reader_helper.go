@@ -6,9 +6,7 @@ import (
 	"strings"
 )
 
-func (reader *Reader) isEof() bool {
-	return reader.currentLine > len(reader.lines)-1
-}
+func (reader *Reader) isEof() bool { return reader.currentLine > len(reader.lines)-1 }
 
 func (reader *Reader) at() string {
 	if reader.isEof() {

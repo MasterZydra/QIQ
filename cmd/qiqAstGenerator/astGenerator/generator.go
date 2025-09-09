@@ -11,9 +11,7 @@ type AstGenerator struct {
 	output string
 }
 
-func NewAstGenerator() *AstGenerator {
-	return &AstGenerator{}
-}
+func NewAstGenerator() *AstGenerator { return &AstGenerator{} }
 
 func (generator *AstGenerator) Process(sourceCode, filename string) (string, phpError.Error) {
 	program, err := parser.NewParser(ini.NewDevIni()).ProduceAST(sourceCode, filename)

@@ -24,13 +24,9 @@ func NewExpr(id int64, kind NodeType, pos *position.Position) *Expression {
 	return &Expression{id: id, kind: kind, pos: pos}
 }
 
-func (stmt *Expression) GetId() int64 {
-	return stmt.id
-}
+func (stmt *Expression) GetId() int64 { return stmt.id }
 
-func (expr *Expression) GetKind() NodeType {
-	return expr.kind
-}
+func (expr *Expression) GetKind() NodeType { return expr.kind }
 
 func (expr *Expression) GetPosition() *position.Position {
 	if expr.pos == nil {
@@ -39,9 +35,7 @@ func (expr *Expression) GetPosition() *position.Position {
 	return expr.pos
 }
 
-func (expr *Expression) GetPosString() string {
-	return expr.GetPosition().ToPosString()
-}
+func (expr *Expression) GetPosString() string { return expr.GetPosition().ToPosString() }
 
 func (stmt *Expression) Process(visitor Visitor, context any) (any, error) {
 	return visitor.ProcessExpr(stmt, context)

@@ -20,9 +20,7 @@ func newAbstractValue(valueType ValueType) *abstractValue {
 	return &abstractValue{valueType: valueType}
 }
 
-func (value *abstractValue) GetType() ValueType {
-	return value.valueType
-}
+func (value *abstractValue) GetType() ValueType { return value.valueType }
 
 // MARK: Void
 
@@ -32,13 +30,9 @@ type Void struct {
 
 var void = &Void{abstractValue: newAbstractValue(VoidValue)}
 
-func NewVoid() *Void {
-	return void
-}
+func NewVoid() *Void { return void }
 
-func NewVoidSlot() *Slot {
-	return NewSlot(NewVoid())
-}
+func NewVoidSlot() *Slot { return NewSlot(NewVoid()) }
 
 // MARK: Null
 
@@ -48,13 +42,9 @@ type Null struct {
 
 var null = &Null{abstractValue: newAbstractValue(NullValue)}
 
-func NewNull() *Null {
-	return null
-}
+func NewNull() *Null { return null }
 
-func NewNullSlot() *Slot {
-	return NewSlot(NewNull())
-}
+func NewNullSlot() *Slot { return NewSlot(NewNull()) }
 
 // MARK: Bool
 
@@ -73,9 +63,7 @@ func NewBool(value bool) *Bool {
 	return falseRuntimeValue
 }
 
-func NewBoolSlot(value bool) *Slot {
-	return NewSlot(NewBool(value))
-}
+func NewBoolSlot(value bool) *Slot { return NewSlot(NewBool(value)) }
 
 // MARK: Int
 
@@ -84,13 +72,9 @@ type Int struct {
 	Value int64
 }
 
-func NewInt(value int64) *Int {
-	return &Int{abstractValue: newAbstractValue(IntValue), Value: value}
-}
+func NewInt(value int64) *Int { return &Int{abstractValue: newAbstractValue(IntValue), Value: value} }
 
-func NewIntSlot(value int64) *Slot {
-	return NewSlot(NewInt(value))
-}
+func NewIntSlot(value int64) *Slot { return NewSlot(NewInt(value)) }
 
 // MARK: Float
 
@@ -103,13 +87,9 @@ func NewFloat(value float64) *Float {
 	return &Float{abstractValue: newAbstractValue(FloatValue), Value: value}
 }
 
-func NewFloatSlot(value float64) *Slot {
-	return NewSlot(NewFloat(value))
-}
+func NewFloatSlot(value float64) *Slot { return NewSlot(NewFloat(value)) }
 
-func (value *Float) ToPhpString() string {
-	return strconv.FormatFloat(value.Value, 'f', -1, 64)
-}
+func (value *Float) ToPhpString() string { return strconv.FormatFloat(value.Value, 'f', -1, 64) }
 
 // MARK: Str
 
@@ -118,10 +98,6 @@ type Str struct {
 	Value string
 }
 
-func NewStr(value string) *Str {
-	return &Str{abstractValue: newAbstractValue(StrValue), Value: value}
-}
+func NewStr(value string) *Str { return &Str{abstractValue: newAbstractValue(StrValue), Value: value} }
 
-func NewStrSlot(value string) *Slot {
-	return NewSlot(NewStr(value))
-}
+func NewStrSlot(value string) *Slot { return NewSlot(NewStr(value)) }

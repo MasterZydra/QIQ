@@ -64,17 +64,13 @@ type PhpError struct {
 	message   string
 }
 
-func (err *PhpError) GetErrorType() ErrorType {
-	return err.errorType
-}
+func (err *PhpError) GetErrorType() ErrorType { return err.errorType }
 
-func (err *PhpError) GetMessage() string {
-	return err.String()
-}
+func (err *PhpError) GetMessage() string { return err.String() }
 
-func (err *PhpError) GetRawMessage() string {
-	return err.message
-}
+func (err *PhpError) GetRawMessage() string { return err.message }
+
+func (err *PhpError) Error() string { return err.String() }
 
 func (err *PhpError) String() string {
 	switch err.errorType {
@@ -91,10 +87,6 @@ func (err *PhpError) String() string {
 	default:
 		return err.message
 	}
-}
-
-func (err *PhpError) Error() string {
-	return err.String()
 }
 
 func NewParseError(format string, a ...any) Error {
@@ -128,9 +120,7 @@ type ContinueEventError struct {
 	breakoutLevel int64
 }
 
-func (err *ContinueEventError) GetBreakoutLevel() int64 {
-	return err.breakoutLevel
-}
+func (err *ContinueEventError) GetBreakoutLevel() int64 { return err.breakoutLevel }
 
 func NewBreakEvent(breakoutLevel int64) Error {
 	return &ContinueEventError{PhpError: &PhpError{errorType: EventError, message: BreakEvent}, breakoutLevel: breakoutLevel}

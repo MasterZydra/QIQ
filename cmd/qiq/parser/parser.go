@@ -21,9 +21,7 @@ type Parser struct {
 	id      int64
 }
 
-func NewParser(ini *ini.Ini) *Parser {
-	return &Parser{ini: ini}
-}
+func NewParser(ini *ini.Ini) *Parser { return &Parser{ini: ini} }
 
 func (parser *Parser) init() {
 	parser.program = ast.NewProgram()

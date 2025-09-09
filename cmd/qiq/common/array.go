@@ -10,9 +10,7 @@ type UniqueRand struct {
 	used []int
 }
 
-func NewUniqueRand(size int) *UniqueRand {
-	return &UniqueRand{size: size, used: []int{}}
-}
+func NewUniqueRand(size int) *UniqueRand { return &UniqueRand{size: size, used: []int{}} }
 
 func (u *UniqueRand) Int() int {
 	for {

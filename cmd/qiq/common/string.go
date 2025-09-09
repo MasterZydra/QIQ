@@ -342,13 +342,9 @@ func TrimTrailingLineBreaks(str string) string {
 	return str
 }
 
-func TrimLineBreaks(str string) string {
-	return strings.Trim(str, "\n")
-}
+func TrimLineBreaks(str string) string { return strings.Trim(str, "\n") }
 
-func ReplaceUnderscores(str string) string {
-	return strings.ReplaceAll(str, "_", "")
-}
+func ReplaceUnderscores(str string) string { return strings.ReplaceAll(str, "_", "") }
 
 func ReplaceAtPos(str string, new string, pos int) string {
 	out := []rune(str)

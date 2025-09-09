@@ -4,9 +4,7 @@ import (
 	"QIQ/cmd/qiq/position"
 )
 
-func (lexer *Lexer) isEof() bool {
-	return lexer.currPos.CurrPos > len(lexer.input)-1
-}
+func (lexer *Lexer) isEof() bool { return lexer.currPos.CurrPos > len(lexer.input)-1 }
 
 func (lexer *Lexer) at() string {
 	if lexer.isEof() {
@@ -77,13 +75,9 @@ func (lexer *Lexer) pushToken(tokenType TokenType, value string) {
 	lexer.currPos.SearchTokenStart = true
 }
 
-func (lexer *Lexer) pushKeywordToken(keyword string) {
-	lexer.pushToken(KeywordToken, keyword)
-}
+func (lexer *Lexer) pushKeywordToken(keyword string) { lexer.pushToken(KeywordToken, keyword) }
 
-func (lexer *Lexer) lastToken() *Token {
-	return lexer.tokens[len(lexer.tokens)-1]
-}
+func (lexer *Lexer) lastToken() *Token { return lexer.tokens[len(lexer.tokens)-1] }
 
 func (lexer *Lexer) pushSnapShot() {
 	lexer.positionSnapShots = append(lexer.positionSnapShots, lexer.currPos)

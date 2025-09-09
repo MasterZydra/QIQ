@@ -46,9 +46,7 @@ func (executionContext *ExecutionContext) GetClass(class string) (*ast.ClassDecl
 	return classDeclaration, true
 }
 
-func (executionContext *ExecutionContext) GetClasses() []string {
-	return executionContext.classNames
-}
+func (executionContext *ExecutionContext) GetClasses() []string { return executionContext.classNames }
 
 // -------------------------------------- Interfaces -------------------------------------- MARK: Interfaces
 

@@ -161,9 +161,7 @@ func (env *Environment) getAllObjects() []*values.Object {
 
 // -------------------------------------- Objects -------------------------------------- MARK: Objects
 
-func (env *Environment) AddObject(object *values.Object) {
-	env.objects = append(env.objects, object)
-}
+func (env *Environment) AddObject(object *values.Object) { env.objects = append(env.objects, object) }
 
 // -------------------------------------- Constants -------------------------------------- MARK: Constants
 

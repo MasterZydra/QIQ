@@ -9,9 +9,7 @@ import (
 	"slices"
 )
 
-func ToString(stmt IStatement) string {
-	return NewDumpVisitor(false).toString(stmt)
-}
+func ToString(stmt IStatement) string { return NewDumpVisitor(false).toString(stmt) }
 
 func PrintInterpreterCallstack(stmt IStatement) {
 	if !config.ShowInterpreterCallStack {
@@ -30,9 +28,7 @@ type DumpVisitor struct {
 	withPos bool
 }
 
-func NewDumpVisitor(withPos bool) DumpVisitor {
-	return DumpVisitor{withPos: withPos}
-}
+func NewDumpVisitor(withPos bool) DumpVisitor { return DumpVisitor{withPos: withPos} }
 
 func (visitor DumpVisitor) toString(stmt IStatement) string {
 	if stmt == nil {

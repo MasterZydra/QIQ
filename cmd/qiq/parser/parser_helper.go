@@ -26,9 +26,7 @@ func NewExpectedError(expected string, got *lexer.Token) phpError.Error {
 
 // -------------------------------------- Common -------------------------------------- MARK: Common
 
-func (parser *Parser) isEof() bool {
-	return parser.currPos > len(parser.tokens)-1
-}
+func (parser *Parser) isEof() bool { return parser.currPos > len(parser.tokens)-1 }
 
 func (parser *Parser) at() *lexer.Token {
 	if parser.isEof() {

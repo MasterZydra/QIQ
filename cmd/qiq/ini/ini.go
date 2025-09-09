@@ -23,9 +23,7 @@ type Ini struct {
 	directives map[string]string
 }
 
-func NewDefaultIni() *Ini {
-	return &Ini{directives: copyDefaultValues()}
-}
+func NewDefaultIni() *Ini { return &Ini{directives: copyDefaultValues()} }
 
 func NewDevIni() *Ini {
 	defaultIni := NewDefaultIni()

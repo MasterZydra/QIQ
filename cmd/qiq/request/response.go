@@ -4,8 +4,4 @@ type Response struct {
 	ExitCode int
 }
 
-func NewResponse() *Response {
-	return &Response{
-		ExitCode: 0,
-	}
-}
+func NewResponse() *Response { return &Response{ExitCode: 0} }

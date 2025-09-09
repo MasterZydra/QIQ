@@ -5,9 +5,7 @@ import (
 	"fmt"
 )
 
-func (generator *AstGenerator) println(format string, a ...any) {
-	generator.print(format+"\n", a...)
-}
+func (generator *AstGenerator) println(format string, a ...any) { generator.print(format+"\n", a...) }
 
 func (generator *AstGenerator) print(format string, a ...any) {
 	generator.output += fmt.Sprintf(format, a...)

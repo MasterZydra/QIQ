@@ -72,17 +72,15 @@ func (interpreter *Interpreter) GetExectionContext() *runtime.ExecutionContext {
 	return interpreter.executionContext
 }
 
-func (interpreter *Interpreter) GetIni() *ini.Ini {
-	return interpreter.ini
-}
+func (interpreter *Interpreter) GetFilename() string { return interpreter.filename }
 
-func (interpreter *Interpreter) GetRequest() *request.Request {
-	return interpreter.request
-}
+func (interpreter *Interpreter) GetWorkingDir() string { return interpreter.workingDir }
 
-func (interpreter *Interpreter) GetResponse() *request.Response {
-	return interpreter.response
-}
+func (interpreter *Interpreter) GetIni() *ini.Ini { return interpreter.ini }
+
+func (interpreter *Interpreter) GetRequest() *request.Request { return interpreter.request }
+
+func (interpreter *Interpreter) GetResponse() *request.Response { return interpreter.response }
 
 func (interpreter *Interpreter) GetOutputBufferStack() *outputBuffer.Stack {
 	return interpreter.outputBufferStack

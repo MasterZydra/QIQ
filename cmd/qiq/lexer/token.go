@@ -20,9 +20,7 @@ func (token *Token) String() string {
 	return fmt.Sprintf("&{Token - type: %s, value: \"%s\", position: %s}", token.TokenType, token.Value, token.Position)
 }
 
-func (token *Token) GetPosString() string {
-	return token.Position.ToPosString()
-}
+func (token *Token) GetPosString() string { return token.Position.ToPosString() }
 
 type TokenType string
 

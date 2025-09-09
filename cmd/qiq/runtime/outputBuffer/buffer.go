@@ -4,6 +4,4 @@ type Buffer struct {
 	Content string
 }
 
-func NewBuffer() *Buffer {
-	return &Buffer{}
-}
+func NewBuffer() *Buffer { return &Buffer{} }

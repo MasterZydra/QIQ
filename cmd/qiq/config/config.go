@@ -11,9 +11,7 @@ const QIQVersion string = "0.4.0"
 
 var SoftwareVersion string = softwareVersion()
 
-func softwareVersion() string {
-	return fmt.Sprintf("QIQ/%s (%s)", QIQVersion, runtime.GOOS)
-}
+func softwareVersion() string { return fmt.Sprintf("QIQ/%s (%s)", QIQVersion, runtime.GOOS) }
 
 // PHP version
 const MajorVersion int64 = 8

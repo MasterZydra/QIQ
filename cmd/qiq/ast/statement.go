@@ -22,21 +22,15 @@ type Statement struct {
 	pos  *position.Position
 }
 
-func NewEmptyStmt() *Statement {
-	return &Statement{kind: EmptyNode}
-}
+func NewEmptyStmt() *Statement { return &Statement{kind: EmptyNode} }
 
 func NewStmt(id int64, kind NodeType, pos *position.Position) *Statement {
 	return &Statement{id: id, kind: kind, pos: pos}
 }
 
-func (stmt *Statement) GetId() int64 {
-	return stmt.id
-}
+func (stmt *Statement) GetId() int64 { return stmt.id }
 
-func (stmt *Statement) GetKind() NodeType {
-	return stmt.kind
-}
+func (stmt *Statement) GetKind() NodeType { return stmt.kind }
 
 func (stmt *Statement) GetPosition() *position.Position {
 	if stmt.pos == nil {
@@ -45,9 +39,7 @@ func (stmt *Statement) GetPosition() *position.Position {
 	return stmt.pos
 }
 
-func (stmt *Statement) GetPosString() string {
-	return stmt.GetPosition().ToPosString()
-}
+func (stmt *Statement) GetPosString() string { return stmt.GetPosition().ToPosString() }
 
 func (stmt *Statement) Process(visitor Visitor, context any) (any, error) {
 	return visitor.ProcessStmt(stmt, context)

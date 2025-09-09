@@ -53,9 +53,7 @@ func OsFamily() string {
 // Is OS Windows?
 var IS_WIN = IsWindows()
 
-func IsWindows() bool {
-	return Os() == "Windows"
-}
+func IsWindows() bool { return Os() == "Windows" }
 
 var EOL string = Eol()
 

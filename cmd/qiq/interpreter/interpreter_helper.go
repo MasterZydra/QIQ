@@ -29,13 +29,9 @@ func (interpreter *Interpreter) Print(str string) {
 	}
 }
 
-func (interpreter *Interpreter) Println(str string) {
-	interpreter.Print(str + os.EOL)
-}
+func (interpreter *Interpreter) Println(str string) { interpreter.Print(str + os.EOL) }
 
-func (interpreter *Interpreter) WriteResult(str string) {
-	interpreter.result += str
-}
+func (interpreter *Interpreter) WriteResult(str string) { interpreter.result += str }
 
 func (interpreter *Interpreter) flushOutputBuffers() {
 	if interpreter.outputBufferStack.Len() == 0 {
