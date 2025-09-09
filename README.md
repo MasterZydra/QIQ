@@ -18,7 +18,8 @@ The goals of the project are:
 ## Usage
 ```
 Usage of ./qiq:
-  -h            Show help
+  -h            Show help.
+  -debug        Enable debug mode (for development on QIQ).
   -dev          Run in developer mode.
   -stats        Show statistics.
   -S string     Run with built-in web server. <addr>:<port>
@@ -40,7 +41,7 @@ In order to test the QIQ implementation against this cases the binary `qiqTester
 
 **Usage:**
 ```bash
-./qiqTester [-h] [-v(1|2)] [-only-failed] [-no-color] <list of directory or phpt-file>
+./qiqTester [-h] [-v(1|2)] [-only-failed] [-no-color] [-replace-json <file-name>] <list of directory or phpt-file>
 ```
 
 **Examples:**
