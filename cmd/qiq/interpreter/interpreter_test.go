@@ -136,6 +136,9 @@ func testInputOutput(t *testing.T, php string, output string) *Interpreter {
 }
 
 func TestOutput(t *testing.T) {
+	// Empty string
+	testInputOutput(t, "", "")
+
 	// Without PHP
 	testInputOutput(t, "<html>...</html>", "<html>...</html>")
 

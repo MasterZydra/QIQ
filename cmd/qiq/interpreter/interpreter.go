@@ -128,7 +128,7 @@ func (interpreter *Interpreter) processProgram(program *ast.Program, env *Enviro
 
 	defer interpreter.flushOutputBuffers()
 
-	var slot *values.Slot = nil
+	slot := values.NewSlot(nil)
 	for _, stmt := range program.GetStatements() {
 		if slot, err = interpreter.processStmt(stmt, env); err != nil {
 			// Handle exit event - Stop code execution
