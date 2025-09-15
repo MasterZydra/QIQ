@@ -51,6 +51,7 @@
 
 ## QIQ
 - qiq.case_sensitive_include
+- qiq.strict_comparison
 
 ## Resource Limits
 - max_memory_limit

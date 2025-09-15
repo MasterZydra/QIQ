@@ -95,6 +95,7 @@ var allowedDirectives = map[string]int{
 	"zlib.output_handler":           INI_ALL,
 	// QIQ
 	"qiq.case_sensitive_include": INI_SYSTEM,
+	"qiq.strict_comparison":      INI_SYSTEM,
 }
 
 var defaultValues = map[string]string{
@@ -193,6 +194,7 @@ var defaultValues = map[string]string{
 	"zlib.output_handler":           "",
 	// Category: QIQ
 	"qiq.case_sensitive_include": "0",
+	"qiq.strict_comparison":      "0",
 }
 
 var boolDirectives = []string{
@@ -220,6 +222,7 @@ var boolDirectives = []string{
 	"zlib.output_compression",
 	// QIQ
 	"qiq.case_sensitive_include",
+	"qiq.strict_comparison",
 }
 
 var intDirectives = []string{

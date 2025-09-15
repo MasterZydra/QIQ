@@ -112,10 +112,10 @@ func testForError(t *testing.T, php string, expected phpError.Error) {
 	testForErrorCustomIni(t, ini.NewDevIni(), php, expected)
 }
 
-func testInputOutput(t *testing.T, php string, output string) *Interpreter {
+func testInputOutputCustomIni(t *testing.T, ini *ini.Ini, php string, output string) *Interpreter {
 	// Always use "\n" for tests so that they also pass on Windows
 	os.EOL = "\n"
-	interpreter, err := NewInterpreter(runtime.NewExecutionContext(), ini.NewDevIni(), &request.Request{}, TEST_FILE_NAME)
+	interpreter, err := NewInterpreter(runtime.NewExecutionContext(), ini, &request.Request{}, TEST_FILE_NAME)
 	if err != nil {
 		t.Errorf("\nCode: \"%s\"\nUnexpected error: \"%s\"", php, err)
 		return interpreter
@@ -129,6 +129,10 @@ func testInputOutput(t *testing.T, php string, output string) *Interpreter {
 		t.Errorf("\nCode: \"%s\"\nExpected: \"%s\",\nGot:      \"%s\"", php, output, actual)
 	}
 	return interpreter
+}
+
+func testInputOutput(t *testing.T, php string, output string) *Interpreter {
+	return testInputOutputCustomIni(t, ini.NewDevIni(), php, output)
 }
 
 func TestOutput(t *testing.T) {
@@ -965,6 +969,32 @@ func TestLooseComparison(t *testing.T) {
 	testInputOutput(t, `<?php class c {} $c1 = new c; var_dump($c1 == $c1);`, "bool(true)\n")
 	testInputOutput(t, `<?php class c {} $c1 = new c; var_dump($c1 != $c1);`, "bool(false)\n")
 	testInputOutput(t, `<?php class c {} $c1 = new c; var_dump($c1 == null);`, "bool(false)\n")
+
+	// QIQ feature: always strict comparison
+	devIni := ini.NewDevIni()
+	devIni.Set("qiq.strict_comparison", "1", ini.INI_SYSTEM)
+	testInputOutputCustomIni(t, devIni, `<?php var_dump(true == 1);`, "bool(false)\n")
+	testInputOutputCustomIni(t, devIni, `<?php var_dump(true == -1);`, "bool(false)\n")
+	testInputOutputCustomIni(t, devIni, `<?php var_dump(true == "1");`, "bool(false)\n")
+	testInputOutputCustomIni(t, devIni, `<?php var_dump(true == "-1");`, "bool(false)\n")
+	testInputOutputCustomIni(t, devIni, `<?php var_dump(true == "php");`, "bool(false)\n")
+	testInputOutputCustomIni(t, devIni, `<?php var_dump(false == 0);`, "bool(false)\n")
+	testInputOutputCustomIni(t, devIni, `<?php var_dump(false == "0");`, "bool(false)\n")
+	testInputOutputCustomIni(t, devIni, `<?php var_dump(false == null);`, "bool(false)\n")
+	testInputOutputCustomIni(t, devIni, `<?php var_dump(false == []);`, "bool(false)\n")
+	testInputOutputCustomIni(t, devIni, `<?php var_dump(false == "");`, "bool(false)\n")
+	testInputOutputCustomIni(t, devIni, `<?php var_dump(1 == "1");`, "bool(false)\n")
+	testInputOutputCustomIni(t, devIni, `<?php var_dump(0 == "0");`, "bool(false)\n")
+	testInputOutputCustomIni(t, devIni, `<?php var_dump(0 == null);`, "bool(false)\n")
+	testInputOutputCustomIni(t, devIni, `<?php var_dump(-1 == "-1");`, "bool(false)\n")
+	testInputOutputCustomIni(t, devIni, `<?php var_dump(null == []);`, "bool(false)\n")
+	testInputOutputCustomIni(t, devIni, `<?php var_dump(null == "");`, "bool(false)\n")
+	testInputOutputCustomIni(t, devIni, `<?php var_dump("1" == "01");`, "bool(false)\n")
+	testInputOutputCustomIni(t, devIni, `<?php var_dump("01" == "1");`, "bool(false)\n")
+	testInputOutputCustomIni(t, devIni, `<?php var_dump("10" == "1e1");`, "bool(false)\n")
+	testInputOutputCustomIni(t, devIni, `<?php var_dump("1e1" == "10");`, "bool(false)\n")
+	testInputOutputCustomIni(t, devIni, `<?php var_dump(100 == "1e2");`, "bool(false)\n")
+	testInputOutputCustomIni(t, devIni, `<?php var_dump(1e2 == "100");`, "bool(false)\n")
 }
 
 func TestCompareRelation(t *testing.T) {

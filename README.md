@@ -98,6 +98,10 @@ In addition to supporting official PHP syntax and features, QIQ offers some uniq
 
 QIQ provides the `qiq.case_sensitive_include` INI directive, which enforces case-sensitive behavior for `include` and `require` statements even on Windows systems. This helps catch issues where file or path casing does not match, which would otherwise only cause problems in Linux environments.
 
+### Strict Comparison Mode
+
+QIQ provides the `qiq.strict_comparison` INI directive, which enforces strict comparison semantics throughout your codebase. When enabled, the `==` operator behaves like `===`, and both `!=` and `<>` behave like `!==`. This can help to prevent subtle bugs caused by type juggling in comparisons, making the code more predictable and robust.
+
 ## Used resources
 For some part of this project, the following resources were used as a guide, inspiration, or concept:
 - [PHP Language Specification](https://phplang.org/)

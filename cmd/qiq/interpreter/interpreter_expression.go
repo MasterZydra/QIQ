@@ -739,6 +739,12 @@ func (interpreter *Interpreter) ProcessRelationalExpr(expr *ast.RelationalExpres
 func (interpreter *Interpreter) ProcessEqualityExpr(expr *ast.EqualityExpression, env any) (any, error) {
 	lhs := must(interpreter.processStmt(expr.Lhs, env))
 	rhs := must(interpreter.processStmt(expr.Rhs, env))
+	if expr.Operator == "==" && interpreter.ini.GetBool("qiq.strict_comparison") {
+		return variableHandling.Compare(lhs.Value, "===", rhs.Value)
+	}
+	if (expr.Operator == "!=" || expr.Operator == "<>") && interpreter.ini.GetBool("qiq.strict_comparison") {
+		return variableHandling.Compare(lhs.Value, "!==", rhs.Value)
+	}
 	return variableHandling.Compare(lhs.Value, expr.Operator, rhs.Value)
 }
 
