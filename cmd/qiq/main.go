@@ -22,6 +22,7 @@ var serverAddr string
 var documentRoot string
 
 func main() {
+	iniFile := flag.String("create-ini", "", "Create given ini file")
 	file := flag.String("f", "", "Parse and execute <file>.")
 	isDev := flag.Bool("dev", false, "Run in developer mode.")
 	// Developer tools
@@ -35,6 +36,15 @@ func main() {
 
 	if len(os.Args) > 1 && os.Args[1] == "version" {
 		fmt.Printf("QIQ %s (PHP %s)\n", config.QIQVersion, config.Version)
+		os.Exit(0)
+	}
+
+	if *iniFile != "" {
+		iniWriter := ini.NewWriter(*iniFile)
+		if err := iniWriter.Write(); err != nil {
+			fmt.Printf("Creation of ini file \"%s\" failed: %s", *iniFile, err.Error())
+			os.Exit(1)
+		}
 		os.Exit(0)
 	}
 

@@ -18,13 +18,14 @@ The goals of the project are:
 ## Usage
 ```
 Usage of ./qiq:
-  -h            Show help.
-  -debug        Enable debug mode (for development on QIQ).
-  -dev          Run in developer mode.
-  -stats        Show statistics.
-  -S string     Run with built-in web server. <addr>:<port>
-  -t string     Specify document root <docroot> for built-in web server.
-  -f string     Parse and execute <file>.
+  -h                  Show help.
+  -debug              Enable debug mode (for development on QIQ).
+  -dev                Run in developer mode.
+  -stats              Show statistics.
+  -S string           Run with built-in web server. <addr>:<port>
+  -t string           Specify document root <docroot> for built-in web server.
+  -f string           Parse and execute <file>.
+  -create-ini string   Create given ini file
 ```
 
 **Parse file:**  
