@@ -8,9 +8,21 @@ import (
 	"strings"
 )
 
+func GetExecutablePath() string {
+	exePath, err := os.Executable()
+	if err != nil {
+		return ""
+	}
+	return ExtractPath(exePath)
+}
+
+func Join(path1, path2 string) string {
+	return filepath.Join(path1, path2)
+}
+
 func GetAbsPath(path string) (string, error) {
 	if !PathExists(path) {
-		return path, fmt.Errorf("Could not open file: %s", path)
+		return path, fmt.Errorf("could not open file: %s", path)
 	}
 	return ToAbsPath(path), nil
 }

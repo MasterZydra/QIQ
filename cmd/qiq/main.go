@@ -20,9 +20,11 @@ import (
 
 var serverAddr string
 var documentRoot string
+var iniFilePath string
 
 func main() {
-	iniFile := flag.String("create-ini", "", "Create given ini file")
+	iniFilePathFlag := flag.String("ini", "", "Path to ini file to use.")
+	createIniFile := flag.String("create-ini", "", "Create given ini file.")
 	file := flag.String("f", "", "Parse and execute <file>.")
 	isDev := flag.Bool("dev", false, "Run in developer mode.")
 	// Developer tools
@@ -39,15 +41,16 @@ func main() {
 		os.Exit(0)
 	}
 
-	if *iniFile != "" {
-		iniWriter := ini.NewWriter(*iniFile)
+	if *createIniFile != "" {
+		iniWriter := ini.NewWriter(*createIniFile)
 		if err := iniWriter.Write(); err != nil {
-			fmt.Printf("Creation of ini file \"%s\" failed: %s", *iniFile, err.Error())
+			fmt.Printf("Creation of ini file \"%s\" failed: %s", *createIniFile, err.Error())
 			os.Exit(1)
 		}
 		os.Exit(0)
 	}
 
+	iniFilePath = *iniFilePathFlag
 	config.IsDevMode = *isDev
 	config.ShowStats = *showStats
 	if *debugMode {
@@ -217,6 +220,35 @@ func processContent(w http.ResponseWriter, r *http.Request, content string, file
 		initIni = ini.NewDevIni()
 	} else {
 		initIni = ini.NewDefaultIni()
+	}
+
+	iniReader := ini.NewReader()
+
+	// Read ini in folder of this binary
+	iniFile := common.Join(common.GetExecutablePath(), "qiq.ini")
+	if common.PathExists(iniFile) {
+		if err := iniReader.Read(iniFile); err != nil {
+			return fmt.Sprintf("Cannot read ini file: %s", iniFile), 1
+		}
+		initIni = iniReader.GetIni()
+	}
+
+	// Read ini in document root
+	iniFile = common.Join(documentRoot, "qiq.ini")
+	if common.PathExists(iniFile) {
+		if err := iniReader.Read(iniFile); err != nil {
+			return fmt.Sprintf("Cannot read ini file: %s", iniFile), 1
+		}
+		initIni = iniReader.GetIni()
+	}
+
+	// Read given ini file
+	iniFile = common.GetAbsPathForWorkingDir(documentRoot, iniFilePath)
+	if common.PathExists(iniFile) {
+		if err := iniReader.Read(iniFile); err != nil {
+			return fmt.Sprintf("Cannot read ini file: %s", iniFile), 1
+		}
+		initIni = iniReader.GetIni()
 	}
 
 	request := request.NewRequestFromGoRequest(r, documentRoot, serverAddr, filename)

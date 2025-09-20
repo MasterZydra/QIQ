@@ -8,12 +8,12 @@ import (
 	"strings"
 )
 
-type IniReader struct {
+type Reader struct {
 	ini *Ini
 }
 
-func NewIniReader() *IniReader {
-	reader := &IniReader{}
+func NewReader() *Reader {
+	reader := &Reader{}
 	if config.IsDevMode {
 		reader.ini = NewDevIni()
 	} else {
@@ -22,13 +22,16 @@ func NewIniReader() *IniReader {
 	return reader
 }
 
-func (reader *IniReader) Read(filename string) phpError.Error {
+func (reader *Reader) GetIni() *Ini { return reader.ini }
+
+func (reader *Reader) Read(filename string) phpError.Error {
 	file, err := os.Open(filename)
 	if err != nil {
 		return phpError.NewError("%s", err.Error())
 	}
 	defer file.Close()
 
+	section := ""
 	scanner := bufio.NewScanner(file)
 	lineNumber := 0
 	for scanner.Scan() {
@@ -39,14 +42,29 @@ func (reader *IniReader) Read(filename string) phpError.Error {
 		if line == "" || strings.HasPrefix(line, ";") {
 			continue
 		}
+
+		// Read section
+		if strings.HasPrefix(line, "[") && strings.Contains(line, "]") {
+			section = strings.TrimSpace(line[strings.Index(line, "[")+1 : strings.Index(line, "]")])
+			continue
+		}
+
+		// PHP section
+		if section != "PHP" {
+			continue
+		}
+
 		if !strings.Contains(line, "=") {
 			return phpError.NewError("Cannot parse ini file line %d", lineNumber)
 		}
 
-		println(strings.SplitN(line, "=", 2))
-		// Trim directive, trim value
-		// set directive in ini struct
+		parts := strings.SplitN(line, "=", 2)
+		directive, value := strings.TrimSpace(parts[0]), strings.TrimSpace(parts[1])
+		value = strings.TrimPrefix(value, `"`)
+		value = strings.TrimSuffix(value, `"`)
+		reader.ini.Set(directive, value, INI_ALL)
 
+		// TODO Ini Reader: Add support for environment variables
 		// Spec: https://www.php.net/manual/en/configuration.file.php
 		/*
 			; PHP_MEMORY_LIMIT is taken from environment

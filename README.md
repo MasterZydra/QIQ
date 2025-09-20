@@ -25,7 +25,8 @@ Usage of ./qiq:
   -S string           Run with built-in web server. <addr>:<port>
   -t string           Specify document root <docroot> for built-in web server.
   -f string           Parse and execute <file>.
-  -create-ini string   Create given ini file
+  -ini string         Path to ini file to use.
+  -create-ini string  Create given ini file.
 ```
 
 **Parse file:**  
@@ -102,6 +103,19 @@ QIQ provides the `qiq.case_sensitive_include` INI directive, which enforces case
 ### Strict Comparison Mode
 
 QIQ provides the `qiq.strict_comparison` INI directive, which enforces strict comparison semantics throughout your codebase. When enabled, the `==` operator behaves like `===`, and both `!=` and `<>` behave like `!==`. This can help to prevent subtle bugs caused by type juggling in comparisons, making the code more predictable and robust.
+
+## INI files
+
+The application loads configuration files in the following order:
+1. The INI file `qiq.ini` located in the same directory as the executable.
+2. The INI file `qiq.ini` located in the document root.
+3. Any custom INI file specified by the user using the `-ini` flag.
+
+You can generate a new INI file using the `-create-ini` flag:
+
+```bash
+qiq -create-ini <path>/qiq.ini
+```
 
 ## Used resources
 For some part of this project, the following resources were used as a guide, inspiration, or concept:

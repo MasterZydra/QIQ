@@ -2,9 +2,11 @@ package ini
 
 import (
 	"QIQ/cmd/qiq/common"
+	"QIQ/cmd/qiq/config"
 	"fmt"
 	"slices"
 	"strings"
+	"time"
 )
 
 type Writer struct {
@@ -54,6 +56,8 @@ func (w *Writer) addHeading(builder *strings.Builder, heading string) {
 
 func (w *Writer) Write() error {
 	var builder strings.Builder
+
+	builder.WriteString(fmt.Sprintf("; Generate with QIQ %s on %s\n\n", config.QIQVersion, time.Now().Format("2006-01-02 15:04:05")))
 
 	builder.WriteString("[PHP]\n\n")
 

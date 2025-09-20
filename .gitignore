@@ -13,3 +13,6 @@
 /test-suits/*
 /php-src/*
 *.php.ast
+
+# Ini files
+qiq.ini
