@@ -118,6 +118,11 @@ func (generator *AstGenerator) ProcessThrowStmt(stmt *ast.ThrowStatement, _ any)
 	panic("ProcessThrowStmt is unimplemented")
 }
 
+// ProcessTryStmt implements ast.Visitor.
+func (generator *AstGenerator) ProcessTryStmt(stmt *ast.TryStatement, _ any) (any, error) {
+	panic("ProcessTryStmt is unimplemented")
+}
+
 // ProcessWhileStmt implements ast.Visitor.
 func (generator *AstGenerator) ProcessWhileStmt(stmt *ast.WhileStatement, _ any) (any, error) {
 	panic("ProcessWhileStmt is unimplemented")

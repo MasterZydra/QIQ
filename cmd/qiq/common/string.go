@@ -23,11 +23,11 @@ func IsQualifiedName(name string) bool {
 	// Spec: https://phplang.org/spec/09-lexical-structure.html#grammar-qualified-name
 
 	// qualified-name::
-	//    namespace-name-as-a-prefixopt   name
+	//    namespace-name-as-a-prefix(opt)   name
 
 	// namespace-name-as-a-prefix::
 	//    \
-	//    \opt   namespace-name   \
+	//    \(opt)   namespace-name   \
 	//    namespace   \
 	//    namespace   \   namespace-name
 

@@ -531,6 +531,26 @@ func (visitor DumpVisitor) ProcessThrowStmt(stmt *ThrowStatement, _ any) (any, e
 	return fmt.Sprintf("{ %s, \"expr\": %s }", visitor.getKindAndPos(stmt), visitor.toString(stmt.Expr)), nil
 }
 
+// ProcessTryStmt implements Visitor.
+func (visitor DumpVisitor) ProcessTryStmt(stmt *TryStatement, _ any) (any, error) {
+	catches := "["
+	for _, catch := range stmt.Catches {
+		if len(catches) > 1 {
+			catches += ", "
+		}
+		catches += fmt.Sprintf(
+			"{ \"errorTypes\": [%s], \"variableName\": \"%s\", \"body\": %s }",
+			common.ImplodeStrSlice(catch.ErrorType), catch.VariableName, visitor.toString(catch.Body),
+		)
+	}
+	catches += "]"
+
+	return fmt.Sprintf(
+		"{ %s, \"body\": %s, \"catches\": %s, \"finally\": %s }",
+		visitor.getKindAndPos(stmt), visitor.toString(stmt.Body), catches, visitor.toString(stmt.Finally),
+	), nil
+}
+
 // ProcessUnaryExpr implements Visitor.
 func (visitor DumpVisitor) ProcessUnaryExpr(stmt *UnaryOpExpression, _ any) (any, error) {
 	return fmt.Sprintf(

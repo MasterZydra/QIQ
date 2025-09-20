@@ -480,3 +480,24 @@ func (interpreter *Interpreter) ProcessForeachStmt(stmt *ast.ForeachStatement, e
 
 	return values.NewVoidSlot(), nil
 }
+
+// ProcessTryStmt implements Visitor.
+func (interpreter *Interpreter) ProcessTryStmt(stmt *ast.TryStatement, env any) (any, error) {
+	interpreter.processStmt(stmt.Body, env)
+
+	// TODO implement correct handling of catches - this requires that the error is an object
+	// _, err := interpreter.processStmt(stmt.Body, env)
+	// if err != nil {
+	// 	for _, catch := range stmt.Catches {
+	// 		// TODO Check if catch.ErrorType contains current error type
+	// 	}
+	// }
+
+	if stmt.Finally != nil {
+		_, err := interpreter.processStmt(stmt.Finally, env)
+		if err != nil {
+			return values.NewVoidSlot(), err
+		}
+	}
+	return values.NewVoidSlot(), nil
+}

@@ -161,7 +161,10 @@ func (parser *Parser) parseStmt() (ast.IStatement, phpError.Error) {
 		return parser.parseJumpStmt()
 	}
 
-	// TODO try-statement
+	// try-statement
+	if parser.isToken(lexer.KeywordToken, "try", false) {
+		return parser.parseTryStmt()
+	}
 
 	// -------------------------------------- declare-statement -------------------------------------- MARK: declare-statement
 
@@ -1142,6 +1145,116 @@ func (parser *Parser) parseJumpStmt() (ast.IStatement, phpError.Error) {
 	}
 
 	return ast.NewEmptyStmt(), phpError.NewParseError("Unsupported jump statement '%s' at %s", parser.at().Value, parser.at().GetPosString())
+}
+
+func (parser *Parser) parseTryStmt() (ast.IStatement, phpError.Error) {
+	// -------------------------------------- try-statement -------------------------------------- MARK: try-statement
+	// Spec: https://phplang.org/spec/11-statements.html#the-try-statement
+
+	// try-statement:
+	//    try   compound-statement   catch-clauses
+	//    try   compound-statement   finally-clause
+	//    try   compound-statement   catch-clauses   finally-clause
+
+	// catch-clauses:
+	//    catch-clause
+	//    catch-clauses   catch-clause
+
+	// catch-clause:
+	//    catch   (   catch-name-list   variable-name(opt)   )   compound-statement
+	// Spec-Fix: Since PHP 8 the variable name is optional.
+
+	// catch-name-list:
+	//    qualified-name
+	//    catch-name-list   |   qualified-name
+
+	// finally-clause:
+	//    finally   compound-statement
+
+	// Supported statement: try statement: `try { ... } catch (...) { ... } finally { ... }`
+	PrintParserCallstack("try-statement", parser)
+
+	// Eat "try"
+	pos := parser.eat().Position
+
+	// Body
+	if !parser.isToken(lexer.OpOrPuncToken, "{", false) {
+		return ast.NewEmptyStmt(), NewExpectedError("{", parser.at())
+	}
+	body, err := parser.parseStmt()
+	if err != nil {
+		return ast.NewEmptyStmt(), err
+	}
+	if body.GetKind() != ast.CompoundStmt {
+		return ast.NewEmptyStmt(), phpError.NewParseError("Expected compound statement. Got %s at %s", body.GetKind(), body.GetPosString())
+	}
+
+	tryStmt := ast.NewTryStmt(parser.nextId(), pos, body.(*ast.CompoundStatement))
+
+	// Catch
+	for parser.isToken(lexer.KeywordToken, "catch", true) {
+		if !parser.isToken(lexer.OpOrPuncToken, "(", true) {
+			return ast.NewEmptyStmt(), NewExpectedError("(", parser.at())
+		}
+
+		catchNames := []string{}
+		for {
+			if !common.IsQualifiedName(parser.at().Value) {
+				return ast.NewEmptyStmt(), phpError.NewParseError("Expected qualified name at %s", parser.at().GetPosString())
+			}
+			catchNames = append(catchNames, parser.eat().Value)
+
+			if parser.isToken(lexer.OpOrPuncToken, "|", true) {
+				continue
+			}
+			break
+		}
+
+		variableName := ""
+		if !parser.isToken(lexer.OpOrPuncToken, ")", false) {
+			if !common.IsVariableName(parser.at().Value) {
+				return ast.NewEmptyStmt(), phpError.NewParseError("Expected variable name at %s", parser.at().GetPosString())
+			}
+			variableName = parser.eat().Value
+		}
+		if !parser.isToken(lexer.OpOrPuncToken, ")", true) {
+			return ast.NewEmptyStmt(), NewExpectedError(")", parser.at())
+		}
+
+		if !parser.isToken(lexer.OpOrPuncToken, "{", false) {
+			return ast.NewEmptyStmt(), NewExpectedError("{", parser.at())
+		}
+		body, err := parser.parseStmt()
+		if err != nil {
+			return ast.NewEmptyStmt(), err
+		}
+		if body.GetKind() != ast.CompoundStmt {
+			return ast.NewEmptyStmt(), phpError.NewParseError("Expected compound statement. Got %s at %s", body.GetKind(), body.GetPosString())
+		}
+
+		tryStmt.AddCatch(ast.CatchStatement{ErrorType: catchNames, VariableName: variableName, Body: body.(*ast.CompoundStatement)})
+	}
+
+	// Finally
+	if parser.isToken(lexer.KeywordToken, "finally", true) {
+		if !parser.isToken(lexer.OpOrPuncToken, "{", false) {
+			return ast.NewEmptyStmt(), NewExpectedError("{", parser.at())
+		}
+		finally, err := parser.parseStmt()
+		if err != nil {
+			return ast.NewEmptyStmt(), err
+		}
+		if finally.GetKind() != ast.CompoundStmt {
+			return ast.NewEmptyStmt(), phpError.NewParseError("Expected compound statement. Got %s at %s", finally.GetKind(), finally.GetPosString())
+		}
+		tryStmt.Finally = finally.(*ast.CompoundStatement)
+	}
+
+	if tryStmt.Finally == nil && len(tryStmt.Catches) == 0 {
+		return ast.NewEmptyStmt(), phpError.NewError("Cannot use try without catch of finally at %s", tryStmt.GetPosString())
+	}
+
+	return tryStmt, nil
 }
 
 func (parser *Parser) parseFunctionDefinition() (ast.IStatement, phpError.Error) {

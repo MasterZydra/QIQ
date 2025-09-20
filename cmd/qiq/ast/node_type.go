@@ -63,6 +63,7 @@ const (
 	ReturnStmt               NodeType = "ReturnStatement"
 	ThrowStmt                NodeType = "ThrowStatement"
 	TraitUseStmt             NodeType = "TraitUseStatement"
+	TryStmt                  NodeType = "TryStatement"
 	WhileStmt                NodeType = "WhileStatement"
 	// Class
 	ClassConstDeclarationStmt NodeType = "ClassConstDeclarationStatement"

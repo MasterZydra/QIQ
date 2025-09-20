@@ -175,6 +175,12 @@ func TestOutput(t *testing.T) {
 	testInputOutput(t, `<?php print(1 + 2) * 3;`, "9")
 }
 
+func TestTryStmt(t *testing.T) {
+	testInputOutput(t, `<?php try { echo "try."; } finally { echo "finally."; }`, "try.finally.")
+
+	testForError(t, `<?php try {} finally { f1(); }`, phpError.NewError("Call to undefined function f1() at %s:1:24", TEST_FILE_NAME))
+}
+
 func TestConstants(t *testing.T) {
 	// Predefined constants
 	testInputOutput(t, `<?php echo E_USER_NOTICE;`, fmt.Sprintf("%d", phpError.E_USER_NOTICE))
@@ -1289,6 +1295,9 @@ func TestCompareRelation(t *testing.T) {
 // -------------------------------------- functions -------------------------------------- MARK: functions
 
 func TestUserFunctions(t *testing.T) {
+	// Error if function is never declared
+	testForError(t, "<?php noneExistingFunction(); ", phpError.NewError("Call to undefined function noneexistingfunction() at %s:1:7", TEST_FILE_NAME))
+
 	// Simple user defined function without types, params, ...
 	// Check if function definition can be after the function call
 	testInputOutput(t,

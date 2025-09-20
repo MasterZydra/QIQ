@@ -21,6 +21,7 @@ type Visitor interface {
 	ProcessReturnStmt(stmt *ReturnStatement, context any) (any, error)
 	ProcessStmt(stmt *Statement, context any) (any, error)
 	ProcessThrowStmt(stmt *ThrowStatement, context any) (any, error)
+	ProcessTryStmt(stmt *TryStatement, context any) (any, error)
 	ProcessWhileStmt(stmt *WhileStatement, context any) (any, error)
 
 	// Expressions

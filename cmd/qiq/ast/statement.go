@@ -534,3 +534,34 @@ func (stmt *InterfaceDeclarationStatement) GetMethod(name string) (*MethodDefini
 	}
 	return methodDef, true
 }
+
+// -------------------------------------- TryStatement -------------------------------------- MARK: TryStatement
+
+type CatchStatement struct {
+	ErrorType    []string
+	VariableName string
+	Body         *CompoundStatement
+}
+
+type TryStatement struct {
+	*Statement
+	Body    *CompoundStatement
+	Catches []CatchStatement
+	Finally *CompoundStatement
+}
+
+func NewTryStmt(id int64, pos *position.Position, body *CompoundStatement) *TryStatement {
+	return &TryStatement{
+		Statement: NewStmt(id, TryStmt, pos),
+		Body:      body,
+		Catches:   []CatchStatement{},
+	}
+}
+
+func (stmt *TryStatement) Process(visitor Visitor, context any) (any, error) {
+	return visitor.ProcessTryStmt(stmt, context)
+}
+
+func (stmt *TryStatement) AddCatch(catch CatchStatement) {
+	stmt.Catches = append(stmt.Catches, catch)
+}

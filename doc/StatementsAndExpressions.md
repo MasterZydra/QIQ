@@ -20,6 +20,7 @@
 - short echo statement: `<?= "123";`
 - short open tag: `<? 1 + 2;`
 - throw statement: `throw new Exception();`
+- try statement: `try { ... } catch (...) { ... } finally { ... }`
 - while statement: `while (true) { ... }`
 
 # Expressions

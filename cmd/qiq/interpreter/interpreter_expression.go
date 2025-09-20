@@ -342,7 +342,10 @@ func (interpreter *Interpreter) ProcessFunctionCallExpr(expr *ast.FunctionCallEx
 	}
 
 	// Lookup user function
-	userFunction := mustOrVoid(env.(*Environment).lookupUserFunction(functionName))
+	userFunction, err := env.(*Environment).lookupUserFunction(functionName)
+	if err != nil {
+		return values.NewVoidSlot(), phpError.NewError("%s at %s", err.GetRawMessage(), expr.FunctionName.GetPosString())
+	}
 
 	functionEnv, err := NewEnvironment(env.(*Environment), nil, interpreter)
 	if err != nil {

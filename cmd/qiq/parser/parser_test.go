@@ -329,6 +329,24 @@ func TestGlobalDeclaration(t *testing.T) {
 	)
 }
 
+func TestTryStmt(t *testing.T) {
+	testForError(t, "<?php try {}", phpError.NewError("Cannot use try without catch of finally at %s:1:7", TEST_FILE_NAME))
+	testForError(t, `<?php try echo "hi"; finally {}`, phpError.NewParseError(`Expected "{", got "echo" instead at %s:1:11`, TEST_FILE_NAME))
+	testForError(t, `<?php try {} finally echo "hi";`, phpError.NewParseError(`Expected "{", got "echo" instead at %s:1:22`, TEST_FILE_NAME))
+
+	tryStmt := ast.NewTryStmt(0, nil, ast.NewCompoundStmt(0, []ast.IStatement{}))
+	tryStmt.Finally = ast.NewCompoundStmt(0, []ast.IStatement{})
+	testStmt(t, `<?php try {} finally {}`, tryStmt)
+
+	tryStmt = ast.NewTryStmt(0, nil, ast.NewCompoundStmt(0, []ast.IStatement{}))
+	tryStmt.Catches = append(tryStmt.Catches, ast.CatchStatement{ErrorType: []string{"Throwable"}, VariableName: "", Body: ast.NewCompoundStmt(0, []ast.IStatement{})})
+	testStmt(t, `<?php try {} catch (Throwable) {}`, tryStmt)
+
+	tryStmt = ast.NewTryStmt(0, nil, ast.NewCompoundStmt(0, []ast.IStatement{}))
+	tryStmt.Catches = append(tryStmt.Catches, ast.CatchStatement{ErrorType: []string{"Throwable", "Exception"}, VariableName: "$th", Body: ast.NewCompoundStmt(0, []ast.IStatement{})})
+	testStmt(t, `<?php try {} catch (Throwable|Exception $th) {}`, tryStmt)
+}
+
 // -------------------------------------- Loops -------------------------------------- MARK: Loops
 
 func TestLoops(t *testing.T) {
