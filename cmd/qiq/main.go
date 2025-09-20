@@ -251,6 +251,10 @@ func processContent(w http.ResponseWriter, r *http.Request, content string, file
 		initIni = iniReader.GetIni()
 	}
 
+	if config.IsDevMode {
+		initIni.SetToDev()
+	}
+
 	request := request.NewRequestFromGoRequest(r, documentRoot, serverAddr, filename)
 	interpreter, err := interpreter.NewInterpreter(runtime.NewExecutionContext(), initIni, request, filename)
 

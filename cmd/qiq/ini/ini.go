@@ -27,8 +27,7 @@ func NewDefaultIni() *Ini { return &Ini{directives: copyDefaultValues()} }
 
 func NewDevIni() *Ini {
 	defaultIni := NewDefaultIni()
-	defaultIni.Set("error_reporting", "32767", INI_ALL)
-	defaultIni.Set("expose_php", "1", INI_ALL)
+	defaultIni.SetToDev()
 	return defaultIni
 }
 
@@ -49,6 +48,11 @@ func NewDevIniFromArray(ini []string) (*Ini, phpError.Error) {
 	}
 
 	return defaultIni, resultErr
+}
+
+func (ini *Ini) SetToDev() {
+	ini.Set("error_reporting", "32767", INI_ALL)
+	ini.Set("expose_php", "1", INI_ALL)
 }
 
 func (ini *Ini) Set(directive string, value string, source int) phpError.Error {
