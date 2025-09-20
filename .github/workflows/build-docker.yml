@@ -11,6 +11,8 @@ on:
     workflows: ["Build and Test"]
     types:
       - completed
+  push:
+    tags: [ 'v*.*.*' ]
   pull_request:
     branches: [ "main" ]
     paths-ignore:
