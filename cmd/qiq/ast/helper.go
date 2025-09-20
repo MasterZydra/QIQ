@@ -6,7 +6,7 @@ import (
 
 // Spec: https://phplang.org/spec/10-expressions.html#grammar-variable
 var variableExpressions = []NodeType{
-	SimpleVariableExpr, SubscriptExpr, FunctionCallExpr,
+	SimpleVariableExpr, SubscriptExpr, FunctionCallExpr, MemberAccessExpr,
 }
 
 func IsVariableExpr(expr IExpression) bool {

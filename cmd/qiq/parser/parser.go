@@ -66,6 +66,41 @@ func (parser *Parser) ProduceAST(sourceCode string, filename string) (*ast.Progr
 	return parser.program, nil
 }
 
+func (parser *Parser) parseMixedStmt(compoundEndKeywords []string) (ast.IStatement, phpError.Error) {
+	return parser.parseMixedStmtRec(compoundEndKeywords, ast.NewCompoundStmt(parser.nextId(), []ast.IStatement{}))
+}
+
+func (parser *Parser) parseMixedStmtRec(compoundEndKeywords []string, textExprCompoundStmt *ast.CompoundStatement) (ast.IStatement, phpError.Error) {
+	// Resolve text expressions
+	if parser.isTextExpression(true) {
+		PrintParserCallstack("text-expression (mixed-stmt)", parser)
+		textExpr := ast.NewExpressionStmt(parser.nextId(), ast.NewTextExpr(parser.nextId(), parser.eat().Value))
+		parser.isTokenType(lexer.StartTagToken, true)
+
+		textExprCompoundStmt.Statements = append(textExprCompoundStmt.Statements, textExpr)
+
+		if parser.isTokenType(lexer.KeywordToken, false) && slices.Contains(compoundEndKeywords, strings.ToLower(parser.at().Value)) {
+			return textExprCompoundStmt, nil
+		}
+
+		println(parser.at().Value, parser.at().TokenType)
+
+		stmt, err := parser.parseMixedStmtRec(compoundEndKeywords, textExprCompoundStmt)
+		for err == nil || parser.isTextExpression(false) {
+			println(parser.at().Value, parser.at().TokenType)
+			if parser.isTokenType(lexer.KeywordToken, false) && slices.Contains(compoundEndKeywords, strings.ToLower(parser.at().Value)) {
+				break
+			}
+			textExprCompoundStmt.Statements = append(textExprCompoundStmt.Statements, stmt)
+			stmt, err = parser.parseMixedStmtRec(compoundEndKeywords, textExprCompoundStmt)
+		}
+
+		return textExprCompoundStmt, nil
+	}
+
+	return parser.parseStmt()
+}
+
 func (parser *Parser) parseStmt() (ast.IStatement, phpError.Error) {
 	// Spec: https://phplang.org/spec/11-statements.html#general
 
@@ -93,19 +128,9 @@ func (parser *Parser) parseStmt() (ast.IStatement, phpError.Error) {
 	// Resolve text expressions
 	if parser.isTextExpression(true) {
 		PrintParserCallstack("text-expression", parser)
-		statements := []ast.IStatement{}
-		textExpr := ast.NewExpressionStmt(parser.nextId(), ast.NewTextExpr(parser.nextId(), parser.eat().Value))
+		stmt := ast.NewExpressionStmt(parser.nextId(), ast.NewTextExpr(parser.nextId(), parser.eat().Value))
 		parser.isTokenType(lexer.StartTagToken, true)
-
-		statements = append(statements, textExpr)
-
-		stmt, err := parser.parseStmt()
-		for err == nil || parser.isTextExpression(false) {
-			statements = append(statements, stmt)
-			stmt, err = parser.parseStmt()
-		}
-
-		return ast.NewCompoundStmt(parser.nextId(), statements), nil
+		return stmt, nil
 	}
 
 	if parser.isTokenType(lexer.TextToken, false) {
@@ -575,7 +600,7 @@ func (parser *Parser) parseSelectionStmt() (ast.IStatement, phpError.Error) {
 			statements := []ast.IStatement{}
 			for !parser.isToken(lexer.KeywordToken, "elseif", false) && !parser.isToken(lexer.KeywordToken, "else", false) &&
 				!parser.isToken(lexer.KeywordToken, "endif", false) {
-				statement, err := parser.parseStmt()
+				statement, err := parser.parseMixedStmt([]string{"elseif", "else", "endif"})
 				if err != nil {
 					return ast.NewEmptyStmt(), err
 				}
@@ -615,7 +640,7 @@ func (parser *Parser) parseSelectionStmt() (ast.IStatement, phpError.Error) {
 				statements := []ast.IStatement{}
 				for !parser.isToken(lexer.KeywordToken, "elseif", false) && !parser.isToken(lexer.KeywordToken, "else", false) &&
 					!parser.isToken(lexer.KeywordToken, "endif", false) {
-					statement, err := parser.parseStmt()
+					statement, err := parser.parseMixedStmt([]string{"elseif", "else", "endif"})
 					if err != nil {
 						return ast.NewEmptyStmt(), err
 					}
@@ -642,7 +667,7 @@ func (parser *Parser) parseSelectionStmt() (ast.IStatement, phpError.Error) {
 			} else {
 				statements := []ast.IStatement{}
 				for !parser.isToken(lexer.KeywordToken, "endif", false) {
-					statement, err := parser.parseStmt()
+					statement, err := parser.parseMixedStmt([]string{"endif"})
 					if err != nil {
 						return ast.NewEmptyStmt(), err
 					}
@@ -716,7 +741,7 @@ func (parser *Parser) parseIterationStmt() (ast.IStatement, phpError.Error) {
 		} else {
 			statements := []ast.IStatement{}
 			for !parser.isToken(lexer.KeywordToken, "endwhile", false) {
-				statement, err := parser.parseStmt()
+				statement, err := parser.parseMixedStmt([]string{"endwhile"})
 				if err != nil {
 					return ast.NewEmptyStmt(), err
 				}
@@ -2435,33 +2460,6 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, phpError.Error) {
 
 	// TODO class-constant-access-expression
 
-	// -------------------------------------- constant-access-expression -------------------------------------- MARK: constant-access-expression
-
-	// Spec: https://phplang.org/spec/10-expressions.html#grammar-constant-access-expression
-
-	// constant-access-expression:
-	//    qualified-name
-
-	// A constant-access-expression evaluates to the value of the constant with name qualified-name.
-
-	// Spec: https://phplang.org/spec/09-lexical-structure.html#grammar-qualified-name
-
-	// qualified-name::
-	//    namespace-name-as-a-prefix(opt)   name
-
-	if parser.isTokenType(lexer.NameToken, false) ||
-		(parser.isTokenType(lexer.KeywordToken, false) && common.IsCorePredefinedConstant(parser.at().Value)) {
-		// TODO constant-access-expression - namespace-name-as-a-prefix
-		// TODO constant-access-expression - check if name is a defined constant here or in interpreter
-		PrintParserCallstack("constant-access-expression", parser)
-		constantName := parser.at().Value
-		// TODO Find a way to reduce "is..constant" to just one time
-		if common.IsCorePredefinedConstant(constantName) || common.IsContextDependentConstant(constantName) {
-			constantName = strings.ToUpper(constantName)
-		}
-		return ast.NewConstantAccessExpr(parser.nextId(), parser.eat().Position, constantName), nil
-	}
-
 	// literal
 	if parser.isTokenType(lexer.IntegerLiteralToken, false) || parser.isTokenType(lexer.FloatingLiteralToken, false) ||
 		parser.isTokenType(lexer.StringLiteralToken, false) {
@@ -2558,14 +2556,31 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, phpError.Error) {
 		}
 	}
 
-	// if parser.isToken(lexer.OpOrPuncToken, ";", false) &&
-	// 	slices.Contains([]lexer.TokenType{lexer.StartTagToken, lexer.EndTagToken}, parser.next(0).TokenType) {
-	// 	parser.eatN(2)
-	// }
+	// -------------------------------------- constant-access-expression -------------------------------------- MARK: constant-access-expression
 
-	// if parser.isTokenType(lexer.TextToken, false) {
-	// 	return ast.NewExpressionStmt(parser.nextId(), ast.NewTextExpr(parser.nextId(), parser.eat().Value)), nil
-	// }
+	// Spec: https://phplang.org/spec/10-expressions.html#grammar-constant-access-expression
+
+	// constant-access-expression:
+	//    qualified-name
+
+	// A constant-access-expression evaluates to the value of the constant with name qualified-name.
+
+	// Spec: https://phplang.org/spec/09-lexical-structure.html#grammar-qualified-name
+
+	// qualified-name::
+	//    namespace-name-as-a-prefix(opt)   name
+
+	if parser.isTokenType(lexer.NameToken, false) || parser.isTokenType(lexer.KeywordToken, false) {
+		// TODO constant-access-expression - namespace-name-as-a-prefix
+		// TODO constant-access-expression - check if name is a defined constant here or in interpreter
+		PrintParserCallstack("constant-access-expression", parser)
+		constantName := parser.at().Value
+		// TODO Find a way to reduce "is..constant" to just one time
+		if common.IsCorePredefinedConstant(constantName) || common.IsContextDependentConstant(constantName) {
+			constantName = strings.ToUpper(constantName)
+		}
+		return ast.NewConstantAccessExpr(parser.nextId(), parser.eat().Position, constantName), nil
+	}
 
 	return ast.NewEmptyExpr(), phpError.NewParseError("Unsupported expression type '%s', value: '%s' at %s", parser.at().TokenType, parser.at().Value, parser.at().GetPosString())
 }

@@ -142,6 +142,8 @@ func (interpreter *Interpreter) varExprToVarName(expr ast.IExpression, env *Envi
 		return "$" + valueStr, nil
 	case ast.SubscriptExpr:
 		return interpreter.varExprToVarName(expr.(*ast.SubscriptExpression).Variable, env)
+	case ast.MemberAccessExpr:
+		return interpreter.varExprToVarName(expr.(*ast.MemberAccessExpression).Object, env)
 	default:
 		return "", phpError.NewError("varExprToVarName: Unsupported expression: %s", ast.ToString(expr))
 	}

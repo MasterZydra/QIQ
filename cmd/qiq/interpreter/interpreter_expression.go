@@ -72,6 +72,7 @@ func (interpreter *Interpreter) ProcessSimpleAssignmentExpr(expr *ast.SimpleAssi
 	variableName := mustOrVoid(interpreter.varExprToVarName(expr.Variable, env.(*Environment)))
 	currentValue, _ := env.(*Environment).LookupVariable(variableName)
 
+	// SubscriptExpr
 	if currentValue.GetType() == values.StrValue && expr.Variable.GetKind() == ast.SubscriptExpr {
 		if expr.Variable.(*ast.SubscriptExpression).Index == nil {
 			return values.NewVoidSlot(), phpError.NewError("[] operator not supported for strings in %s", expr.Variable.GetPosString())
@@ -111,9 +112,10 @@ func (interpreter *Interpreter) ProcessSimpleAssignmentExpr(expr *ast.SimpleAssi
 		currentValue, _ = env.(*Environment).LookupVariable(variableName)
 	}
 
+	// Array
 	if currentValue.GetType() == values.ArrayValue {
 		if expr.Variable.GetKind() != ast.SubscriptExpr {
-			return values.NewVoidSlot(), phpError.NewError("processSimpleAssignmentExpr: Unsupported variable type %s", expr.Variable.GetKind())
+			return values.NewVoidSlot(), phpError.NewError("processSimpleAssignmentExpr - Array: Unsupported variable type %s", expr.Variable.GetKind())
 		}
 
 		keys := []ast.IExpression{expr.Variable.(*ast.SubscriptExpression).Index}
@@ -126,7 +128,7 @@ func (interpreter *Interpreter) ProcessSimpleAssignmentExpr(expr *ast.SimpleAssi
 		var valueSlot *values.Slot
 		for i := len(keys) - 1; i >= 0; i-- {
 			if currentValue.GetType() != values.ArrayValue {
-				return values.NewVoidSlot(), phpError.NewError("processSimpleAssignmentExpr: Unexpected currentValue type %s", currentValue.GetType())
+				return values.NewVoidSlot(), phpError.NewError("processSimpleAssignmentExpr - Array: Unexpected currentValue type %s", currentValue.GetType())
 			}
 
 			array := currentValue.Value.(*values.Array)
@@ -159,6 +161,30 @@ func (interpreter *Interpreter) ProcessSimpleAssignmentExpr(expr *ast.SimpleAssi
 		}
 
 		return valueSlot, nil
+	}
+
+	if currentValue.GetType() == values.ObjectValue {
+		if expr.Variable.GetKind() != ast.MemberAccessExpr {
+			return values.NewVoidSlot(), phpError.NewError("processSimpleAssignmentExpr - Object: Unsupported variable type %s", expr.Variable.GetKind())
+		}
+
+		if expr.Variable.(*ast.MemberAccessExpression).Member.GetKind() != ast.ConstantAccessExpr {
+			return values.NewVoidSlot(), phpError.NewError("processSimpleAssignmentExpr - Object: Unsupported member type %s", expr.Variable.(*ast.MemberAccessExpression).Member.GetKind())
+		}
+
+		propertyName := expr.Variable.(*ast.MemberAccessExpression).Member.(*ast.ConstantAccessExpression).ConstantName
+
+		valueSlot := must(interpreter.processStmt(expr.Value, env))
+
+		// TODO check if property can be changed (public, protected, private)
+		object := currentValue.Value.(*values.Object)
+		object.SetProperty("$"+propertyName, valueSlot.Value)
+
+		return valueSlot, nil
+	}
+
+	if currentValue.GetType() == values.NullValue && expr.Variable.GetKind() == ast.MemberAccessExpr {
+		return values.NewVoidSlot(), phpError.NewError(`Attempt to assign property "%s" on null at %s`, expr.Variable.(*ast.MemberAccessExpression).Member.(*ast.ConstantAccessExpression).ConstantName, expr.GetPosString())
 	}
 
 	valueSlot := must(interpreter.processStmt(expr.Value, env))
@@ -935,7 +961,7 @@ func (interpreter *Interpreter) ProcessObjectCreationExpr(stmt *ast.ObjectCreati
 	// TODO ProcessObjectCreationExpr - Add correct handling of namespaces
 	class, found := interpreter.GetClass(stmt.GetPosition().File.GetNamespaceStr() + stmt.Designator)
 	if !found {
-		return values.NewVoidSlot(), phpError.NewError("Cannot create object. Class \"%s\" not found.", stmt.Designator)
+		return values.NewVoidSlot(), phpError.NewError("Class \"%s\" not found.", stmt.Designator)
 	}
 	object := values.NewObject(class)
 
@@ -981,7 +1007,7 @@ func (interpreter *Interpreter) initObject(object *values.Object, constructorArg
 	for baseClass != "" {
 		baseClassDecl, found := interpreter.GetClass(baseClass)
 		if !found {
-			return phpError.NewError("Cannot create object. Class \"%s\" not found.", object.Class.BaseClass)
+			return phpError.NewError("Class \"%s\" not found.", object.Class.BaseClass)
 		}
 		// TODO initialize parent class
 

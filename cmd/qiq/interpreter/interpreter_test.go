@@ -1429,6 +1429,9 @@ func TestClasses(t *testing.T) {
 	testInputOutput(t, `<?php class c { public int $i = 42; } $c = new c; var_dump($c->i);`, "int(42)\n")
 	// TODO testInputOutput(t, `<?php class c { private int $i = 42; } $c = new c; var_dump($c->i);`, "int(42)\n")
 	testForError(t, `<?php class c { } $c = new c; $c->prop;`, phpError.NewError("Undefined property: c::$prop in %s:1:35", TEST_FILE_NAME))
+	// Overwrite property value
+	testInputOutput(t, `<?php class C { public $p = "ab"; } $c = new C; echo $c->p; $c->p = "cd"; echo $c->p;`, "abcd")
+	testInputOutput(t, `<?php class C { public $string = "ab"; } $c = new C; echo $c->string; $c->string = "cd"; echo $c->string;`, "abcd")
 
 	// Destructor
 	testInputOutput(t, `<?php class c { function __destruct() { echo __METHOD__; } } $c = new c; echo "Done\n";`, "Done\nc::__destruct")
