@@ -901,8 +901,14 @@ func calculateFloating(operand1 *values.Float, operator string, operand2 *values
 func calculateInteger(operand1 *values.Int, operator string, operand2 *values.Int) (*values.Slot, phpError.Error) {
 	switch operator {
 	case "<<":
+		if operand2.Value < 0 {
+			return values.NewVoidSlot(), phpError.NewError("Bit shift by negative number")
+		}
 		return values.NewIntSlot(operand1.Value << operand2.Value), nil
 	case ">>":
+		if operand2.Value < 0 {
+			return values.NewVoidSlot(), phpError.NewError("Bit shift by negative number")
+		}
 		return values.NewIntSlot(operand1.Value >> operand2.Value), nil
 	case "^":
 		return values.NewIntSlot(operand1.Value ^ operand2.Value), nil
@@ -923,11 +929,14 @@ func calculateInteger(operand1 *values.Int, operator string, operand2 *values.In
 		}
 		return values.NewIntSlot(operand1.Value / operand2.Value), nil
 	case "%":
+		if operand2.Value == 0 {
+			return values.NewVoidSlot(), phpError.NewError("Division by zero")
+		}
 		return values.NewIntSlot(operand1.Value % operand2.Value), nil
 	case "**":
 		return values.NewIntSlot(int64(math.Pow(float64(operand1.Value), float64(operand2.Value)))), nil
 	default:
-		return values.NewIntSlot(0), phpError.NewError("calculateInteger: Operator \"%s\" not implemented", operator)
+		return values.NewVoidSlot(), phpError.NewError("calculateInteger: Operator \"%s\" not implemented", operator)
 	}
 }
 
