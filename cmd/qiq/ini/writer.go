@@ -96,9 +96,11 @@ func (w *Writer) Write() error {
 
 	w.addHeading(&builder, "Language Options")
 
+	builder.WriteString("; Enables opening tag short cut `<?` besides the default opening tag `<?php`\n")
 	if err := w.addDirectiveAndValue(&builder, "short_open_tag"); err != nil {
 		return err
 	}
+	builder.WriteString("\n")
 	if err := w.addDirectiveAndValue(&builder, "precision"); err != nil {
 		return err
 	}
