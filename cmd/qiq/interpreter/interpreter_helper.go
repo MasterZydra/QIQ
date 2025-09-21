@@ -965,7 +965,7 @@ func (interpreter *Interpreter) CallMethod(object *values.Object, method string,
 	}
 	methodEnv.CurrentObject = object
 	methodEnv.CurrentMethod = methodDefinition
-	methodEnv.declareVariable("$this", object)
+	methodEnv.variables["$this"] = values.NewSlot(object)
 
 	if len(methodDefinition.Params) != len(args) {
 		return values.NewVoidSlot(), phpError.NewError(

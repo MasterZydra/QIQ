@@ -616,6 +616,10 @@ func TestClassDeclaration(t *testing.T) {
 	// Class with redefined constants
 	testForError(t, `<?php class C { const C = 1; const C = 2; }`, phpError.NewError(`Cannot redefine class constant C::C (previously declared in %s:1:17) in %s:1:30`, TEST_FILE_NAME, TEST_FILE_NAME))
 	testForError(t, `<?php namespace My\Space; class C { const C = 1; const C = 2; }`, phpError.NewError(`Cannot redefine class constant My\Space\C::C (previously declared in %s:1:37) in %s:1:50`, TEST_FILE_NAME, TEST_FILE_NAME))
+
+	// Prevent $this re-assignment
+	testForError(t, `<?php $this = 1;`, phpError.NewError("Cannot re-assign $this at %s:1:7", TEST_FILE_NAME))
+	testForError(t, `<?php class C { function f() { $this = 1; } }`, phpError.NewError("Cannot re-assign $this at %s:1:32", TEST_FILE_NAME))
 }
 
 // -------------------------------------- Interface -------------------------------------- MARK: Interface

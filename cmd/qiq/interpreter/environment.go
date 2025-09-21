@@ -55,6 +55,9 @@ func NewEnvironment(parentEnv *Environment, request *request.Request, interprete
 // -------------------------------------- Variables -------------------------------------- MARK: Variables
 
 func (env *Environment) declareVariable(variableName string, value values.RuntimeValue) (*values.Slot, phpError.Error) {
+	if variableName == "$this" {
+		return values.NewVoidSlot(), phpError.NewError("Cannot re-assign $this")
+	}
 	if slices.Contains(env.globalVariables, variableName) {
 		return env.parent.declareVariable(variableName, value)
 	}

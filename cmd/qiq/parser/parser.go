@@ -1760,6 +1760,10 @@ func (parser *Parser) parseAssignmentExpr() (ast.IExpression, phpError.Error) {
 		if err != nil {
 			return ast.NewEmptyExpr(), err
 		}
+		if expr.GetKind() == ast.SimpleVariableExpr && expr.(*ast.SimpleVariableExpression).VariableName.GetKind() == ast.VariableNameExpr &&
+			expr.(*ast.SimpleVariableExpression).VariableName.(*ast.VariableNameExpression).VariableName == "$this" {
+			return ast.NewEmptyExpr(), phpError.NewError("Cannot re-assign $this at %s", expr.GetPosString())
+		}
 		return ast.NewSimpleAssignmentExpr(parser.nextId(), expr, value), nil
 	}
 
