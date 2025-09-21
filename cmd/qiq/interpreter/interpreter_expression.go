@@ -59,7 +59,8 @@ func (interpreter *Interpreter) ProcessStringLiteralExpr(expr *ast.StringLiteral
 
 // ProcessSimpleVariableExpr implements Visitor.
 func (interpreter *Interpreter) ProcessSimpleVariableExpr(expr *ast.SimpleVariableExpression, env any) (any, error) {
-	return interpreter.lookupVariable(expr, env.(*Environment))
+	_, slot, err := interpreter.lookupVariable(expr, env.(*Environment))
+	return slot, err
 }
 
 // ProcessSimpleAssignmentExpr implements Visitor.
@@ -198,7 +199,11 @@ func (interpreter *Interpreter) ProcessSimpleAssignmentExpr(expr *ast.SimpleAssi
 func (interpreter *Interpreter) ProcessSubscriptExpr(expr *ast.SubscriptExpression, env any) (any, error) {
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-subscript-expression
 
-	variableSlot := must(interpreter.lookupVariable(expr.Variable, env.(*Environment)))
+	// variableName, variableSlot, err := interpreter.lookupVariable(expr.Variable, env.(*Environment))
+	_, variableSlot, err := interpreter.lookupVariable(expr.Variable, env.(*Environment))
+	if err != nil {
+		return values.NewVoidSlot(), err
+	}
 
 	if variableSlot.GetType() == values.StrValue {
 		if expr.Index == nil {
@@ -225,6 +230,13 @@ func (interpreter *Interpreter) ProcessSubscriptExpr(expr *ast.SubscriptExpressi
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-subscript-expression
 	// dereferencable-expression designates an array
 	if variableSlot.GetType() == values.ArrayValue {
+		// TODO Deprecatoin message only for GET requests
+		// if variableName == "$_SERVER" &&
+		// 	expr.Index.GetKind() == ast.StringLiteralExpr && expr.Index.(*ast.StringLiteralExpression).Value == "argv" &&
+		// 	interpreter.ini.GetBool("register_argc_argv") {
+		// 	interpreter.PrintError(phpError.NewDeprecatedError("Deriving $_SERVER['argv'] from the query string is deprecated. Configure register_argc_argv=0 to turn this message off in %s", expr.GetPosString()))
+		// }
+
 		array := variableSlot.Value.(*values.Array)
 
 		keys := []ast.IExpression{expr.Index}
@@ -573,7 +585,7 @@ func (interpreter *Interpreter) ProcessIssetIntrinsicExpr(expr *ast.IssetIntrins
 				return values.NewBoolSlot(false), nil
 			}
 		} else {
-			runtimeValue, _ := interpreter.lookupVariable(arg, env.(*Environment))
+			_, runtimeValue, _ := interpreter.lookupVariable(arg, env.(*Environment))
 			if runtimeValue.GetType() == values.NullValue {
 				return values.NewBoolSlot(false), nil
 			}

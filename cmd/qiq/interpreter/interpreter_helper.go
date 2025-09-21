@@ -53,17 +53,17 @@ func (interpreter *Interpreter) processCondition(expr ast.IExpression, env *Envi
 	return slot.Value, boolean, err
 }
 
-func (interpreter *Interpreter) lookupVariable(expr ast.IExpression, env *Environment) (*values.Slot, phpError.Error) {
+func (interpreter *Interpreter) lookupVariable(expr ast.IExpression, env *Environment) (string, *values.Slot, phpError.Error) {
 	variableName, err := interpreter.varExprToVarName(expr, env)
 	if err != nil {
-		return values.NewVoidSlot(), err
+		return "", values.NewVoidSlot(), err
 	}
 
 	slot, err := env.LookupVariable(variableName)
 	if !interpreter.suppressWarning && err != nil {
 		interpreter.PrintError(phpError.NewWarning("%s in %s", strings.TrimPrefix(err.Error(), "Warning: "), expr.GetPosString()))
 	}
-	return slot, nil
+	return variableName, slot, nil
 }
 
 func (interpreter *Interpreter) destructObject(object *values.Object, env *Environment) phpError.Error {
