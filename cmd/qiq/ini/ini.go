@@ -65,7 +65,7 @@ func (ini *Ini) Set(directive string, value string, source int) phpError.Error {
 		return phpError.NewError("Not allowed to change %s", directive)
 	}
 
-	if slices.Contains(boolDirectives, directive) {
+	if IsBool(directive) {
 		if value == "1" || strings.ToLower(value) == "on" {
 			ini.directives[directive] = "1"
 			return nil
@@ -94,6 +94,10 @@ func (ini *Ini) Get(directive string) (string, phpError.Error) {
 	return ini.directives[directive], nil
 }
 
+func IsBool(directive string) bool {
+	return slices.Contains(boolDirectives, directive)
+}
+
 func (ini *Ini) GetBool(directive string) bool {
 	value, err := ini.Get(directive)
 	if err != nil {
@@ -120,6 +124,14 @@ func (ini *Ini) GetStr(directive string) string {
 		return ""
 	}
 	return value
+}
+
+func GetDirectives() []string {
+	result := []string{}
+	for directive := range allowedDirectives {
+		result = append(result, directive)
+	}
+	return result
 }
 
 func copyDefaultValues() map[string]string {

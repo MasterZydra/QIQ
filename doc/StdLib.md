@@ -67,8 +67,15 @@
 
 ## Options/Info Functions
 - getenv
+- getmygid
+- getmypid
+- getmyuid
 - ini_get
 - ini_set
+- phpinfo
+- phpversion
+- zend_thread_id
+- zend_version
 
 ## Output Control Functions
 - ob_clean

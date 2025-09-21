@@ -1,6 +1,7 @@
 package interpreter
 
 import (
+	"QIQ/cmd/qiq/config"
 	"QIQ/cmd/qiq/phpError"
 	"fmt"
 	"testing"
@@ -350,6 +351,12 @@ func TestLibOptionInfo(t *testing.T) {
 	testInputOutput(t, `<?php var_dump(ini_set('none_existing', true));`, "bool(false)\n")
 	testInputOutput(t, `<?php var_dump(ini_set('variables_order', true));`, "bool(false)\n")
 	testInputOutput(t, `<?php var_dump(ini_set('error_reporting', E_ERROR)); var_dump(ini_set('error_reporting', E_ERROR));`, "string(5) \"32767\"\nstring(1) \"1\"\n")
+
+	// phpversion
+	testInputOutput(t, `<?= phpversion();`, config.Version)
+
+	// zend_version
+	testInputOutput(t, `<?= zend_version();`, config.QIQVersion)
 }
 
 // -------------------------------------- error_reporting -------------------------------------- MARK: error_reporting

@@ -135,6 +135,8 @@ flowchart LR
     QIQ_cmd_qiq_runtime_stdlib_misc[QIQ/cmd/qiq/runtime/stdlib/misc] --> QIQ_cmd_qiq_runtime_funcParamValidator[QIQ/cmd/qiq/runtime/funcParamValidator]
     QIQ_cmd_qiq_runtime_stdlib_misc[QIQ/cmd/qiq/runtime/stdlib/misc] --> QIQ_cmd_qiq_runtime_values[QIQ/cmd/qiq/runtime/values]
 
+    QIQ_cmd_qiq_runtime_stdlib_optionsInfo[QIQ/cmd/qiq/runtime/stdlib/optionsInfo] --> QIQ_cmd_qiq_common_os[QIQ/cmd/qiq/common/os]
+    QIQ_cmd_qiq_runtime_stdlib_optionsInfo[QIQ/cmd/qiq/runtime/stdlib/optionsInfo] --> QIQ_cmd_qiq_config[QIQ/cmd/qiq/config]
     QIQ_cmd_qiq_runtime_stdlib_optionsInfo[QIQ/cmd/qiq/runtime/stdlib/optionsInfo] --> QIQ_cmd_qiq_ini[QIQ/cmd/qiq/ini]
     QIQ_cmd_qiq_runtime_stdlib_optionsInfo[QIQ/cmd/qiq/runtime/stdlib/optionsInfo] --> QIQ_cmd_qiq_phpError[QIQ/cmd/qiq/phpError]
     QIQ_cmd_qiq_runtime_stdlib_optionsInfo[QIQ/cmd/qiq/runtime/stdlib/optionsInfo] --> QIQ_cmd_qiq_runtime[QIQ/cmd/qiq/runtime]
