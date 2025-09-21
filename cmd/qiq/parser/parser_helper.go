@@ -21,7 +21,7 @@ func PrintParserCallstack(function string, parser *Parser) {
 }
 
 func NewExpectedError(expected string, got *lexer.Token) phpError.Error {
-	return phpError.NewParseError("Expected \"%s\", got \"%s\" instead at %s", expected, got.Value, got.GetPosString())
+	return phpError.NewParseError("Expected \"%s\", got \"%s\" instead in %s", expected, got.Value, got.GetPosString())
 }
 
 // -------------------------------------- Common -------------------------------------- MARK: Common

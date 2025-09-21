@@ -330,9 +330,9 @@ func TestGlobalDeclaration(t *testing.T) {
 }
 
 func TestTryStmt(t *testing.T) {
-	testForError(t, "<?php try {}", phpError.NewError("Cannot use try without catch of finally at %s:1:7", TEST_FILE_NAME))
-	testForError(t, `<?php try echo "hi"; finally {}`, phpError.NewParseError(`Expected "{", got "echo" instead at %s:1:11`, TEST_FILE_NAME))
-	testForError(t, `<?php try {} finally echo "hi";`, phpError.NewParseError(`Expected "{", got "echo" instead at %s:1:22`, TEST_FILE_NAME))
+	testForError(t, "<?php try {}", phpError.NewError("Cannot use try without catch of finally in %s:1:7", TEST_FILE_NAME))
+	testForError(t, `<?php try echo "hi"; finally {}`, phpError.NewParseError(`Expected "{", got "echo" instead in %s:1:11`, TEST_FILE_NAME))
+	testForError(t, `<?php try {} finally echo "hi";`, phpError.NewParseError(`Expected "{", got "echo" instead in %s:1:22`, TEST_FILE_NAME))
 
 	tryStmt := ast.NewTryStmt(0, nil, ast.NewCompoundStmt(0, []ast.IStatement{}))
 	tryStmt.Finally = ast.NewCompoundStmt(0, []ast.IStatement{})
@@ -462,7 +462,7 @@ func TestLoops(t *testing.T) {
 			ast.NewCompoundStmt(0, []ast.IStatement{ast.NewExpressionStmt(0, ast.NewFunctionCallExpr(0, nil, ast.NewStringLiteralExpr(0, nil, "func", ast.SingleQuotedString), []ast.IExpression{}))}),
 		),
 	)
-	testForError(t, `<?php foreach ([] as &$key => $value) { }`, phpError.NewParseError("Syntax error, key cannot be by reference at %s:1:22", TEST_FILE_NAME))
+	testForError(t, `<?php foreach ([] as &$key => $value) { }`, phpError.NewParseError("Syntax error, key cannot be by reference in %s:1:22", TEST_FILE_NAME))
 }
 
 // -------------------------------------- Class -------------------------------------- MARK: Class
@@ -618,8 +618,8 @@ func TestClassDeclaration(t *testing.T) {
 	testForError(t, `<?php namespace My\Space; class C { const C = 1; const C = 2; }`, phpError.NewError(`Cannot redefine class constant My\Space\C::C (previously declared in %s:1:37) in %s:1:50`, TEST_FILE_NAME, TEST_FILE_NAME))
 
 	// Prevent $this re-assignment
-	testForError(t, `<?php $this = 1;`, phpError.NewError("Cannot re-assign $this at %s:1:7", TEST_FILE_NAME))
-	testForError(t, `<?php class C { function f() { $this = 1; } }`, phpError.NewError("Cannot re-assign $this at %s:1:32", TEST_FILE_NAME))
+	testForError(t, `<?php $this = 1;`, phpError.NewError("Cannot re-assign $this in %s:1:7", TEST_FILE_NAME))
+	testForError(t, `<?php class C { function f() { $this = 1; } }`, phpError.NewError("Cannot re-assign $this in %s:1:32", TEST_FILE_NAME))
 }
 
 // -------------------------------------- Interface -------------------------------------- MARK: Interface

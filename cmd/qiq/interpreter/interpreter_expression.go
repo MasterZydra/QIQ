@@ -184,7 +184,7 @@ func (interpreter *Interpreter) ProcessSimpleAssignmentExpr(expr *ast.SimpleAssi
 	}
 
 	if currentValue.GetType() == values.NullValue && expr.Variable.GetKind() == ast.MemberAccessExpr {
-		return values.NewVoidSlot(), phpError.NewError(`Attempt to assign property "%s" on null at %s`, expr.Variable.(*ast.MemberAccessExpression).Member.(*ast.ConstantAccessExpression).ConstantName, expr.GetPosString())
+		return values.NewVoidSlot(), phpError.NewError(`Attempt to assign property "%s" on null in %s`, expr.Variable.(*ast.MemberAccessExpression).Member.(*ast.ConstantAccessExpression).ConstantName, expr.GetPosString())
 	}
 
 	valueSlot := must(interpreter.processStmt(expr.Value, env))
@@ -370,7 +370,7 @@ func (interpreter *Interpreter) ProcessFunctionCallExpr(expr *ast.FunctionCallEx
 	// Lookup user function
 	userFunction, err := env.(*Environment).lookupUserFunction(functionName)
 	if err != nil {
-		return values.NewVoidSlot(), phpError.NewError("%s at %s", err.GetRawMessage(), expr.FunctionName.GetPosString())
+		return values.NewVoidSlot(), phpError.NewError("%s in %s", err.GetRawMessage(), expr.FunctionName.GetPosString())
 	}
 
 	functionEnv, err := NewEnvironment(env.(*Environment), nil, interpreter)

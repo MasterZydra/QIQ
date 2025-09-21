@@ -208,7 +208,7 @@ func (lexer *Lexer) tokenizeComment() error {
 		lexer.eatN(2)
 		isSingleLineComment = false
 	} else {
-		return fmt.Errorf("Syntax error: Unexpected start of a comment at %s:%d:%d", lexer.file.Filename, lexer.currPos.CurrLine, lexer.currPos.CurrCol)
+		return fmt.Errorf("Syntax error: Unexpected start of a comment in %s:%d:%d", lexer.file.Filename, lexer.currPos.CurrLine, lexer.currPos.CurrCol)
 	}
 
 	for !lexer.isEof() {
@@ -237,7 +237,7 @@ func (lexer *Lexer) tokenizeComment() error {
 
 	// Delimited-comment must be closed with */
 	if !isSingleLineComment {
-		return fmt.Errorf("Unterminated delimited comment detected at %s:%d:%d", lexer.file.Filename, lexer.currPos.CurrLine, lexer.currPos.CurrCol)
+		return fmt.Errorf("Unterminated delimited comment detected in %s:%d:%d", lexer.file.Filename, lexer.currPos.CurrLine, lexer.currPos.CurrCol)
 	}
 
 	return nil
@@ -319,7 +319,7 @@ func (lexer *Lexer) tokenizeToken() error {
 				lexer.pushToken(NameToken, name)
 				return nil
 			}
-			return fmt.Errorf("Unsupported name detected at %s:%d:%d", lexer.file.Filename, lexer.currPos.CurrLine, lexer.currPos.CurrCol)
+			return fmt.Errorf("Unsupported name detected in %s:%d:%d", lexer.file.Filename, lexer.currPos.CurrLine, lexer.currPos.CurrCol)
 		}
 
 		// integer-literal or floating-literal
@@ -338,7 +338,7 @@ func (lexer *Lexer) tokenizeToken() error {
 				return nil
 			}
 
-			return fmt.Errorf("Unsupported number format detected at %s:%d:%d", lexer.file.Filename, lexer.currPos.CurrLine, lexer.currPos.CurrCol)
+			return fmt.Errorf("Unsupported number format detected in %s:%d:%d", lexer.file.Filename, lexer.currPos.CurrLine, lexer.currPos.CurrCol)
 		}
 
 		// operator-or-punctuator
@@ -348,7 +348,7 @@ func (lexer *Lexer) tokenizeToken() error {
 			return nil
 		}
 
-		return fmt.Errorf("Uncaught char '%s' at %s:%d:%d", lexer.at(), lexer.file.Filename, lexer.currPos.CurrLine, lexer.currPos.CurrCol)
+		return fmt.Errorf("Uncaught char '%s' in %s:%d:%d", lexer.at(), lexer.file.Filename, lexer.currPos.CurrLine, lexer.currPos.CurrCol)
 	}
 
 	return nil
@@ -650,7 +650,7 @@ func (lexer *Lexer) getStringLiteral(eat bool) (string, phpError.Error) {
 		}
 
 		lexer.popSnapShot(true)
-		return "", phpError.NewError("Invalid single quoted string literal detected at %s:%d:%d", lexer.file.Filename, lexer.currPos.CurrLine, lexer.currPos.CurrPos)
+		return "", phpError.NewError("Invalid single quoted string literal detected in %s:%d:%d", lexer.file.Filename, lexer.currPos.CurrLine, lexer.currPos.CurrPos)
 	}
 
 	// ------------------- double-quoted-string-literal -------------------
@@ -736,7 +736,7 @@ func (lexer *Lexer) getStringLiteral(eat bool) (string, phpError.Error) {
 		}
 
 		lexer.popSnapShot(true)
-		return "", phpError.NewError("Invalid double quoted string literal detected at %s:%d:%d", lexer.file.Filename, lexer.currPos.CurrLine, lexer.currPos.CurrPos)
+		return "", phpError.NewError("Invalid double quoted string literal detected in %s:%d:%d", lexer.file.Filename, lexer.currPos.CurrLine, lexer.currPos.CurrPos)
 	}
 
 	// ------------------- heredoc-string-literal -------------------
@@ -802,7 +802,7 @@ func (lexer *Lexer) getStringLiteral(eat bool) (string, phpError.Error) {
 		// Process closing quote
 		if hasQuotes {
 			if lexer.at() != "\"" {
-				return "", phpError.NewError("Invalid heredoc string literal: Expected closing quote '\"', Got: '%s' at %s:%d:%d", lexer.at(), lexer.file.Filename, lexer.currPos.CurrLine, lexer.currPos.CurrPos)
+				return "", phpError.NewError("Invalid heredoc string literal: Expected closing quote '\"', Got: '%s' in %s:%d:%d", lexer.at(), lexer.file.Filename, lexer.currPos.CurrLine, lexer.currPos.CurrPos)
 			}
 			strValue += lexer.eat()
 		}
@@ -810,7 +810,7 @@ func (lexer *Lexer) getStringLiteral(eat bool) (string, phpError.Error) {
 		// Spec: https://phplang.org/spec/09-lexical-structure.html#grammar-heredoc-string-literal
 		// No white space is permitted between the start identifier and the new-line that follows.
 		if !lexer.isNewLine(false) {
-			return "", phpError.NewError("Invalid heredoc string literal: Expected new line, Got: '%s' at %s:%d:%d", lexer.at(), lexer.file.Filename, lexer.currPos.CurrLine, lexer.currPos.CurrPos)
+			return "", phpError.NewError("Invalid heredoc string literal: Expected new line, Got: '%s' in %s:%d:%d", lexer.at(), lexer.file.Filename, lexer.currPos.CurrLine, lexer.currPos.CurrPos)
 		}
 		strValue += lexer.getAndEatNewLine()
 
@@ -829,7 +829,7 @@ func (lexer *Lexer) getStringLiteral(eat bool) (string, phpError.Error) {
 				// Spec: https://phplang.org/spec/09-lexical-structure.html#grammar-heredoc-string-literal
 				// no characters—-not even comments or white space-—are permitted between the end identifier and the new-line that terminates that source line.
 				if !lexer.isNewLine(false) {
-					return "", phpError.NewError("Invalid heredoc string literal: Expected new line, Got: '%s' at %s:%d:%d", lexer.at(), lexer.file.Filename, lexer.currPos.CurrLine, lexer.currPos.CurrPos)
+					return "", phpError.NewError("Invalid heredoc string literal: Expected new line, Got: '%s' in %s:%d:%d", lexer.at(), lexer.file.Filename, lexer.currPos.CurrLine, lexer.currPos.CurrPos)
 				}
 
 				strValue += lexer.getAndEatNewLine()
@@ -853,12 +853,12 @@ func (lexer *Lexer) getStringLiteral(eat bool) (string, phpError.Error) {
 		}
 
 		lexer.popSnapShot(true)
-		return "", phpError.NewError("Invalid heredoc string literal detected at %s:%d:%d", lexer.file.Filename, lexer.currPos.CurrLine, lexer.currPos.CurrPos)
+		return "", phpError.NewError("Invalid heredoc string literal detected in %s:%d:%d", lexer.file.Filename, lexer.currPos.CurrLine, lexer.currPos.CurrPos)
 	}
 
 	// TODO nowdoc-string-literal
 
-	return "", phpError.NewError("Unsupported string literal detected at %s:%d:%d", lexer.file.Filename, lexer.currPos.CurrLine, lexer.currPos.CurrPos)
+	return "", phpError.NewError("Unsupported string literal detected in %s:%d:%d", lexer.file.Filename, lexer.currPos.CurrLine, lexer.currPos.CurrPos)
 }
 
 func (lexer *Lexer) getOperatorOrPunctuator(eat bool) string {

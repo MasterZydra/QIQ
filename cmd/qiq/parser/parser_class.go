@@ -48,7 +48,7 @@ func (parser *Parser) parseObjectCreationExpression() (ast.IExpression, phpError
 		return ast.NewEmptyExpr(), err
 	}
 	if !common.IsQualifiedName(designator) {
-		return ast.NewEmptyExpr(), phpError.NewParseError("parseObjectCreationExpression: Only qualified name as designator allowed at %s", designatorPos)
+		return ast.NewEmptyExpr(), phpError.NewParseError("parseObjectCreationExpression: Only qualified name as designator allowed in %s", designatorPos)
 	}
 
 	hasParenthese := parser.isToken(lexer.OpOrPuncToken, "(", true)
@@ -112,7 +112,7 @@ func (parser *Parser) parseClassDeclaration() (ast.IStatement, phpError.Error) {
 	className := parser.at().Value
 	classNamePos := parser.eat().GetPosString()
 	if !common.IsName(className) {
-		return ast.NewEmptyStmt(), phpError.NewParseError("\"%s\" is not a valid class name at %s", className, classNamePos)
+		return ast.NewEmptyStmt(), phpError.NewParseError("\"%s\" is not a valid class name in %s", className, classNamePos)
 	}
 	if common.IsReservedName(className) {
 		return ast.NewEmptyStmt(), phpError.NewError("Cannot use \"%s\" as a class name as it is reserved in %s", className, classNamePos)
@@ -126,7 +126,7 @@ func (parser *Parser) parseClassDeclaration() (ast.IStatement, phpError.Error) {
 		class.BaseClass = namespace + parser.at().Value
 		baseClassPos := parser.eat().GetPosString()
 		if !common.IsQualifiedName(class.BaseClass) {
-			return ast.NewEmptyStmt(), phpError.NewParseError("\"%s\" is not a valid class name at %s", class.BaseClass, baseClassPos)
+			return ast.NewEmptyStmt(), phpError.NewParseError("\"%s\" is not a valid class name in %s", class.BaseClass, baseClassPos)
 		}
 	}
 
@@ -136,7 +136,7 @@ func (parser *Parser) parseClassDeclaration() (ast.IStatement, phpError.Error) {
 			interfaceName := parser.at().Value
 			interfaceNamePos := parser.eat().GetPosString()
 			if !common.IsQualifiedName(interfaceName) {
-				return ast.NewEmptyStmt(), phpError.NewParseError("\"%s\" is not a valid interface name at %s", interfaceName, interfaceNamePos)
+				return ast.NewEmptyStmt(), phpError.NewParseError("\"%s\" is not a valid interface name in %s", interfaceName, interfaceNamePos)
 			}
 
 			class.Interfaces = append(class.Interfaces, interfaceName)
@@ -347,7 +347,7 @@ func (parser *Parser) parserTraitUseClause(class *ast.ClassDeclarationStatement)
 		traitName := parser.at().Value
 		traitNamePos := parser.eat().Position
 		if !common.IsQualifiedName(traitName) {
-			return phpError.NewParseError("\"%s\" is not a valid trait name at %s", traitName, traitNamePos.ToPosString())
+			return phpError.NewParseError("\"%s\" is not a valid trait name in %s", traitName, traitNamePos.ToPosString())
 		}
 		class.AddTrait(ast.NewTraitUseStmt(parser.nextId(), traitNamePos, traitName))
 
@@ -805,7 +805,7 @@ func (parser *Parser) parseInterfaceDeclaration() (ast.IStatement, phpError.Erro
 	interfaceName := parser.at().Value
 	interfaceNamePos := parser.eat().GetPosString()
 	if !common.IsName(interfaceName) {
-		return ast.NewEmptyStmt(), phpError.NewParseError("\"%s\" is not a valid interface name at %s", interfaceName, interfaceNamePos)
+		return ast.NewEmptyStmt(), phpError.NewParseError("\"%s\" is not a valid interface name in %s", interfaceName, interfaceNamePos)
 	}
 	if common.IsReservedName(interfaceName) {
 		return ast.NewEmptyStmt(), phpError.NewError("Cannot use \"%s\" as an interface name as it is reserved in %s", interfaceName, interfaceNamePos)
@@ -819,7 +819,7 @@ func (parser *Parser) parseInterfaceDeclaration() (ast.IStatement, phpError.Erro
 			interfaceName := parser.at().Value
 			interfaceNamePos := parser.eat().GetPosString()
 			if !common.IsQualifiedName(interfaceName) {
-				return ast.NewEmptyStmt(), phpError.NewParseError("\"%s\" is not a valid interface name at %s", interfaceName, interfaceNamePos)
+				return ast.NewEmptyStmt(), phpError.NewParseError("\"%s\" is not a valid interface name in %s", interfaceName, interfaceNamePos)
 			}
 
 			interfaceDecl.Parents = append(interfaceDecl.Parents, interfaceName)
