@@ -106,8 +106,8 @@ func readGoFileConstants(path string) error {
 				constants[category] = []string{}
 			}
 
-			functionName := strings.Replace(line, "environment.AddPredefinedConstant(\"", "", 1)
-			functionName = functionName[:strings.Index(functionName, "\"")]
+			functionName := strings.Replace(line, `environment.AddPredefinedConstant("`, "", 1)
+			functionName = functionName[:strings.Index(functionName, `"`)]
 
 			constants[category] = append(constants[category], functionName)
 		}

@@ -676,7 +676,7 @@ func lib_var_dump_var(context runtime.Context, value values.RuntimeValue, depth 
 		context.Interpreter.Println("NULL")
 	case values.StrValue:
 		strVal := value.(*values.Str).Value
-		context.Interpreter.Println(fmt.Sprintf("string(%d) \"%s\"", len(strVal), strVal))
+		context.Interpreter.Println(fmt.Sprintf(`string(%d) "%s"`, len(strVal), strVal))
 	case values.ObjectValue:
 		object := value.(*values.Object)
 		// TODO var_dump - object: dynamic counter of instaces

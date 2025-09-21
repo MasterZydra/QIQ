@@ -411,7 +411,7 @@ func (interpreter *Interpreter) validateClass(classDecl *ast.ClassDeclarationSta
 	if classDecl.BaseClass != "" {
 		_, found := interpreter.GetClass(classDecl.BaseClass)
 		if !found {
-			return phpError.NewError("Class \"%s\" not found in %s", classDecl.BaseClass, classDecl.GetPosString())
+			return phpError.NewError(`Class "%s" not found in %s`, classDecl.BaseClass, classDecl.GetPosString())
 		}
 	}
 
@@ -421,7 +421,7 @@ func (interpreter *Interpreter) validateClass(classDecl *ast.ClassDeclarationSta
 			// Check if interface exists
 			interfaceDecl, found := interpreter.GetInterface(classDecl.GetPosition().File.GetNamespaceStr() + interfaceName)
 			if !found {
-				return phpError.NewError("Interface \"%s\" not found in %s", interfaceName, classDecl.GetPosString())
+				return phpError.NewError(`Interface "%s" not found in %s`, interfaceName, classDecl.GetPosString())
 			}
 
 			// Check if all methods are implemented
@@ -601,7 +601,7 @@ func calculateIncDec(operator string, operand values.RuntimeValue) (*values.Slot
 	case values.StrValue:
 		return calculateIncDecString(operator, operand.(*values.Str))
 	default:
-		return values.NewVoidSlot(), phpError.NewError("calculateIncDec: Type \"%s\" not implemented", operand.GetType())
+		return values.NewVoidSlot(), phpError.NewError(`calculateIncDec: Type "%s" not implemented`, operand.GetType())
 	}
 
 	// TODO calculateIncDec - object
@@ -632,7 +632,7 @@ func calculateIncDecInteger(operator string, operand *values.Int) (*values.Slot,
 		return calculateInteger(operand, "-", values.NewInt(1))
 
 	default:
-		return values.NewIntSlot(0), phpError.NewError("calculateIncDecInteger: Operator \"%s\" not implemented", operator)
+		return values.NewIntSlot(0), phpError.NewError(`calculateIncDecInteger: Operator "%s" not implemented`, operator)
 	}
 }
 
@@ -659,7 +659,7 @@ func calculateIncDecFloating(operator string, operand *values.Float) (*values.Sl
 		return calculateFloating(operand, "-", values.NewFloat(1))
 
 	default:
-		return values.NewIntSlot(0), phpError.NewError("calculateIncDecFloating: Operator \"%s\" not implemented", operator)
+		return values.NewIntSlot(0), phpError.NewError(`calculateIncDecFloating: Operator "%s" not implemented`, operator)
 	}
 }
 
@@ -678,7 +678,7 @@ func calculateIncDecNull(operator string) (*values.Slot, phpError.Error) {
 		return values.NewNullSlot(), nil
 
 	default:
-		return values.NewIntSlot(0), phpError.NewError("calculateIncDecNull: Operator \"%s\" not implemented", operator)
+		return values.NewIntSlot(0), phpError.NewError(`calculateIncDecNull: Operator "%s" not implemented`, operator)
 	}
 }
 
@@ -705,7 +705,7 @@ func calculateIncDecString(operator string, operand *values.Str) (*values.Slot, 
 		return values.NewVoidSlot(), phpError.NewError("TODO calculateIncDecString")
 
 	default:
-		return values.NewIntSlot(0), phpError.NewError("calculateIncDecNull: Operator \"%s\" not implemented", operator)
+		return values.NewIntSlot(0), phpError.NewError(`calculateIncDecNull: Operator "%s" not implemented`, operator)
 	}
 
 	// TODO calculateIncDecString
@@ -738,7 +738,7 @@ func calculateUnary(operator string, operand values.RuntimeValue) (*values.Slot,
 		// For a unary + or unary - operator used with a NULL-valued operand, the value of the result is zero and the type is int.
 		return values.NewIntSlot(0), nil
 	default:
-		return values.NewVoidSlot(), phpError.NewError("calculateUnary: Type \"%s\" not implemented", operand.GetType())
+		return values.NewVoidSlot(), phpError.NewError(`calculateUnary: Type "%s" not implemented`, operand.GetType())
 	}
 
 	// TODO calculateUnary - string
@@ -771,7 +771,7 @@ func calculateUnaryBoolean(operator string, operand *values.Bool) (*values.Slot,
 		return values.NewIntSlot(0), nil
 
 	default:
-		return values.NewIntSlot(0), phpError.NewError("calculateUnaryBoolean: Operator \"%s\" not implemented", operator)
+		return values.NewIntSlot(0), phpError.NewError(`calculateUnaryBoolean: Operator "%s" not implemented`, operator)
 	}
 }
 
@@ -799,7 +799,7 @@ func calculateUnaryFloating(operator string, operand *values.Float) (*values.Slo
 		return calculateUnaryInteger(operator, intRuntimeValue.(*values.Int))
 
 	default:
-		return values.NewFloatSlot(0), phpError.NewError("calculateUnaryFloating: Operator \"%s\" not implemented", operator)
+		return values.NewFloatSlot(0), phpError.NewError(`calculateUnaryFloating: Operator "%s" not implemented`, operator)
 	}
 }
 
@@ -824,7 +824,7 @@ func calculateUnaryInteger(operator string, operand *values.Int) (*values.Slot, 
 		// (that is, each bit in the result is set if and only if the corresponding bit in the operand is clear).
 		return values.NewIntSlot(^operand.Value), nil
 	default:
-		return values.NewIntSlot(0), phpError.NewError("calculateUnaryInteger: Operator \"%s\" not implemented", operator)
+		return values.NewIntSlot(0), phpError.NewError(`calculateUnaryInteger: Operator "%s" not implemented`, operator)
 	}
 }
 
@@ -869,7 +869,7 @@ func calculate(operand1 values.RuntimeValue, operator string, operand2 values.Ru
 	case values.StrValue:
 		return calculateString(operand1.(*values.Str), operator, operand2.(*values.Str))
 	default:
-		return values.NewVoidSlot(), phpError.NewError("calculate: Type \"%s\" not implemented", resultType)
+		return values.NewVoidSlot(), phpError.NewError(`calculate: Type "%s" not implemented`, resultType)
 	}
 }
 
@@ -896,7 +896,7 @@ func calculateFloating(operand1 *values.Float, operator string, operand2 *values
 		}
 		return values.NewIntSlot(op1 % op2), nil
 	default:
-		return values.NewFloatSlot(0), phpError.NewError("calculateFloating: Operator \"%s\" not implemented", operator)
+		return values.NewFloatSlot(0), phpError.NewError(`calculateFloating: Operator "%s" not implemented`, operator)
 	}
 }
 
@@ -938,7 +938,7 @@ func calculateInteger(operand1 *values.Int, operator string, operand2 *values.In
 	case "**":
 		return values.NewIntSlot(int64(math.Pow(float64(operand1.Value), float64(operand2.Value)))), nil
 	default:
-		return values.NewVoidSlot(), phpError.NewError("calculateInteger: Operator \"%s\" not implemented", operator)
+		return values.NewVoidSlot(), phpError.NewError(`calculateInteger: Operator "%s" not implemented`, operator)
 	}
 }
 
@@ -947,7 +947,7 @@ func calculateString(operand1 *values.Str, operator string, operand2 *values.Str
 	case ".":
 		return values.NewStrSlot(operand1.Value + operand2.Value), nil
 	default:
-		return values.NewStrSlot(""), phpError.NewError("calculateString: Operator \"%s\" not implemented", operator)
+		return values.NewStrSlot(""), phpError.NewError(`calculateString: Operator "%s" not implemented`, operator)
 	}
 }
 
@@ -956,7 +956,7 @@ func calculateString(operand1 *values.Str, operator string, operand2 *values.Str
 func (interpreter *Interpreter) CallMethod(object *values.Object, method string, args []ast.IExpression, env *Environment) (*values.Slot, phpError.Error) {
 	methodDefinition, found := interpreter.getObjectMethod(object, method)
 	if !found {
-		return values.NewNullSlot(), phpError.NewError("Class %s does not have a function \"%s\"", object.Class.Name, method)
+		return values.NewNullSlot(), phpError.NewError(`Class %s does not have a function "%s"`, object.Class.Name, method)
 	}
 
 	methodEnv, err := NewEnvironment(env, nil, interpreter)

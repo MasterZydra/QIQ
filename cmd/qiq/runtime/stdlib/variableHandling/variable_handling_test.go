@@ -11,11 +11,11 @@ func TestLibBoolval(t *testing.T) {
 	doTest := func(runtimeValue values.RuntimeValue, expected bool) {
 		actual, err := BoolVal(runtimeValue)
 		if err != nil {
-			t.Errorf("Unexpected error: \"%s\"", err)
+			t.Errorf(`Unexpected error: "%s"`, err)
 			return
 		}
 		if actual != expected {
-			t.Errorf("Expected: \"%t\", Got \"%t\"", expected, actual)
+			t.Errorf(`Expected: "%t", Got "%t"`, expected, actual)
 		}
 	}
 
@@ -57,11 +57,11 @@ func TestLibFloatval(t *testing.T) {
 	doTest := func(runtimeValue values.RuntimeValue, expected float64) {
 		actual, err := FloatVal(runtimeValue, true)
 		if err != nil {
-			t.Errorf("Unexpected error: \"%s\"", err)
+			t.Errorf(`Unexpected error: "%s"`, err)
 			return
 		}
 		if actual != expected {
-			t.Errorf("Expected: \"%g\", Got \"%g\"", expected, actual)
+			t.Errorf(`Expected: "%g", Got "%g"`, expected, actual)
 		}
 	}
 
@@ -100,11 +100,11 @@ func TestLibIntval(t *testing.T) {
 	doTest := func(runtimeValue values.RuntimeValue, expected int64) {
 		actual, err := IntVal(runtimeValue, true)
 		if err != nil {
-			t.Errorf("Unexpected error: \"%s\"", err)
+			t.Errorf(`Unexpected error: "%s"`, err)
 			return
 		}
 		if actual != expected {
-			t.Errorf("Expected: \"%d\", Got \"%d\"", expected, actual)
+			t.Errorf(`Expected: "%d", Got "%d"`, expected, actual)
 		}
 	}
 
@@ -150,11 +150,11 @@ func TestLibStrval(t *testing.T) {
 	doTest := func(runtimeValue values.RuntimeValue, expected string) {
 		actual, err := StrVal(runtimeValue)
 		if err != nil {
-			t.Errorf("Unexpected error: \"%s\"", err)
+			t.Errorf(`Unexpected error: "%s"`, err)
 			return
 		}
 		if actual != expected {
-			t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
+			t.Errorf(`Expected: "%s", Got "%s"`, expected, actual)
 		}
 	}
 

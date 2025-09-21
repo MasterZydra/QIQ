@@ -17,7 +17,7 @@ func ImplodeStrSlice(slice []string) string {
 		if i > 0 {
 			result += ", "
 		}
-		result += "\"" + s + "\""
+		result += `"` + s + `"`
 	}
 	return result
 }

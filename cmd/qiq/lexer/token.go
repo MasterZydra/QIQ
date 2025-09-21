@@ -17,7 +17,7 @@ func NewToken(tokenType TokenType, value string, position *position.Position) *T
 }
 
 func (token *Token) String() string {
-	return fmt.Sprintf("&{Token - type: %s, value: \"%s\", position: %s}", token.TokenType, token.Value, token.Position)
+	return fmt.Sprintf(`&{Token - type: %s, value: "%s", position: %s}`, token.TokenType, token.Value, token.Position)
 }
 
 func (token *Token) GetPosition() *position.Position {

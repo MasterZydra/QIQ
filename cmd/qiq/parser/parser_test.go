@@ -45,7 +45,7 @@ func testExpr(t *testing.T, php string, expected ast.IExpression) {
 func testExprs(t *testing.T, php string, expected []ast.IExpression) {
 	program, err := NewParser(ini.NewDevIni()).ProduceAST(php, "test.php")
 	if err != nil {
-		t.Errorf("Unexpected error: \"%s\"", err)
+		t.Errorf(`Unexpected error: "%s"`, err)
 		return
 	}
 	for index, expect := range expected {

@@ -20,7 +20,7 @@ func testTokenize(t *testing.T, php string, expected []*Token) {
 	tokens, err := NewLexer(ini.NewDevIni()).Tokenize(php, testFile.Filename)
 	if err != nil {
 		fmt.Println("    Code:", php)
-		t.Errorf("Unexpected error: \"%s\"", err)
+		t.Errorf(`Unexpected error: "%s"`, err)
 		return
 	}
 	for index, token := range expected {

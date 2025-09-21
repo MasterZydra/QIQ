@@ -43,7 +43,7 @@ func nativeFn_class_alias(args []values.RuntimeValue, context runtime.Context) (
 	className := args[0].(*values.Str).Value
 	classDecl, found := context.Interpreter.GetClass(className)
 	if !found {
-		context.Interpreter.PrintError(phpError.NewWarning("Class \"%s\" not found in %s", className, context.Stmt.GetPosString()))
+		context.Interpreter.PrintError(phpError.NewWarning(`Class "%s" not found in %s`, className, context.Stmt.GetPosString()))
 		return values.NewBool(false), nil
 	}
 

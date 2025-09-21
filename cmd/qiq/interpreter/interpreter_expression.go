@@ -961,7 +961,7 @@ func (interpreter *Interpreter) ProcessObjectCreationExpr(stmt *ast.ObjectCreati
 	// TODO ProcessObjectCreationExpr - Add correct handling of namespaces
 	class, found := interpreter.GetClass(stmt.GetPosition().File.GetNamespaceStr() + stmt.Designator)
 	if !found {
-		return values.NewVoidSlot(), phpError.NewError("Class \"%s\" not found.", stmt.Designator)
+		return values.NewVoidSlot(), phpError.NewError(`Class "%s" not found.`, stmt.Designator)
 	}
 	object := values.NewObject(class)
 
@@ -984,7 +984,7 @@ func (interpreter *Interpreter) initObject(object *values.Object, constructorArg
 			} else {
 				value, err := interpreter.processStmt(property.InitialValue, env)
 				if err != nil {
-					return phpError.NewError("Failed to initialize property \"%s\": %s", property.Name, err)
+					return phpError.NewError(`Failed to initialize property "%s": %s`, property.Name, err)
 				}
 				object.SetProperty(property.Name, value.Value)
 			}
@@ -1007,7 +1007,7 @@ func (interpreter *Interpreter) initObject(object *values.Object, constructorArg
 	for baseClass != "" {
 		baseClassDecl, found := interpreter.GetClass(baseClass)
 		if !found {
-			return phpError.NewError("Class \"%s\" not found.", object.Class.BaseClass)
+			return phpError.NewError(`Class "%s" not found.`, object.Class.BaseClass)
 		}
 		// TODO initialize parent class
 
@@ -1041,7 +1041,7 @@ func (interpreter *Interpreter) ProcessMemberAccessExpr(stmt *ast.MemberAccessEx
 
 	if runtimeObject.GetType() != values.ObjectValue {
 		return values.NewVoidSlot(), phpError.NewError(
-			"Uncaught Error: Attempt to read property \"%s\" on %s in %s",
+			`Uncaught Error: Attempt to read property "%s" on %s in %s`,
 			member, values.ToPhpType(runtimeObject.Value), stmt.GetPosString(),
 		)
 	}

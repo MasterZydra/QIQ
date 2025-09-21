@@ -32,23 +32,23 @@ func TestVariableExprToVariableName(t *testing.T) {
 	// $var
 	interpreter, err := NewInterpreter(runtime.NewExecutionContext(), ini.NewDevIni(), &request.Request{}, "test.php")
 	if err != nil {
-		t.Errorf("Unexpected error: \"%s\"", err)
+		t.Errorf(`Unexpected error: "%s"`, err)
 		return
 	}
 	actual, err := interpreter.varExprToVarName(ast.NewSimpleVariableExpr(0, ast.NewVariableNameExpr(0, nil, "$var")), interpreter.env)
 	if err != nil {
-		t.Errorf("Unexpected error: \"%s\"", err)
+		t.Errorf(`Unexpected error: "%s"`, err)
 		return
 	}
 	expected := "$var"
 	if actual != expected {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
+		t.Errorf(`Expected: "%s", Got "%s"`, expected, actual)
 	}
 
 	// $$var
 	interpreter, err = NewInterpreter(runtime.NewExecutionContext(), ini.NewDevIni(), &request.Request{}, "test.php")
 	if err != nil {
-		t.Errorf("Unexpected error: \"%s\"", err)
+		t.Errorf(`Unexpected error: "%s"`, err)
 		return
 	}
 	interpreter.env.declareVariable("$var", values.NewStr("hi"))
@@ -56,18 +56,18 @@ func TestVariableExprToVariableName(t *testing.T) {
 		ast.NewSimpleVariableExpr(0,
 			ast.NewSimpleVariableExpr(0, ast.NewVariableNameExpr(0, nil, "$var"))), interpreter.env)
 	if err != nil {
-		t.Errorf("Unexpected error: \"%s\"", err)
+		t.Errorf(`Unexpected error: "%s"`, err)
 		return
 	}
 	expected = "$hi"
 	if actual != expected {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
+		t.Errorf(`Expected: "%s", Got "%s"`, expected, actual)
 	}
 
 	// $$$var
 	interpreter, err = NewInterpreter(runtime.NewExecutionContext(), ini.NewDevIni(), &request.Request{}, "test.php")
 	if err != nil {
-		t.Errorf("Unexpected error: \"%s\"", err)
+		t.Errorf(`Unexpected error: "%s"`, err)
 		return
 	}
 	interpreter.env.declareVariable("$var1", values.NewStr("hi"))
@@ -77,12 +77,12 @@ func TestVariableExprToVariableName(t *testing.T) {
 			ast.NewSimpleVariableExpr(0,
 				ast.NewSimpleVariableExpr(0, ast.NewVariableNameExpr(0, nil, "$var")))), interpreter.env)
 	if err != nil {
-		t.Errorf("Unexpected error: \"%s\"", err)
+		t.Errorf(`Unexpected error: "%s"`, err)
 		return
 	}
 	expected = "$hi"
 	if actual != expected {
-		t.Errorf("Expected: \"%s\", Got \"%s\"", expected, actual)
+		t.Errorf(`Expected: "%s", Got "%s"`, expected, actual)
 	}
 
 	// ${$a}

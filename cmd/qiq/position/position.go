@@ -14,7 +14,7 @@ func (namespace *Namespace) ToString() string {
 	result := ""
 	if len(namespace.namespace) > 0 {
 		for _, name := range namespace.namespace {
-			result += name + "\\"
+			result += name + `\`
 		}
 	}
 	return result
@@ -60,5 +60,5 @@ func (pos *Position) ToPosString() string {
 }
 
 func (pos *Position) String() string {
-	return fmt.Sprintf("{Position - file: \"%s\", ln: %d, col: %d}", pos.File.Filename, pos.Line, pos.Column)
+	return fmt.Sprintf(`{Position - file: "%s", ln: %d, col: %d}`, pos.File.Filename, pos.Line, pos.Column)
 }

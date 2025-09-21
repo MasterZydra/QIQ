@@ -20,7 +20,7 @@ func (replaceJson *ReplaceJson) GetEntry(filename string) (ReplaceEntry, bool) {
 	for _, entry := range replaceJson.Replace {
 		entryFile := entry.File
 		if os.IS_WIN {
-			entryFile = strings.ReplaceAll(entryFile, "/", "\\")
+			entryFile = strings.ReplaceAll(entryFile, "/", `\`)
 		}
 		if entryFile == filename {
 			return entry, true

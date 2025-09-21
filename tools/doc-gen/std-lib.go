@@ -107,8 +107,8 @@ func readGoFileStdLib(path string) error {
 				stdLibFunctions[category] = []string{}
 			}
 
-			functionName := strings.Replace(line, "environment.AddNativeFunction(\"", "", 1)
-			functionName = functionName[:strings.Index(functionName, "\"")]
+			functionName := strings.Replace(line, `environment.AddNativeFunction("`, "", 1)
+			functionName = functionName[:strings.Index(functionName, `"`)]
 
 			stdLibFunctions[category] = append(stdLibFunctions[category], functionName)
 		}

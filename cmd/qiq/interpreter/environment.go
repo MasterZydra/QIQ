@@ -205,7 +205,7 @@ func (env *Environment) LookupConstant(constantName string) (values.RuntimeValue
 	if slot, ok := environment.constants[constantName]; ok {
 		return slot.Value, nil
 	}
-	return values.NewVoidSlot(), phpError.NewError("Undefined constant \"%s\"", constantName)
+	return values.NewVoidSlot(), phpError.NewError(`Undefined constant "%s"`, constantName)
 }
 
 // -------------------------------------- Functions -------------------------------------- MARK: Functions

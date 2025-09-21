@@ -790,7 +790,7 @@ func (lexer *Lexer) getStringLiteral(eat bool) (string, phpError.Error) {
 		}
 
 		// Check if hd-start-identifier is in quotes
-		hasQuotes := lexer.at() == "\""
+		hasQuotes := lexer.at() == `"`
 		if hasQuotes {
 			strValue += lexer.eat()
 		}
@@ -801,8 +801,8 @@ func (lexer *Lexer) getStringLiteral(eat bool) (string, phpError.Error) {
 
 		// Process closing quote
 		if hasQuotes {
-			if lexer.at() != "\"" {
-				return "", phpError.NewError("Invalid heredoc string literal: Expected closing quote '\"', Got: '%s' in %s:%d:%d", lexer.at(), lexer.file.Filename, lexer.currPos.CurrLine, lexer.currPos.CurrPos)
+			if lexer.at() != `"` {
+				return "", phpError.NewError(`Invalid heredoc string literal: Expected closing quote '"', Got: '%s' in %s:%d:%d`, lexer.at(), lexer.file.Filename, lexer.currPos.CurrLine, lexer.currPos.CurrPos)
 			}
 			strValue += lexer.eat()
 		}

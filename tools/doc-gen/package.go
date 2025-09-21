@@ -109,11 +109,11 @@ func readGoFilePackage(path, filename string) error {
 		}
 
 		if isImportSection {
-			if !strings.HasPrefix(line, "\"") {
-				line = line[strings.Index(line, "\""):]
+			if !strings.HasPrefix(line, `"`) {
+				line = line[strings.Index(line, `"`):]
 			}
-			line = strings.TrimPrefix(line, "\"")
-			addImportPackage(path, line[:strings.Index(line, "\"")])
+			line = strings.TrimPrefix(line, `"`)
+			addImportPackage(path, line[:strings.Index(line, `"`)])
 			continue
 		}
 
@@ -122,9 +122,9 @@ func readGoFilePackage(path, filename string) error {
 			continue
 		}
 
-		if strings.HasPrefix(line, "import \"") {
-			line = strings.Replace(line, "import \"", "", 1)
-			addImportPackage(path, line[:strings.Index(line, "\"")])
+		if strings.HasPrefix(line, `import "`) {
+			line = strings.Replace(line, `import "`, "", 1)
+			addImportPackage(path, line[:strings.Index(line, `"`)])
 			return nil
 		}
 	}

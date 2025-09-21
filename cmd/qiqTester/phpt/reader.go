@@ -175,7 +175,7 @@ func (reader *Reader) GetTestFile() (*TestFile, error) {
 			continue
 		}
 
-		return reader.testFile, fmt.Errorf("Unsupported section \"%s\"", reader.at())
+		return reader.testFile, fmt.Errorf(`Unsupported section "%s"`, reader.at())
 	}
 
 	if err := reader.isValid(); err != nil {
@@ -187,18 +187,18 @@ func (reader *Reader) GetTestFile() (*TestFile, error) {
 
 func (reader *Reader) isValid() error {
 	if !reader.hasSection("--TEST--") {
-		return fmt.Errorf("Section \"--TEST--\" is missing")
+		return fmt.Errorf(`Section "--TEST--" is missing`)
 	}
 
 	if !reader.hasSection("--FILE--") && !reader.hasSection("--FILEEOF--") &&
 		!reader.hasSection("--FILE_EXTERNAL--") && !reader.hasSection("--REDIRECTTEST--") {
-		return fmt.Errorf("Section \"--FILE-- | --FILEEOF-- | --FILE_EXTERNAL-- | --REDIRECTTEST--\" is missing")
+		return fmt.Errorf(`Section "--FILE-- | --FILEEOF-- | --FILE_EXTERNAL-- | --REDIRECTTEST--" is missing`)
 	}
 
 	if !reader.hasSection("--EXPECT--") && !reader.hasSection("--EXPECTF--") && !reader.hasSection("--EXPECTREGEX--") &&
 		!reader.hasSection("--EXPECT_EXTERNAL--") && !reader.hasSection("--EXPECTF_EXTERNAL--") &&
 		!reader.hasSection("--EXPECTREGEX_EXTERNAL--") {
-		return fmt.Errorf("Section \"--EXPECT-- | --EXPECTF-- | --EXPECTREGEX-- | --EXPECT_EXTERNAL-- | --EXPECTF_EXTERNAL-- | --EXPECTREGEX_EXTERNAL--\" is missing")
+		return fmt.Errorf(`Section "--EXPECT-- | --EXPECTF-- | --EXPECTREGEX-- | --EXPECT_EXTERNAL-- | --EXPECTF_EXTERNAL-- | --EXPECTREGEX_EXTERNAL--" is missing`)
 	}
 	return nil
 }

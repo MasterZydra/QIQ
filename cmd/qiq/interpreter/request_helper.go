@@ -100,10 +100,10 @@ func parsePost(query string, interpreter runtime.Interpreter) (*values.Array, *v
 			if lineNum == 0 {
 				boundary = strings.Replace(lines[lineNum], "Content-Type: multipart/form-data;", "", 1)
 				boundary = strings.Replace(strings.TrimSpace(boundary), "boundary=", "", 1)
-				if strings.HasPrefix(boundary, "\"") {
+				if strings.HasPrefix(boundary, `"`) {
 					boundary = boundary[1:]
-					if strings.Contains(boundary, "\"") {
-						boundary = boundary[:strings.Index(boundary, "\"")]
+					if strings.Contains(boundary, `"`) {
+						boundary = boundary[:strings.Index(boundary, `"`)]
 					}
 				}
 				boundary = "--" + boundary
@@ -138,8 +138,8 @@ func parsePost(query string, interpreter runtime.Interpreter) (*values.Array, *v
 						name = name[1:strings.LastIndex(name, "'")]
 						name = strings.ReplaceAll(name, `\'`, "'")
 					}
-					if strings.HasPrefix(name, "\"") {
-						name = name[1:strings.LastIndex(name, "\"")]
+					if strings.HasPrefix(name, `"`) {
+						name = name[1:strings.LastIndex(name, `"`)]
 						name = strings.ReplaceAll(name, `\"`, `"`)
 					}
 					name = strings.ReplaceAll(name, `\\`, `\`)
@@ -150,8 +150,8 @@ func parsePost(query string, interpreter runtime.Interpreter) (*values.Array, *v
 					if isFile {
 						filename = fullname[strings.Index(fullname, "filename="):]
 						filename = strings.TrimPrefix(filename, "filename=")
-						if strings.HasPrefix(filename, "\"") {
-							filename = filename[1:strings.LastIndex(filename, "\"")]
+						if strings.HasPrefix(filename, `"`) {
+							filename = filename[1:strings.LastIndex(filename, `"`)]
 						}
 						filename = recode(filename, interpreter.GetIni())
 						lineNum++

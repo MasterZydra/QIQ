@@ -44,7 +44,7 @@ func main() {
 	if *createIniFile != "" {
 		iniWriter := ini.NewWriter(*createIniFile)
 		if err := iniWriter.Write(); err != nil {
-			fmt.Printf("Creation of ini file \"%s\" failed: %s", *createIniFile, err.Error())
+			fmt.Printf(`Creation of ini file "%s" failed: %s`, *createIniFile, err.Error())
 			os.Exit(1)
 		}
 		os.Exit(0)

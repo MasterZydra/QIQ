@@ -16,7 +16,7 @@ func TestArrayFirst(t *testing.T) {
 	if err != nil {
 		t.Errorf("Unexpected error: %s", err)
 	} else if actual.GetType() != values.NullValue {
-		t.Errorf("Expected: \"null\", Got \"%s\"", actual)
+		t.Errorf(`Expected: "null", Got "%s"`, actual)
 	}
 
 	array.SetElement(nil, values.NewInt(42))
@@ -44,10 +44,10 @@ func TestArrayKeyExists(t *testing.T) {
 	array := values.NewArray()
 	array.SetElement(nil, values.NewInt(42))
 	if actual, _ := lib_array_key_exists(values.NewInt(0), array); !actual {
-		t.Errorf("Expected: \"%t\", Got \"%t\"", true, actual)
+		t.Errorf(`Expected: "%t", Got "%t"`, true, actual)
 	}
 	if actual, _ := lib_array_key_exists(values.NewInt(1), array); actual {
-		t.Errorf("Expected: \"%t\", Got \"%t\"", false, actual)
+		t.Errorf(`Expected: "%t", Got "%t"`, false, actual)
 	}
 }
 
@@ -56,7 +56,7 @@ func TestArrayKeyExists(t *testing.T) {
 func TestArrayKeyFirst(t *testing.T) {
 	array := values.NewArray()
 	if actual := FirstKey(array); actual.GetType() != values.NullValue {
-		t.Errorf("Expected: \"null\", Got \"%s\"", actual)
+		t.Errorf(`Expected: "null", Got "%s"`, actual)
 	}
 
 	array.SetElement(nil, values.NewInt(42))
@@ -73,7 +73,7 @@ func TestArrayKeyFirst(t *testing.T) {
 	array = values.NewArray()
 	array.SetElement(values.NewStr("str"), values.NewInt(43))
 	if actual := FirstKey(array); actual.(*values.Str).Value != "str" {
-		t.Errorf("Expected: \"str\", Got \"%s\"", actual.(*values.Str).Value)
+		t.Errorf(`Expected: "str", Got "%s"`, actual.(*values.Str).Value)
 	}
 }
 
@@ -82,7 +82,7 @@ func TestArrayKeyFirst(t *testing.T) {
 func TestArrayKeyLast(t *testing.T) {
 	array := values.NewArray()
 	if actual := LastKey(array); actual.GetType() != values.NullValue {
-		t.Errorf("Expected: \"null\", Got \"%s\"", actual)
+		t.Errorf(`Expected: "null", Got "%s"`, actual)
 	}
 
 	array.SetElement(nil, values.NewInt(42))
@@ -101,7 +101,7 @@ func TestArrayKeyLast(t *testing.T) {
 	array.SetElement(nil, values.NewInt(42))
 	array.SetElement(values.NewStr("str"), values.NewInt(43))
 	if actual := LastKey(array); actual.(*values.Str).Value != "str" {
-		t.Errorf("Expected: \"str\", Got \"%s\"", actual.(*values.Str).Value)
+		t.Errorf(`Expected: "str", Got "%s"`, actual.(*values.Str).Value)
 	}
 }
 
@@ -115,7 +115,7 @@ func TestArrayLast(t *testing.T) {
 	if err != nil {
 		t.Errorf("Unexpected error: %s", err)
 	} else if actual.GetType() != values.NullValue {
-		t.Errorf("Expected: \"null\", Got \"%s\"", actual)
+		t.Errorf(`Expected: "null", Got "%s"`, actual)
 	}
 
 	array.SetElement(nil, values.NewInt(42))
@@ -147,7 +147,7 @@ func TestArrayPop(t *testing.T) {
 	if err != nil {
 		t.Errorf("Unexpected error: %s", err)
 	} else if actual.GetType() != values.NullValue {
-		t.Errorf("Expected: \"null\", Got \"%s\"", actual)
+		t.Errorf(`Expected: "null", Got "%s"`, actual)
 	}
 
 	array.SetElement(nil, values.NewInt(42))

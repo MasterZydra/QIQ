@@ -89,7 +89,7 @@ func readGoFileIni(path string) error {
 		}
 
 		// Only process lines that look like: '"key": "value",'
-		if !strings.HasPrefix(line, "\"") {
+		if !strings.HasPrefix(line, `"`) {
 			continue
 		}
 
@@ -103,12 +103,12 @@ func readGoFileIni(path string) error {
 		}
 
 		// Extract directive name
-		directiveName := strings.Trim(parts[0], "\" ")
+		directiveName := strings.Trim(parts[0], `" `)
 
 		// Extract default value
 		defaultValue := strings.TrimSpace(parts[1])
 		defaultValue = strings.TrimSuffix(defaultValue, ",")
-		defaultValue = strings.Trim(defaultValue, "\"")
+		defaultValue = strings.Trim(defaultValue, `"`)
 
 		if _, found := iniDirectives[category]; !found {
 			iniDirectives[category] = []string{}

@@ -113,23 +113,23 @@ func TestParseQuery(t *testing.T) {
 	runTest := func(t *testing.T, input string, expected *values.Array) {
 		interp, phpErr := NewInterpreter(runtime.NewExecutionContext(), ini.NewDefaultIni(), request.NewRequest(), TEST_FILE_NAME)
 		if phpErr != nil {
-			t.Errorf("Unexpected error: \"%s\"", phpErr)
+			t.Errorf(`Unexpected error: "%s"`, phpErr)
 			return
 		}
 
 		actual, err := parseQuery(input, interp)
 		if err != nil {
-			t.Errorf("Unexpected error: \"%s\"", err)
+			t.Errorf(`Unexpected error: "%s"`, err)
 			return
 		}
 
 		equal, err := variableHandling.Compare(actual, "===", expected)
 		if err != nil {
-			t.Errorf("Unexpected error while comparing: \"%s\"", err)
+			t.Errorf(`Unexpected error while comparing: "%s"`, err)
 			return
 		}
 		if !equal.Value.(*values.Bool).Value {
-			t.Errorf("Wrong result for query \"%s\"", input)
+			t.Errorf(`Wrong result for query "%s"`, input)
 		}
 	}
 

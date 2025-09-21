@@ -12,7 +12,7 @@ func TestReplaceSingleQuoteControlChars(t *testing.T) {
 	doTest(t, `\r`, `\r`)
 	doTest(t, `\n`, `\n`)
 	doTest(t, `\t`, `\t`)
-	doTest(t, `\\`, "\\")
+	doTest(t, `\\`, `\`)
 	doTest(t, `\'`, "'")
 
 	doTest(t, `\\n`, `\n`)
@@ -31,7 +31,7 @@ func TestReplaceDoubleQuoteControlChars(t *testing.T) {
 	doTest(t, `\r`, "\r")
 	doTest(t, `\n`, "\n")
 	doTest(t, `\t`, "\t")
-	doTest(t, `\\`, "\\")
+	doTest(t, `\\`, `\`)
 
 	doTest(t, `\\n`, `\n`)
 	doTest(t, `\\\n`, `\`+"\n")

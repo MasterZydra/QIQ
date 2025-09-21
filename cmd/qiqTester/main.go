@@ -108,13 +108,13 @@ func process(path string) error {
 		return filepath.Walk(path, doTest)
 	} else {
 		if !strings.HasSuffix(strings.ToLower(file.Name()), ".phpt") {
-			return fmt.Errorf("Test files must have the extension \"phpt\". Got: \"%s\"", file.Name())
+			return fmt.Errorf(`Test files must have the extension "phpt". Got: "%s"`, file.Name())
 		}
 		return filepath.Walk(path, doTest)
 	}
 }
 
-func doTest(path string, info goOs.FileInfo, err error) error {
+func doTest(path string, info goOs.FileInfo, _ error) error {
 	if info.IsDir() || !strings.HasSuffix(strings.ToLower(info.Name()), ".phpt") {
 		return nil
 	}
