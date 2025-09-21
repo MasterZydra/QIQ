@@ -7,7 +7,7 @@ import (
 )
 
 // QIQ version
-const QIQVersion string = "0.4.0"
+const QIQVersion string = "0.5.0"
 
 var SoftwareVersion string = softwareVersion()
 
