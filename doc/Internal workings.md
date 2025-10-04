@@ -12,8 +12,8 @@ Another case where look-ahead is needed is when processing floats. The lexer det
 For this "jump back" logic, the lexer can push and pop a `PositionSnapshot` of the current position information into/from an array.
 The cases that might end with a "jump back" then push a snapshot. If a jump back is required, the latest snapshot is popped and applied, otherwise the snapshot is popped and discarded.
 
-## Pass by value
-The interpreter uses the structs that implement `RuntimeValue` as pointers.
+## Memory management
+The interpreter uses the structs that implement `RuntimeValue` as pointers (in GoLang).
 The interpreter creates new instances for each new runtime value of type `Boolean`, `Integer`, `Floating` or `String`.
 This results in "pass by value" behavior.
 
@@ -25,6 +25,43 @@ There are two places in the interpreter logic where a DeepCopy must be created:
 - array assignments: `array.SetElement(keyValue, DeepCopy(value))`
 - function calls: `argument = DeepCopy(argument)`
 - variable assignments: `variable = DeepCopy(value)`
+
+PHP allows the usage of pointers for "by reference" variables for example in function parameters.
+To realize this, the actual (runtime) value like an `Boolen`, `String` or `Object` is wrapped inside of a `Slot`.
+A variable in the environment shows to a slot.
+
+### Pass by value
+
+```php
+function foo($b) { }
+
+$a = 42;
+foo($a);
+```
+
+```mermaid
+flowchart LR
+    var_a[Variable: $a] --> slot_a[Slot: 0x0000AFFE]
+    slot_a --> value_int_42[Integer: 42]
+    var_b[Variable: $b] --> slot_b[Slot: 0x0000CAFE]
+    slot_b --> value_int_42b[Integer: 42]
+```
+
+### Pass by reference
+
+```php
+function foo(&$b) { }
+
+$a = 42;
+foo($a);
+```
+
+```mermaid
+flowchart LR
+    var_a[Variable: $a] --> slot_a[Slot: 0x0000AFFE]
+    var_b[Variable: $b] --> slot_a
+    slot_a --> value_int_42[Integer: 42]
+```
 
 ## Performant runtime array
 In the first iteration, the array implementation was very slow.  
