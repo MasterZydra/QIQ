@@ -9,7 +9,8 @@ func (generator *AstGenerator) ProcessAnonymousFunctionCreationExpr(stmt *ast.An
 
 // ProcessArrayLiteralExpr implements ast.Visitor.
 func (generator *AstGenerator) ProcessArrayLiteralExpr(stmt *ast.ArrayLiteralExpression, _ any) (any, error) {
-	panic("ProcessArrayLiteralExpr unimplemented")
+	generator.print(`ast.NewArrayLiteralExpr(0, nil)`)
+	return nil, nil
 }
 
 // ProcessArrayNextKeyExpr implements ast.Visitor.
@@ -44,7 +45,8 @@ func (generator *AstGenerator) ProcessConditionalExpr(stmt *ast.ConditionalExpre
 
 // ProcessConstantAccessExpr implements ast.Visitor.
 func (generator *AstGenerator) ProcessConstantAccessExpr(stmt *ast.ConstantAccessExpression, _ any) (any, error) {
-	panic("ProcessConstantAccessExpr unimplemented")
+	generator.print(`ast.NewConstantAccessExpr(0, nil, "%s")`, stmt.ConstantName)
+	return nil, nil
 }
 
 // ProcessEmptyIntrinsicExpr implements ast.Visitor.
@@ -84,7 +86,17 @@ func (generator *AstGenerator) ProcessFloatingLiteralExpr(stmt *ast.FloatingLite
 
 // ProcessFunctionCallExpr implements ast.Visitor.
 func (generator *AstGenerator) ProcessFunctionCallExpr(stmt *ast.FunctionCallExpression, _ any) (any, error) {
-	panic("ProcessFunctionCallExpr unimplemented")
+	generator.print("ast.NewFunctionCallExpr(0, nil, ")
+	generator.processStmt(stmt.FunctionName)
+	generator.print(", []ast.IExpression{")
+	for i, expr := range stmt.Arguments {
+		if i > 0 {
+			generator.print(", ")
+		}
+		generator.processStmt(expr)
+	}
+	generator.print("})")
+	return nil, nil
 }
 
 // ProcessIncludeExpr implements ast.Visitor.
@@ -119,7 +131,12 @@ func (generator *AstGenerator) ProcessLogicalNotExpr(stmt *ast.LogicalNotExpress
 
 // ProcessMemberAccessExpr implements ast.Visitor.
 func (generator *AstGenerator) ProcessMemberAccessExpr(stmt *ast.MemberAccessExpression, _ any) (any, error) {
-	panic("ProcessMemberAccessExpr unimplemented")
+	generator.print("ast.NewMemberAccessExpr(0, nil, ")
+	generator.processStmt(stmt.Object)
+	generator.print(", ")
+	generator.processStmt(stmt.Member)
+	generator.print(")")
+	return nil, nil
 }
 
 // ProcessObjectCreationExpr implements ast.Visitor.
@@ -164,17 +181,26 @@ func (generator *AstGenerator) ProcessRequireOnceExpr(stmt *ast.RequireOnceExpre
 
 // ProcessSimpleAssignmentExpr implements ast.Visitor.
 func (generator *AstGenerator) ProcessSimpleAssignmentExpr(stmt *ast.SimpleAssignmentExpression, _ any) (any, error) {
-	panic("ProcessSimpleAssignmentExpr unimplemented")
+	generator.print("ast.NewSimpleAssignmentExpr(0, ")
+	generator.processStmt(stmt.Variable)
+	generator.print(", ")
+	generator.processStmt(stmt.Value)
+	generator.print(")")
+	return nil, nil
 }
 
 // ProcessSimpleVariableExpr implements ast.Visitor.
 func (generator *AstGenerator) ProcessSimpleVariableExpr(stmt *ast.SimpleVariableExpression, _ any) (any, error) {
-	panic("ProcessSimpleVariableExpr unimplemented")
+	generator.print("ast.NewSimpleVariableExpr(0, ")
+	generator.processStmt(stmt.VariableName)
+	generator.print(")")
+	return nil, nil
 }
 
 // ProcessStringLiteralExpr implements ast.Visitor.
 func (generator *AstGenerator) ProcessStringLiteralExpr(stmt *ast.StringLiteralExpression, _ any) (any, error) {
-	panic("ProcessStringLiteralExpr unimplemented")
+	generator.print(`ast.NewStringLiteralExpr(0, nil, "%s", ast.DoubleQuotedString)`, stmt.Value)
+	return nil, nil
 }
 
 // ProcessSubscriptExpr implements ast.Visitor.
@@ -199,5 +225,6 @@ func (generator *AstGenerator) ProcessUnsetIntrinsicExpr(stmt *ast.UnsetIntrinsi
 
 // ProcessVariableNameExpr implements ast.Visitor.
 func (generator *AstGenerator) ProcessVariableNameExpr(stmt *ast.VariableNameExpression, _ any) (any, error) {
-	panic("ProcessVariableNameExpr unimplemented")
+	generator.print(`ast.NewVariableNameExpr(0, nil, "%s")`, stmt.VariableName)
+	return nil, nil
 }

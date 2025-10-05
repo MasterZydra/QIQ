@@ -37,6 +37,10 @@ func (generator *AstGenerator) processProgram(program *ast.Program) phpError.Err
 }
 
 func (generator *AstGenerator) processStmt(stmt ast.IStatement) phpError.Error {
+	if stmt == nil {
+		generator.print("nil")
+		return nil
+	}
 	_, err := stmt.Process(generator, nil)
 	if err != nil {
 		return err.(phpError.Error)

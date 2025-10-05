@@ -15,13 +15,42 @@ func (generator *AstGenerator) ProcessClassDeclarationStmt(stmt *ast.ClassDeclar
 	// Create new class declaration stmt
 	generator.println(`%s := ast.NewClassDeclarationStmt(0, nil, "%s", %s, %s)`, variableName, stmt.Name, toBoolStr(stmt.IsAbstract), toBoolStr(stmt.IsFinal))
 
+	for _, interfaceName := range stmt.Interfaces {
+		generator.println(`%s.Interfaces = append(%s.Interfaces, "%s")`, variableName, variableName, interfaceName)
+	}
+
+	for _, propertyName := range stmt.PropertieNames {
+		property := stmt.Properties[propertyName]
+		generator.print(`%s.AddProperty(ast.NewPropertyDeclarationStmt(0, nil, "%s", "%s", %s, %s, `, variableName, property.Name, property.Visibility, toBoolStr(property.IsStatic), toStringSlice(property.Type))
+		generator.processStmt(property.InitialValue)
+		generator.println("))")
+	}
+
+	for _, methodName := range stmt.MethodNames {
+		method, _ := stmt.GetMethod(methodName)
+		generator.print(`%s.AddMethod(`, variableName)
+		generator.print(`ast.NewMethodDefinitionStmt(0, nil, "%s", %s, %s, `,
+			method.Name, toStringSlice(method.Modifiers), funcParamArrayToStr(method.Params),
+		)
+		generator.processStmt(method.Body)
+		generator.println(`, %s))`, toStringSlice(method.ReturnType))
+	}
+
 	generator.println("")
 	return nil, nil
 }
 
 // ProcessCompoundStmt implements ast.Visitor.
 func (generator *AstGenerator) ProcessCompoundStmt(stmt *ast.CompoundStatement, _ any) (any, error) {
-	panic("ProcessCompoundStmt is unimplemented")
+	generator.print("ast.NewCompoundStmt(0, []ast.IStatement{")
+	for i, statement := range stmt.Statements {
+		if i > 0 {
+			generator.print(", ")
+		}
+		generator.processStmt(statement)
+	}
+	generator.print("})")
+	return nil, nil
 }
 
 // ProcessConstDeclarationStmt implements ast.Visitor.
@@ -51,7 +80,10 @@ func (generator *AstGenerator) ProcessEchoStmt(stmt *ast.EchoStatement, _ any) (
 
 // ProcessExpressionStmt implements ast.Visitor.
 func (generator *AstGenerator) ProcessExpressionStmt(stmt *ast.ExpressionStatement, _ any) (any, error) {
-	panic("ProcessExpressionStmt is unimplemented")
+	generator.print("ast.NewExpressionStmt(0, ")
+	generator.processStmt(stmt.Expr)
+	generator.print(")")
+	return nil, nil
 }
 
 // ProcessForStmt implements ast.Visitor.
@@ -105,7 +137,10 @@ func (generator *AstGenerator) ProcessInterfaceDeclarationStmt(stmt *ast.Interfa
 
 // ProcessReturnStmt implements ast.Visitor.
 func (generator *AstGenerator) ProcessReturnStmt(stmt *ast.ReturnStatement, _ any) (any, error) {
-	panic("ProcessReturnStmt is unimplemented")
+	generator.print("ast.NewReturnStmt(0, nil, ")
+	generator.processStmt(stmt.Expr)
+	generator.print(")")
+	return nil, nil
 }
 
 // ProcessStmt implements ast.Visitor.
