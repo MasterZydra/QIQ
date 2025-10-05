@@ -628,6 +628,12 @@ func TestClassDeclaration(t *testing.T) {
 			ast.NewConstantAccessExpr(0, nil, "member")),
 		),
 	)
+	testStmt(t, `<?php $obj::member;`,
+		ast.NewExpressionStmt(0, ast.NewScopedPropertyAccessExpr(0, nil,
+			ast.NewSimpleVariableExpr(0, ast.NewVariableNameExpr(0, nil, "$obj")),
+			ast.NewConstantAccessExpr(0, nil, "member")),
+		),
+	)
 
 	// Member call
 	testStmt(t, `<?php $obj->func();`,
@@ -638,6 +644,20 @@ func TestClassDeclaration(t *testing.T) {
 	)
 	testStmt(t, `<?php $obj->func($a);`,
 		ast.NewExpressionStmt(0, ast.NewMemberAccessExpr(0, nil,
+			ast.NewSimpleVariableExpr(0, ast.NewVariableNameExpr(0, nil, "$obj")),
+			ast.NewFunctionCallExpr(0, nil, ast.NewStringLiteralExpr(0, nil, "func", ast.SingleQuotedString),
+				[]ast.IExpression{ast.NewSimpleVariableExpr(0, ast.NewVariableNameExpr(0, nil, "$a"))},
+			),
+		)),
+	)
+	testStmt(t, `<?php $obj::func();`,
+		ast.NewExpressionStmt(0, ast.NewScopedPropertyAccessExpr(0, nil,
+			ast.NewSimpleVariableExpr(0, ast.NewVariableNameExpr(0, nil, "$obj")),
+			ast.NewFunctionCallExpr(0, nil, ast.NewStringLiteralExpr(0, nil, "func", ast.SingleQuotedString), []ast.IExpression{}),
+		)),
+	)
+	testStmt(t, `<?php $obj::func($a);`,
+		ast.NewExpressionStmt(0, ast.NewScopedPropertyAccessExpr(0, nil,
 			ast.NewSimpleVariableExpr(0, ast.NewVariableNameExpr(0, nil, "$obj")),
 			ast.NewFunctionCallExpr(0, nil, ast.NewStringLiteralExpr(0, nil, "func", ast.SingleQuotedString),
 				[]ast.IExpression{ast.NewSimpleVariableExpr(0, ast.NewVariableNameExpr(0, nil, "$a"))},

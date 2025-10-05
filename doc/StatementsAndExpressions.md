@@ -56,6 +56,8 @@
 - relational expression: `$var >= 42;`
 - require expression: `require 'lib.php';`
 - require_once expression: `require_once 'lib.php';`
+- scoped call expression: `$obj::func(); parent::__construct()`
+- scoped property access expression: `$obj::member`
 - shift expression: `$var << 8;`
 - simple assignment expression: `$v = "abc";`
 - single quoted string: `'Hi World!'`

@@ -11,6 +11,12 @@
             "section": "--EXPECTF--",
             "search": "in %s on line 5",
             "replace": "(previously declared in %s:%d:%d) in %s:%d:%d"
+        },
+        {
+            "file": "php-src/tests/lang/bug43958.phpt",
+            "section": "--EXPECTF--",
+            "search": "%sbug43958.php on line 5",
+            "replace": "%sbug43958.php:5:24"
         }
     ]
 }

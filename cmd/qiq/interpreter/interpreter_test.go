@@ -1439,11 +1439,25 @@ func TestClasses(t *testing.T) {
 		$c = new C; echo $c->p;`,
 		"bar",
 	)
+	testInputOutput(t, `<?php class C { const field = 42; } $c = new C; echo $c::field;`, "42")
+	testInputOutput(t, `<?php class C { const field = 42; } echo c::field;`, "42")
+	testInputOutput(t, `<?php class C { const field = 42; } echo C::field;`, "42")
+	testInputOutput(t, `<?php class C { CONST field = 42; } echo C::field;`, "42")
+	testInputOutput(t, `<?php class C { const constant = 42; function f() { echo self::constant; } } $c = new C; echo $c->f();`, "42")
+	testInputOutput(t, `<?php class C { const constant = 42; function f() { echo SELF::constant; } } $c = new C; echo $c->f();`, "42")
+	testInputOutput(t, `<?php class B { const constant = 41; } class C extends B { const constant = 42; function f() { echo self::constant; } } $c = new C; echo $c->f();`, "42")
+	testInputOutput(t, `<?php class B { const constant = 41; } class C extends B { const constant = 42; function f() { echo parent::constant; } } $c = new C; echo $c->f();`, "41")
+	testInputOutput(t, `<?php class B { const constant = 41; } class C extends B { const constant = 42; function f() { echo PARENT::constant; } } $c = new C; echo $c->f();`, "41")
+	testForError(t, `<?php class C { function f() { echo PARENT::constant; } } $c = new C; echo $c->f();`, phpError.NewError(`Cannot use "parent" when current class scope has no parent in %s:1:45`, TEST_FILE_NAME))
 
 	// Member call
 	testInputOutput(t, `<?php class C { function f(): void { echo "f()"; } } $c = new C; $c->f();`, "f()")
 	testForError(t, `<?php class C { } $c = new C; $c->g();`, phpError.NewError("Uncaught Error: Call to undefined method C::g() in %s:1:35", TEST_FILE_NAME))
 	testForError(t, `<?php $a = []; $a->g();`, phpError.NewError("Uncaught Error: Call to a member function g() on array in %s:1:18", TEST_FILE_NAME))
+	testInputOutput(t, `<?php class C { static function f(): void { echo "f()"; } } $c = new C; $c::f();`, "f()")
+	testInputOutput(t, `<?php class C { static function f(): void { echo "f()"; } } c::f();`, "f()")
+	testInputOutput(t, `<?php class C { static function f(): void { echo "f()"; } } C::f();`, "f()")
+	testForError(t, `<?php class C { function f(): void { echo "f()"; } } C::f();`, phpError.NewError("Uncaught Error: Non-static method C::f() cannot be called statically in %s:1:57", TEST_FILE_NAME))
 
 	// Destructor
 	testInputOutput(t, `<?php class c { function __destruct() { echo __METHOD__; } } $c = new c; echo "Done\n";`, "Done\nc::__destruct")

@@ -2328,7 +2328,8 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, phpError.Error) {
 	if ast.IsVariableExpr(variable) &&
 		!parser.isToken(lexer.OpOrPuncToken, "(", false) && !parser.isToken(lexer.OpOrPuncToken, "[", false) &&
 		!parser.isToken(lexer.OpOrPuncToken, "{", false) && !parser.isToken(lexer.OpOrPuncToken, "++", false) &&
-		!parser.isToken(lexer.OpOrPuncToken, "--", false) && !parser.isToken(lexer.OpOrPuncToken, "->", false) {
+		!parser.isToken(lexer.OpOrPuncToken, "--", false) && !parser.isToken(lexer.OpOrPuncToken, "->", false) &&
+		!parser.isToken(lexer.OpOrPuncToken, "::", false) {
 		return variable, nil
 	}
 
@@ -2367,8 +2368,6 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, phpError.Error) {
 		}
 		return variable, nil
 	}
-
-	// TODO scoped-call-expression
 
 	// -------------------------------------- function-call-expression -------------------------------------- MARK: function-call-expression
 
@@ -2428,8 +2427,6 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, phpError.Error) {
 		}
 		return ast.NewFunctionCallExpr(parser.nextId(), pos, functionName, args), nil
 	}
-
-	// TODO scoped-property-access-expression
 
 	// -------------------------------------- member-access-expression -------------------------------------- MARK: member-access-expression
 
@@ -2589,7 +2586,51 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, phpError.Error) {
 		if common.IsCorePredefinedConstant(constantName) || common.IsContextDependentConstant(constantName) {
 			constantName = strings.ToUpper(constantName)
 		}
-		return ast.NewConstantAccessExpr(parser.nextId(), parser.eat().Position, constantName), nil
+		variable = ast.NewConstantAccessExpr(parser.nextId(), parser.eat().Position, constantName)
+		if !parser.isToken(lexer.OpOrPuncToken, "::", false) {
+			return variable, nil
+		}
+	}
+
+	// -------------------------------------- scoped-property-access-expression -------------------------------------- MARK: scoped-property-access-expression
+
+	// Spec: https://phplang.org/spec/10-expressions.html#scope-resolution-operator
+
+	// scoped-property-access-expression:
+	//    scope-resolution-qualifier   ::   simple-variable
+
+	// scoped-call-expression:
+	//    scope-resolution-qualifier   ::   member-name   (   argument-expression-list(opt)   )
+	//    scope-resolution-qualifier   ::   member-name   (   argument-expression-list   ,   )
+
+	// class-constant-access-expression:
+	//    scope-resolution-qualifier   ::   name
+
+	// scope-resolution-qualifier:
+	//    relative-scope
+	//    qualified-name
+	//    dereferencable-expression
+
+	// relative-scope:
+	//    self
+	//    parent
+	//    static
+
+	// Supported expression: scoped property access expression: `$obj::member`
+	// Supported expression: scoped call expression: `$obj::func(); parent::__construct()`
+	if variable != nil && (ast.IsVariableExpr(variable) || variable.GetKind() == ast.ConstantAccessExpr) && parser.isToken(lexer.OpOrPuncToken, "::", false) {
+		PrintParserCallstack("scoped-property-access-expression", parser)
+
+		pos := parser.eat().Position
+
+		member, err := parser.parseExpr()
+		if err != nil {
+			return ast.NewEmptyExpr(), err
+		}
+
+		// TODO scoped-property-access-expression - check member name type
+
+		return ast.NewScopedPropertyAccessExpr(parser.nextId(), pos, variable, member), nil
 	}
 
 	return ast.NewEmptyExpr(), phpError.NewParseError("Unsupported expression type '%s', value: '%s' in %s", parser.at().TokenType, parser.at().Value, parser.at().GetPosString())

@@ -66,45 +66,6 @@ func (interpreter *Interpreter) lookupVariable(expr ast.IExpression, env *Enviro
 	return variableName, slot, nil
 }
 
-func (interpreter *Interpreter) destructObject(object *values.Object, env *Environment) phpError.Error {
-	if object.IsDestructed {
-		return nil
-	}
-	_, found := interpreter.getObjectMethod(object, "__destruct")
-	if found {
-		_, err := interpreter.CallMethod(object, "__destruct", []ast.IExpression{}, env)
-		if err != nil {
-			return err
-		}
-		object.IsDestructed = true
-	}
-	return nil
-}
-
-func (interpreter *Interpreter) getObjectMethod(object *values.Object, methodName string) (*ast.MethodDefinitionStatement, bool) {
-	classDecl := object.Class
-	for classDecl != nil {
-		MethodDecl, found := classDecl.GetMethod(methodName)
-		if found {
-			return MethodDecl, true
-		}
-		if classDecl.BaseClass == "" {
-			return nil, false
-		}
-		classDecl, _ = interpreter.GetClass(classDecl.BaseClass)
-	}
-	return nil, false
-}
-
-func (interpreter *Interpreter) destructAllObjects(env *Environment) {
-	objects := env.getAllObjects()
-	for _, object := range objects {
-		if err := interpreter.destructObject(object, env); err != nil {
-			interpreter.PrintError(err)
-		}
-	}
-}
-
 // Convert a variable expression into the interpreted variable name
 func (interpreter *Interpreter) varExprToVarName(expr ast.IExpression, env *Environment) (string, phpError.Error) {
 	switch expr.GetKind() {
@@ -428,7 +389,7 @@ func (interpreter *Interpreter) validateClass(classDecl *ast.ClassDeclarationSta
 			missingMethods := []string{}
 			for _, methodName := range interfaceDecl.MethodNames {
 				// Check if method exists
-				methodDef, found := interpreter.classGetMethod(classDecl, methodName)
+				methodDef, found := interpreter.getClassMethod(classDecl, methodName)
 				if !found {
 					missingMethods = append(missingMethods, interfaceName+"::"+methodName)
 					continue
@@ -468,22 +429,120 @@ func (interpreter *Interpreter) validateClass(classDecl *ast.ClassDeclarationSta
 	return nil
 }
 
-func (interpreter *Interpreter) classGetMethod(classDecl *ast.ClassDeclarationStatement, methodName string) (*ast.MethodDefinitionStatement, bool) {
-	methodDecl, found := classDecl.Methods[strings.ToLower(methodName)]
+func (interpreter *Interpreter) destructObject(object *values.Object, env *Environment) phpError.Error {
+	if object.IsDestructed {
+		return nil
+	}
+	_, found := interpreter.getClassMethod(object.Class, "__destruct")
 	if found {
-		return methodDecl, true
+		_, err := interpreter.CallMethod(object, nil, "__destruct", []ast.IExpression{}, env)
+		if err != nil {
+			return err
+		}
+		object.IsDestructed = true
 	}
+	return nil
+}
 
-	if classDecl.BaseClass == "" {
-		return nil, false
+func (interpreter *Interpreter) getClassMethod(class *ast.ClassDeclarationStatement, methodName string) (*ast.MethodDefinitionStatement, bool) {
+	classDecl := class
+	for classDecl != nil {
+		MethodDecl, found := classDecl.GetMethod(methodName)
+		if found {
+			return MethodDecl, true
+		}
+		if classDecl.BaseClass == "" {
+			return nil, false
+		}
+		classDecl, _ = interpreter.GetClass(classDecl.BaseClass)
 	}
+	return nil, false
+}
 
-	classDecl, found = interpreter.GetClass(classDecl.BaseClass)
+func (interpreter *Interpreter) destructAllObjects(env *Environment) {
+	objects := env.getAllObjects()
+	for _, object := range objects {
+		if err := interpreter.destructObject(object, env); err != nil {
+			interpreter.PrintError(err)
+		}
+	}
+}
+
+func (interpreter *Interpreter) CallMethod(object *values.Object, class *ast.ClassDeclarationStatement, method string, args []ast.IExpression, env *Environment) (*values.Slot, phpError.Error) {
+	if object != nil {
+		class = object.Class
+	}
+	methodDefinition, found := interpreter.getClassMethod(class, method)
 	if !found {
-		return nil, false
+		return values.NewNullSlot(), phpError.NewError(`Class %s does not have a function "%s"`, class.Name, method)
+	}
+	if object == nil && !methodDefinition.IsStatic() && !slices.Contains([]string{"__call" /*"__construct"*/}, strings.ToLower(method)) {
+		return values.NewNullSlot(), phpError.NewError(`%s::%s is not a static function`, class.Name, method)
 	}
 
-	return interpreter.classGetMethod(classDecl, methodName)
+	methodEnv, err := NewEnvironment(env, nil, interpreter)
+	if err != nil {
+		return values.NewVoidSlot(), err
+	}
+	methodEnv.CurrentMethod = methodDefinition
+	methodEnv.AddConstant("self", values.NewNull())
+	methodEnv.AddConstant("parent", values.NewNull())
+	if object != nil {
+		methodEnv.CurrentObject = object
+		methodEnv.variables["$this"] = values.NewSlot(object)
+	}
+
+	if methodDefinition.GetRequiredParamLen() > len(args) {
+		return values.NewVoidSlot(), phpError.NewError(
+			"Uncaught ArgumentCountError: %s::%s() expects exactly %d arguments, %d given",
+			class.BaseClass, methodDefinition.Name, len(methodDefinition.Params), len(args),
+		)
+	}
+
+	for index, param := range methodDefinition.Params {
+		var slot *values.Slot
+		if index+1 > len(args) {
+			slot = must(interpreter.processStmt(param.DefaultValue, env))
+		} else {
+			slot = must(interpreter.processStmt(args[index], env))
+		}
+
+		// Check if the parameter types match
+		err = checkParameterTypes(slot.Value, param.Type)
+		if err != nil && err.GetMessage() == "Types do not match" {
+			givenType, err := variableHandling.GetType(slot.Value)
+			if err != nil {
+				return values.NewVoidSlot(), err
+			}
+			return values.NewVoidSlot(), phpError.NewError(
+				"Uncaught TypeError: %s::%s(): Argument #%d (%s) must be of type %s, %s given",
+				class.BaseClass, methodDefinition.Name, index+1, param.Name, strings.Join(param.Type, "|"), givenType,
+			)
+		}
+		// Declare parameter in method environment
+		methodEnv.declareVariable(param.Name, values.DeepCopy(slot).Value)
+	}
+
+	slot, err := interpreter.processStmt(methodDefinition.Body, methodEnv)
+	if err != nil && !(err.GetErrorType() == phpError.EventError && err.GetMessage() == phpError.ReturnEvent) {
+		return slot, err
+	}
+	err = checkParameterTypes(slot.Value, methodDefinition.ReturnType)
+	if err != nil && err.GetMessage() == "Types do not match" {
+		givenType, err := variableHandling.GetType(slot.Value)
+		if slot.GetType() == values.VoidValue {
+			givenType = "void"
+		}
+		if err != nil {
+			return slot, err
+		}
+		return slot, phpError.NewError(
+			"Uncaught TypeError: %s::%s(): Return value must be of type %s, %s given",
+			class.BaseClass, methodDefinition.Name, strings.Join(methodDefinition.ReturnType, "|"), givenType,
+		)
+	}
+
+	return slot, nil
 }
 
 // -------------------------------------- Caching -------------------------------------- MARK: Caching
@@ -949,73 +1008,4 @@ func calculateString(operand1 *values.Str, operator string, operand2 *values.Str
 	default:
 		return values.NewStrSlot(""), phpError.NewError(`calculateString: Operator "%s" not implemented`, operator)
 	}
-}
-
-// -------------------------------------- class-object -------------------------------------- MARK: class-object
-
-func (interpreter *Interpreter) CallMethod(object *values.Object, method string, args []ast.IExpression, env *Environment) (*values.Slot, phpError.Error) {
-	methodDefinition, found := interpreter.getObjectMethod(object, method)
-	if !found {
-		return values.NewNullSlot(), phpError.NewError(`Class %s does not have a function "%s"`, object.Class.Name, method)
-	}
-
-	methodEnv, err := NewEnvironment(env, nil, interpreter)
-	if err != nil {
-		return values.NewVoidSlot(), err
-	}
-	methodEnv.CurrentObject = object
-	methodEnv.CurrentMethod = methodDefinition
-	methodEnv.variables["$this"] = values.NewSlot(object)
-
-	if methodDefinition.GetRequiredParamLen() > len(args) {
-		return values.NewVoidSlot(), phpError.NewError(
-			"Uncaught ArgumentCountError: %s::%s() expects exactly %d arguments, %d given",
-			object.Class.BaseClass, methodDefinition.Name, len(methodDefinition.Params), len(args),
-		)
-	}
-
-	for index, param := range methodDefinition.Params {
-		var slot *values.Slot
-		if index+1 > len(args) {
-			slot = must(interpreter.processStmt(param.DefaultValue, env))
-		} else {
-			slot = must(interpreter.processStmt(args[index], env))
-		}
-
-		// Check if the parameter types match
-		err = checkParameterTypes(slot.Value, param.Type)
-		if err != nil && err.GetMessage() == "Types do not match" {
-			givenType, err := variableHandling.GetType(slot.Value)
-			if err != nil {
-				return values.NewVoidSlot(), err
-			}
-			return values.NewVoidSlot(), phpError.NewError(
-				"Uncaught TypeError: %s::%s(): Argument #%d (%s) must be of type %s, %s given",
-				object.Class.BaseClass, methodDefinition.Name, index+1, param.Name, strings.Join(param.Type, "|"), givenType,
-			)
-		}
-		// Declare parameter in method environment
-		methodEnv.declareVariable(param.Name, values.DeepCopy(slot).Value)
-	}
-
-	slot, err := interpreter.processStmt(methodDefinition.Body, methodEnv)
-	if err != nil && !(err.GetErrorType() == phpError.EventError && err.GetMessage() == phpError.ReturnEvent) {
-		return slot, err
-	}
-	err = checkParameterTypes(slot.Value, methodDefinition.ReturnType)
-	if err != nil && err.GetMessage() == "Types do not match" {
-		givenType, err := variableHandling.GetType(slot.Value)
-		if slot.GetType() == values.VoidValue {
-			givenType = "void"
-		}
-		if err != nil {
-			return slot, err
-		}
-		return slot, phpError.NewError(
-			"Uncaught TypeError: %s::%s(): Return value must be of type %s, %s given",
-			object.Class.BaseClass, methodDefinition.Name, strings.Join(methodDefinition.ReturnType, "|"), givenType,
-		)
-	}
-
-	return slot, nil
 }

@@ -8,6 +8,7 @@ import (
 	"QIQ/cmd/qiq/runtime"
 	"QIQ/cmd/qiq/runtime/stdlib/variableHandling"
 	"QIQ/cmd/qiq/runtime/values"
+	"slices"
 	"strings"
 )
 
@@ -1004,8 +1005,8 @@ func (interpreter *Interpreter) initObject(object *values.Object, constructorArg
 
 		// Call constructor
 		if !isParent {
-			if _, found := interpreter.getObjectMethod(object, "__construct"); found {
-				if _, err := interpreter.CallMethod(object, "__construct", constructorArgs, env.(*Environment)); err != nil {
+			if _, found := interpreter.getClassMethod(object.Class, "__construct"); found {
+				if _, err := interpreter.CallMethod(object, nil, "__construct", constructorArgs, env.(*Environment)); err != nil {
 					return err
 				}
 			}
@@ -1040,72 +1041,213 @@ func (interpreter *Interpreter) initObject(object *values.Object, constructorArg
 
 // ProcessMemberAccessExpr implements Visitor.
 func (interpreter *Interpreter) ProcessMemberAccessExpr(stmt *ast.MemberAccessExpression, env any) (any, error) {
-	variableName := mustOrVoid(interpreter.varExprToVarName(stmt.Object, env.(*Environment)))
-	runtimeObject, err := env.(*Environment).LookupVariable(variableName)
-	if err != nil {
-		return values.NewVoidSlot(), err
-	}
+	if stmt.IsScoped {
+		var class *ast.ClassDeclarationStatement
+		if stmt.Object.GetKind() != ast.ConstantAccessExpr {
+			variableName := mustOrVoid(interpreter.varExprToVarName(stmt.Object, env.(*Environment)))
+			runtimeObject, err := env.(*Environment).LookupVariable(variableName)
+			if err != nil {
+				return values.NewVoidSlot(), err
+			}
 
-	// Member Access
-	if stmt.Member.GetKind() == ast.ConstantAccessExpr {
-		member := stmt.Member.(*ast.ConstantAccessExpression).ConstantName
+			if runtimeObject.GetType() != values.ObjectValue {
+				return values.NewVoidSlot(), phpError.NewError(
+					`Uncaught Error: Attempt to read scoped property on %s in %s`,
+					values.ToPhpType(runtimeObject.Value), stmt.GetPosString(),
+				)
+			}
 
-		if runtimeObject.GetType() != values.ObjectValue {
-			return values.NewVoidSlot(), phpError.NewError(
-				`Uncaught Error: Attempt to read property "%s" on %s in %s`,
-				member, values.ToPhpType(runtimeObject.Value), stmt.GetPosString(),
-			)
+			class = runtimeObject.Value.(*values.Object).Class
+		} else {
+			constantName := stmt.Object.(*ast.ConstantAccessExpression).ConstantName
+			if strings.ToLower(constantName) == "parent" && env.(*Environment).CurrentMethod != nil {
+				if env.(*Environment).CurrentMethod.Class.BaseClass == "" {
+					return values.NewVoidSlot(), phpError.NewError(
+						`Cannot use "parent" when current class scope has no parent in %s`,
+						stmt.Member.GetPosString(),
+					)
+				}
+
+				classDecl, found := interpreter.GetClass(env.(*Environment).CurrentMethod.Class.BaseClass)
+				if !found {
+					return values.NewVoidSlot(), phpError.NewError(
+						`Uncaught Error: Cannot find parent class "%s" is not a class in %s`,
+						constantName, stmt.Object.GetPosString(),
+					)
+				}
+				class = classDecl
+			} else if strings.ToLower(constantName) == "self" && env.(*Environment).CurrentMethod != nil {
+				class = env.(*Environment).CurrentMethod.Class
+			} else {
+				classDecl, found := interpreter.GetClass(constantName)
+				if !found {
+					return values.NewVoidSlot(), phpError.NewError(
+						`Uncaught Error: "%s" is not a class in %s`,
+						constantName, stmt.GetPosString(),
+					)
+				}
+				class = classDecl
+			}
 		}
 
-		object := runtimeObject.Value.(*values.Object)
-		value, found := object.GetProperty("$" + member)
-		if !found {
-			return values.NewVoidSlot(), phpError.NewError("Undefined property: %s::$%s in %s",
-				object.Class.Name, member, stmt.Member.GetPosString())
+		// Member Access
+		if stmt.Member.GetKind() == ast.ConstantAccessExpr {
+			member := stmt.Member.(*ast.ConstantAccessExpression).ConstantName
+
+			constant, found := class.GetConst(member)
+			if !found {
+				return values.NewVoidSlot(), phpError.NewError(
+					"Uncaught Error: Undefined constant %s::%s in %s",
+					class.GetQualifiedName(), member, stmt.GetPosString(),
+				)
+			}
+			slot, err := interpreter.processStmt(constant.Value, env)
+			if err != nil {
+				return values.NewVoidSlot(), err
+			}
+			return slot, nil
 		}
-		// TODO Check if visibility --> != public, ...
 
-		return values.NewSlot(value), nil
-	}
+		// Member Call
+		if stmt.Member.GetKind() == ast.FunctionCallExpr {
+			functionCall := stmt.Member.(*ast.FunctionCallExpression)
+			functionNameSlot, err := interpreter.processStmt(functionCall.FunctionName, env)
+			if err != nil {
+				return values.NewVoidSlot(), err
+			}
+			if functionNameSlot.GetType() != values.StrValue {
+				return values.NewVoidSlot(), phpError.NewError(
+					"ProcessMemberAccessExpr - Static Member Call - Function name is type %s, expected string in %s",
+					functionNameSlot.GetType(), functionCall.GetPosString(),
+				)
+			}
+			functionName := functionNameSlot.Value.(*values.Str).Value
+			arguments := functionCall.Arguments
 
-	// Member Call
-	if stmt.Member.GetKind() == ast.FunctionCallExpr {
-		functionCall := stmt.Member.(*ast.FunctionCallExpression)
-		functionNameSlot, err := interpreter.processStmt(functionCall.FunctionName, env)
+			methodDecl, found := interpreter.getClassMethod(class, functionName)
+			if !found {
+				_, found := interpreter.getClassMethod(class, "__call")
+				if found {
+					originalArgs := ast.NewArrayLiteralExpr(0, nil)
+					for _, argument := range functionCall.Arguments {
+						originalArgs.AddElement(nil, argument)
+					}
+					arguments = []ast.IExpression{
+						ast.NewStringLiteralExpr(0, nil, functionName, ast.SingleQuotedString),
+						originalArgs,
+					}
+					functionName = "__call"
+				} else {
+					return values.NewVoidSlot(), phpError.NewError(
+						"Uncaught Error: Call to undefined method %s::%s() in %s",
+						class.GetQualifiedName(), functionName, functionCall.FunctionName.GetPosString(),
+					)
+				}
+			}
+
+			if !slices.Contains([]string{"__call" /*"__construct"*/}, strings.ToLower(functionName)) && !methodDecl.IsStatic() {
+				return values.NewVoidSlot(), phpError.NewError(
+					"Uncaught Error: Non-static method %s::%s() cannot be called statically in %s",
+					class.GetQualifiedName(), functionName, functionCall.FunctionName.GetPosString(),
+				)
+			}
+
+			// var object *values.Object
+			// if slices.Contains([]string{"__call", "__construct"}, strings.ToLower(functionName)) && env.(*Environment).CurrentObject != nil {
+			// 	object = env.(*Environment).CurrentObject
+			// }
+			// TODO ProcessMemberAccessExpr: Fix so that parent constructor can be called
+
+			result, err := interpreter.CallMethod(nil, class, functionName, arguments, env.(*Environment))
+			if err != nil {
+				return values.NewVoidSlot(), err
+			}
+			return result, nil
+		}
+
+		return values.NewVoidSlot(), phpError.NewError("ProcessMemberAccessExpr - scoped: Unsupported member type %s in %s", stmt.Member.GetKind(), stmt.Member.GetPosString())
+	} else {
+		variableName := mustOrVoid(interpreter.varExprToVarName(stmt.Object, env.(*Environment)))
+		runtimeObject, err := env.(*Environment).LookupVariable(variableName)
 		if err != nil {
 			return values.NewVoidSlot(), err
 		}
-		if functionNameSlot.GetType() != values.StrValue {
-			return values.NewVoidSlot(), phpError.NewError(
-				"ProcessMemberAccessExpr - Member Call - Function name is type %s, expected string in %s",
-				functionNameSlot.GetType(), functionCall.GetPosString(),
-			)
-		}
-		functionName := functionNameSlot.Value.(*values.Str).Value
 
-		if runtimeObject.GetType() != values.ObjectValue {
-			return values.NewVoidSlot(), phpError.NewError(
-				`Uncaught Error: Call to a member function %s() on %s in %s`,
-				functionName, values.ToPhpType(runtimeObject.Value), stmt.GetPosString(),
-			)
+		// Member Access
+		if stmt.Member.GetKind() == ast.ConstantAccessExpr {
+			member := stmt.Member.(*ast.ConstantAccessExpression).ConstantName
+
+			if runtimeObject.GetType() != values.ObjectValue {
+				return values.NewVoidSlot(), phpError.NewError(
+					`Uncaught Error: Attempt to read property "%s" on %s in %s`,
+					member, values.ToPhpType(runtimeObject.Value), stmt.GetPosString(),
+				)
+			}
+
+			object := runtimeObject.Value.(*values.Object)
+			value, found := object.GetProperty("$" + member)
+			if !found {
+				return values.NewVoidSlot(), phpError.NewError("Undefined property: %s::$%s in %s",
+					object.Class.Name, member, stmt.Member.GetPosString())
+			}
+			// TODO Check if visibility --> != public, ...
+
+			return values.NewSlot(value), nil
 		}
 
-		object := runtimeObject.Value.(*values.Object)
-		_, found := interpreter.getObjectMethod(object, functionName)
-		if !found {
-			return values.NewVoidSlot(), phpError.NewError(
-				"Uncaught Error: Call to undefined method %s::%s() in %s",
-				object.Class.GetQualifiedName(), functionName, functionCall.FunctionName.GetPosString(),
-			)
+		// Member Call
+		if stmt.Member.GetKind() == ast.FunctionCallExpr {
+			functionCall := stmt.Member.(*ast.FunctionCallExpression)
+			functionNameSlot, err := interpreter.processStmt(functionCall.FunctionName, env)
+			if err != nil {
+				return values.NewVoidSlot(), err
+			}
+			if functionNameSlot.GetType() != values.StrValue {
+				return values.NewVoidSlot(), phpError.NewError(
+					"ProcessMemberAccessExpr - Member Call - Function name is type %s, expected string in %s",
+					functionNameSlot.GetType(), functionCall.GetPosString(),
+				)
+			}
+			functionName := functionNameSlot.Value.(*values.Str).Value
+			arguments := functionCall.Arguments
+
+			if runtimeObject.GetType() != values.ObjectValue {
+				return values.NewVoidSlot(), phpError.NewError(
+					`Uncaught Error: Call to a member function %s() on %s in %s`,
+					functionName, values.ToPhpType(runtimeObject.Value), stmt.GetPosString(),
+				)
+			}
+
+			object := runtimeObject.Value.(*values.Object)
+			_, found := interpreter.getClassMethod(object.Class, functionName)
+			if !found {
+				_, found := interpreter.getClassMethod(object.Class, "__call")
+				if found {
+					originalArgs := ast.NewArrayLiteralExpr(0, nil)
+					for _, argument := range functionCall.Arguments {
+						originalArgs.AddElement(nil, argument)
+					}
+					arguments = []ast.IExpression{
+						ast.NewStringLiteralExpr(0, nil, functionName, ast.SingleQuotedString),
+						originalArgs,
+					}
+					functionName = "__call"
+				} else {
+					return values.NewVoidSlot(), phpError.NewError(
+						"Uncaught Error: Call to undefined method %s::%s() in %s",
+						object.Class.GetQualifiedName(), functionName, functionCall.FunctionName.GetPosString(),
+					)
+				}
+			}
+			result, err := interpreter.CallMethod(object, nil, functionName, arguments, env.(*Environment))
+			if err != nil {
+				return values.NewVoidSlot(), err
+			}
+			return result, nil
 		}
-		result, err := interpreter.CallMethod(object, functionName, functionCall.Arguments, env.(*Environment))
-		if err != nil {
-			return values.NewVoidSlot(), err
-		}
-		return result, nil
+
+		return values.NewVoidSlot(), phpError.NewError("ProcessMemberAccessExpr: Unsupported member type %s in %s", stmt.Member.GetKind(), stmt.Member.GetPosString())
 	}
-
-	return values.NewVoidSlot(), phpError.NewError("ProcessMemberAccessExpr: Unsupported member type %s in %s", stmt.Member.GetKind(), stmt.Member.GetPosString())
 }
 
 // ProcessAnonymousFunctionCreationExpr implements Visitor.

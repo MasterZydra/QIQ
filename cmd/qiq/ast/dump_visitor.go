@@ -435,7 +435,7 @@ func (visitor DumpVisitor) ProcessLogicalNotExpr(stmt *LogicalNotExpression, _ a
 
 // ProcessMemberAccessExpr implements Visitor.
 func (visitor DumpVisitor) ProcessMemberAccessExpr(stmt *MemberAccessExpression, _ any) (any, error) {
-	return fmt.Sprintf(`{ %s, "object": %s, "member": %s}`, visitor.getKindAndPos(stmt), visitor.toString(stmt.Object), visitor.toString(stmt.Member)), nil
+	return fmt.Sprintf(`{ %s, "object": %s, "member": %s, "isScoped": %t }`, visitor.getKindAndPos(stmt), visitor.toString(stmt.Object), visitor.toString(stmt.Member), stmt.IsScoped), nil
 }
 
 // ProcessObjectCreationExpr implements Visitor.

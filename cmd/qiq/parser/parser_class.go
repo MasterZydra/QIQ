@@ -6,6 +6,7 @@ import (
 	"QIQ/cmd/qiq/lexer"
 	"QIQ/cmd/qiq/phpError"
 	"QIQ/cmd/qiq/position"
+	"strings"
 )
 
 func (parser *Parser) parseObjectCreationExpression() (ast.IExpression, phpError.Error) {
@@ -225,9 +226,15 @@ func (parser *Parser) parseClassMemberDeclaration(class *ast.ClassDeclarationSta
 		}
 
 		// method-declaration
-		isMethodDeclaration, err := parser.parseClassMethodDeclaration(class, true)
+		isMethodDeclaration, err, methodDecl := parser.parseClassMethodDeclaration(class, true)
 		if isMethodDeclaration && err != nil {
 			return err
+		}
+		if isMethodDeclaration &&
+			strings.ToLower(methodDecl.Name) == "__call" &&
+			len(methodDecl.Params) != 2 {
+			return phpError.NewError(`Method %s::%s() must take exactly 2 arguments in %s`,
+				class.GetQualifiedName(), methodDecl.Name, methodDecl.GetPosString())
 		}
 		if isMethodDeclaration {
 			continue
@@ -503,7 +510,7 @@ func (parser *Parser) parseClassDestrutorDeclaration(class *ast.ClassDeclaration
 	return isDestructor, nil
 }
 
-func (parser *Parser) parseClassMethodDeclaration(class ast.AddGetMethod, isClass bool) (bool, phpError.Error) {
+func (parser *Parser) parseClassMethodDeclaration(class ast.AddGetMethod, isClass bool) (bool, phpError.Error, *ast.MethodDefinitionStatement) {
 	// -------------------------------------- method-declaration -------------------------------------- MARK: method-declaration
 
 	// Spec: https://phplang.org/spec/14-classes.html#grammar-method-declaration
@@ -532,7 +539,7 @@ func (parser *Parser) parseClassMethodDeclaration(class ast.AddGetMethod, isClas
 
 	// Return if it is not a method declaration
 	if !isMethod {
-		return isMethod, nil
+		return isMethod, nil, nil
 	}
 
 	PrintParserCallstack("method-declaration", parser)
@@ -560,15 +567,15 @@ func (parser *Parser) parseClassMethodDeclaration(class ast.AddGetMethod, isClas
 
 	// (   parameter-declaration-list(opt)   )
 	if !parser.isToken(lexer.OpOrPuncToken, "(", true) {
-		return isMethod, NewExpectedError("(", parser.at())
+		return isMethod, NewExpectedError("(", parser.at()), nil
 	}
 	parameters, err := parser.parseFunctionParameters()
 	if err != nil {
-		return isMethod, err
+		return isMethod, err, nil
 	}
 
 	if !parser.isToken(lexer.OpOrPuncToken, ")", true) {
-		return isMethod, NewExpectedError(")", parser.at())
+		return isMethod, NewExpectedError(")", parser.at()), nil
 	}
 
 	// return-type
@@ -576,13 +583,13 @@ func (parser *Parser) parseClassMethodDeclaration(class ast.AddGetMethod, isClas
 	if parser.isToken(lexer.OpOrPuncToken, ":", true) {
 		returnTypes, err = parser.getTypes(true)
 		if err != nil {
-			return isMethod, err
+			return isMethod, err, nil
 		}
 	}
 
 	if !isClass {
 		if !parser.isToken(lexer.OpOrPuncToken, ";", true) {
-			return isMethod, NewExpectedError(";", parser.at())
+			return isMethod, NewExpectedError(";", parser.at()), nil
 		}
 
 		methodDef, found := class.GetMethod(name)
@@ -590,24 +597,25 @@ func (parser *Parser) parseClassMethodDeclaration(class ast.AddGetMethod, isClas
 			return isMethod, phpError.NewError(
 				"Cannot redeclare %s:%s() (previously declared in %s) in %s",
 				class.GetQualifiedName(), methodDef.Name, methodDef.GetPosString(), pos.ToPosString(),
-			)
+			), nil
 		}
 
-		class.AddMethod(ast.NewMethodDefinitionStmt(
+		methodDecl := ast.NewMethodDefinitionStmt(
 			parser.nextId(), pos,
 			name, modifiers, parameters, nil, returnTypes,
-		))
+		)
+		class.AddMethod(methodDecl)
 
-		return isMethod, nil
+		return isMethod, nil, methodDecl
 	}
 
 	// compound-statement
 	body, err := parser.parseStmt()
 	if err != nil {
-		return isMethod, err
+		return isMethod, err, nil
 	}
 	if body.GetKind() != ast.CompoundStmt {
-		return isMethod, phpError.NewParseError("Expected compound statement. Got %s", body.GetKind())
+		return isMethod, phpError.NewParseError("Expected compound statement. Got %s", body.GetKind()), nil
 	}
 
 	methodDef, found := class.GetMethod(name)
@@ -615,15 +623,16 @@ func (parser *Parser) parseClassMethodDeclaration(class ast.AddGetMethod, isClas
 		return isMethod, phpError.NewError(
 			"Cannot redeclare %s:%s() (previously declared in %s) in %s",
 			class.GetQualifiedName(), methodDef.Name, methodDef.GetPosString(), pos.ToPosString(),
-		)
+		), nil
 	}
 
-	class.AddMethod(ast.NewMethodDefinitionStmt(
+	methodDecl := ast.NewMethodDefinitionStmt(
 		parser.nextId(), pos,
 		name, modifiers, parameters, body.(*ast.CompoundStatement), returnTypes,
-	))
+	)
+	class.AddMethod(methodDecl)
 
-	return isMethod, nil
+	return isMethod, nil, methodDecl
 }
 
 func (parser *Parser) parseClassPropertyDeclaration(class *ast.ClassDeclarationStatement) (bool, phpError.Error) {
@@ -878,7 +887,7 @@ func (parser *Parser) parseInterfaceMemberDeclaration(interfaceDecl *ast.Interfa
 		}
 
 		// method-declaration
-		isMethodDeclaration, err := parser.parseClassMethodDeclaration(interfaceDecl, false)
+		isMethodDeclaration, err, _ := parser.parseClassMethodDeclaration(interfaceDecl, false)
 		if err != nil {
 			return err
 		}

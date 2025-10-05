@@ -80,6 +80,10 @@ func (stmt *MethodDefinitionStatement) GetRequiredParamLen() int {
 	return len(stmt.Params)
 }
 
+func (stmt *MethodDefinitionStatement) IsStatic() bool {
+	return slices.Contains(stmt.Modifiers, "static")
+}
+
 // -------------------------------------- FunctionDefinitionStatement -------------------------------------- MARK: FunctionDefinitionStatement
 
 type FunctionParameter struct {

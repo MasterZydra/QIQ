@@ -6,7 +6,7 @@ import (
 )
 
 func IsReservedName(token string) bool {
-	return IsKeyword(token) || IsContextDependentConstant(token) || IsCorePredefinedConstant(token) || slices.Contains([]string{"parent"}, strings.ToLower(token))
+	return IsKeyword(token) || IsContextDependentConstant(token) || IsCorePredefinedConstant(token) || slices.Contains([]string{"parent", "self"}, strings.ToLower(token))
 }
 
 // MARK: Keywords

@@ -674,13 +674,20 @@ func (stmt *ObjectCreationExpression) Process(visitor Visitor, context any) (any
 
 type MemberAccessExpression struct {
 	*Expression
-	Object IExpression
-	Member IExpression
+	Object   IExpression
+	Member   IExpression
+	IsScoped bool
 }
 
 func NewMemberAccessExpr(id int64, pos *position.Position, object, member IExpression) *MemberAccessExpression {
 	return &MemberAccessExpression{Expression: NewExpr(id, MemberAccessExpr, pos),
-		Object: object, Member: member,
+		Object: object, Member: member, IsScoped: false,
+	}
+}
+
+func NewScopedPropertyAccessExpr(id int64, pos *position.Position, object, member IExpression) *MemberAccessExpression {
+	return &MemberAccessExpression{Expression: NewExpr(id, MemberAccessExpr, pos),
+		Object: object, Member: member, IsScoped: true,
 	}
 }
 
