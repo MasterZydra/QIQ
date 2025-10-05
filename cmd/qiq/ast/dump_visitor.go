@@ -558,7 +558,7 @@ func (visitor DumpVisitor) ProcessUnaryExpr(stmt *UnaryOpExpression, _ any) (any
 // ProcessUnsetIntrinsicExpr implements Visitor.
 func (visitor DumpVisitor) ProcessUnsetIntrinsicExpr(stmt *UnsetIntrinsicExpression, _ any) (any, error) {
 	return fmt.Sprintf(
-		`{ %s, "functionName": %s, "arguments": %s}`,
+		`{ %s, "functionName": %s, "arguments": %s }`,
 		visitor.getKindAndPos(stmt), visitor.toString(stmt.FunctionName), visitor.dumpExpressions(stmt.Arguments),
 	), nil
 }

@@ -2368,7 +2368,6 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, phpError.Error) {
 		return variable, nil
 	}
 
-	// TODO member-call-expression
 	// TODO scoped-call-expression
 
 	// -------------------------------------- function-call-expression -------------------------------------- MARK: function-call-expression
@@ -2444,9 +2443,16 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, phpError.Error) {
 	//    simple-variable
 	//    {   expression   }
 
+	// Spec: https://phplang.org/spec/10-expressions.html#member-call-operator
+
+	// member-call-expression:
+	//    dereferencable-expression   ->   member-name   (   argument-expression-list(opt)   )
+	//    dereferencable-expression   ->   member-name   (   argument-expression-list   ,   )
+
 	// TODO member-access-expression - check if it is a "dereferencable-expression"
 
 	// Supported expression: member access expression: `$obj->member`
+	// Supported expression: member call expression: `$obj->func()`
 	if ast.IsVariableExpr(variable) && parser.isToken(lexer.OpOrPuncToken, "->", false) {
 		PrintParserCallstack("member-access-expression", parser)
 

@@ -1425,7 +1425,7 @@ func TestClasses(t *testing.T) {
 	testInputOutput(t, `<?php class c {} $c = new c(); echo "Class created";`, "Class created")
 	testInputOutput(t, `<?php class c { public function __construct(string $name) { echo "Construct(Name: " . $name . ")\n"; } } $c = new c("Max"); echo "Done";`, "Construct(Name: Max)\nDone")
 
-	// Property access
+	// Member access
 	testInputOutput(t, `<?php class c { public int $i = 42; } $c = new c; var_dump($c->i);`, "int(42)\n")
 	// TODO testInputOutput(t, `<?php class c { private int $i = 42; } $c = new c; var_dump($c->i);`, "int(42)\n")
 	testForError(t, `<?php class c { } $c = new c; $c->prop;`, phpError.NewError("Undefined property: c::$prop in %s:1:35", TEST_FILE_NAME))
@@ -1439,6 +1439,11 @@ func TestClasses(t *testing.T) {
 		$c = new C; echo $c->p;`,
 		"bar",
 	)
+
+	// Member call
+	testInputOutput(t, `<?php class C { function f(): void { echo "f()"; } } $c = new C; $c->f();`, "f()")
+	testForError(t, `<?php class C { } $c = new C; $c->g();`, phpError.NewError("Uncaught Error: Call to undefined method C::g() in %s:1:35", TEST_FILE_NAME))
+	testForError(t, `<?php $a = []; $a->g();`, phpError.NewError("Uncaught Error: Call to a member function g() on array in %s:1:18", TEST_FILE_NAME))
 
 	// Destructor
 	testInputOutput(t, `<?php class c { function __destruct() { echo __METHOD__; } } $c = new c; echo "Done\n";`, "Done\nc::__destruct")

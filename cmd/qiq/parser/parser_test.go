@@ -620,6 +620,30 @@ func TestClassDeclaration(t *testing.T) {
 	// Prevent $this re-assignment
 	testForError(t, `<?php $this = 1;`, phpError.NewError("Cannot re-assign $this in %s:1:7", TEST_FILE_NAME))
 	testForError(t, `<?php class C { function f() { $this = 1; } }`, phpError.NewError("Cannot re-assign $this in %s:1:32", TEST_FILE_NAME))
+
+	// Member access
+	testStmt(t, `<?php $obj->member;`,
+		ast.NewExpressionStmt(0, ast.NewMemberAccessExpr(0, nil,
+			ast.NewSimpleVariableExpr(0, ast.NewVariableNameExpr(0, nil, "$obj")),
+			ast.NewConstantAccessExpr(0, nil, "member")),
+		),
+	)
+
+	// Member call
+	testStmt(t, `<?php $obj->func();`,
+		ast.NewExpressionStmt(0, ast.NewMemberAccessExpr(0, nil,
+			ast.NewSimpleVariableExpr(0, ast.NewVariableNameExpr(0, nil, "$obj")),
+			ast.NewFunctionCallExpr(0, nil, ast.NewStringLiteralExpr(0, nil, "func", ast.SingleQuotedString), []ast.IExpression{}),
+		)),
+	)
+	testStmt(t, `<?php $obj->func($a);`,
+		ast.NewExpressionStmt(0, ast.NewMemberAccessExpr(0, nil,
+			ast.NewSimpleVariableExpr(0, ast.NewVariableNameExpr(0, nil, "$obj")),
+			ast.NewFunctionCallExpr(0, nil, ast.NewStringLiteralExpr(0, nil, "func", ast.SingleQuotedString),
+				[]ast.IExpression{ast.NewSimpleVariableExpr(0, ast.NewVariableNameExpr(0, nil, "$a"))},
+			),
+		)),
+	)
 }
 
 // -------------------------------------- Interface -------------------------------------- MARK: Interface

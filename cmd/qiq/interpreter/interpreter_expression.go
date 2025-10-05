@@ -1038,6 +1038,7 @@ func (interpreter *Interpreter) initObject(object *values.Object, constructorArg
 	return nil
 }
 
+// ProcessMemberAccessExpr implements Visitor.
 func (interpreter *Interpreter) ProcessMemberAccessExpr(stmt *ast.MemberAccessExpression, env any) (any, error) {
 	variableName := mustOrVoid(interpreter.varExprToVarName(stmt.Object, env.(*Environment)))
 	runtimeObject, err := env.(*Environment).LookupVariable(variableName)
@@ -1045,29 +1046,66 @@ func (interpreter *Interpreter) ProcessMemberAccessExpr(stmt *ast.MemberAccessEx
 		return values.NewVoidSlot(), err
 	}
 
-	if stmt.Member.GetKind() != ast.ConstantAccessExpr {
-		return values.NewVoidSlot(), phpError.NewError("ProcessMemberAccessExpr: Unsupported member type: %s", stmt.Member.GetKind())
+	// Member Access
+	if stmt.Member.GetKind() == ast.ConstantAccessExpr {
+		member := stmt.Member.(*ast.ConstantAccessExpression).ConstantName
+
+		if runtimeObject.GetType() != values.ObjectValue {
+			return values.NewVoidSlot(), phpError.NewError(
+				`Uncaught Error: Attempt to read property "%s" on %s in %s`,
+				member, values.ToPhpType(runtimeObject.Value), stmt.GetPosString(),
+			)
+		}
+
+		object := runtimeObject.Value.(*values.Object)
+		value, found := object.GetProperty("$" + member)
+		if !found {
+			return values.NewVoidSlot(), phpError.NewError("Undefined property: %s::$%s in %s",
+				object.Class.Name, member, stmt.Member.GetPosString())
+		}
+		// TODO Check if visibility --> != public, ...
+
+		return values.NewSlot(value), nil
 	}
 
-	member := stmt.Member.(*ast.ConstantAccessExpression).ConstantName
+	// Member Call
+	if stmt.Member.GetKind() == ast.FunctionCallExpr {
+		functionCall := stmt.Member.(*ast.FunctionCallExpression)
+		functionNameSlot, err := interpreter.processStmt(functionCall.FunctionName, env)
+		if err != nil {
+			return values.NewVoidSlot(), err
+		}
+		if functionNameSlot.GetType() != values.StrValue {
+			return values.NewVoidSlot(), phpError.NewError(
+				"ProcessMemberAccessExpr - Member Call - Function name is type %s, expected string in %s",
+				functionNameSlot.GetType(), functionCall.GetPosString(),
+			)
+		}
+		functionName := functionNameSlot.Value.(*values.Str).Value
 
-	if runtimeObject.GetType() != values.ObjectValue {
-		return values.NewVoidSlot(), phpError.NewError(
-			`Uncaught Error: Attempt to read property "%s" on %s in %s`,
-			member, values.ToPhpType(runtimeObject.Value), stmt.GetPosString(),
-		)
+		if runtimeObject.GetType() != values.ObjectValue {
+			return values.NewVoidSlot(), phpError.NewError(
+				`Uncaught Error: Call to a member function %s() on %s in %s`,
+				functionName, values.ToPhpType(runtimeObject.Value), stmt.GetPosString(),
+			)
+		}
+
+		object := runtimeObject.Value.(*values.Object)
+		_, found := interpreter.getObjectMethod(object, functionName)
+		if !found {
+			return values.NewVoidSlot(), phpError.NewError(
+				"Uncaught Error: Call to undefined method %s::%s() in %s",
+				object.Class.GetQualifiedName(), functionName, functionCall.FunctionName.GetPosString(),
+			)
+		}
+		result, err := interpreter.CallMethod(object, functionName, functionCall.Arguments, env.(*Environment))
+		if err != nil {
+			return values.NewVoidSlot(), err
+		}
+		return result, nil
 	}
 
-	object := runtimeObject.Value.(*values.Object)
-	// property, found := object.Class.Properties["$" + member]
-	value, found := object.GetProperty("$" + member)
-	if !found {
-		return values.NewVoidSlot(), phpError.NewError("Undefined property: %s::$%s in %s",
-			object.Class.Name, member, stmt.Member.GetPosString())
-	}
-	// TODO Check if visibility --> != public, ...
-
-	return values.NewSlot(value), nil
+	return values.NewVoidSlot(), phpError.NewError("ProcessMemberAccessExpr: Unsupported member type %s in %s", stmt.Member.GetKind(), stmt.Member.GetPosString())
 }
 
 // ProcessAnonymousFunctionCreationExpr implements Visitor.

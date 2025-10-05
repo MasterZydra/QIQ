@@ -47,6 +47,7 @@
 - logical inc or expression: `$var || 8;`
 - logical not expression: `!$var;`
 - member access expression: `$obj->member`
+- member call expression: `$obj->func()`
 - multiplicative expression: `$var * 42; $var / 42; $var % 42;`
 - object creation expression: `new myClass;`
 - parenthesized expression: `(1 + 2) * 3;`
