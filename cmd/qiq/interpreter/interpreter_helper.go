@@ -967,7 +967,7 @@ func (interpreter *Interpreter) CallMethod(object *values.Object, method string,
 	methodEnv.CurrentMethod = methodDefinition
 	methodEnv.variables["$this"] = values.NewSlot(object)
 
-	if len(methodDefinition.Params) != len(args) {
+	if methodDefinition.GetRequiredParamLen() > len(args) {
 		return values.NewVoidSlot(), phpError.NewError(
 			"Uncaught ArgumentCountError: %s::%s() expects exactly %d arguments, %d given",
 			object.Class.BaseClass, methodDefinition.Name, len(methodDefinition.Params), len(args),
@@ -975,7 +975,12 @@ func (interpreter *Interpreter) CallMethod(object *values.Object, method string,
 	}
 
 	for index, param := range methodDefinition.Params {
-		slot := must(interpreter.processStmt(args[index], env))
+		var slot *values.Slot
+		if index+1 > len(args) {
+			slot = must(interpreter.processStmt(param.DefaultValue, env))
+		} else {
+			slot = must(interpreter.processStmt(args[index], env))
+		}
 
 		// Check if the parameter types match
 		err = checkParameterTypes(slot.Value, param.Type)

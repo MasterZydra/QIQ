@@ -71,6 +71,15 @@ func (stmt *MethodDefinitionStatement) Process(visitor Visitor, context any) (an
 	panic("MethodDefinitionStatement.Process should not be called")
 }
 
+func (stmt *MethodDefinitionStatement) GetRequiredParamLen() int {
+	for i, param := range stmt.Params {
+		if param.DefaultValue != nil {
+			return i + 1
+		}
+	}
+	return len(stmt.Params)
+}
+
 // -------------------------------------- FunctionDefinitionStatement -------------------------------------- MARK: FunctionDefinitionStatement
 
 type FunctionParameter struct {
