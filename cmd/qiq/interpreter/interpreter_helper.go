@@ -435,7 +435,7 @@ func (interpreter *Interpreter) destructObject(object *values.Object, env *Envir
 	}
 	_, found := interpreter.getClassMethod(object.Class, "__destruct")
 	if found {
-		_, err := interpreter.CallMethod(object, nil, "__destruct", []ast.IExpression{}, env)
+		_, err := interpreter.CallMethod(object, "__destruct", []ast.IExpression{}, env)
 		if err != nil {
 			return err
 		}
@@ -468,7 +468,15 @@ func (interpreter *Interpreter) destructAllObjects(env *Environment) {
 	}
 }
 
-func (interpreter *Interpreter) CallMethod(object *values.Object, class *ast.ClassDeclarationStatement, method string, args []ast.IExpression, env *Environment) (*values.Slot, phpError.Error) {
+func (interpreter *Interpreter) CallStaticMethod(class *ast.ClassDeclarationStatement, method string, args []ast.IExpression, env *Environment) (*values.Slot, phpError.Error) {
+	return interpreter.callMethod(nil, class, method, args, env)
+}
+
+func (interpreter *Interpreter) CallMethod(object *values.Object, method string, args []ast.IExpression, env *Environment) (*values.Slot, phpError.Error) {
+	return interpreter.callMethod(object, nil, method, args, env)
+}
+
+func (interpreter *Interpreter) callMethod(object *values.Object, class *ast.ClassDeclarationStatement, method string, args []ast.IExpression, env *Environment) (*values.Slot, phpError.Error) {
 	if object != nil {
 		class = object.Class
 	}
@@ -476,7 +484,7 @@ func (interpreter *Interpreter) CallMethod(object *values.Object, class *ast.Cla
 	if !found {
 		return values.NewNullSlot(), phpError.NewError(`Class %s does not have a function "%s"`, class.Name, method)
 	}
-	if object == nil && !methodDefinition.IsStatic() && !slices.Contains([]string{"__call" /*"__construct"*/}, strings.ToLower(method)) {
+	if object == nil && !methodDefinition.IsStatic() && !slices.Contains([]string{"__callStatic" /*"__construct"*/}, strings.ToLower(method)) {
 		return values.NewNullSlot(), phpError.NewError(`%s::%s is not a static function`, class.Name, method)
 	}
 

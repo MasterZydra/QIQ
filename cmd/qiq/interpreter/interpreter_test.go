@@ -1536,6 +1536,20 @@ func TestClasses(t *testing.T) {
 		phpError.NewError(`Declaration of Space\C::F($p) must be compatible with Space\I::F(?string $p): ?string in %s:3:3`, TEST_FILE_NAME),
 	)
 
+	// Class with unimplemented function and __call
+	testInputOutput(t, `<?php
+		class C { function __call($method, $args) { var_dump($method, $args); } }
+		$c = new C; $c->f(1);`,
+		"string(1) \"f\"\narray(1) {\n  [0]=>\n  int(1)\n}\n",
+	)
+
+	// Class with unimplemented static function and __callStatic
+	testInputOutput(t, `<?php
+		class C { static function __callStatic($method, $args) { var_dump($method, $args); } }
+		C::f(1);`,
+		"string(1) \"f\"\narray(1) {\n  [0]=>\n  int(1)\n}\n",
+	)
+
 	// Class with functions implemented in parent
 	testInputOutput(t, `<?php
 		class A { public function __construct() { echo __METHOD__; } }

@@ -1006,7 +1006,7 @@ func (interpreter *Interpreter) initObject(object *values.Object, constructorArg
 		// Call constructor
 		if !isParent {
 			if _, found := interpreter.getClassMethod(object.Class, "__construct"); found {
-				if _, err := interpreter.CallMethod(object, nil, "__construct", constructorArgs, env.(*Environment)); err != nil {
+				if _, err := interpreter.CallMethod(object, "__construct", constructorArgs, env.(*Environment)); err != nil {
 					return err
 				}
 			}
@@ -1126,7 +1126,7 @@ func (interpreter *Interpreter) ProcessMemberAccessExpr(stmt *ast.MemberAccessEx
 
 			methodDecl, found := interpreter.getClassMethod(class, functionName)
 			if !found {
-				_, found := interpreter.getClassMethod(class, "__call")
+				methodDecl, found = interpreter.getClassMethod(class, "__callStatic")
 				if found {
 					originalArgs := ast.NewArrayLiteralExpr(0, nil)
 					for _, argument := range functionCall.Arguments {
@@ -1136,7 +1136,7 @@ func (interpreter *Interpreter) ProcessMemberAccessExpr(stmt *ast.MemberAccessEx
 						ast.NewStringLiteralExpr(0, nil, functionName, ast.SingleQuotedString),
 						originalArgs,
 					}
-					functionName = "__call"
+					functionName = "__callStatic"
 				} else {
 					return values.NewVoidSlot(), phpError.NewError(
 						"Uncaught Error: Call to undefined method %s::%s() in %s",
@@ -1145,7 +1145,7 @@ func (interpreter *Interpreter) ProcessMemberAccessExpr(stmt *ast.MemberAccessEx
 				}
 			}
 
-			if !slices.Contains([]string{"__call" /*"__construct"*/}, strings.ToLower(functionName)) && !methodDecl.IsStatic() {
+			if !slices.Contains([]string{"__callStatic" /*"__construct"*/}, strings.ToLower(functionName)) && !methodDecl.IsStatic() {
 				return values.NewVoidSlot(), phpError.NewError(
 					"Uncaught Error: Non-static method %s::%s() cannot be called statically in %s",
 					class.GetQualifiedName(), functionName, functionCall.FunctionName.GetPosString(),
@@ -1153,12 +1153,12 @@ func (interpreter *Interpreter) ProcessMemberAccessExpr(stmt *ast.MemberAccessEx
 			}
 
 			// var object *values.Object
-			// if slices.Contains([]string{"__call", "__construct"}, strings.ToLower(functionName)) && env.(*Environment).CurrentObject != nil {
+			// if slices.Contains([]string{"__callStatic", "__construct"}, strings.ToLower(functionName)) && env.(*Environment).CurrentObject != nil {
 			// 	object = env.(*Environment).CurrentObject
 			// }
 			// TODO ProcessMemberAccessExpr: Fix so that parent constructor can be called
 
-			result, err := interpreter.CallMethod(nil, class, functionName, arguments, env.(*Environment))
+			result, err := interpreter.CallStaticMethod(class, functionName, arguments, env.(*Environment))
 			if err != nil {
 				return values.NewVoidSlot(), err
 			}
@@ -1239,7 +1239,7 @@ func (interpreter *Interpreter) ProcessMemberAccessExpr(stmt *ast.MemberAccessEx
 					)
 				}
 			}
-			result, err := interpreter.CallMethod(object, nil, functionName, arguments, env.(*Environment))
+			result, err := interpreter.CallMethod(object, functionName, arguments, env.(*Environment))
 			if err != nil {
 				return values.NewVoidSlot(), err
 			}
