@@ -154,16 +154,33 @@ func TestLibStrings(t *testing.T) {
 	testInputOutput(t, `<?php var_dump(chr(60-256));`, "string(1) \"<\"\n")
 	testInputOutput(t, `<?php var_dump(chr(60+256));`, "string(1) \"<\"\n")
 
+	// hex2bin
+	testInputOutput(t, `<?php var_dump(hex2bin(''));`, "string(0) \"\"\n")
+	testInputOutput(t, `<?php var_dump(hex2bin('6578616d706c65206865782064617461'));`, "string(16) \"example hex data\"\n")
+	testInputOutput(t, `<?php var_dump(hex2bin('6'));`, fmt.Sprintf("\nWarning: Hexadecimal input string must have an even length in %s:1:24\nbool(false)\n", TEST_FILE_NAME))
+
 	// lcfirst
 	testInputOutput(t, `<?php var_dump(lcfirst('ABC'));`, "string(3) \"aBC\"\n")
 	testInputOutput(t, `<?php var_dump(lcfirst('Abc'));`, "string(3) \"abc\"\n")
 	testInputOutput(t, `<?php var_dump(lcfirst('abc'));`, "string(3) \"abc\"\n")
 	testInputOutput(t, `<?php var_dump(lcfirst(''));`, "string(0) \"\"\n")
 
+	// md5
+	testInputOutput(t, `<?php var_dump(md5('apple'));`, "string(32) \"1f3870be274f6c49b3e31a0c6728957f\"\n")
+	testInputOutput(t, `<?php var_dump(bin2hex(md5('apple', true)));`, "string(32) \"1f3870be274f6c49b3e31a0c6728957f\"\n")
+	testInputOutput(t, `<?php var_dump(md5('hello world'));`, "string(32) \"5eb63bbbe01eeed093cb22bb8f5acdc3\"\n")
+	testInputOutput(t, `<?php var_dump(bin2hex(md5('hello world', true)));`, "string(32) \"5eb63bbbe01eeed093cb22bb8f5acdc3\"\n")
+
 	// quotemeta
 	testInputOutput(t, `<?php var_dump(quotemeta('. \ + * ? [ ^ ] ( $ )'));`, `string(31) "\. \\ \+ \* \? \[ \^ ] \( \$ \)"`+"\n")
 	testInputOutput(t, `<?php var_dump(quotemeta('Hello. (can you hear me?)'));`, `string(29) "Hello\. \(can you hear me\?\)"`+"\n")
 	testInputOutput(t, `<?php var_dump(quotemeta(''));`, "bool(false)\n")
+
+	// sha1
+	testInputOutput(t, `<?php var_dump(sha1('apple'));`, "string(40) \"d0be2dc421be4fcd0172e5afceea3970e2f3d940\"\n")
+	testInputOutput(t, `<?php var_dump(bin2hex(sha1('apple', true)));`, "string(40) \"d0be2dc421be4fcd0172e5afceea3970e2f3d940\"\n")
+	testInputOutput(t, `<?php var_dump(sha1('hello world'));`, "string(40) \"2aae6c35c94fcfb415dbe95f408b9ce91ee846ed\"\n")
+	testInputOutput(t, `<?php var_dump(bin2hex(sha1('hello world', true)));`, "string(40) \"2aae6c35c94fcfb415dbe95f408b9ce91ee846ed\"\n")
 
 	// str_contains
 	testInputOutput(t, `<?php var_dump(str_contains('abc', ''));`, "bool(true)\n")

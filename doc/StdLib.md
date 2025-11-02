@@ -91,10 +91,13 @@
 ## String Functions
 - bin2hex
 - chr
+- hex2bin
 - implode
 - join
 - lcfirst
+- md5
 - quotemeta
+- sha1
 - str_contains
 - str_ends_with
 - str_repeat

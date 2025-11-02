@@ -149,6 +149,7 @@ flowchart LR
     QIQ_cmd_qiq_runtime_stdlib_outputControl[QIQ/cmd/qiq/runtime/stdlib/outputControl] --> QIQ_cmd_qiq_runtime_funcParamValidator[QIQ/cmd/qiq/runtime/funcParamValidator]
     QIQ_cmd_qiq_runtime_stdlib_outputControl[QIQ/cmd/qiq/runtime/stdlib/outputControl] --> QIQ_cmd_qiq_runtime_values[QIQ/cmd/qiq/runtime/values]
 
+    QIQ_cmd_qiq_runtime_stdlib_strings[QIQ/cmd/qiq/runtime/stdlib/strings] --> QIQ_cmd_qiq_ast[QIQ/cmd/qiq/ast]
     QIQ_cmd_qiq_runtime_stdlib_strings[QIQ/cmd/qiq/runtime/stdlib/strings] --> QIQ_cmd_qiq_phpError[QIQ/cmd/qiq/phpError]
     QIQ_cmd_qiq_runtime_stdlib_strings[QIQ/cmd/qiq/runtime/stdlib/strings] --> QIQ_cmd_qiq_runtime[QIQ/cmd/qiq/runtime]
     QIQ_cmd_qiq_runtime_stdlib_strings[QIQ/cmd/qiq/runtime/stdlib/strings] --> QIQ_cmd_qiq_runtime_funcParamValidator[QIQ/cmd/qiq/runtime/funcParamValidator]

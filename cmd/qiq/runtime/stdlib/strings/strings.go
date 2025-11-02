@@ -1,11 +1,14 @@
 package strings
 
 import (
+	"QIQ/cmd/qiq/ast"
 	"QIQ/cmd/qiq/phpError"
 	"QIQ/cmd/qiq/runtime"
 	"QIQ/cmd/qiq/runtime/funcParamValidator"
 	"QIQ/cmd/qiq/runtime/stdlib/variableHandling"
 	"QIQ/cmd/qiq/runtime/values"
+	"crypto/md5"
+	"crypto/sha1"
 	"encoding/hex"
 	goStrings "strings"
 )
@@ -14,10 +17,13 @@ func Register(environment runtime.Environment) {
 	// Category: String Functions
 	environment.AddNativeFunction("bin2hex", nativeFn_bin2hex)
 	environment.AddNativeFunction("chr", nativeFn_chr)
+	environment.AddNativeFunction("hex2bin", nativeFn_hex2bin)
 	environment.AddNativeFunction("implode", nativeFn_implode)
 	environment.AddNativeFunction("join", nativeFn_implode)
 	environment.AddNativeFunction("lcfirst", nativeFn_lcfirst)
+	environment.AddNativeFunction("md5", nativeFn_md5)
 	environment.AddNativeFunction("quotemeta", nativeFn_quotemeta)
+	environment.AddNativeFunction("sha1", nativeFn_sha1)
 	environment.AddNativeFunction("str_contains", nativeFn_str_contains)
 	environment.AddNativeFunction("str_ends_with", nativeFn_str_ends_with)
 	environment.AddNativeFunction("str_repeat", nativeFn_str_repeat)
@@ -101,6 +107,32 @@ func nativeFn_chr(args []values.RuntimeValue, _ runtime.Context) (values.Runtime
 	codepoint %= 256
 
 	return values.NewStr(string(rune(codepoint))), nil
+}
+
+// -------------------------------------- hex2bin -------------------------------------- MARK: hex2bin
+
+func nativeFn_hex2bin(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
+	// Spec: https://www.php.net/manual/en/function.hex2bin.php
+
+	args, phpErr := funcParamValidator.NewValidator("hex2bin").AddParam("$string", []string{"string"}, nil).Validate(args)
+	if phpErr != nil {
+		return values.NewVoid(), phpErr
+	}
+
+	input := args[0].(*values.Str).Value
+
+	// hex string must have even length
+	if len(input)%2 != 0 {
+		context.Interpreter.PrintError(phpError.NewWarning("Hexadecimal input string must have an even length in %s", context.Stmt.(*ast.FunctionCallExpression).Arguments[0].GetPosString()))
+		return values.NewBool(false), nil
+	}
+
+	decoded, err := hex.DecodeString(input)
+	if err != nil {
+		return values.NewBool(false), nil
+	}
+
+	return values.NewStr(string(decoded)), nil
 }
 
 // -------------------------------------- implode -------------------------------------- MARK: implode
@@ -191,6 +223,31 @@ func nativeFn_lcfirst(args []values.RuntimeValue, _ runtime.Context) (values.Run
 	return values.NewStr(input), nil
 }
 
+// -------------------------------------- md5 -------------------------------------- MARK: md5
+
+func nativeFn_md5(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
+	// Spec: https://www.php.net/manual/en/function.md5.php
+
+	args, err := funcParamValidator.NewValidator("md5").
+		AddParam("$string", []string{"string"}, nil).
+		AddParam("$binary", []string{"bool"}, values.NewBool(false)).
+		Validate(args)
+	if err != nil {
+		return values.NewVoid(), err
+	}
+
+	binary := args[1].(*values.Bool).Value
+
+	hasher := md5.New()
+	hasher.Write([]byte(args[0].(*values.Str).Value))
+
+	if binary {
+		return values.NewStr(string(hasher.Sum(nil))), nil
+	}
+
+	return values.NewStr(hex.EncodeToString(hasher.Sum(nil))), nil
+}
+
 // -------------------------------------- quotemeta -------------------------------------- MARK: quotemeta
 
 func nativeFn_quotemeta(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
@@ -216,6 +273,31 @@ func nativeFn_quotemeta(args []values.RuntimeValue, _ runtime.Context) (values.R
 	}
 
 	return values.NewStr(output.String()), nil
+}
+
+// -------------------------------------- sha1 -------------------------------------- MARK: sha1
+
+func nativeFn_sha1(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
+	// Spec: https://www.php.net/manual/en/function.sha1.php
+
+	args, err := funcParamValidator.NewValidator("sha1").
+		AddParam("$string", []string{"string"}, nil).
+		AddParam("$binary", []string{"bool"}, values.NewBool(false)).
+		Validate(args)
+	if err != nil {
+		return values.NewVoid(), err
+	}
+
+	binary := args[1].(*values.Bool).Value
+
+	hasher := sha1.New()
+	hasher.Write([]byte(args[0].(*values.Str).Value))
+
+	if binary {
+		return values.NewStr(string(hasher.Sum(nil))), nil
+	}
+
+	return values.NewStr(hex.EncodeToString(hasher.Sum(nil))), nil
 }
 
 // -------------------------------------- str_contains -------------------------------------- MARK: str_contains
@@ -458,17 +540,13 @@ func nativeFn_ucfirst(args []values.RuntimeValue, _ runtime.Context) (values.Run
 // TODO fprintf
 // TODO get_html_translation_table
 // TODO hebrev
-// TODO hex2bin
 // TODO html_entity_decode
 // TODO htmlentities
 // TODO htmlspecialchars
 // TODO htmlspecialchars_decode
-// TODO implode
-// TODO join
 // TODO levenshtein
 // TODO localeconv
 // TODO ltrim
-// TODO md5
 // TODO md5_file
 // TODO metaphone
 // TODO money_format
@@ -482,7 +560,6 @@ func nativeFn_ucfirst(args []values.RuntimeValue, _ runtime.Context) (values.Run
 // TODO quoted_printable_encode
 // TODO rtrim
 // TODO setlocale
-// TODO sha1
 // TODO sha1_file
 // TODO similar_text
 // TODO soundex
