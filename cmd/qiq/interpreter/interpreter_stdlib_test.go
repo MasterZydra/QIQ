@@ -171,6 +171,20 @@ func TestLibStrings(t *testing.T) {
 	testInputOutput(t, `<?php var_dump(md5('hello world'));`, "string(32) \"5eb63bbbe01eeed093cb22bb8f5acdc3\"\n")
 	testInputOutput(t, `<?php var_dump(bin2hex(md5('hello world', true)));`, "string(32) \"5eb63bbbe01eeed093cb22bb8f5acdc3\"\n")
 
+	// nl2br
+	testInputOutput(t, "<?php var_dump(nl2br(\"a\nb\"));", "string(9) \"a<br />\nb\"\n")
+	testInputOutput(t, "<?php var_dump(nl2br(\"c\nd\", false));", "string(7) \"c<br>\nd\"\n")
+	testInputOutput(t, "<?php var_dump(nl2br(\"e\rf\"));", "string(9) \"e<br />\rf\"\n")
+	testInputOutput(t, "<?php var_dump(nl2br(\"g\rh\", false));", "string(7) \"g<br>\rh\"\n")
+	testInputOutput(t, "<?php var_dump(nl2br(\"i\r\nj\"));", "string(10) \"i<br />\r\nj\"\n")
+	testInputOutput(t, "<?php var_dump(nl2br(\"k\r\nl\", false));", "string(8) \"k<br>\r\nl\"\n")
+	testInputOutput(t, "<?php var_dump(nl2br(\"m\n\ro\"));", "string(10) \"m<br />\n\ro\"\n")
+	testInputOutput(t, "<?php var_dump(nl2br(\"p\n\rq\", false));", "string(8) \"p<br>\n\rq\"\n")
+	testInputOutput(t, "<?php var_dump(nl2br(\"r\r\rs\"));", "string(16) \"r<br />\r<br />\rs\"\n")
+	testInputOutput(t, "<?php var_dump(nl2br(\"t\r\ru\", false));", "string(12) \"t<br>\r<br>\ru\"\n")
+	testInputOutput(t, "<?php var_dump(nl2br(\"v\n\nw\"));", "string(16) \"v<br />\n<br />\nw\"\n")
+	testInputOutput(t, "<?php var_dump(nl2br(\"x\n\ny\", false));", "string(12) \"x<br>\n<br>\ny\"\n")
+
 	// quotemeta
 	testInputOutput(t, `<?php var_dump(quotemeta('. \ + * ? [ ^ ] ( $ )'));`, `string(31) "\. \\ \+ \* \? \[ \^ ] \( \$ \)"`+"\n")
 	testInputOutput(t, `<?php var_dump(quotemeta('Hello. (can you hear me?)'));`, `string(29) "Hello\. \(can you hear me\?\)"`+"\n")

@@ -10,6 +10,7 @@ import (
 	"crypto/md5"
 	"crypto/sha1"
 	"encoding/hex"
+	"regexp"
 	goStrings "strings"
 )
 
@@ -22,6 +23,7 @@ func Register(environment runtime.Environment) {
 	environment.AddNativeFunction("join", nativeFn_implode)
 	environment.AddNativeFunction("lcfirst", nativeFn_lcfirst)
 	environment.AddNativeFunction("md5", nativeFn_md5)
+	environment.AddNativeFunction("nl2br", nativeFn_nl2br)
 	environment.AddNativeFunction("quotemeta", nativeFn_quotemeta)
 	environment.AddNativeFunction("sha1", nativeFn_sha1)
 	environment.AddNativeFunction("str_contains", nativeFn_str_contains)
@@ -246,6 +248,35 @@ func nativeFn_md5(args []values.RuntimeValue, _ runtime.Context) (values.Runtime
 	}
 
 	return values.NewStr(hex.EncodeToString(hasher.Sum(nil))), nil
+}
+
+// -------------------------------------- nl2br -------------------------------------- MARK: nl2br
+
+func nativeFn_nl2br(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
+	// Spec: https://www.php.net/manual/en/function.nl2br.php
+
+	args, err := funcParamValidator.NewValidator("nl2br").
+		AddParam("$string", []string{"string"}, nil).
+		AddParam("$use_xhtml", []string{"bool"}, values.NewBool(true)).
+		Validate(args)
+	if err != nil {
+		return values.NewVoid(), err
+	}
+
+	var br string
+	if args[1].(*values.Bool).Value {
+		br = "<br />"
+	} else {
+		br = "<br>"
+	}
+
+	input := args[0].(*values.Str).Value
+	pattern := regexp.MustCompile(`\r\n|\n\r|\n|\r`)
+	result := pattern.ReplaceAllStringFunc(input, func(s string) string {
+		return br + s
+	})
+
+	return values.NewStr(result), nil
 }
 
 // -------------------------------------- quotemeta -------------------------------------- MARK: quotemeta
@@ -551,7 +582,6 @@ func nativeFn_ucfirst(args []values.RuntimeValue, _ runtime.Context) (values.Run
 // TODO metaphone
 // TODO money_format
 // TODO nl_langinfo
-// TODO nl2br
 // TODO number_format
 // TODO ord
 // TODO parse_str

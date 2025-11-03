@@ -96,6 +96,7 @@
 - join
 - lcfirst
 - md5
+- nl2br
 - quotemeta
 - sha1
 - str_contains
