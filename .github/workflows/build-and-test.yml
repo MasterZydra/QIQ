@@ -24,7 +24,7 @@ jobs:
         go-version: ^1.25
 
     - name: Check out code into the Go module directory
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
 
     - name: Building
       run: go build -v ./...
@@ -43,7 +43,7 @@ jobs:
         go-version: ^1.25
 
     - name: Check out code into the Go module directory
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
 
     - name: Building
       run: go build -v ./...
