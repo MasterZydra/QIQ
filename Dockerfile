@@ -18,4 +18,4 @@ COPY --from=builder /app/qiq .
 COPY --from=builder /app/docker/ /var/www/html/
 COPY --from=builder /app/doc/Rabbit.svg /var/www/html/
 
-CMD ["sh", "-c", "./qiq -S 0.0.0.0:${PORT} $( [ \"$DEV\" = \"true\" ] && echo \"-dev\" ) -t ${DOC_ROOT}"]
+CMD ["sh", "-c", "/app/qiq -S 0.0.0.0:${PORT} $( [ \"$DEV\" = \"true\" ] && echo \"-dev\" ) -t ${DOC_ROOT}"]
