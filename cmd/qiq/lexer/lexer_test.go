@@ -24,6 +24,11 @@ func testTokenize(t *testing.T, php string, expected []*Token) {
 		return
 	}
 	for index, token := range expected {
+		if index > len(tokens)-1 {
+			fmt.Println("    Code:", php)
+			t.Errorf("\nExpectation has more tokens than the tokenized code")
+			return
+		}
 		if !compareTokens(token, tokens[index]) {
 			fmt.Println("    Code:", php)
 			t.Errorf("\nExpected: \"%s\"\nGot:      \"%s\"", token, tokens[index])
@@ -254,5 +259,44 @@ func TestHtmlAndPhp(t *testing.T) {
 			NewToken(OpOrPuncToken, ";", position.NewPosition(testFile, 3, 22)),
 			NewToken(EndTagToken, "", position.NewPosition(testFile, 3, 22)),
 			NewToken(TextToken, "</h1>", nil),
+		})
+}
+
+func TestChainingPhpTags(t *testing.T) {
+	testTokenize(t, "<?php $var = 1; ?><?php if (isset($var)): ?><?= $var ?><?php endif; ?>",
+		[]*Token{
+			// <?php $var = 1; ?>
+			NewToken(StartTagToken, "", position.NewPosition(testFile, 1, 1)),
+			NewToken(VariableNameToken, "$var", position.NewPosition(testFile, 1, 7)),
+			NewToken(OpOrPuncToken, "=", position.NewPosition(testFile, 1, 12)),
+			NewToken(IntegerLiteralToken, "1", position.NewPosition(testFile, 1, 14)),
+			NewToken(OpOrPuncToken, ";", position.NewPosition(testFile, 1, 15)),
+			NewToken(EndTagToken, "", position.NewPosition(testFile, 1, 17)),
+
+			// <?php if (isset($var)): ?>
+			NewToken(StartTagToken, "", position.NewPosition(testFile, 1, 19)),
+			NewToken(KeywordToken, "if", position.NewPosition(testFile, 1, 25)),
+			NewToken(OpOrPuncToken, "(", position.NewPosition(testFile, 1, 28)),
+			NewToken(KeywordToken, "isset", position.NewPosition(testFile, 1, 29)),
+			NewToken(OpOrPuncToken, "(", position.NewPosition(testFile, 1, 34)),
+			NewToken(VariableNameToken, "$var", position.NewPosition(testFile, 1, 35)),
+			NewToken(OpOrPuncToken, ")", position.NewPosition(testFile, 1, 39)),
+			NewToken(OpOrPuncToken, ")", position.NewPosition(testFile, 1, 40)),
+			NewToken(OpOrPuncToken, ":", position.NewPosition(testFile, 1, 41)),
+			NewToken(OpOrPuncToken, ";", position.NewPosition(testFile, 1, 43)),
+			NewToken(EndTagToken, "", position.NewPosition(testFile, 1, 43)),
+
+			// <?= $var ?>
+			NewToken(StartTagToken, "", position.NewPosition(testFile, 1, 45)),
+			NewToken(KeywordToken, "echo", position.NewPosition(testFile, 1, 45)),
+			NewToken(VariableNameToken, "$var", position.NewPosition(testFile, 1, 49)),
+			NewToken(OpOrPuncToken, ";", position.NewPosition(testFile, 1, 54)),
+			NewToken(EndTagToken, "", position.NewPosition(testFile, 1, 54)),
+
+			// <?php endif; ?>
+			NewToken(StartTagToken, "", position.NewPosition(testFile, 1, 56)),
+			NewToken(KeywordToken, "endif", position.NewPosition(testFile, 1, 62)),
+			NewToken(OpOrPuncToken, ";", position.NewPosition(testFile, 1, 67)),
+			NewToken(EndTagToken, "", position.NewPosition(testFile, 1, 69)),
 		})
 }
