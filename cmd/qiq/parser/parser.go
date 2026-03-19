@@ -49,10 +49,11 @@ func (parser *Parser) ProduceAST(sourceCode string, filename string) (*ast.Progr
 	PrintParserCallstack("Parser callstack", nil)
 	PrintParserCallstack("----------------", nil)
 
+for1:
 	for !parser.isEof() {
-		if parser.isTokenType(lexer.StartTagToken, true) || parser.isTokenType(lexer.EndTagToken, true) ||
+		for parser.isTokenType(lexer.StartTagToken, true) || parser.isTokenType(lexer.EndTagToken, true) ||
 			parser.isToken(lexer.OpOrPuncToken, ";", true) {
-			continue
+			continue for1
 		}
 		stmt, err := parser.parseStmt()
 		if err != nil {
@@ -67,6 +68,8 @@ func (parser *Parser) ProduceAST(sourceCode string, filename string) (*ast.Progr
 }
 
 func (parser *Parser) parseMixedStmt(compoundEndKeywords []string) (ast.IStatement, phpError.Error) {
+	PrintParserCallstack("mixed-statement", parser)
+
 	return parser.parseMixedStmtRec(compoundEndKeywords, ast.NewCompoundStmt(parser.nextId(), []ast.IStatement{}))
 }
 
@@ -74,20 +77,22 @@ func (parser *Parser) parseMixedStmtRec(compoundEndKeywords []string, textExprCo
 	// Resolve text expressions
 	if parser.isTextExpression(true) {
 		PrintParserCallstack("text-expression (mixed-stmt)", parser)
-		textExpr := ast.NewExpressionStmt(parser.nextId(), ast.NewTextExpr(parser.nextId(), parser.eat().Value))
-		parser.isTokenType(lexer.StartTagToken, true)
 
-		textExprCompoundStmt.Statements = append(textExprCompoundStmt.Statements, textExpr)
+		if parser.isTokenType(lexer.TextToken, false) {
+			textExpr := ast.NewExpressionStmt(parser.nextId(), ast.NewTextExpr(parser.nextId(), parser.eat().Value))
+			textExprCompoundStmt.Statements = append(textExprCompoundStmt.Statements, textExpr)
+		} else if !parser.isTokenType(lexer.StartTagToken, false) {
+			return textExprCompoundStmt, NewExpectedError(`StartToken" or "TextToken`, parser.at())
+		}
+
+		parser.isTokenType(lexer.StartTagToken, true)
 
 		if parser.isTokenType(lexer.KeywordToken, false) && slices.Contains(compoundEndKeywords, strings.ToLower(parser.at().Value)) {
 			return textExprCompoundStmt, nil
 		}
 
-		println(parser.at().Value, parser.at().TokenType)
-
 		stmt, err := parser.parseMixedStmtRec(compoundEndKeywords, textExprCompoundStmt)
 		for err == nil || parser.isTextExpression(false) {
-			println(parser.at().Value, parser.at().TokenType)
 			if parser.isTokenType(lexer.KeywordToken, false) && slices.Contains(compoundEndKeywords, strings.ToLower(parser.at().Value)) {
 				break
 			}

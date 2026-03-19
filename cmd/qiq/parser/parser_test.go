@@ -49,6 +49,10 @@ func testExprs(t *testing.T, php string, expected []ast.IExpression) {
 		return
 	}
 	for index, expect := range expected {
+		if index > len(program.GetStatements())-1 {
+			t.Errorf("\nExpectation has more statments than parsed code")
+			return
+		}
 		actual := program.GetStatements()[index].(*ast.ExpressionStatement).Expr
 		if ast.ToString(expect) != ast.ToString(actual) {
 			t.Errorf("\nExpected: \"%s\"\nGot:      \"%s\"", ast.ToString(expect), ast.ToString(actual))
@@ -68,6 +72,10 @@ func testStmts(t *testing.T, php string, expected []ast.IStatement) {
 		return
 	}
 	for index, expect := range expected {
+		if index > len(program.GetStatements())-1 {
+			t.Errorf("\nExpectation has more statments than parsed code")
+			return
+		}
 		actual := program.GetStatements()[index]
 		if ast.ToString(expect) != ast.ToString(actual) {
 			t.Errorf(
@@ -81,6 +89,22 @@ func testStmts(t *testing.T, php string, expected []ast.IStatement) {
 
 func TestText(t *testing.T) {
 	testExpr(t, "<html>", ast.NewTextExpr(0, "<html>"))
+}
+
+// MARK: Tests
+
+func TestMultiplePhpTags(t *testing.T) {
+	testStmts(t, "<?php $var = 1; ?><?php if (isset($var)): ?><?= $var ?><?php endif; ?>", []ast.IStatement{
+		ast.NewExpressionStmt(0, ast.NewSimpleAssignmentExpr(0, ast.NewSimpleVariableExpr(0, ast.NewVariableNameExpr(0, nil, "$var")), ast.NewIntegerLiteralExpr(0, nil, 1))),
+		ast.NewIfStmt(0, nil,
+			ast.NewIssetIntrinsic(0, nil, []ast.IExpression{ast.NewSimpleVariableExpr(0, ast.NewVariableNameExpr(0, nil, "$var"))}),
+			ast.NewCompoundStmt(0, []ast.IStatement{
+				ast.NewCompoundStmt(0, []ast.IStatement{
+					ast.NewEchoStmt(0, nil, []ast.IExpression{ast.NewSimpleVariableExpr(0, ast.NewVariableNameExpr(0, nil, "$var"))}),
+				}),
+			}),
+			[]*ast.IfStatement{}, nil),
+	})
 }
 
 func TestVariable(t *testing.T) {

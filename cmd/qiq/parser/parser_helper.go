@@ -107,10 +107,17 @@ func (parser *Parser) expect(tokenType lexer.TokenType, value string, eat bool) 
 // -------------------------------------- Tokens -------------------------------------- MARK: Tokens
 
 func (parser *Parser) isTextExpression(eat bool) bool {
-	isTextExpression := (parser.isToken(lexer.OpOrPuncToken, ";", false) &&
-		parser.next(0).TokenType == lexer.EndTagToken &&
-		parser.next(1).TokenType == lexer.TextToken) || (parser.isTokenType(lexer.EndTagToken, false) &&
-		parser.next(0).TokenType == lexer.TextToken)
+	isTextExpression :=
+		// ; ?>Text
+		(parser.isToken(lexer.OpOrPuncToken, ";", false) && parser.next(0).TokenType == lexer.EndTagToken &&
+			parser.next(1).TokenType == lexer.TextToken) || (
+		// ?>Text
+		parser.isTokenType(lexer.EndTagToken, false) && parser.next(0).TokenType == lexer.TextToken) || (
+		// ; ?><?php
+		parser.isToken(lexer.OpOrPuncToken, ";", false) && parser.next(0).TokenType == lexer.EndTagToken &&
+			parser.next(1).TokenType == lexer.StartTagToken) || (
+		// ?><?php
+		parser.isTokenType(lexer.EndTagToken, false) && parser.next(0).TokenType == lexer.StartTagToken)
 
 	if isTextExpression && eat {
 		parser.isToken(lexer.OpOrPuncToken, ";", true)
