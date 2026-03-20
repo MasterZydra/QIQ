@@ -107,9 +107,15 @@ class Error implements Throwable {
     private function __clone(): void {}
 }
 
-// TODO CompileError
-// TODO ParseError
-// TODO TypeError
+// -------------------------------------- CompileError -------------------------------------- MARK: CompileError
+
+// Spec: https://www.php.net/manual/en/class.compileerror.php
+class CompileError extends Error {}
+
+// -------------------------------------- ParseError -------------------------------------- MARK: ParseError
+
+// Spec: https://www.php.net/manual/en/class.parseerror.php
+class ParseError extends CompileError {}
 
 // -------------------------------------- TypeError -------------------------------------- MARK: TypeError
 
@@ -131,9 +137,21 @@ class ValueError extends Error {}
 // Spec: https://www.php.net/manual/en/class.arithmeticerror.php
 class ArithmeticError extends Error {}
 
-// TODO DivisionByZeroError
-// TODO UnhandledMatchError
-// TODO RequestParseBodyException
+// -------------------------------------- DivisionByZeroError -------------------------------------- MARK: DivisionByZeroError
+
+// Spec: https://www.php.net/manual/en/class.divisionbyzeroerror.php
+class DivisionByZeroError extends ArithmeticError {}
+
+// -------------------------------------- UnhandledMatchError -------------------------------------- MARK: UnhandledMatchError
+
+// Spec: https://www.php.net/manual/en/class.unhandledmatcherror.php
+class UnhandledMatchError extends Error {}
+
+// -------------------------------------- RequestParseBodyException -------------------------------------- MARK: RequestParseBodyException
+
+// Spec: https://www.php.net/manual/en/class.requestparsebodyexception.php
+class RequestParseBodyException extends Exception {}
+
 // TODO Closure
 // TODO Generator
 
@@ -154,7 +172,11 @@ class ClosedGeneratorException extends Exception {}
 // TODO NoDiscard
 // TODO DelayedTargetValidation
 // TODO Fiber
-// TODO FiberError
+
+// -------------------------------------- FiberError -------------------------------------- MARK: FiberError
+
+// Spec: https://www.php.net/manual/en/class.fibererror.php
+class FiberError extends Error {}
 
 // -------------------------------------- stdClass -------------------------------------- MARK: stdClass
 
@@ -282,7 +304,6 @@ class stdClass {
 
 // Spec: https://www.php.net/manual/en/class.assertionerror.php
 class AssertionError extends Error {}
-
 
 // TODO RoundingMode
 // TODO php_user_filter

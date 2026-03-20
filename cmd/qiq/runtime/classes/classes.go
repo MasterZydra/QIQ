@@ -67,6 +67,22 @@ func RegisterDefaultClasses(interpreter runtime.Interpreter) {
 
 	interpreter.AddClass(Error.Name, Error)
 
+	// -------------------------------------- CompileError -------------------------------------- MARK: CompileError
+
+	// Spec: https://www.php.net/manual/en/class.compileerror.php
+	CompileError := ast.NewClassDeclarationStmt(0, nil, "CompileError", false, false)
+	CompileError.BaseClass = "Error"
+
+	interpreter.AddClass(CompileError.Name, CompileError)
+
+	// -------------------------------------- ParseError -------------------------------------- MARK: ParseError
+
+	// Spec: https://www.php.net/manual/en/class.parseerror.php
+	ParseError := ast.NewClassDeclarationStmt(0, nil, "ParseError", false, false)
+	ParseError.BaseClass = "CompileError"
+
+	interpreter.AddClass(ParseError.Name, ParseError)
+
 	// -------------------------------------- TypeError -------------------------------------- MARK: TypeError
 
 	// Spec: https://www.php.net/manual/en/class.typeerror.php
@@ -100,6 +116,30 @@ func RegisterDefaultClasses(interpreter runtime.Interpreter) {
 
 	interpreter.AddClass(ArithmeticError.Name, ArithmeticError)
 
+	// -------------------------------------- DivisionByZeroError -------------------------------------- MARK: DivisionByZeroError
+
+	// Spec: https://www.php.net/manual/en/class.divisionbyzeroerror.php
+	DivisionByZeroError := ast.NewClassDeclarationStmt(0, nil, "DivisionByZeroError", false, false)
+	DivisionByZeroError.BaseClass = "ArithmeticError"
+
+	interpreter.AddClass(DivisionByZeroError.Name, DivisionByZeroError)
+
+	// -------------------------------------- UnhandledMatchError -------------------------------------- MARK: UnhandledMatchError
+
+	// Spec: https://www.php.net/manual/en/class.unhandledmatcherror.php
+	UnhandledMatchError := ast.NewClassDeclarationStmt(0, nil, "UnhandledMatchError", false, false)
+	UnhandledMatchError.BaseClass = "Error"
+
+	interpreter.AddClass(UnhandledMatchError.Name, UnhandledMatchError)
+
+	// -------------------------------------- RequestParseBodyException -------------------------------------- MARK: RequestParseBodyException
+
+	// Spec: https://www.php.net/manual/en/class.requestparsebodyexception.php
+	RequestParseBodyException := ast.NewClassDeclarationStmt(0, nil, "RequestParseBodyException", false, false)
+	RequestParseBodyException.BaseClass = "Exception"
+
+	interpreter.AddClass(RequestParseBodyException.Name, RequestParseBodyException)
+
 	// -------------------------------------- ClosedGeneratorException -------------------------------------- MARK: ClosedGeneratorException
 
 	// Spec: https://www.php.net/manual/en/class.closedgeneratorexception.php
@@ -108,6 +148,14 @@ func RegisterDefaultClasses(interpreter runtime.Interpreter) {
 	ClosedGeneratorException.BaseClass = "Exception"
 
 	interpreter.AddClass(ClosedGeneratorException.Name, ClosedGeneratorException)
+
+	// -------------------------------------- FiberError -------------------------------------- MARK: FiberError
+
+	// Spec: https://www.php.net/manual/en/class.fibererror.php
+	FiberError := ast.NewClassDeclarationStmt(0, nil, "FiberError", false, false)
+	FiberError.BaseClass = "Error"
+
+	interpreter.AddClass(FiberError.Name, FiberError)
 
 	// -------------------------------------- stdClass -------------------------------------- MARK: stdClass
 
