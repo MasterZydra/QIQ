@@ -277,7 +277,13 @@ class stdClass {
 // TODO SessionHandler
 // TODO PhpToken
 // TODO __PHP_Incomplete_Class
-// TODO AssertionError
+
+// -------------------------------------- AssertionError -------------------------------------- MARK: AssertionError
+
+// Spec: https://www.php.net/manual/en/class.assertionerror.php
+class AssertionError extends Error {}
+
+
 // TODO RoundingMode
 // TODO php_user_filter
 // TODO StreamBucket

@@ -115,4 +115,12 @@ func RegisterDefaultClasses(interpreter runtime.Interpreter) {
 	stdClass := ast.NewClassDeclarationStmt(0, nil, "stdClass", false, false)
 
 	interpreter.AddClass(stdClass.Name, stdClass)
+
+	// -------------------------------------- AssertionError -------------------------------------- MARK: AssertionError
+
+	// Spec: https://www.php.net/manual/en/class.assertionerror.php
+	AssertionError := ast.NewClassDeclarationStmt(0, nil, "AssertionError", false, false)
+	AssertionError.BaseClass = "Error"
+
+	interpreter.AddClass(AssertionError.Name, AssertionError)
 }
