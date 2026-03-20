@@ -15,6 +15,10 @@ func (generator *AstGenerator) ProcessClassDeclarationStmt(stmt *ast.ClassDeclar
 	// Create new class declaration stmt
 	generator.println(`%s := ast.NewClassDeclarationStmt(0, nil, "%s", %s, %s)`, variableName, stmt.Name, toBoolStr(stmt.IsAbstract), toBoolStr(stmt.IsFinal))
 
+	if stmt.BaseClass != "" {
+		generator.println(`%s.BaseClass = "%s"`, variableName, stmt.BaseClass)
+	}
+
 	for _, interfaceName := range stmt.Interfaces {
 		generator.println(`%s.Interfaces = append(%s.Interfaces, "%s")`, variableName, variableName, interfaceName)
 	}

@@ -30,7 +30,12 @@ func (generator *AstGenerator) ProcessCastExpr(stmt *ast.CastExpression, _ any) 
 
 // ProcessCoalesceExpr implements ast.Visitor.
 func (generator *AstGenerator) ProcessCoalesceExpr(stmt *ast.CoalesceExpression, _ any) (any, error) {
-	panic("ProcessCoalesceExpr unimplemented")
+	generator.print("ast.NewCoalescExpr(0, ")
+	generator.processStmt(stmt.Cond)
+	generator.print(",")
+	generator.processStmt(stmt.ElseExpr)
+	generator.print(")")
+	return nil, nil
 }
 
 // ProcessCompoundAssignmentExpr implements ast.Visitor.
@@ -111,7 +116,8 @@ func (generator *AstGenerator) ProcessIncludeOnceExpr(stmt *ast.IncludeOnceExpre
 
 // ProcessIntegerLiteralExpr implements ast.Visitor.
 func (generator *AstGenerator) ProcessIntegerLiteralExpr(stmt *ast.IntegerLiteralExpression, _ any) (any, error) {
-	panic("ProcessIntegerLiteralExpr unimplemented")
+	generator.print(`ast.NewIntegerLiteralExpr(0, nil, %d)`, stmt.Value)
+	return nil, nil
 }
 
 // ProcessIssetIntrinsicExpr implements ast.Visitor.
