@@ -44,7 +44,7 @@ class Exception implements Throwable {
 // -------------------------------------- ErrorException -------------------------------------- MARK: ErrorException
 
 // Spec: https://www.php.net/manual/en/class.errorexception.php
-class ErrorException  extends Exception {
+class ErrorException extends Exception {
     /* Properties */
     protected int $severity = E_ERROR;
 
@@ -122,7 +122,7 @@ class Error implements Throwable {
 // -------------------------------------- ClosedGeneratorException -------------------------------------- MARK: ClosedGeneratorException
 
 // Spec: https://www.php.net/manual/en/class.closedgeneratorexception.php
-class ClosedGeneratorException implements Throwable {
+class ClosedGeneratorException extends Exception {
     /* Properties */
     protected string $message = "";
     private string $string = "";

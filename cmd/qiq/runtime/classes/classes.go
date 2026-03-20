@@ -72,7 +72,7 @@ func RegisterDefaultClasses(interpreter runtime.Interpreter) {
 	// Spec: https://www.php.net/manual/en/class.closedgeneratorexception.php
 
 	ClosedGeneratorException := ast.NewClassDeclarationStmt(0, nil, "ClosedGeneratorException", false, false)
-	ClosedGeneratorException.Interfaces = append(ClosedGeneratorException.Interfaces, "Throwable")
+	ClosedGeneratorException.BaseClass = "Exception"
 	ClosedGeneratorException.AddProperty(ast.NewPropertyDeclarationStmt(0, nil, "$message", "protected", false, []string{"string"}, ast.NewStringLiteralExpr(0, nil, "", ast.DoubleQuotedString)))
 	ClosedGeneratorException.AddProperty(ast.NewPropertyDeclarationStmt(0, nil, "$string", "private", false, []string{"string"}, ast.NewStringLiteralExpr(0, nil, "", ast.DoubleQuotedString)))
 	ClosedGeneratorException.AddProperty(ast.NewPropertyDeclarationStmt(0, nil, "$code", "protected", false, []string{"int"}, nil))
