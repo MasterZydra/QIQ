@@ -121,7 +121,10 @@ class TypeError extends Error {}
 // Spec: https://www.php.net/manual/en/class.argumentcounterror.php
 class ArgumentCountError extends TypeError {}
 
-// TODO ValueError
+// -------------------------------------- ValueError -------------------------------------- MARK: ValueError
+
+// Spec: https://www.php.net/manual/en/class.valueerror.php
+class ValueError extends Error {}
 
 // -------------------------------------- ArithmeticError -------------------------------------- MARK: ArithmeticError
 

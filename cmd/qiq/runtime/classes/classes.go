@@ -83,6 +83,14 @@ func RegisterDefaultClasses(interpreter runtime.Interpreter) {
 
 	interpreter.AddClass(ArgumentCountError.Name, ArgumentCountError)
 
+	// -------------------------------------- ValueError -------------------------------------- MARK: ValueError
+
+	// Spec: https://www.php.net/manual/en/class.valueerror.php
+	ValueError := ast.NewClassDeclarationStmt(0, nil, "ValueError", false, false)
+	ValueError.BaseClass = "Error"
+
+	interpreter.AddClass(ValueError.Name, ValueError)
+
 	// -------------------------------------- ArithmeticError -------------------------------------- MARK: ArithmeticError
 
 	// Spec: https://www.php.net/manual/en/class.arithmeticerror.php
