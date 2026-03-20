@@ -131,20 +131,6 @@ class TypeError extends Error {
         $this->previous = $previous;
     }
 
-    final public function getMessage(): string { return $this->message; }
-
-    final public function getPrevious(): ?Throwable { return $this->previous; }
-
-    final public function getCode(): int { return $this->code; }
-
-    final public function getFile(): string { return $this->file; }
-
-    final public function getLine(): int { return $this->line; }
-
-    final public function getTrace(): array { return $this->trace; }
-
-    final public function getTraceAsString(): string { return implode(PHP_EOL, $this->trace); }
-
     public function __toString(): string { return $this->string; }
 
     private function __clone(): void {}
@@ -178,20 +164,6 @@ class ClosedGeneratorException extends Exception {
         $this->code = $code;
         $this->previous = $previous;
     }
-
-    final public function getMessage(): string { return $this->message; }
-
-    final public function getPrevious(): ?Throwable { return $this->previous; }
-
-    final public function getCode(): int { return $this->code; }
-
-    final public function getFile(): string { return $this->file; }
-
-    final public function getLine(): int { return $this->line; }
-
-    final public function getTrace(): array { return $this->trace; }
-
-    final public function getTraceAsString(): string { return implode(PHP_EOL, $this->trace); }
 
     public function __toString(): string { return $this->string; }
 
