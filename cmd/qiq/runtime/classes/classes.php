@@ -1,5 +1,7 @@
 <?php
 
+// -------------------------------------- Exception -------------------------------------- MARK: Exception
+
 // Spec: https://www.php.net/manual/en/class.exception.php
 class Exception implements Throwable {
     /* Properties */
@@ -36,6 +38,35 @@ class Exception implements Throwable {
 
     private function __clone(): void {}
 }
+
+// -------------------------------------- ErrorException -------------------------------------- MARK: ErrorException
+
+// Spec: https://www.php.net/manual/en/class.errorexception.php
+class ErrorException  extends Exception {
+    /* Properties */
+    protected int $severity = E_ERROR;
+
+    /* Methods */
+    public function __construct(
+    string $message = "",
+    int $code = 0,
+    int $severity = E_ERROR,
+    ?string $filename = null,
+    ?int $line = null,
+    ?Throwable $previous = null
+    ) {
+        parent::__construct($message, $code, $previous);
+        $this->severity = $severity;
+        $this->file = $filename ?? "";
+        $this->line = $line ?? 0;
+    }
+
+    final public function getSeverity(): int {
+        return $this->severity;
+    }
+}
+
+// -------------------------------------- stdClass -------------------------------------- MARK: stdClass
 
 // Spec: https://www.php.net/manual/en/class.stdclass.php
 class stdClass {
