@@ -114,27 +114,7 @@ class Error implements Throwable {
 // -------------------------------------- TypeError -------------------------------------- MARK: TypeError
 
 // Spec: https://www.php.net/manual/en/class.typeerror.php
-class TypeError extends Error {
-    /* Properties */
-    protected string $message = "";
-    private string $string = "";
-    protected int $code;
-    protected string $file = "";
-    protected int $line;
-    private array $trace = [];
-    private ?Throwable $previous = null;
-
-    /* Methods */
-    public function __construct(string $message = "", int $code = 0, ?Throwable $previous = null) {
-        $this->message = $message;
-        $this->code = $code;
-        $this->previous = $previous;
-    }
-
-    public function __toString(): string { return $this->string; }
-
-    private function __clone(): void {}
-}
+class TypeError extends Error {}
 
 // TODO ArgumentCountError
 // TODO ValueError
@@ -148,27 +128,7 @@ class TypeError extends Error {
 // -------------------------------------- ClosedGeneratorException -------------------------------------- MARK: ClosedGeneratorException
 
 // Spec: https://www.php.net/manual/en/class.closedgeneratorexception.php
-class ClosedGeneratorException extends Exception {
-    /* Properties */
-    protected string $message = "";
-    private string $string = "";
-    protected int $code;
-    protected string $file = "";
-    protected int $line;
-    private array $trace = [];
-    private ?Throwable $previous = null;
-
-    /* Methods */
-    public function __construct(string $message = "", int $code = 0, ?Throwable $previous = null) {
-        $this->message = $message;
-        $this->code = $code;
-        $this->previous = $previous;
-    }
-
-    public function __toString(): string { return $this->string; }
-
-    private function __clone(): void {}
-}
+class ClosedGeneratorException extends Exception {}
 
 // TODO WeakReference
 // TODO WeakMap
