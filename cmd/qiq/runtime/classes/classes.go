@@ -75,6 +75,14 @@ func RegisterDefaultClasses(interpreter runtime.Interpreter) {
 
 	interpreter.AddClass(TypeError.Name, TypeError)
 
+	// -------------------------------------- ArgumentCountError -------------------------------------- MARK: ArgumentCountError
+
+	// Spec: https://www.php.net/manual/en/class.argumentcounterror.php
+	ArgumentCountError := ast.NewClassDeclarationStmt(0, nil, "ArgumentCountError", false, false)
+	ArgumentCountError.BaseClass = "TypeError"
+
+	interpreter.AddClass(ArgumentCountError.Name, ArgumentCountError)
+
 	// -------------------------------------- ClosedGeneratorException -------------------------------------- MARK: ClosedGeneratorException
 
 	// Spec: https://www.php.net/manual/en/class.closedgeneratorexception.php

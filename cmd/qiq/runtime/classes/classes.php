@@ -116,7 +116,11 @@ class Error implements Throwable {
 // Spec: https://www.php.net/manual/en/class.typeerror.php
 class TypeError extends Error {}
 
-// TODO ArgumentCountError
+// -------------------------------------- ArgumentCountError -------------------------------------- MARK: ArgumentCountError
+
+// Spec: https://www.php.net/manual/en/class.argumentcounterror.php
+class ArgumentCountError extends TypeError {}
+
 // TODO ValueError
 // TODO ArithmeticError
 // TODO DivisionByZeroError
