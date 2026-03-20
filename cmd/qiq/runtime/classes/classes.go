@@ -31,6 +31,17 @@ func RegisterDefaultClasses(interpreter runtime.Interpreter) {
 
 	interpreter.AddClass(Exception.Name, Exception)
 
+	// -------------------------------------- ErrorException -------------------------------------- MARK: ErrorException
+
+	// Spec: https://www.php.net/manual/en/class.errorexception.php
+	ErrorException := ast.NewClassDeclarationStmt(0, nil, "ErrorException", false, false)
+	ErrorException.BaseClass = "Exception"
+	ErrorException.AddProperty(ast.NewPropertyDeclarationStmt(0, nil, "$severity", "protected", false, []string{"int"}, ast.NewConstantAccessExpr(0, nil, "E_ERROR")))
+	ErrorException.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "__construct", []string{"public"}, []ast.FunctionParameter{{Name: "$message", Type: []string{"string"}, DefaultValue: ast.NewStringLiteralExpr(0, nil, "", ast.DoubleQuotedString)}, {Name: "$code", Type: []string{"int"}, DefaultValue: ast.NewIntegerLiteralExpr(0, nil, 0)}, {Name: "$severity", Type: []string{"int"}, DefaultValue: ast.NewConstantAccessExpr(0, nil, "E_ERROR")}, {Name: "$filename", Type: []string{"null", "string"}, DefaultValue: ast.NewConstantAccessExpr(0, nil, "NULL")}, {Name: "$line", Type: []string{"null", "int"}, DefaultValue: ast.NewConstantAccessExpr(0, nil, "NULL")}, {Name: "$previous", Type: []string{"null", "Throwable"}, DefaultValue: ast.NewConstantAccessExpr(0, nil, "NULL")}}, ast.NewCompoundStmt(0, []ast.IStatement{ast.NewExpressionStmt(0, ast.NewMemberAccessExpr(0, nil, ast.NewConstantAccessExpr(0, nil, "parent"), ast.NewFunctionCallExpr(0, nil, ast.NewStringLiteralExpr(0, nil, "__construct", ast.DoubleQuotedString), []ast.IExpression{ast.NewSimpleVariableExpr(0, ast.NewVariableNameExpr(0, nil, "$message")), ast.NewSimpleVariableExpr(0, ast.NewVariableNameExpr(0, nil, "$code")), ast.NewSimpleVariableExpr(0, ast.NewVariableNameExpr(0, nil, "$previous"))}))), ast.NewExpressionStmt(0, ast.NewSimpleAssignmentExpr(0, ast.NewMemberAccessExpr(0, nil, ast.NewSimpleVariableExpr(0, ast.NewVariableNameExpr(0, nil, "$this")), ast.NewConstantAccessExpr(0, nil, "severity")), ast.NewSimpleVariableExpr(0, ast.NewVariableNameExpr(0, nil, "$severity")))), ast.NewExpressionStmt(0, ast.NewSimpleAssignmentExpr(0, ast.NewMemberAccessExpr(0, nil, ast.NewSimpleVariableExpr(0, ast.NewVariableNameExpr(0, nil, "$this")), ast.NewConstantAccessExpr(0, nil, "file")), ast.NewCoalesceExpr(0, ast.NewSimpleVariableExpr(0, ast.NewVariableNameExpr(0, nil, "$filename")), ast.NewStringLiteralExpr(0, nil, "", ast.DoubleQuotedString)))), ast.NewExpressionStmt(0, ast.NewSimpleAssignmentExpr(0, ast.NewMemberAccessExpr(0, nil, ast.NewSimpleVariableExpr(0, ast.NewVariableNameExpr(0, nil, "$this")), ast.NewConstantAccessExpr(0, nil, "line")), ast.NewCoalesceExpr(0, ast.NewSimpleVariableExpr(0, ast.NewVariableNameExpr(0, nil, "$line")), ast.NewIntegerLiteralExpr(0, nil, 0))))}), []string{}))
+	ErrorException.AddMethod(ast.NewMethodDefinitionStmt(0, nil, "getSeverity", []string{"public", "final"}, []ast.FunctionParameter{}, ast.NewCompoundStmt(0, []ast.IStatement{ast.NewReturnStmt(0, nil, ast.NewMemberAccessExpr(0, nil, ast.NewSimpleVariableExpr(0, ast.NewVariableNameExpr(0, nil, "$this")), ast.NewConstantAccessExpr(0, nil, "severity")))}), []string{"int"}))
+
+	interpreter.AddClass(ErrorException.Name, ErrorException)
+
 	// -------------------------------------- stdClass -------------------------------------- MARK: stdClass
 
 	// Spec: https://www.php.net/manual/en/class.stdclass.php

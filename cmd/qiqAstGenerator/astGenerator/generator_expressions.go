@@ -30,7 +30,7 @@ func (generator *AstGenerator) ProcessCastExpr(stmt *ast.CastExpression, _ any) 
 
 // ProcessCoalesceExpr implements ast.Visitor.
 func (generator *AstGenerator) ProcessCoalesceExpr(stmt *ast.CoalesceExpression, _ any) (any, error) {
-	generator.print("ast.NewCoalescExpr(0, ")
+	generator.print("ast.NewCoalesceExpr(0, ")
 	generator.processStmt(stmt.Cond)
 	generator.print(",")
 	generator.processStmt(stmt.ElseExpr)
