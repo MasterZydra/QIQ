@@ -101,7 +101,8 @@ func (parser *Parser) parseClassDeclaration() (ast.IStatement, phpError.Error) {
 	//    class-interface-clause   ,   qualified-name
 
 	// Supported statement: class declaration: `class MyClass extends ParentC implements I, J {}`
-	PrintParserCallstack("class-declaration", parser)
+	parser.PrintParserCallstack("class-declaration")
+	defer parser.PopParserCallstack()
 
 	// class-modifier
 	isAbstract := parser.isToken(lexer.KeywordToken, "abstract", true)
@@ -181,7 +182,8 @@ func (parser *Parser) parseClassMemberDeclaration(class *ast.ClassDeclarationSta
 	//    destructor-declaration
 	//    trait-use-clause
 
-	PrintParserCallstack("class-member-declarations", parser)
+	parser.PrintParserCallstack("class-member-declarations")
+	defer parser.PopParserCallstack()
 
 	for {
 		// End of class-member-declarations
@@ -276,7 +278,9 @@ func (parser *Parser) parseClassConstDeclaration(class ast.AddGetConst) phpError
 		visibility = parser.eat().Value
 	}
 
-	PrintParserCallstack("class-const-statement", parser)
+	parser.PrintParserCallstack("class-const-statement")
+	defer parser.PopParserCallstack()
+
 	pos := parser.eat().Position
 	if parser.at().TokenType != lexer.NameToken && parser.at().TokenType != lexer.KeywordToken {
 		if err := parser.expectTokenType(lexer.NameToken, false); err != nil {
@@ -344,7 +348,8 @@ func (parser *Parser) parserTraitUseClause(class *ast.ClassDeclarationStatement)
 	//    name   as   visibility-modifier(opt)   name
 	//    name   as   visibility-modifier   name(opt)
 
-	PrintParserCallstack("trait-use-clause", parser)
+	parser.PrintParserCallstack("trait-use-clause")
+	defer parser.PopParserCallstack()
 
 	// Eat "use"
 	parser.eat()
@@ -387,7 +392,8 @@ func (parser *Parser) parseClassConstrutorDeclaration(class *ast.ClassDeclaratio
 		return isConstructor, nil
 	}
 
-	PrintParserCallstack("constructor-declaration", parser)
+	parser.PrintParserCallstack("constructor-declaration")
+	defer parser.PopParserCallstack()
 
 	// Static modifier is not allowed for constructor
 	if staticModifierKeyword != "" {
@@ -459,7 +465,8 @@ func (parser *Parser) parseClassDestrutorDeclaration(class *ast.ClassDeclaration
 		return isDestructor, nil
 	}
 
-	PrintParserCallstack("destructor-declaration", parser)
+	parser.PrintParserCallstack("destructor-declaration")
+	defer parser.PopParserCallstack()
 
 	// Static modifier is not allowed for destructor
 	if staticModifierKeyword != "" {
@@ -542,7 +549,8 @@ func (parser *Parser) parseClassMethodDeclaration(class ast.AddGetMethod, isClas
 		return isMethod, nil, nil
 	}
 
-	PrintParserCallstack("method-declaration", parser)
+	parser.PrintParserCallstack("method-declaration")
+	defer parser.PopParserCallstack()
 
 	// Eat all tokens to get the name token
 	parser.eatN(offset + 1)
@@ -710,7 +718,8 @@ func (parser *Parser) parseClassPropertyDeclaration(class *ast.ClassDeclarationS
 		return isProperty, nil
 	}
 
-	PrintParserCallstack("property-declaration", parser)
+	parser.PrintParserCallstack("property-declaration")
+	defer parser.PopParserCallstack()
 
 	// Eat all tokens to get the name token
 	parser.eatN(offset + 1)
@@ -868,7 +877,8 @@ func (parser *Parser) parseInterfaceMemberDeclaration(interfaceDecl *ast.Interfa
 	//    class-const-declaration
 	//    method-declaration
 
-	PrintParserCallstack("interface-member-declarations", parser)
+	parser.PrintParserCallstack("interface-member-declarations")
+	defer parser.PopParserCallstack()
 
 	for {
 		// End of class-member-declarations

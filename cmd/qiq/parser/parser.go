@@ -3,6 +3,7 @@ package parser
 import (
 	"QIQ/cmd/qiq/ast"
 	"QIQ/cmd/qiq/common"
+	"QIQ/cmd/qiq/config"
 	"QIQ/cmd/qiq/ini"
 	"QIQ/cmd/qiq/lexer"
 	"QIQ/cmd/qiq/phpError"
@@ -13,12 +14,13 @@ import (
 )
 
 type Parser struct {
-	ini     *ini.Ini
-	program *ast.Program
-	lexer   *lexer.Lexer
-	tokens  []*lexer.Token
-	currPos int
-	id      int64
+	ini        *ini.Ini
+	program    *ast.Program
+	lexer      *lexer.Lexer
+	tokens     []*lexer.Token
+	currPos    int
+	id         int64
+	stackDepth int
 }
 
 func NewParser(ini *ini.Ini) *Parser { return &Parser{ini: ini} }
@@ -46,8 +48,10 @@ func (parser *Parser) ProduceAST(sourceCode string, filename string) (*ast.Progr
 	stat := stats.Start()
 	defer stats.StopAndPrint(stat, "Parser")
 
-	PrintParserCallstack("Parser callstack", nil)
-	PrintParserCallstack("----------------", nil)
+	if config.ShowParserCallStack {
+		println("Parser callstack")
+		println("----------------")
+	}
 
 for1:
 	for !parser.isEof() {
@@ -68,7 +72,8 @@ for1:
 }
 
 func (parser *Parser) parseMixedStmt(compoundEndKeywords []string) (ast.IStatement, phpError.Error) {
-	PrintParserCallstack("mixed-statement", parser)
+	parser.PrintParserCallstack("mixed-statement")
+	defer parser.PopParserCallstack()
 
 	return parser.parseMixedStmtRec(compoundEndKeywords, ast.NewCompoundStmt(parser.nextId(), []ast.IStatement{}))
 }
@@ -76,7 +81,8 @@ func (parser *Parser) parseMixedStmt(compoundEndKeywords []string) (ast.IStateme
 func (parser *Parser) parseMixedStmtRec(compoundEndKeywords []string, textExprCompoundStmt *ast.CompoundStatement) (ast.IStatement, phpError.Error) {
 	// Resolve text expressions
 	if parser.isTextExpression(true) {
-		PrintParserCallstack("text-expression (mixed-stmt)", parser)
+		parser.PrintParserCallstack("text-expression (mixed-stmt)")
+		defer parser.PopParserCallstack()
 
 		if parser.isTokenType(lexer.TextToken, false) {
 			textExpr := ast.NewExpressionStmt(parser.nextId(), ast.NewTextExpr(parser.nextId(), parser.eat().Value))
@@ -132,7 +138,9 @@ func (parser *Parser) parseStmt() (ast.IStatement, phpError.Error) {
 
 	// Resolve text expressions
 	if parser.isTextExpression(true) {
-		PrintParserCallstack("text-expression", parser)
+		parser.PrintParserCallstack("text-expression")
+		defer parser.PopParserCallstack()
+
 		stmt := ast.NewExpressionStmt(parser.nextId(), ast.NewTextExpr(parser.nextId(), parser.eat().Value))
 		parser.isTokenType(lexer.StartTagToken, true)
 		return stmt, nil
@@ -155,7 +163,9 @@ func (parser *Parser) parseStmt() (ast.IStatement, phpError.Error) {
 
 	// Supported statement: compound statement: `{ doThis(); doThat(); }`
 	if parser.isToken(lexer.OpOrPuncToken, "{", true) {
-		PrintParserCallstack("compound-statement", parser)
+		parser.PrintParserCallstack("compound-statement")
+		defer parser.PopParserCallstack()
+
 		statements := []ast.IStatement{}
 		for !parser.isEof() && !parser.isToken(lexer.OpOrPuncToken, "}", false) {
 			stmt, err := parser.parseStmt()
@@ -212,7 +222,9 @@ func (parser *Parser) parseStmt() (ast.IStatement, phpError.Error) {
 
 	// Supported statement: declare statement: `declare(strict_types = 1)`
 	if parser.isToken(lexer.KeywordToken, "declare", false) {
-		PrintParserCallstack("declare-statement", parser)
+		parser.PrintParserCallstack("declare-statement")
+		defer parser.PopParserCallstack()
+
 		pos := parser.eat().Position
 
 		// (
@@ -282,7 +294,9 @@ func (parser *Parser) parseStmt() (ast.IStatement, phpError.Error) {
 
 	// Supported statement: echo statement: `echo "abc", 123, true;`
 	if parser.isToken(lexer.KeywordToken, "echo", false) {
-		PrintParserCallstack("echo-statement", parser)
+		parser.PrintParserCallstack("echo-statement")
+		defer parser.PopParserCallstack()
+
 		pos := parser.eat().Position
 		expressions := make([]ast.IExpression, 0)
 		for {
@@ -322,7 +336,9 @@ func (parser *Parser) parseStmt() (ast.IStatement, phpError.Error) {
 
 	// Supported intrinsic: unset intrinsic: `unset($v);`
 	if parser.isToken(lexer.KeywordToken, "unset", false) {
-		PrintParserCallstack("unset-statement", parser)
+		parser.PrintParserCallstack("unset-statement")
+		defer parser.PopParserCallstack()
+
 		pos := parser.eat().Position
 		if !parser.isToken(lexer.OpOrPuncToken, "(", true) {
 			return ast.NewEmptyStmt(), NewExpectedError("(", parser.at())
@@ -394,7 +410,9 @@ func (parser *Parser) parseStmt() (ast.IStatement, phpError.Error) {
 
 	// Supported statement: namespace definition: `namespace My\Name\Space;`
 	if parser.isToken(lexer.KeywordToken, "namespace", true) {
-		PrintParserCallstack("namespace-definition", parser)
+		parser.PrintParserCallstack("namespace-definition")
+		defer parser.PopParserCallstack()
+
 		namespace := []string{}
 
 		for {
@@ -436,7 +454,9 @@ func (parser *Parser) parseStmt() (ast.IStatement, phpError.Error) {
 
 	// Supported statement: global declaration: `global $var;`
 	if parser.isToken(lexer.KeywordToken, "global", false) {
-		PrintParserCallstack("global-declaration-statement", parser)
+		parser.PrintParserCallstack("global-declaration-statement")
+		defer parser.PopParserCallstack()
+
 		pos := parser.eat().Position
 		variables := []ast.IExpression{}
 
@@ -481,7 +501,9 @@ func (parser *Parser) parseStmt() (ast.IStatement, phpError.Error) {
 	// If expression is omitted, the statement is a null statement, which has no effect on execution.
 	parser.isToken(lexer.OpOrPuncToken, ";", true)
 
-	PrintParserCallstack("expression-statement", parser)
+	parser.PrintParserCallstack("expression-statement")
+	defer parser.PopParserCallstack()
+
 	if expr, err := parser.parseExpr(); err != nil {
 		return ast.NewEmptyExpr(), err
 	} else {
@@ -509,7 +531,9 @@ func (parser *Parser) parseConstDeclaration() (ast.IStatement, phpError.Error) {
 	//    name   =   constant-expression
 
 	// Supported statement: const statement: `const TRUTH = 42;`
-	PrintParserCallstack("const-statement", parser)
+	parser.PrintParserCallstack("const-statement")
+	defer parser.PopParserCallstack()
+
 	pos := parser.eat().Position
 	if parser.at().TokenType != lexer.NameToken && parser.at().TokenType != lexer.KeywordToken {
 		if err := parser.expectTokenType(lexer.NameToken, false); err != nil {
@@ -576,7 +600,8 @@ func (parser *Parser) parseSelectionStmt() (ast.IStatement, phpError.Error) {
 		// else-clause-2:
 		//    else   :   statement-list
 
-		PrintParserCallstack("if-statement", parser)
+		parser.PrintParserCallstack("if-statement")
+		defer parser.PopParserCallstack()
 
 		// if
 		ifPos := parser.eat().Position
@@ -718,7 +743,8 @@ func (parser *Parser) parseIterationStmt() (ast.IStatement, phpError.Error) {
 		//    while   (   expression   )   statement
 		//    while   (   expression   )   :   statement-list   endwhile   ;
 
-		PrintParserCallstack("while-statement", parser)
+		parser.PrintParserCallstack("while-statement")
+		defer parser.PopParserCallstack()
 
 		// condition
 		whilePos := parser.eat().Position
@@ -772,7 +798,8 @@ func (parser *Parser) parseIterationStmt() (ast.IStatement, phpError.Error) {
 		// do-statement:
 		//    do   statement   while   (   expression   )   ;
 
-		PrintParserCallstack("do-statement", parser)
+		parser.PrintParserCallstack("do-statement")
+		defer parser.PopParserCallstack()
 
 		doPos := parser.eat().Position
 
@@ -828,7 +855,8 @@ func (parser *Parser) parseIterationStmt() (ast.IStatement, phpError.Error) {
 		//    expression
 		//    for-expression-group   ,   expression
 
-		PrintParserCallstack("for-statement", parser)
+		parser.PrintParserCallstack("for-statement")
+		defer parser.PopParserCallstack()
 
 		pos := parser.eat().Position
 
@@ -940,7 +968,8 @@ func (parser *Parser) parseIterationStmt() (ast.IStatement, phpError.Error) {
 		//    &(opt)   expression
 		//    list-intrinsic
 
-		PrintParserCallstack("foreach-statement", parser)
+		parser.PrintParserCallstack("foreach-statement")
+		defer parser.PopParserCallstack()
 
 		pos := parser.eat().Position
 
@@ -1054,7 +1083,8 @@ func (parser *Parser) parseJumpStmt() (ast.IStatement, phpError.Error) {
 		//   integer-literal
 		//   (   breakout-level   )
 
-		PrintParserCallstack("continue-statement", parser)
+		parser.PrintParserCallstack("continue-statement")
+		defer parser.PopParserCallstack()
 
 		pos := parser.eat().Position
 
@@ -1096,7 +1126,8 @@ func (parser *Parser) parseJumpStmt() (ast.IStatement, phpError.Error) {
 		//   integer-literal
 		//   (   breakout-level   )
 
-		PrintParserCallstack("break-statement", parser)
+		parser.PrintParserCallstack("break-statement")
+		defer parser.PopParserCallstack()
 
 		pos := parser.eat().Position
 
@@ -1136,7 +1167,9 @@ func (parser *Parser) parseJumpStmt() (ast.IStatement, phpError.Error) {
 
 	// Supported statement: return statement: `return 42;`
 	if parser.isToken(lexer.KeywordToken, "return", false) {
-		PrintParserCallstack("return-statement", parser)
+		parser.PrintParserCallstack("return-statement")
+		defer parser.PopParserCallstack()
+
 		pos := parser.eat().Position
 		var expr ast.IExpression = nil
 		if !parser.isToken(lexer.OpOrPuncToken, ";", false) {
@@ -1162,7 +1195,9 @@ func (parser *Parser) parseJumpStmt() (ast.IStatement, phpError.Error) {
 
 	// Supported statement: throw statement: `throw new Exception();`
 	if parser.isToken(lexer.KeywordToken, "throw", false) {
-		PrintParserCallstack("throw-statement", parser)
+		parser.PrintParserCallstack("throw-statement")
+		defer parser.PopParserCallstack()
+
 		pos := parser.eat().Position
 		expr, err := parser.parseExpr()
 		if err != nil {
@@ -1202,7 +1237,8 @@ func (parser *Parser) parseTryStmt() (ast.IStatement, phpError.Error) {
 	//    finally   compound-statement
 
 	// Supported statement: try statement: `try { ... } catch (...) { ... } finally { ... }`
-	PrintParserCallstack("try-statement", parser)
+	parser.PrintParserCallstack("try-statement")
+	defer parser.PopParserCallstack()
 
 	// Eat "try"
 	pos := parser.eat().Position
@@ -1339,7 +1375,9 @@ func (parser *Parser) parseFunctionDefinition() (ast.IStatement, phpError.Error)
 	//    =   constant-expression
 
 	// Supported statement: function definition: `function func1($param1) { ... }`
-	PrintParserCallstack("function-definition", parser)
+	parser.PrintParserCallstack("function-definition")
+	defer parser.PopParserCallstack()
+
 	if !parser.isToken(lexer.KeywordToken, "function", false) {
 		return ast.NewEmptyStmt(), NewExpectedError("function", parser.at())
 	}
@@ -1470,7 +1508,9 @@ func (parser *Parser) parseAnonymousFunctionCreationExpression() (ast.IExpressio
 
 	// TODO anonymous-function-creation-expression - static
 	// Supported statement: anonymous function creation: `function ($param1) { ... }`
-	PrintParserCallstack("anonymous-function-creation", parser)
+	parser.PrintParserCallstack("anonymous-function-creation")
+	defer parser.PopParserCallstack()
+
 	if !parser.isToken(lexer.KeywordToken, "function", false) {
 		return ast.NewEmptyStmt(), NewExpectedError("function", parser.at())
 	}
@@ -1535,7 +1575,9 @@ func (parser *Parser) parseExpr() (ast.IExpression, phpError.Error) {
 
 	// Supported expression: include expression: `include 'lib.php';`
 	if parser.isToken(lexer.KeywordToken, "include", false) {
-		PrintParserCallstack("include-expression", parser)
+		parser.PrintParserCallstack("include-expression")
+		defer parser.PopParserCallstack()
+
 		pos := parser.eat().Position
 
 		expr, err := parser.parseExpr()
@@ -1555,7 +1597,9 @@ func (parser *Parser) parseExpr() (ast.IExpression, phpError.Error) {
 
 	// Supported expression: include_once expression: `include_once 'lib.php';`
 	if parser.isToken(lexer.KeywordToken, "include_once", false) {
-		PrintParserCallstack("include-once-expression", parser)
+		parser.PrintParserCallstack("include-once-expression")
+		defer parser.PopParserCallstack()
+
 		pos := parser.eat().Position
 
 		expr, err := parser.parseExpr()
@@ -1575,7 +1619,9 @@ func (parser *Parser) parseExpr() (ast.IExpression, phpError.Error) {
 
 	// Supported expression: require expression: `require 'lib.php';`
 	if parser.isToken(lexer.KeywordToken, "require", false) {
-		PrintParserCallstack("require-expression", parser)
+		parser.PrintParserCallstack("require-expression")
+		defer parser.PopParserCallstack()
+
 		pos := parser.eat().Position
 
 		expr, err := parser.parseExpr()
@@ -1595,7 +1641,9 @@ func (parser *Parser) parseExpr() (ast.IExpression, phpError.Error) {
 
 	// Supported expression: require_once expression: `require_once 'lib.php';`
 	if parser.isToken(lexer.KeywordToken, "require_once", false) {
-		PrintParserCallstack("require-once-expression", parser)
+		parser.PrintParserCallstack("require-once-expression")
+		defer parser.PopParserCallstack()
+
 		pos := parser.eat().Position
 
 		expr, err := parser.parseExpr()
@@ -1623,7 +1671,9 @@ func (parser *Parser) parseLogicalIncOrExpr2() (ast.IExpression, phpError.Error)
 
 	// Supported expression: logical inc or expression 2: `$var or 8;`
 	for parser.isToken(lexer.KeywordToken, "or", true) {
-		PrintParserCallstack("logical-inc-OR-expression-2", parser)
+		parser.PrintParserCallstack("logical-inc-OR-expression-2")
+		defer parser.PopParserCallstack()
+
 		rhs, err := parser.parseLogicalIncOrExpr2()
 		if err != nil {
 			return ast.NewEmptyExpr(), err
@@ -1647,7 +1697,9 @@ func (parser *Parser) parseLogicalExcOrExpr() (ast.IExpression, phpError.Error) 
 
 	// Supported expression: logical exc or expression: `$var xor 8;`
 	for parser.isToken(lexer.KeywordToken, "xor", true) {
-		PrintParserCallstack("logical-exc-OR-expression", parser)
+		parser.PrintParserCallstack("logical-exc-OR-expression")
+		defer parser.PopParserCallstack()
+
 		rhs, err := parser.parseLogicalExcOrExpr()
 		if err != nil {
 			return ast.NewEmptyExpr(), err
@@ -1679,7 +1731,9 @@ func (parser *Parser) parseLogicalAndExpr2() (ast.IExpression, phpError.Error) {
 
 	// Supported statement: print statement: `print "abc";`
 	if parser.isToken(lexer.KeywordToken, "print", false) {
-		PrintParserCallstack("print-expression", parser)
+		parser.PrintParserCallstack("print-expression")
+		defer parser.PopParserCallstack()
+
 		pos := parser.eat().Position
 
 		lhs, err = parser.parseLogicalAndExpr2()
@@ -1696,7 +1750,9 @@ func (parser *Parser) parseLogicalAndExpr2() (ast.IExpression, phpError.Error) {
 
 	// Supported expression: logical and expression 2: `$var and 8;`
 	for parser.isToken(lexer.KeywordToken, "and", true) {
-		PrintParserCallstack("logical-AND-expression-2", parser)
+		parser.PrintParserCallstack("logical-AND-expression-2")
+		defer parser.PopParserCallstack()
+
 		rhs, err := parser.parseLogicalAndExpr2()
 		if err != nil {
 			return ast.NewEmptyExpr(), err
@@ -1733,7 +1789,9 @@ func (parser *Parser) parseAssignmentExpr() (ast.IExpression, phpError.Error) {
 	// Supported expression: conditional expression: `$var ? $a : "b";`
 	// conditional-expression   ?   expression(opt)   :   coalesce-expression
 	for parser.isToken(lexer.OpOrPuncToken, "?", true) {
-		PrintParserCallstack("conditional-expression", parser)
+		parser.PrintParserCallstack("conditional-expression")
+		defer parser.PopParserCallstack()
+
 		var ifExpr ast.IExpression = nil
 		if !parser.isToken(lexer.OpOrPuncToken, ":", false) {
 			ifExpr, err = parser.parseExpr()
@@ -1760,7 +1818,9 @@ func (parser *Parser) parseAssignmentExpr() (ast.IExpression, phpError.Error) {
 	// Supported expression: simple assignment expression: `$v = "abc";`
 	// TODO simple-assignment-expression - list-intrinsic
 	if ast.IsVariableExpr(expr) && parser.isToken(lexer.OpOrPuncToken, "=", true) {
-		PrintParserCallstack("simple-assignment-expression", parser)
+		parser.PrintParserCallstack("simple-assignment-expression")
+		defer parser.PopParserCallstack()
+
 		value, err := parser.parseAssignmentExpr()
 		if err != nil {
 			return ast.NewEmptyExpr(), err
@@ -1783,7 +1843,9 @@ func (parser *Parser) parseAssignmentExpr() (ast.IExpression, phpError.Error) {
 	// Supported expression: compound assignment expression: `$v += 2; $w &= 8;`
 	if ast.IsVariableExpr(expr) &&
 		parser.isTokenType(lexer.OpOrPuncToken, false) && common.IsCompoundAssignmentOp(parser.at().Value) {
-		PrintParserCallstack("compound-assignment-operator", parser)
+		parser.PrintParserCallstack("compound-assignment-operator")
+		defer parser.PopParserCallstack()
+
 		operatorStr := strings.ReplaceAll(parser.eat().Value, "=", "")
 		value, err := parser.parseAssignmentExpr()
 		if err != nil {
@@ -1811,7 +1873,9 @@ func (parser *Parser) parseCoalesceExpr() (ast.IExpression, phpError.Error) {
 	// Supported expression: coalesce expression: `$var ?? "b";`
 	// logical-inc-OR-expression-1   ??   coalesce-expression
 	if parser.isToken(lexer.OpOrPuncToken, "??", true) {
-		PrintParserCallstack("coalesce-expression", parser)
+		parser.PrintParserCallstack("coalesce-expression")
+		defer parser.PopParserCallstack()
+
 		elseExpr, err := parser.parseCoalesceExpr()
 		if err != nil {
 			return ast.NewEmptyExpr(), err
@@ -1837,7 +1901,9 @@ func (parser *Parser) parseLogicalIncOrExpr1() (ast.IExpression, phpError.Error)
 
 	// Supported expression: logical inc or expression: `$var || 8;`
 	for parser.isToken(lexer.OpOrPuncToken, "||", true) {
-		PrintParserCallstack("logical-inc-OR-expression-1", parser)
+		parser.PrintParserCallstack("logical-inc-OR-expression-1")
+		defer parser.PopParserCallstack()
+
 		rhs, err := parser.parseLogicalIncOrExpr1()
 		if err != nil {
 			return ast.NewEmptyExpr(), err
@@ -1861,7 +1927,9 @@ func (parser *Parser) parseLogicalAndExpr1() (ast.IExpression, phpError.Error) {
 
 	// Supported expression: logical and expression: `$var && 8;`
 	for parser.isToken(lexer.OpOrPuncToken, "&&", true) {
-		PrintParserCallstack("logical-AND-expression-1", parser)
+		parser.PrintParserCallstack("logical-AND-expression-1")
+		defer parser.PopParserCallstack()
+
 		rhs, err := parser.parseLogicalAndExpr1()
 		if err != nil {
 			return ast.NewEmptyExpr(), err
@@ -1885,7 +1953,9 @@ func (parser *Parser) parseBitwiseIncOrExpr() (ast.IExpression, phpError.Error) 
 
 	// Supported expression: bitwise inc or expression: `$var | 8;`
 	for parser.isToken(lexer.OpOrPuncToken, "|", true) {
-		PrintParserCallstack("bitwise-inc-OR-expression", parser)
+		parser.PrintParserCallstack("bitwise-inc-OR-expression")
+		defer parser.PopParserCallstack()
+
 		rhs, err := parser.parseBitwiseIncOrExpr()
 		if err != nil {
 			return ast.NewEmptyExpr(), err
@@ -1909,7 +1979,9 @@ func (parser *Parser) parseBitwiseExcOrExpr() (ast.IExpression, phpError.Error) 
 
 	// Supported expression: bitwise exc or expression: `$var ^ 8;`
 	for parser.isToken(lexer.OpOrPuncToken, "^", true) {
-		PrintParserCallstack("bitwise-exc-OR-expression", parser)
+		parser.PrintParserCallstack("bitwise-exc-OR-expression")
+		defer parser.PopParserCallstack()
+
 		rhs, err := parser.parseBitwiseExcOrExpr()
 		if err != nil {
 			return ast.NewEmptyExpr(), err
@@ -1933,7 +2005,9 @@ func (parser *Parser) parseBitwiseAndExpr() (ast.IExpression, phpError.Error) {
 
 	// Supported expression: bitwise and expression: `$var & 8;`
 	for parser.isToken(lexer.OpOrPuncToken, "&", true) {
-		PrintParserCallstack("bitwise-AND-expression", parser)
+		parser.PrintParserCallstack("bitwise-AND-expression")
+		defer parser.PopParserCallstack()
+
 		rhs, err := parser.parseBitwiseAndExpr()
 		if err != nil {
 			return ast.NewEmptyExpr(), err
@@ -1961,7 +2035,9 @@ func (parser *Parser) parseEqualityExpr() (ast.IExpression, phpError.Error) {
 
 	// Supported expression: equality expression: `$var === 42;`
 	for parser.isTokenType(lexer.OpOrPuncToken, false) && common.IsEqualityOp(parser.at().Value) {
-		PrintParserCallstack("equality-expression", parser)
+		parser.PrintParserCallstack("equality-expression")
+		defer parser.PopParserCallstack()
+
 		operator := parser.eat().Value
 		rhs, err := parser.parserRelationalExpr()
 		if err != nil {
@@ -1990,7 +2066,9 @@ func (parser *Parser) parserRelationalExpr() (ast.IExpression, phpError.Error) {
 
 	// Supported expression: relational expression: `$var >= 42;`
 	for parser.isTokenType(lexer.OpOrPuncToken, false) && common.IsRelationalExpressionOp(parser.at().Value) {
-		PrintParserCallstack("relational-expression", parser)
+		parser.PrintParserCallstack("relational-expression")
+		defer parser.PopParserCallstack()
+
 		operator := parser.eat().Value
 		rhs, err := parser.parseShiftExpr()
 		if err != nil {
@@ -2016,7 +2094,9 @@ func (parser *Parser) parseShiftExpr() (ast.IExpression, phpError.Error) {
 
 	// Supported expression: shift expression: `$var << 8;`
 	for parser.isTokenType(lexer.OpOrPuncToken, false) && slices.Contains([]string{"<<", ">>"}, parser.at().Value) {
-		PrintParserCallstack("shift-expression", parser)
+		parser.PrintParserCallstack("shift-expression")
+		defer parser.PopParserCallstack()
+
 		operator := parser.eat().Value
 		rhs, err := parser.parseShiftExpr()
 		if err != nil {
@@ -2043,7 +2123,9 @@ func (parser *Parser) parseAdditiveExpr() (ast.IExpression, phpError.Error) {
 
 	// Supported expression: additive expression: `$var + 42; $var - 42; "a" . "b";`
 	for parser.isTokenType(lexer.OpOrPuncToken, false) && common.IsAdditiveOp(parser.at().Value) {
-		PrintParserCallstack("additive-expression", parser)
+		parser.PrintParserCallstack("additive-expression")
+		defer parser.PopParserCallstack()
+
 		operator := parser.eat().Value
 		rhs, err := parser.parseMultiplicativeExpr()
 		if err != nil {
@@ -2071,7 +2153,9 @@ func (parser *Parser) parseMultiplicativeExpr() (ast.IExpression, phpError.Error
 
 	// Supported expression: multiplicative expression: `$var * 42; $var / 42; $var % 42;`
 	for parser.isTokenType(lexer.OpOrPuncToken, false) && common.IsMultiplicativeOp(parser.at().Value) {
-		PrintParserCallstack("multiplicative-expression", parser)
+		parser.PrintParserCallstack("multiplicative-expression")
+		defer parser.PopParserCallstack()
+
 		operator := parser.eat().Value
 		rhs, err := parser.parseLogicalNotExpr()
 		if err != nil {
@@ -2093,7 +2177,9 @@ func (parser *Parser) parseLogicalNotExpr() (ast.IExpression, phpError.Error) {
 	isNotExpression := parser.isToken(lexer.OpOrPuncToken, "!", false)
 	var pos *position.Position = nil
 	if isNotExpression {
-		PrintParserCallstack("logical-NOT-expression", parser)
+		parser.PrintParserCallstack("logical-NOT-expression")
+		defer parser.PopParserCallstack()
+
 		pos = parser.eat().Position
 	}
 
@@ -2146,7 +2232,9 @@ func (parser *Parser) parseUnaryExpr() (ast.IExpression, phpError.Error) {
 
 	// Supported expression: unary expression: `-1; +1; ~1;`
 	if parser.isTokenType(lexer.OpOrPuncToken, false) && common.IsUnaryOp(parser.at().Value) {
-		PrintParserCallstack("unary-op-expression", parser)
+		parser.PrintParserCallstack("unary-op-expression")
+		defer parser.PopParserCallstack()
+
 		pos := parser.at().Position
 		operator := parser.eat().Value
 		expr, err := parser.parseUnaryExpr()
@@ -2166,7 +2254,9 @@ func (parser *Parser) parseUnaryExpr() (ast.IExpression, phpError.Error) {
 
 	// Supported expression: error control expression: `@func();`
 	if parser.isToken(lexer.OpOrPuncToken, "@", false) {
-		PrintParserCallstack("error-control-expression", parser)
+		parser.PrintParserCallstack("error-control-expression")
+		defer parser.PopParserCallstack()
+
 		pos := parser.eat().Position
 		expr, err := parser.parseUnaryExpr()
 		if err != nil {
@@ -2185,7 +2275,9 @@ func (parser *Parser) parseUnaryExpr() (ast.IExpression, phpError.Error) {
 	// Supported expression: cast expression: `(int)$a;(string)$a;`
 	if parser.isToken(lexer.OpOrPuncToken, "(", false) &&
 		parser.next(0).TokenType == lexer.KeywordToken && common.IsCastTypeKeyword(parser.next(0).Value) {
-		PrintParserCallstack("cast-expression", parser)
+		parser.PrintParserCallstack("cast-expression")
+		defer parser.PopParserCallstack()
+
 		pos := parser.eat().Position
 		castType := parser.eat().Value
 		if !parser.isToken(lexer.OpOrPuncToken, ")", true) {
@@ -2215,7 +2307,9 @@ func (parser *Parser) parseExponentiationExpr() (ast.IExpression, phpError.Error
 
 	// Supported expression: exponentiation expression: `$var ** 42;`
 	if parser.isToken(lexer.OpOrPuncToken, "**", true) {
-		PrintParserCallstack("exponentiation-expression", parser)
+		parser.PrintParserCallstack("exponentiation-expression")
+		defer parser.PopParserCallstack()
+
 		rhs, err := parser.parseExponentiationExpr()
 		if err != nil {
 			return ast.NewEmptyExpr(), err
@@ -2237,7 +2331,8 @@ func (parser *Parser) parseCloneExpr() (ast.IExpression, phpError.Error) {
 }
 
 func (parser *Parser) parsePrimaryExpr() (ast.IExpression, phpError.Error) {
-	PrintParserCallstack("primary-expression", parser)
+	parser.PrintParserCallstack("primary-expression")
+	defer parser.PopParserCallstack()
 
 	// Spec: https://phplang.org/spec/10-expressions.html#grammar-primary-expression
 
@@ -2288,7 +2383,9 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, phpError.Error) {
 	//    variable-name
 
 	if parser.isTokenType(lexer.VariableNameToken, false) {
-		PrintParserCallstack("simple-variable", parser)
+		parser.PrintParserCallstack("simple-variable")
+		defer parser.PopParserCallstack()
+
 		variable = ast.NewSimpleVariableExpr(parser.nextId(), ast.NewVariableNameExpr(parser.nextId(), parser.at().Position, parser.eat().Value))
 	}
 
@@ -2300,7 +2397,9 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, phpError.Error) {
 	// Supported expression: variable access: `echo $v;`
 	if parser.isToken(lexer.OpOrPuncToken, "$", false) &&
 		parser.next(0).TokenType == lexer.OpOrPuncToken && parser.next(0).Value == "{" {
-		PrintParserCallstack("simple-variable", parser)
+		parser.PrintParserCallstack("simple-variable")
+		defer parser.PopParserCallstack()
+
 		parser.eatN(2)
 		// Get expression
 		expr, err := parser.parseExpr()
@@ -2322,7 +2421,9 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, phpError.Error) {
 	//    $   simple-variable
 
 	if parser.isToken(lexer.OpOrPuncToken, "$", true) {
-		PrintParserCallstack("simple-variable", parser)
+		parser.PrintParserCallstack("simple-variable")
+		defer parser.PopParserCallstack()
+
 		if expr, err := parser.parsePrimaryExpr(); err != nil {
 			return ast.NewEmptyExpr(), err
 		} else {
@@ -2356,7 +2457,9 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, phpError.Error) {
 
 	// Supported expression: subscript expression: `$a[1];`
 	if ast.IsVariableExpr(variable) && parser.isToken(lexer.OpOrPuncToken, "[", false) {
-		PrintParserCallstack("subscript-expression", parser)
+		parser.PrintParserCallstack("subscript-expression")
+		defer parser.PopParserCallstack()
+
 		for ast.IsVariableExpr(variable) && parser.isToken(lexer.OpOrPuncToken, "[", true) {
 			var err phpError.Error
 			var index ast.IExpression
@@ -2398,7 +2501,8 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, phpError.Error) {
 	// Supported expression: function call expression: `func(42);`
 	if (parser.isTokenType(lexer.NameToken, false) && parser.next(0).TokenType == lexer.OpOrPuncToken && parser.next(0).Value == "(") ||
 		(ast.IsVariableExpr(variable) && parser.isToken(lexer.OpOrPuncToken, "(", false)) {
-		PrintParserCallstack("function-call-expression", parser)
+		parser.PrintParserCallstack("function-call-expression")
+		defer parser.PopParserCallstack()
 
 		var pos *position.Position
 		var functionName ast.IExpression
@@ -2456,7 +2560,8 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, phpError.Error) {
 	// Supported expression: member access expression: `$obj->member`
 	// Supported expression: member call expression: `$obj->func()`
 	if ast.IsVariableExpr(variable) && parser.isToken(lexer.OpOrPuncToken, "->", false) {
-		PrintParserCallstack("member-access-expression", parser)
+		parser.PrintParserCallstack("member-access-expression")
+		defer parser.PopParserCallstack()
 
 		pos := parser.eat().Position
 
@@ -2517,7 +2622,9 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, phpError.Error) {
 	// Supported expression: postfix (in/de)crease expression: `$var++; $var--;`
 	if ast.IsVariableExpr(variable) && (parser.isToken(lexer.OpOrPuncToken, "++", false) ||
 		parser.isToken(lexer.OpOrPuncToken, "--", false)) {
-		PrintParserCallstack("postfix-decrement-expression", parser)
+		parser.PrintParserCallstack("postfix-decrement-expression")
+		defer parser.PopParserCallstack()
+
 		return ast.NewPostfixIncExpr(parser.nextId(), parser.at().Position, variable, parser.eat().Value), nil
 	}
 
@@ -2535,7 +2642,9 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, phpError.Error) {
 	// Supported expression: prefix (in/de)crease expression: `++$var; --$var;`
 	if parser.isToken(lexer.OpOrPuncToken, "++", false) ||
 		parser.isToken(lexer.OpOrPuncToken, "--", false) {
-		PrintParserCallstack("prefix-decrement-expression", parser)
+		parser.PrintParserCallstack("prefix-decrement-expression")
+		defer parser.PopParserCallstack()
+
 		pos := parser.at().Position
 		operator := parser.eat().Value
 		variable, err := parser.parsePrimaryExpr()
@@ -2555,7 +2664,9 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, phpError.Error) {
 
 	// Supported expression: parenthesized expression: `(1 + 2) * 3;`
 	if parser.isToken(lexer.OpOrPuncToken, "(", false) {
-		PrintParserCallstack("parenthesized-expression", parser)
+		parser.PrintParserCallstack("parenthesized-expression")
+		defer parser.PopParserCallstack()
+
 		pos := parser.eat().Position
 		expr, err := parser.parseExpr()
 		if err != nil {
@@ -2585,7 +2696,9 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, phpError.Error) {
 	if parser.isTokenType(lexer.NameToken, false) || parser.isTokenType(lexer.KeywordToken, false) {
 		// TODO constant-access-expression - namespace-name-as-a-prefix
 		// TODO constant-access-expression - check if name is a defined constant here or in interpreter
-		PrintParserCallstack("constant-access-expression", parser)
+		parser.PrintParserCallstack("constant-access-expression")
+		defer parser.PopParserCallstack()
+
 		constantName := parser.at().Value
 		// TODO Find a way to reduce "is..constant" to just one time
 		if common.IsCorePredefinedConstant(constantName) || common.IsContextDependentConstant(constantName) {
@@ -2624,7 +2737,8 @@ func (parser *Parser) parsePrimaryExpr() (ast.IExpression, phpError.Error) {
 	// Supported expression: scoped property access expression: `$obj::member`
 	// Supported expression: scoped call expression: `$obj::func(); parent::__construct()`
 	if variable != nil && (ast.IsVariableExpr(variable) || variable.GetKind() == ast.ConstantAccessExpr) && parser.isToken(lexer.OpOrPuncToken, "::", false) {
-		PrintParserCallstack("scoped-property-access-expression", parser)
+		parser.PrintParserCallstack("scoped-property-access-expression")
+		defer parser.PopParserCallstack()
 
 		pos := parser.eat().Position
 
@@ -2655,7 +2769,9 @@ func (parser *Parser) parseLiteral() (ast.IExpression, phpError.Error) {
 
 	// integer-literal
 	if parser.isTokenType(lexer.IntegerLiteralToken, false) {
-		PrintParserCallstack("integer-literal", parser)
+		parser.PrintParserCallstack("integer-literal")
+		defer parser.PopParserCallstack()
+
 		intValue, err := common.IntegerLiteralToInt64(parser.at().Value, false)
 		if err != nil {
 			return ast.NewEmptyExpr(), phpError.NewParseError(`Unsupported integer literal "%s`, parser.at().Value)
@@ -2666,7 +2782,9 @@ func (parser *Parser) parseLiteral() (ast.IExpression, phpError.Error) {
 
 	// floating-literal
 	if parser.isTokenType(lexer.FloatingLiteralToken, false) {
-		PrintParserCallstack("floating-literal", parser)
+		parser.PrintParserCallstack("floating-literal")
+		defer parser.PopParserCallstack()
+
 		if common.IsFloatingLiteral(parser.at().Value, false) {
 			return ast.NewFloatingLiteralExpr(parser.nextId(), parser.at().Position, common.FloatingLiteralToFloat64(parser.eat().Value, false)), nil
 		}
@@ -2676,7 +2794,9 @@ func (parser *Parser) parseLiteral() (ast.IExpression, phpError.Error) {
 
 	// string-literal
 	if parser.isTokenType(lexer.StringLiteralToken, false) {
-		PrintParserCallstack("string-literal", parser)
+		parser.PrintParserCallstack("string-literal")
+		defer parser.PopParserCallstack()
+
 		// single-quoted-string-literal
 		if common.IsSingleQuotedStringLiteral(parser.at().Value) {
 			return ast.NewStringLiteralExpr(
@@ -2730,7 +2850,8 @@ func (parser *Parser) parseArrayCreationExpr() (ast.IExpression, phpError.Error)
 	// element-value:
 	//    expression
 
-	PrintParserCallstack("array-creation-expression", parser)
+	parser.PrintParserCallstack("array-creation-expression")
+	defer parser.PopParserCallstack()
 
 	if !((parser.isToken(lexer.KeywordToken, "array", false) &&
 		parser.next(0).TokenType == lexer.OpOrPuncToken && parser.next(0).Value == "(") ||
@@ -2812,7 +2933,9 @@ func (parser *Parser) parseIntrinsic() (ast.IExpression, phpError.Error) {
 
 	// Supported intrinsic: empty intrinsic: `empty($v);`
 	if parser.isToken(lexer.KeywordToken, "empty", false) {
-		PrintParserCallstack("empty-intrinsic", parser)
+		parser.PrintParserCallstack("empty-intrinsic")
+		defer parser.PopParserCallstack()
+
 		pos := parser.eat().Position
 		if !parser.isToken(lexer.OpOrPuncToken, "(", true) {
 			return ast.NewEmptyExpr(), NewExpectedError("(", parser.at())
@@ -2836,7 +2959,9 @@ func (parser *Parser) parseIntrinsic() (ast.IExpression, phpError.Error) {
 
 	// Supported intrinsic: eval intrinsic: `eval($v);`
 	if parser.isToken(lexer.KeywordToken, "eval", false) {
-		PrintParserCallstack("eval-intrinsic", parser)
+		parser.PrintParserCallstack("eval-intrinsic")
+		defer parser.PopParserCallstack()
+
 		pos := parser.eat().Position
 		if !parser.isToken(lexer.OpOrPuncToken, "(", true) {
 			return ast.NewEmptyExpr(), NewExpectedError("(", parser.at())
@@ -2864,7 +2989,9 @@ func (parser *Parser) parseIntrinsic() (ast.IExpression, phpError.Error) {
 	// Supported intrinsic: exit intrinsic: `exit(0);`
 	// Supported intrinsic: die intrinsic: `die(0);`
 	if parser.isToken(lexer.KeywordToken, "exit", false) || parser.isToken(lexer.KeywordToken, "die", false) {
-		PrintParserCallstack("exit-intrinsic", parser)
+		parser.PrintParserCallstack("exit-intrinsic")
+		defer parser.PopParserCallstack()
+
 		pos := parser.eat().Position
 		var expr ast.IExpression = nil
 		if parser.isToken(lexer.OpOrPuncToken, "(", true) {
@@ -2895,7 +3022,9 @@ func (parser *Parser) parseIntrinsic() (ast.IExpression, phpError.Error) {
 
 	// Supported intrinsic: isset intrinsic: `isset($v);`
 	if parser.isToken(lexer.KeywordToken, "isset", false) {
-		PrintParserCallstack("isset-intrinsic", parser)
+		parser.PrintParserCallstack("isset-intrinsic")
+		defer parser.PopParserCallstack()
+
 		pos := parser.eat().Position
 		if !parser.isToken(lexer.OpOrPuncToken, "(", true) {
 			return ast.NewEmptyExpr(), NewExpectedError("(", parser.at())

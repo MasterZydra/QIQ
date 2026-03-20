@@ -10,13 +10,23 @@ import (
 	"strings"
 )
 
-func PrintParserCallstack(function string, parser *Parser) {
-	if config.ShowParserCallStack {
-		if parser != nil {
-			fmt.Printf("%s (%s)\n", function, parser.at().GetPosString())
-		} else {
-			println(function)
-		}
+func (parser *Parser) PrintParserCallstack(function string) {
+	if !config.ShowParserCallStack {
+		return
+	}
+
+	if parser != nil {
+		fmt.Printf("%s%s (%s)\n", strings.Repeat("  ", parser.stackDepth), function, parser.at().GetPosString())
+	} else {
+		println(function)
+	}
+
+	parser.stackDepth++
+}
+
+func (parser *Parser) PopParserCallstack() {
+	if parser.stackDepth > 0 {
+		parser.stackDepth--
 	}
 }
 

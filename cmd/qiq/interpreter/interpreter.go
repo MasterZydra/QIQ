@@ -3,6 +3,7 @@ package interpreter
 import (
 	"QIQ/cmd/qiq/ast"
 	"QIQ/cmd/qiq/common"
+	"QIQ/cmd/qiq/config"
 	"QIQ/cmd/qiq/ini"
 	"QIQ/cmd/qiq/parser"
 	"QIQ/cmd/qiq/phpError"
@@ -109,9 +110,11 @@ func (interpreter *Interpreter) process(sourceCode string, env *Environment, res
 	stat := stats.Start()
 	defer stats.StopAndPrint(stat, "Interpreter")
 
-	parser.PrintParserCallstack("", nil)
-	parser.PrintParserCallstack("Interpreter callstack", nil)
-	parser.PrintParserCallstack("---------------------", nil)
+	if config.ShowParserCallStack {
+		println("")
+		println("Interpreter callstack")
+		println("---------------------")
+	}
 
 	interpreter.resultRuntimeValue = nil
 	slot, err := interpreter.processProgram(program, env)
