@@ -166,6 +166,10 @@ func (interpreter *Interpreter) processStmt(stmt ast.IStatement, env any) (slot 
 	if err != nil {
 		phpErr = err.(phpError.Error)
 	}
+	if _, ok := result.(*values.Slot); !ok {
+		slot = values.NewVoidSlot()
+		return
+	}
 	slot = result.(*values.Slot)
 
 	// Destruct unused objects
