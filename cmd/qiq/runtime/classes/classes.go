@@ -83,6 +83,15 @@ func RegisterDefaultClasses(interpreter runtime.Interpreter) {
 
 	interpreter.AddClass(ArgumentCountError.Name, ArgumentCountError)
 
+	// -------------------------------------- ArithmeticError -------------------------------------- MARK: ArithmeticError
+
+	// Spec: https://www.php.net/manual/en/class.arithmeticerror.php
+
+	ArithmeticError := ast.NewClassDeclarationStmt(0, nil, "ArithmeticError", false, false)
+	ArithmeticError.BaseClass = "Error"
+
+	interpreter.AddClass(ArithmeticError.Name, ArithmeticError)
+
 	// -------------------------------------- ClosedGeneratorException -------------------------------------- MARK: ClosedGeneratorException
 
 	// Spec: https://www.php.net/manual/en/class.closedgeneratorexception.php

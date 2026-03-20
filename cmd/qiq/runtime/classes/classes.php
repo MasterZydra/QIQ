@@ -122,7 +122,12 @@ class TypeError extends Error {}
 class ArgumentCountError extends TypeError {}
 
 // TODO ValueError
-// TODO ArithmeticError
+
+// -------------------------------------- ArithmeticError -------------------------------------- MARK: ArithmeticError
+
+// Spec: https://www.php.net/manual/en/class.arithmeticerror.php
+class ArithmeticError extends Error {}
+
 // TODO DivisionByZeroError
 // TODO UnhandledMatchError
 // TODO RequestParseBodyException
