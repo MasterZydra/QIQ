@@ -174,7 +174,8 @@ func (interpreter *Interpreter) processStmt(stmt ast.IStatement, env any) (slot 
 
 	// Destruct unused objects
 	if stmt.GetKind() != ast.ObjectCreationExpr {
-		for index, object := range env.(*Environment).objects {
+		for index := len(env.(*Environment).objects) - 1; index >= 0; index-- {
+			object := env.(*Environment).objects[index]
 			if object.IsUsed {
 				continue
 			}
