@@ -75,7 +75,7 @@ jobs:
         git commit -m "Update succeeded history [skip ci]" || echo "No changes to commit"
         git push origin stats
 
-  windows-linux:
+  test-windows:
     name: Build & Run official PHP Tests on Windows
     runs-on: windows-latest
     steps:
