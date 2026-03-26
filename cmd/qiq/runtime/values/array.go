@@ -46,6 +46,63 @@ func NewArrayFromSlice(elements []RuntimeValue) *Array {
 	return array
 }
 
+func (array *Array) SetElement(key RuntimeValue, value RuntimeValue) phpError.Error {
+	key, err := array.getNextKey(key)
+	if err != nil {
+		return err
+	}
+
+	mapKey, found, err := array.GetMapKey(key, false)
+	if err != nil {
+		return err
+	}
+
+	if !found {
+		array.Keys = append(array.Keys, key)
+	}
+	array.Elements[mapKey] = NewSlot(value)
+
+	return nil
+}
+
+func (array *Array) GetMapKey(key RuntimeValue, shouldConvertKey bool) (string, bool, phpError.Error) {
+	if shouldConvertKey {
+		var err phpError.Error
+		key, err = convertKey(key)
+		if err != nil {
+			return "", false, err
+		}
+	}
+
+	mapKey, err := keyToMapKey(key)
+	if err != nil {
+		return "", false, err
+	}
+
+	_, found := array.Elements[mapKey]
+
+	return mapKey, found, nil
+}
+
+func (array *Array) IsEmpty() bool { return len(array.Elements) == 0 }
+
+func (array *Array) Contains(key RuntimeValue) bool {
+	_, found, err := array.GetMapKey(key, true)
+	if err != nil && config.IsDevMode {
+		fmt.Println("Array.Contains: " + err.Error())
+		return false
+	}
+	return found
+}
+
+func (array *Array) GetElement(key RuntimeValue) (*Slot, bool) {
+	mapKey, found, err := array.GetMapKey(key, true)
+	if err != nil || !found {
+		return nil, false
+	}
+	return array.Elements[mapKey], true
+}
+
 func keyToMapKey(key RuntimeValue) (string, phpError.Error) {
 	if key.GetType() == IntValue {
 		return fmt.Sprintf("i_%d", key.(*Int).Value), nil
@@ -151,61 +208,4 @@ func (array *Array) getNextKey(key RuntimeValue) (RuntimeValue, phpError.Error) 
 	key = NewInt(array.nextKey)
 	array.nextKey++
 	return key, nil
-}
-
-func (array *Array) SetElement(key RuntimeValue, value RuntimeValue) phpError.Error {
-	key, err := array.getNextKey(key)
-	if err != nil {
-		return err
-	}
-
-	mapKey, found, err := array.GetMapKey(key, false)
-	if err != nil {
-		return err
-	}
-
-	if !found {
-		array.Keys = append(array.Keys, key)
-	}
-	array.Elements[mapKey] = NewSlot(value)
-
-	return nil
-}
-
-func (array *Array) GetMapKey(key RuntimeValue, shouldConvertKey bool) (string, bool, phpError.Error) {
-	if shouldConvertKey {
-		var err phpError.Error
-		key, err = convertKey(key)
-		if err != nil {
-			return "", false, err
-		}
-	}
-
-	mapKey, err := keyToMapKey(key)
-	if err != nil {
-		return "", false, err
-	}
-
-	_, found := array.Elements[mapKey]
-
-	return mapKey, found, nil
-}
-
-func (array *Array) IsEmpty() bool { return len(array.Elements) == 0 }
-
-func (array *Array) Contains(key RuntimeValue) bool {
-	_, found, err := array.GetMapKey(key, true)
-	if err != nil && config.IsDevMode {
-		fmt.Println("Array.Contains: " + err.Error())
-		return false
-	}
-	return found
-}
-
-func (array *Array) GetElement(key RuntimeValue) (*Slot, bool) {
-	mapKey, found, err := array.GetMapKey(key, true)
-	if err != nil || !found {
-		return nil, false
-	}
-	return array.Elements[mapKey], true
 }
