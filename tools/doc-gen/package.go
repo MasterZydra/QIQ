@@ -1,9 +1,10 @@
 package main
 
 import (
+	"QIQ/cmd/qiq/common/os"
 	"bufio"
 	"fmt"
-	"os"
+	goOs "os"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -62,7 +63,7 @@ func generateMermaidPackage(packages []string) string {
 }
 
 func searchDirectoryPackage(path string) error {
-	files, err := os.ReadDir(path)
+	files, err := goOs.ReadDir(path)
 	if err != nil {
 		return fmt.Errorf("failed reading dir %s: %s", path, err)
 	}
@@ -90,7 +91,7 @@ func searchDirectoryPackage(path string) error {
 }
 
 func readGoFilePackage(path, filename string) error {
-	file, err := os.Open(filepath.Join(path, filename))
+	file, err := goOs.Open(filepath.Join(path, filename))
 	if err != nil {
 		return fmt.Errorf("failed to open file %s: %s", path, err)
 	}
@@ -132,6 +133,10 @@ func readGoFilePackage(path, filename string) error {
 }
 
 func addImportPackage(curPackage, usedPackage string) {
+	if os.IS_WIN {
+		curPackage = strings.ReplaceAll(curPackage, `\`, "/")
+	}
+
 	if skipGoPackages && !strings.HasPrefix(usedPackage, "QIQ/cmd/") {
 		return
 	}
