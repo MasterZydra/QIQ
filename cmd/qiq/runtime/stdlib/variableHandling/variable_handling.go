@@ -32,6 +32,7 @@ func Register(environment runtime.Environment) {
 	environment.AddNativeFunction("is_scalar", nativeFn_is_scalar)
 	environment.AddNativeFunction("is_string", nativeFn_is_string)
 	environment.AddNativeFunction("print_r", nativeFn_print_r)
+	environment.AddNativeFunction("serialize", nativeFn_serialize)
 	environment.AddNativeFunction("strval", nativeFn_strval)
 	environment.AddNativeFunction("var_dump", nativeFn_var_dump)
 	environment.AddNativeFunction("var_export", nativeFn_var_export)
@@ -542,6 +543,102 @@ func lib_print_r_var(value values.RuntimeValue, depth int) (string, phpError.Err
 	return result, nil
 }
 
+// -------------------------------------- serialize -------------------------------------- MARK: serialize
+
+func nativeFn_serialize(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
+	// Spec: https://www.php.net/manual/en/function.serialize.php
+	args, err := funcParamValidator.NewValidator("serialize").AddParam("$value", []string{"mixed"}, nil).Validate(args)
+	if err != nil {
+		return values.NewVoid(), err
+	}
+
+	str, err := Serialize(args[0])
+	return values.NewStr(str), err
+}
+
+func Serialize(runtimeValue values.RuntimeValue) (string, phpError.Error) {
+	// Spec: https://www.php.net/manual/en/function.serialize.php#66147
+
+	switch runtimeValue.GetType() {
+	case values.BoolValue:
+		if runtimeValue.(*values.Bool).Value {
+			return "b:1;", nil
+		}
+		return "b:0;", nil
+
+	case values.NullValue:
+		return "N;", nil
+	case values.IntValue:
+		// i:<value>;
+		return fmt.Sprintf("i:%d;", runtimeValue.(*values.Int).Value), nil
+	case values.FloatValue:
+		// d:<value>;
+		return fmt.Sprintf("d:%s;", runtimeValue.(*values.Float).ToPhpString()), nil
+	case values.StrValue:
+		// s:<size>:"<value>";
+		// String values are always in double quotes
+		str := runtimeValue.(*values.Str).Value
+		return fmt.Sprintf(`s:%d:"%s";`, len(str), str), nil
+
+	case values.ArrayValue:
+		// a:<size>:{<key definition><value definition>(repeated per element)}
+		array := runtimeValue.(*values.Array)
+		var result strings.Builder
+		fmt.Fprintf(&result, "a:%d:{", len(array.Keys))
+		for _, key := range array.Keys {
+			// Array key
+			valueStr, err := Serialize(key)
+			if err != nil {
+				return "", err
+			}
+			result.WriteString(valueStr)
+			// Array value
+			slot, _ := array.GetElement(key)
+			valueStr, err = Serialize(slot.Value)
+			if err != nil {
+				return "", err
+			}
+			result.WriteString(valueStr)
+		}
+		result.WriteString("}")
+		return result.String(), nil
+
+	case values.ObjectValue:
+		// O:<strlen(object name)>:"<object name>":<object size>:{<property name definition)><property value definition>(repeated per property)}
+		object := runtimeValue.(*values.Object)
+		var result strings.Builder
+		fmt.Fprintf(&result, `O:%d:"%s":%d:{`,
+			len(object.Class.GetQualifiedName()),
+			object.Class.GetQualifiedName(),
+			len(object.PropertyNames))
+		for _, property := range object.PropertyNames {
+			// Property name
+			// Remove the $ prefix
+			propertyName := property[1:]
+			switch object.Class.Properties[property].Visibility {
+			case "private":
+				propertyName = "\x00" + object.Class.Name + "\x00" + propertyName
+			case "protected":
+				propertyName = "\x00*\x00" + propertyName
+			}
+			fmt.Fprintf(&result, `s:%d:"%s";`, len(propertyName), propertyName)
+
+			// Property value
+			value, _ := object.GetProperty(property)
+			valueStr, err := Serialize(value)
+			if err != nil {
+				return "", err
+			}
+			result.WriteString(valueStr)
+		}
+		result.WriteString("}")
+		return result.String(), nil
+
+	default:
+		return "", phpError.NewError("Serialize: Unsupported runtime value %s", runtimeValue.GetType())
+	}
+}
+
 // -------------------------------------- strval -------------------------------------- MARK: strval
 
 func nativeFn_strval(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
@@ -790,6 +887,5 @@ func lib_var_export_var(value values.RuntimeValue, depth int) (string, phpError.
 // TODO is_​iterable
 // TODO is_​numeric
 // TODO is_​resource
-// TODO serialize
 // TODO settype
 // TODO unserialize

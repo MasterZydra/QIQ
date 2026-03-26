@@ -129,6 +129,7 @@
 - is_scalar
 - is_string
 - print_r
+- serialize
 - strval
 - var_dump
 - var_export

@@ -304,125 +304,6 @@ func TestLibStrings(t *testing.T) {
 	testInputOutput(t, `<?php var_dump(ucfirst(''));`, "string(0) \"\"\n")
 }
 
-// -------------------------------------- get_debug_type -------------------------------------- MARK: get_debug_type
-
-func TestLibGetDebugType(t *testing.T) {
-	testInputOutput(t, `<?php echo get_debug_type(false);`, "bool")
-	testInputOutput(t, `<?php echo get_debug_type(true);`, "bool")
-	testInputOutput(t, `<?php echo get_debug_type(0);`, "int")
-	testInputOutput(t, `<?php echo get_debug_type(-1);`, "int")
-	testInputOutput(t, `<?php echo get_debug_type(42);`, "int")
-	testInputOutput(t, `<?php echo get_debug_type(0.0);`, "float")
-	testInputOutput(t, `<?php echo get_debug_type(-1.5);`, "float")
-	testInputOutput(t, `<?php echo get_debug_type(42.5);`, "float")
-	testInputOutput(t, `<?php echo get_debug_type("");`, "string")
-	testInputOutput(t, `<?php echo get_debug_type("abc");`, "string")
-	testInputOutput(t, `<?php echo get_debug_type([]);`, "array")
-	testInputOutput(t, `<?php echo get_debug_type([42]);`, "array")
-	testInputOutput(t, `<?php echo get_debug_type(null);`, "null")
-}
-
-// -------------------------------------- gettype -------------------------------------- MARK: gettype
-
-func TestLibGettype(t *testing.T) {
-	testInputOutput(t, `<?php echo gettype(false);`, "boolean")
-	testInputOutput(t, `<?php echo gettype(true);`, "boolean")
-	testInputOutput(t, `<?php echo gettype(0);`, "integer")
-	testInputOutput(t, `<?php echo gettype(-1);`, "integer")
-	testInputOutput(t, `<?php echo gettype(42);`, "integer")
-	testInputOutput(t, `<?php echo gettype(0.0);`, "double")
-	testInputOutput(t, `<?php echo gettype(-1.5);`, "double")
-	testInputOutput(t, `<?php echo gettype(42.5);`, "double")
-	testInputOutput(t, `<?php echo gettype("");`, "string")
-	testInputOutput(t, `<?php echo gettype("abc");`, "string")
-	testInputOutput(t, `<?php echo gettype([]);`, "array")
-	testInputOutput(t, `<?php echo gettype([42]);`, "array")
-	testInputOutput(t, `<?php echo gettype(null);`, "NULL")
-}
-
-// -------------------------------------- is_XXX -------------------------------------- MARK: is_XXX
-
-func TestLibIsType(t *testing.T) {
-	// is_array
-	testInputOutput(t, `<?php $a = [true]; var_dump(is_array($a));`, "bool(true)\n")
-	testInputOutput(t, `<?php $a = 0; var_dump(is_array($a));`, "bool(false)\n")
-
-	// is_bool
-	testInputOutput(t, `<?php $a = true; var_dump(is_bool($a));`, "bool(true)\n")
-	testInputOutput(t, `<?php $a = 0; var_dump(is_bool($a));`, "bool(false)\n")
-
-	// is_float
-	testInputOutput(t, `<?php $a = 42.0; var_dump(is_float($a));`, "bool(true)\n")
-	testInputOutput(t, `<?php $a = 0; var_dump(is_float($a));`, "bool(false)\n")
-
-	// is_int
-	testInputOutput(t, `<?php $a = 42; var_dump(is_int($a));`, "bool(true)\n")
-	testInputOutput(t, `<?php $a = "42"; var_dump(is_int($a));`, "bool(false)\n")
-
-	// is_null
-	testInputOutput(t, `<?php $a = null; var_dump(is_null($a));`, "bool(true)\n")
-	testInputOutput(t, `<?php $a = 42; var_dump(is_null($a));`, "bool(false)\n")
-
-	// is_scalar
-	testInputOutput(t, `<?php $a = true; var_dump(is_scalar($a));`, "bool(true)\n")
-	testInputOutput(t, `<?php $a = false; var_dump(is_scalar($a));`, "bool(true)\n")
-	testInputOutput(t, `<?php $a = 42; var_dump(is_scalar($a));`, "bool(true)\n")
-	testInputOutput(t, `<?php $a = 3.5; var_dump(is_scalar($a));`, "bool(true)\n")
-	testInputOutput(t, `<?php $a = "abc"; var_dump(is_scalar($a));`, "bool(true)\n")
-	testInputOutput(t, `<?php $a = null; var_dump(is_scalar($a));`, "bool(false)\n")
-	testInputOutput(t, `<?php $a = []; var_dump(is_scalar($a));`, "bool(false)\n")
-
-	// is_string
-	testInputOutput(t, `<?php $a = " "; var_dump(is_string($a));`, "bool(true)\n")
-	testInputOutput(t, `<?php $a = 42; var_dump(is_string($a));`, "bool(false)\n")
-
-	// is_object
-	testInputOutput(t, `<?php $a = null; var_dump(is_object($a));`, "bool(false)\n")
-	testInputOutput(t, `<?php $a = []; var_dump(is_object($a));`, "bool(false)\n")
-	testInputOutput(t, `<?php class C {} $a = new C; var_dump(is_object($a));`, "bool(true)\n")
-}
-
-// -------------------------------------- print_r -------------------------------------- MARK: print_r
-
-func TestLibPrintR(t *testing.T) {
-	testInputOutput(t, `<?php print_r(3.5);`, "3.5")
-	testInputOutput(t, `<?php print_r(42);`, "42")
-	testInputOutput(t, `<?php print_r("abc");`, "abc")
-	testInputOutput(t, `<?php print_r(true);`, "1")
-	testInputOutput(t, `<?php print_r(false);`, "")
-	testInputOutput(t, `<?php print_r(null);`, "")
-	testInputOutput(t, `<?php print_r([]);`, "Array\n(\n)\n")
-	testInputOutput(t, `<?php print_r([1,2]);`, "Array\n(\n    [0] => 1\n    [1] => 2\n)\n")
-	testInputOutput(t, `<?php print_r([1, [1]]);`, "Array\n(\n    [0] => 1\n    [1] => Array\n        (\n            [0] => 1\n        )\n\n)\n")
-}
-
-// -------------------------------------- var_dump -------------------------------------- MARK: var_dump
-
-func TestLibVarDump(t *testing.T) {
-	testInputOutput(t, `<?php var_dump(3.5);`, "float(3.5)\n")
-	testInputOutput(t, `<?php var_dump(3.5, 42, true, false, null);`, "float(3.5)\nint(42)\nbool(true)\nbool(false)\nNULL\n")
-	testInputOutput(t, `<?php var_dump([]);`, "array(0) {\n}\n")
-	testInputOutput(t, `<?php var_dump([1,2]);`, "array(2) {\n  [0]=>\n  int(1)\n  [1]=>\n  int(2)\n}\n")
-	testInputOutput(t, `<?php var_dump([1, [1]]);`, "array(2) {\n  [0]=>\n  int(1)\n  [1]=>\n  array(1) {\n    [0]=>\n    int(1)\n  }\n}\n")
-	testInputOutput(t, `<?php class C {}; $c = new C; var_dump($c);`, "object(C)#1 (0) {\n}\n")
-	testInputOutput(t, `<?php class C { private $p;}; $c = new C; var_dump($c);`, "object(C)#1 (1) {\n  [\"p\":\"C\":private]=>\n  NULL\n}\n")
-	testInputOutput(t, `<?php namespace Space; class C {}; $c = new C; var_dump($c);`, "object(Space\\C)#1 (0) {\n}\n")
-}
-
-// -------------------------------------- var_export -------------------------------------- MARK: var_export
-
-func TestLibVarExport(t *testing.T) {
-	testInputOutput(t, `<?php var_export(3.5);`, "3.5")
-	testInputOutput(t, `<?php var_export(42);`, "42")
-	testInputOutput(t, `<?php var_export("abc");`, "'abc'")
-	testInputOutput(t, `<?php var_export(true);`, "true")
-	testInputOutput(t, `<?php var_export(false);`, "false")
-	testInputOutput(t, `<?php var_export(null);`, "NULL")
-	testInputOutput(t, `<?php var_export([]);`, "array (\n)")
-	testInputOutput(t, `<?php var_export([1,2]);`, "array (\n  0 => 1,\n  1 => 2,\n)")
-	testInputOutput(t, `<?php var_export([1, [1]]);`, "array (\n  0 => 1,\n  1 => \n  array (\n    0 => 1,\n  ),\n)")
-}
-
 // -------------------------------------- option_info -------------------------------------- MARK: option_info
 
 func TestLibOptionInfo(t *testing.T) {
@@ -568,4 +449,129 @@ func TestLibArray(t *testing.T) {
 func TestLibDirectory(t *testing.T) {
 	// getcwd
 	testInputOutput(t, `<?php echo getcwd();`, TEST_FILE_PATH)
+}
+
+// -------------------------------------- variable handling -------------------------------------- MARK: variable handling
+
+func TestLibVariableHandling(t *testing.T) {
+	// get_debug_type
+	testInputOutput(t, `<?php echo get_debug_type(false);`, "bool")
+	testInputOutput(t, `<?php echo get_debug_type(true);`, "bool")
+	testInputOutput(t, `<?php echo get_debug_type(0);`, "int")
+	testInputOutput(t, `<?php echo get_debug_type(-1);`, "int")
+	testInputOutput(t, `<?php echo get_debug_type(42);`, "int")
+	testInputOutput(t, `<?php echo get_debug_type(0.0);`, "float")
+	testInputOutput(t, `<?php echo get_debug_type(-1.5);`, "float")
+	testInputOutput(t, `<?php echo get_debug_type(42.5);`, "float")
+	testInputOutput(t, `<?php echo get_debug_type("");`, "string")
+	testInputOutput(t, `<?php echo get_debug_type("abc");`, "string")
+	testInputOutput(t, `<?php echo get_debug_type([]);`, "array")
+	testInputOutput(t, `<?php echo get_debug_type([42]);`, "array")
+	testInputOutput(t, `<?php echo get_debug_type(null);`, "null")
+
+	// gettype
+	testInputOutput(t, `<?php echo gettype(false);`, "boolean")
+	testInputOutput(t, `<?php echo gettype(true);`, "boolean")
+	testInputOutput(t, `<?php echo gettype(0);`, "integer")
+	testInputOutput(t, `<?php echo gettype(-1);`, "integer")
+	testInputOutput(t, `<?php echo gettype(42);`, "integer")
+	testInputOutput(t, `<?php echo gettype(0.0);`, "double")
+	testInputOutput(t, `<?php echo gettype(-1.5);`, "double")
+	testInputOutput(t, `<?php echo gettype(42.5);`, "double")
+	testInputOutput(t, `<?php echo gettype("");`, "string")
+	testInputOutput(t, `<?php echo gettype("abc");`, "string")
+	testInputOutput(t, `<?php echo gettype([]);`, "array")
+	testInputOutput(t, `<?php echo gettype([42]);`, "array")
+	testInputOutput(t, `<?php echo gettype(null);`, "NULL")
+
+	// is_array
+	testInputOutput(t, `<?php $a = [true]; var_dump(is_array($a));`, "bool(true)\n")
+	testInputOutput(t, `<?php $a = 0; var_dump(is_array($a));`, "bool(false)\n")
+
+	// is_bool
+	testInputOutput(t, `<?php $a = true; var_dump(is_bool($a));`, "bool(true)\n")
+	testInputOutput(t, `<?php $a = 0; var_dump(is_bool($a));`, "bool(false)\n")
+
+	// is_float
+	testInputOutput(t, `<?php $a = 42.0; var_dump(is_float($a));`, "bool(true)\n")
+	testInputOutput(t, `<?php $a = 0; var_dump(is_float($a));`, "bool(false)\n")
+
+	// is_int
+	testInputOutput(t, `<?php $a = 42; var_dump(is_int($a));`, "bool(true)\n")
+	testInputOutput(t, `<?php $a = "42"; var_dump(is_int($a));`, "bool(false)\n")
+
+	// is_null
+	testInputOutput(t, `<?php $a = null; var_dump(is_null($a));`, "bool(true)\n")
+	testInputOutput(t, `<?php $a = 42; var_dump(is_null($a));`, "bool(false)\n")
+
+	// is_scalar
+	testInputOutput(t, `<?php $a = true; var_dump(is_scalar($a));`, "bool(true)\n")
+	testInputOutput(t, `<?php $a = false; var_dump(is_scalar($a));`, "bool(true)\n")
+	testInputOutput(t, `<?php $a = 42; var_dump(is_scalar($a));`, "bool(true)\n")
+	testInputOutput(t, `<?php $a = 3.5; var_dump(is_scalar($a));`, "bool(true)\n")
+	testInputOutput(t, `<?php $a = "abc"; var_dump(is_scalar($a));`, "bool(true)\n")
+	testInputOutput(t, `<?php $a = null; var_dump(is_scalar($a));`, "bool(false)\n")
+	testInputOutput(t, `<?php $a = []; var_dump(is_scalar($a));`, "bool(false)\n")
+
+	// is_string
+	testInputOutput(t, `<?php $a = " "; var_dump(is_string($a));`, "bool(true)\n")
+	testInputOutput(t, `<?php $a = 42; var_dump(is_string($a));`, "bool(false)\n")
+
+	// is_object
+	testInputOutput(t, `<?php $a = null; var_dump(is_object($a));`, "bool(false)\n")
+	testInputOutput(t, `<?php $a = []; var_dump(is_object($a));`, "bool(false)\n")
+	testInputOutput(t, `<?php class C {} $a = new C; var_dump(is_object($a));`, "bool(true)\n")
+
+	// print_r
+	testInputOutput(t, `<?php print_r(3.5);`, "3.5")
+	testInputOutput(t, `<?php print_r(42);`, "42")
+	testInputOutput(t, `<?php print_r("abc");`, "abc")
+	testInputOutput(t, `<?php print_r(true);`, "1")
+	testInputOutput(t, `<?php print_r(false);`, "")
+	testInputOutput(t, `<?php print_r(null);`, "")
+	testInputOutput(t, `<?php print_r([]);`, "Array\n(\n)\n")
+	testInputOutput(t, `<?php print_r([1,2]);`, "Array\n(\n    [0] => 1\n    [1] => 2\n)\n")
+	testInputOutput(t, `<?php print_r([1, [1]]);`, "Array\n(\n    [0] => 1\n    [1] => Array\n        (\n            [0] => 1\n        )\n\n)\n")
+
+	// serialize
+	testInputOutput(t, `<?= serialize(null);`, "N;")
+	testInputOutput(t, `<?= serialize(false);`, "b:0;")
+	testInputOutput(t, `<?= serialize(true);`, "b:1;")
+	testInputOutput(t, `<?= serialize(3);`, "i:3;")
+	testInputOutput(t, `<?= serialize(3.5);`, "d:3.5;")
+	testInputOutput(t, `<?= serialize("abc");`, `s:3:"abc";`)
+	testInputOutput(t, `<?= serialize("abc");`, `s:3:"abc";`)
+	testInputOutput(t, `<?= serialize('abc";');`, `s:5:"abc";";`)
+	// - Array
+	testInputOutput(t, `<?= serialize([]);`, "a:0:{}")
+	testInputOutput(t, `<?= serialize([42]);`, "a:1:{i:0;i:42;}")
+	testInputOutput(t, `<?= serialize(["a" => 1, 2 => "b"]);`, `a:2:{s:1:"a";i:1;i:2;s:1:"b";}`)
+	testInputOutput(t, `<?= serialize([[], 2]);`, `a:2:{i:0;a:0:{}i:1;i:2;}`)
+	// - Object
+	testInputOutput(t, `<?php class C {}; $c = new C(); echo serialize($c);`, `O:1:"C":0:{}`)
+	testInputOutput(t, `<?php namespace N; class C {}; $c = new C(); echo serialize($c);`, `O:3:"N\C":0:{}`)
+	testInputOutput(t, `<?php class C { private $c; protected $b; public $a; }; $c = new C(); echo serialize($c);`, "O:1:\"C\":3:{s:4:\"\x00C\x00c\";N;s:4:\"\x00*\x00b\";N;s:1:\"a\";N;}")
+
+	// var_dump
+	testInputOutput(t, `<?php var_dump("str");`, "string(3) \"str\"\n")
+	testInputOutput(t, `<?php var_dump(3);`, "int(3)\n")
+	testInputOutput(t, `<?php var_dump(3.5);`, "float(3.5)\n")
+	testInputOutput(t, `<?php var_dump(3.5, 42, true, false, null);`, "float(3.5)\nint(42)\nbool(true)\nbool(false)\nNULL\n")
+	testInputOutput(t, `<?php var_dump([]);`, "array(0) {\n}\n")
+	testInputOutput(t, `<?php var_dump([1,2]);`, "array(2) {\n  [0]=>\n  int(1)\n  [1]=>\n  int(2)\n}\n")
+	testInputOutput(t, `<?php var_dump([1, [1]]);`, "array(2) {\n  [0]=>\n  int(1)\n  [1]=>\n  array(1) {\n    [0]=>\n    int(1)\n  }\n}\n")
+	testInputOutput(t, `<?php class C {}; $c = new C; var_dump($c);`, "object(C)#1 (0) {\n}\n")
+	testInputOutput(t, `<?php class C { private $p;}; $c = new C; var_dump($c);`, "object(C)#1 (1) {\n  [\"p\":\"C\":private]=>\n  NULL\n}\n")
+	testInputOutput(t, `<?php namespace Space; class C {}; $c = new C; var_dump($c);`, "object(Space\\C)#1 (0) {\n}\n")
+
+	// var_export
+	testInputOutput(t, `<?php var_export(3.5);`, "3.5")
+	testInputOutput(t, `<?php var_export(42);`, "42")
+	testInputOutput(t, `<?php var_export("abc");`, "'abc'")
+	testInputOutput(t, `<?php var_export(true);`, "true")
+	testInputOutput(t, `<?php var_export(false);`, "false")
+	testInputOutput(t, `<?php var_export(null);`, "NULL")
+	testInputOutput(t, `<?php var_export([]);`, "array (\n)")
+	testInputOutput(t, `<?php var_export([1,2]);`, "array (\n  0 => 1,\n  1 => 2,\n)")
+	testInputOutput(t, `<?php var_export([1, [1]]);`, "array (\n  0 => 1,\n  1 => \n  array (\n    0 => 1,\n  ),\n)")
 }
