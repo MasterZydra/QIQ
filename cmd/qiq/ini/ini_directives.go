@@ -46,6 +46,15 @@ var allowedDirectives = map[string]int{
 	"zend.max_allowed_stack_size": INI_SYSTEM,
 	"zend.reserved_stack_size":    INI_SYSTEM,
 	"fiber.stack_size":            INI_ALL,
+	// Category: Misc.
+	// Spec: https://www.php.net/manual/en/misc.configuration.php
+	"ignore_user_about": INI_ALL,
+	"highlight.string":  INI_ALL,
+	"highlight.comment": INI_ALL,
+	"highlight.keyword": INI_ALL,
+	"highlight.default": INI_ALL,
+	"highlight.html":    INI_ALL,
+	"browscap":          INI_SYSTEM,
 	// Paths and Directories
 	// Spec: https://www.php.net/manual/en/ini.core.php#ini.sect.path-directory
 	"include_path": INI_ALL,
@@ -145,6 +154,15 @@ var defaultValues = map[string]string{
 	"zend.max_allowed_stack_size": "0",
 	"zend.reserved_stack_size":    "0",
 	"fiber.stack_size":            "2M",
+	// Category: Misc.
+	// Spec: https://www.php.net/manual/en/misc.configuration.php
+	"ignore_user_about": "0",
+	"highlight.string":  "#DD0000",
+	"highlight.comment": "#FF8000",
+	"highlight.keyword": "#007700",
+	"highlight.default": "#0000BB",
+	"highlight.html":    "#000000",
+	"browscap":          "",
 	// Category: Paths and Directories
 	// Spec: https://www.php.net/manual/en/ini.core.php#ini.sect.path-directory
 	"include_path": ".",
@@ -205,6 +223,7 @@ var boolDirectives = []string{
 	"enable_post_data_reading",
 	"expose_php",
 	"file_uploads",
+	"ignore_user_abort",
 	"mbstring.encoding_translation",
 	"register_argc_argv",
 	"session.auto_start",

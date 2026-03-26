@@ -45,6 +45,15 @@
 - serialize_precision
 - short_open_tag
 
+## Misc.
+- browscap
+- highlight.comment
+- highlight.default
+- highlight.html
+- highlight.keyword
+- highlight.string
+- ignore_user_about
+
 ## Paths and Directories
 - include_path
 - open_basedir

@@ -96,17 +96,19 @@ func (w *Writer) Write() error {
 
 	w.addHeading(&builder, "Language Options")
 
-	builder.WriteString("; Enables opening tag short cut `<?` besides the default opening tag `<?php`\n")
+	builder.WriteString("; Enables opening tag short cut `<?` besides the default opening tag `<?php`.\n")
 	if err := w.addDirectiveAndValue(&builder, "short_open_tag"); err != nil {
 		return err
 	}
-	builder.WriteString("\n")
+	builder.WriteString("\n; The number of significant digits displayed in floating point numbers.\n; -1 means that an enhanced algorithm for rounding such numbers will be used.\n")
 	if err := w.addDirectiveAndValue(&builder, "precision"); err != nil {
 		return err
 	}
+	builder.WriteString("\n; The number of significant digits stored while serializing floating point numbers.\n; -1 means that an enhanced algorithm for rounding such numbers will be used.\n")
 	if err := w.addDirectiveAndValue(&builder, "serialize_precision"); err != nil {
 		return err
 	}
+	builder.WriteString("\n")
 	if err := w.addDirectiveAndValue(&builder, "disable_functions"); err != nil {
 		return err
 	}
@@ -204,6 +206,32 @@ func (w *Writer) Write() error {
 		return err
 	}
 	if err := w.addDirectiveAndValue(&builder, "fiber.stack_size"); err != nil {
+		return err
+	}
+
+	w.addHeading(&builder, "Misc.")
+
+	if err := w.addDirectiveAndValue(&builder, "ignore_user_about"); err != nil {
+		return err
+	}
+	builder.WriteString("\n; Colors for Syntax Highlighting mode.\n" + `; Anything that's acceptable in <font color="??????"> would work.` + "\n")
+	if err := w.addDirectiveAndValue(&builder, "highlight.string"); err != nil {
+		return err
+	}
+	if err := w.addDirectiveAndValue(&builder, "highlight.comment"); err != nil {
+		return err
+	}
+	if err := w.addDirectiveAndValue(&builder, "highlight.keyword"); err != nil {
+		return err
+	}
+	if err := w.addDirectiveAndValue(&builder, "highlight.default"); err != nil {
+		return err
+	}
+	if err := w.addDirectiveAndValue(&builder, "highlight.html"); err != nil {
+		return err
+	}
+	builder.WriteString("\n")
+	if err := w.addDirectiveAndValue(&builder, "browscap"); err != nil {
 		return err
 	}
 
