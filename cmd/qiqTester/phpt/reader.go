@@ -175,6 +175,16 @@ func (reader *Reader) GetTestFile() (*TestFile, error) {
 			continue
 		}
 
+		// Spec: https://php.github.io/php-src/miscellaneous/writing-tests.html#cgi
+		// This section takes no value. It merely provides a simple marker for tests
+		// that MUST be run as CGI, even if there is no --POST-- or --GET-- sections in the test file.
+		if reader.at() == "--CGI--" {
+			reader.eat()
+
+			// TODO qiqTester - how to handle CGI?
+			continue
+		}
+
 		return reader.testFile, fmt.Errorf(`Unsupported section "%s"`, reader.at())
 	}
 
