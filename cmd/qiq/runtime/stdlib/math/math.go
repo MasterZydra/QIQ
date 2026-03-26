@@ -4,6 +4,7 @@ import (
 	"QIQ/cmd/qiq/phpError"
 	"QIQ/cmd/qiq/runtime"
 	"QIQ/cmd/qiq/runtime/funcParamValidator"
+	"QIQ/cmd/qiq/runtime/stdlib/variableHandling"
 	"QIQ/cmd/qiq/runtime/values"
 	goMath "math"
 )
@@ -15,6 +16,7 @@ func Register(environment runtime.Environment) {
 	environment.AddNativeFunction("acosh", nativeFn_acosh)
 	environment.AddNativeFunction("asin", nativeFn_asin)
 	environment.AddNativeFunction("asinh", nativeFn_asinh)
+	environment.AddNativeFunction("clamp", nativeFn_clamp)
 	environment.AddNativeFunction("pi", nativeFn_pi)
 
 	// Const Category: Mathematical Constants
@@ -118,6 +120,64 @@ func nativeFn_asinh(args []values.RuntimeValue, _ runtime.Context) (values.Runti
 
 	// Spec: https://www.php.net/manual/en/function.sinh.php
 	return values.NewFloat(goMath.Asinh(args[0].(*values.Float).Value)), nil
+}
+
+// -------------------------------------- clamp -------------------------------------- MARK: clamp
+
+func nativeFn_clamp(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
+	args, err := funcParamValidator.NewValidator("clamp").
+		AddParam("$value", []string{"mixed"}, nil).
+		AddParam("$min", []string{"mixed"}, nil).
+		AddParam("$max", []string{"mixed"}, nil).
+		Validate(args)
+	if err != nil {
+		return values.NewVoid(), err
+	}
+
+	value := args[0]
+	minValue := args[1]
+	maxValue := args[2]
+
+	// Spec: https://php.watch/versions/8.6/clamp#polyfill
+	// TODO clamp - is_nan
+	/*
+	   if (\is_float($min) && \is_nan($min)) {
+	     throw new \ValueError('clamp(): Argument #2 ($min) must not be NAN');
+	   }
+
+	   if (\is_float($max) && \is_nan($max)) {
+	     throw new \ValueError('clamp(): Argument #3 ($max) must not be NAN');
+	   }
+	*/
+
+	// if ($max < $min) throw new ValueError(...)
+	slot, err := variableHandling.CompareRelation(maxValue, "<", minValue, true)
+	if err != nil {
+		return values.NewVoid(), err
+	}
+	if slot.Value.(*values.Bool).Value {
+		return values.NewVoid(), phpError.NewError("clamp(): Argument #2 ($min) must be smaller than or equal to argument #3 ($max) in %s", context.Stmt.GetPosString())
+	}
+
+	// if ($value > $max) return $max;
+	slot, err = variableHandling.CompareRelation(value, ">", maxValue, true)
+	if err != nil {
+		return values.NewVoid(), err
+	}
+	if slot.Value.(*values.Bool).Value {
+		return maxValue, nil
+	}
+
+	// if ($value < $min) return $min;
+	slot, err = variableHandling.CompareRelation(value, "<", minValue, true)
+	if err != nil {
+		return values.NewVoid(), err
+	}
+	if slot.Value.(*values.Bool).Value {
+		return minValue, nil
+	}
+
+	return value, nil
 }
 
 // -------------------------------------- pi -------------------------------------- MARK: pi

@@ -28,6 +28,59 @@ func TestLibMath(t *testing.T) {
 	// asinh
 	testInputOutput(t, `<?php var_dump(asinh(0.0));`, "float(0)\n")
 
+	// clamp
+	// Examples from https://php.watch/versions/8.6/clamp
+	// - Integer clamping
+	testInputOutput(t, `<?php var_dump(clamp(5, 0, 100));`, "int(5)\n")
+	testInputOutput(t, `<?php var_dump(clamp(0, 0, 100));`, "int(0)\n")
+	testInputOutput(t, `<?php var_dump(clamp(-5, 0, 100));`, "int(0)\n")
+	testInputOutput(t, `<?php var_dump(clamp(100, 0, 100));`, "int(100)\n")
+	testInputOutput(t, `<?php var_dump(clamp(105, 0, 100));`, "int(100)\n")
+	testInputOutput(t, `<?php var_dump(clamp(105, 100, 100));`, "int(100)\n")
+	// - Float clamping
+	testInputOutput(t, `<?php var_dump(clamp(3.01, 1.6, 4.2));`, "float(3.01)\n")
+	testInputOutput(t, `<?php var_dump(clamp(10.0, 1.6, 4.2));`, "float(4.2)\n")
+	testInputOutput(t, `<?php var_dump(clamp(0, M_1_PI, M_2_PI));`, "float(0.3183098861837907)\n")
+	// - Integer and float clamping
+	testInputOutput(t, `<?php var_dump(clamp(5, 10, 12.5));`, "int(10)\n")
+	testInputOutput(t, `<?php var_dump(clamp(5, 10.0, 12));`, "float(10)\n")
+	testInputOutput(t, `<?php var_dump(clamp(3.14, 10, 20));`, "int(10)\n")
+	testInputOutput(t, `<?php var_dump(clamp(3.14, 0, 20));`, "float(3.14)\n")
+	// - String values
+	testInputOutput(t, `<?php var_dump(clamp('P', 'A', 'Z'));`, "string(1) \"P\"\n")
+	testInputOutput(t, `<?php var_dump(clamp('P', 'X', 'Z'));`, "string(1) \"X\"\n")
+	testInputOutput(t, `<?php var_dump(clamp('P', 'A', 'C'));`, "string(1) \"C\"\n")
+	testInputOutput(t, `<?php var_dump(clamp('AAA', 'AA', 'Z'));`, "string(3) \"AAA\"\n")
+	// - Boolean values
+	testInputOutput(t, `<?php var_dump(clamp(5, false, true));`, "int(5)\n")
+	testInputOutput(t, `<?php var_dump(clamp(true, false, true));`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump(clamp(true, false, false));`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(clamp(false, true, true));`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump(clamp(false, true, 5));`, "bool(true)\n")
+	// - Arrays
+	testInputOutput(t, `<?php var_dump(clamp(5, [], []));`, "array(0) {\n}\n")
+	testInputOutput(t, `<?php var_dump(clamp(5, 0, []));`, "int(5)\n")
+	testInputOutput(t, `<?php var_dump(clamp(5, false, []));`, "int(5)\n")
+	testInputOutput(t, `<?php var_dump(clamp([3], [1], [5]));`, "array(1) {\n  [0]=>\n  int(3)\n}\n")
+	testInputOutput(t, `<?php var_dump(clamp([1], [3], [5]));`, "array(1) {\n  [0]=>\n  int(3)\n}\n")
+	testInputOutput(t, `<?php var_dump(clamp([1, 4], [3], [1, 5]));`, "array(2) {\n  [0]=>\n  int(1)\n  [1]=>\n  int(4)\n}\n")
+	// - Objects
+	// TODO clamp - objects
+	// clamp(new DateTimeImmutable('2026-01-08'), new DateTimeImmutable('2026-01-01'), new DateTimeImmutable('2026-12-31')); // DateTimeImmutable('2026-01-08')
+	// clamp(new BCMath\Number('36'), new BCMath\Number('16'), new BCMath\Number('42')); // BCMath\Number('36')
+
+	// Examples from https://wiki.php.net/rfc/clamp_v2
+	// - Special numbers
+	// TODO clamp - special numbers
+	// clamp(M_PI, -INF, INF) // 3.141592653589793
+	// clamp(NAN, 4, 6) // NAN
+	// - Errors
+	// TODO clamp - errors
+	// TODO clamp - errors - change error type ValueError: clamp(): Argument #2 ($min) must be smaller than or equal to argument #3 ($max)
+	testForError(t, `<?php clamp(4, 8, 6);`, phpError.NewError("clamp(): Argument #2 ($min) must be smaller than or equal to argument #3 ($max) in %s:1:7", TEST_FILE_NAME))
+	// clamp(4, NAN, 6) // Throws ValueError: clamp(): Argument #2 ($min) cannot be NAN
+	// clamp(4, 6, NAN) // Throws ValueError: clamp(): Argument #3 ($max) cannot be NAN
+
 	// pi
 	testInputOutput(t, `<?php var_dump(M_PI === pi());`, "bool(true)\n")
 }

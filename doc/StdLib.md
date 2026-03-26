@@ -58,6 +58,7 @@
 - acosh
 - asin
 - asinh
+- clamp
 - pi
 
 ## Misc. Functions

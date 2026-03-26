@@ -128,6 +128,7 @@ flowchart LR
     QIQ_cmd_qiq_runtime_stdlib_math[QIQ/cmd/qiq/runtime/stdlib/math] --> QIQ_cmd_qiq_phpError[QIQ/cmd/qiq/phpError]
     QIQ_cmd_qiq_runtime_stdlib_math[QIQ/cmd/qiq/runtime/stdlib/math] --> QIQ_cmd_qiq_runtime[QIQ/cmd/qiq/runtime]
     QIQ_cmd_qiq_runtime_stdlib_math[QIQ/cmd/qiq/runtime/stdlib/math] --> QIQ_cmd_qiq_runtime_funcParamValidator[QIQ/cmd/qiq/runtime/funcParamValidator]
+    QIQ_cmd_qiq_runtime_stdlib_math[QIQ/cmd/qiq/runtime/stdlib/math] --> QIQ_cmd_qiq_runtime_stdlib_variableHandling[QIQ/cmd/qiq/runtime/stdlib/variableHandling]
     QIQ_cmd_qiq_runtime_stdlib_math[QIQ/cmd/qiq/runtime/stdlib/math] --> QIQ_cmd_qiq_runtime_values[QIQ/cmd/qiq/runtime/values]
 
     QIQ_cmd_qiq_runtime_stdlib_misc[QIQ/cmd/qiq/runtime/stdlib/misc] --> QIQ_cmd_qiq_phpError[QIQ/cmd/qiq/phpError]
