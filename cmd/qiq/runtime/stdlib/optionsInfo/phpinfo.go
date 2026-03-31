@@ -56,7 +56,7 @@ func printPhpInfo(context runtime.Context) {
 	slices.Sort(directives)
 	for _, directive := range directives {
 		if ini.IsBool(directive) {
-			printfln("<tr><td><strong>%s</strong></td><td>%t</td></tr>", directive, context.Interpreter.GetIni().GetBool(directive))
+			printfln("<tr><td><strong>%s</strong></td><td><code>%t</code></td></tr>", directive, context.Interpreter.GetIni().GetBool(directive))
 			continue
 		}
 
@@ -64,7 +64,7 @@ func printPhpInfo(context runtime.Context) {
 		if err != nil {
 			value = ""
 		}
-		printfln("<tr><td><strong>%s</strong></td><td>%s</td></tr>", directive, value)
+		printfln("<tr><td><strong>%s</strong></td><td><code>%s</code></td></tr>", directive, value)
 	}
 	println("</table>")
 
@@ -81,7 +81,7 @@ func printPhpInfo(context runtime.Context) {
 	println("<table>")
 	println(`<tr><td>MIT License<br>
 <br>
-Copyright (c) 2024 MasterZydra
+Copyright (c) 2024-present MasterZydra
 <br>
 Permission is hereby granted, free of charge, to any person obtaining a copy<br>
 of this software and associated documentation files (the "Software"), to deal<br>
