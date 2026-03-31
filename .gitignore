@@ -1,6 +1,6 @@
 # Binaries
-/doc-gen
-/doc-gen.exe
+/docGenerator
+/docGenerator.exe
 /qiq
 /qiq.exe
 /qiqAstGenerator

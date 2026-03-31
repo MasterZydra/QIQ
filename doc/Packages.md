@@ -2,6 +2,8 @@
 
 ```mermaid
 flowchart LR
+    QIQ_cmd_docGenerator[QIQ/cmd/docGenerator] --> QIQ_cmd_qiq_common_os[QIQ/cmd/qiq/common/os]
+
     QIQ_cmd_qiq[QIQ/cmd/qiq] --> QIQ_cmd_qiq_common[QIQ/cmd/qiq/common]
     QIQ_cmd_qiq[QIQ/cmd/qiq] --> QIQ_cmd_qiq_config[QIQ/cmd/qiq/config]
     QIQ_cmd_qiq[QIQ/cmd/qiq] --> QIQ_cmd_qiq_ini[QIQ/cmd/qiq/ini]
