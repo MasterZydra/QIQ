@@ -2,6 +2,7 @@ package interpreter
 
 import (
 	"QIQ/cmd/qiq/config"
+	"QIQ/cmd/qiq/ini"
 	"QIQ/cmd/qiq/phpError"
 	"fmt"
 	"testing"
@@ -83,22 +84,6 @@ func TestLibMath(t *testing.T) {
 
 	// pi
 	testInputOutput(t, `<?php var_dump(M_PI === pi());`, "bool(true)\n")
-}
-
-// -------------------------------------- constant -------------------------------------- MARK: constant
-
-func TestLibConstant(t *testing.T) {
-	testInputOutput(t, `<?php var_dump(constant('E_ALL'));`, "int(32767)\n")
-	testForError(t, `<?php constant('NOT_DEFINED_CONSTANT');`, phpError.NewError(`Undefined constant "NOT_DEFINED_CONSTANT"`))
-	// TODO Add test cases for user defined constants
-}
-
-// -------------------------------------- defined -------------------------------------- MARK: defined
-
-func TestLibDefined(t *testing.T) {
-	testInputOutput(t, `<?php var_dump(defined('PHP_VERSION'));`, "bool(true)\n")
-	testInputOutput(t, `<?php var_dump(defined('NOT_DEFINED_CONSTANT'));`, "bool(false)\n")
-	// TODO Add test cases for user defined constants
 }
 
 // -------------------------------------- ob_ functions -------------------------------------- MARK: ob_ functions
@@ -449,6 +434,28 @@ func TestLibArray(t *testing.T) {
 func TestLibDirectory(t *testing.T) {
 	// getcwd
 	testInputOutput(t, `<?php echo getcwd();`, TEST_FILE_PATH)
+}
+
+// -------------------------------------- misc -------------------------------------- MARK: misc
+
+func TestLibMisc(t *testing.T) {
+	// constant
+	testInputOutput(t, `<?php var_dump(constant('E_ALL'));`, "int(32767)\n")
+	testForError(t, `<?php constant('NOT_DEFINED_CONSTANT');`, phpError.NewError(`Undefined constant "NOT_DEFINED_CONSTANT"`))
+	// TODO Add test cases for user defined constants
+
+	// defined
+	testInputOutput(t, `<?php var_dump(defined('PHP_VERSION'));`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump(defined('NOT_DEFINED_CONSTANT'));`, "bool(false)\n")
+	// TODO Add test cases for user defined constants
+
+	// highlight_string
+	testInputOutput(t, `<?php highlight_string('');`, `<pre><code style="color: #000000"></code></pre>`)
+	testInputOutput(t, `<?php highlight_string('abc');`, `<pre><code style="color: #000000">abc</code></pre>`)
+	// - custom colors
+	devIni := ini.NewDevIni()
+	devIni.Set("highlight.html", "#101010", ini.INI_ALL)
+	testInputOutputCustomIni(t, devIni, `<?php highlight_string('');`, `<pre><code style="color: #101010"></code></pre>`)
 }
 
 // -------------------------------------- variable handling -------------------------------------- MARK: variable handling

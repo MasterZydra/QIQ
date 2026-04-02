@@ -5,6 +5,8 @@ import (
 	"QIQ/cmd/qiq/runtime"
 	"QIQ/cmd/qiq/runtime/funcParamValidator"
 	"QIQ/cmd/qiq/runtime/values"
+	"fmt"
+	"strings"
 )
 
 func Register(environment runtime.Environment) {
@@ -12,6 +14,7 @@ func Register(environment runtime.Environment) {
 	environment.AddNativeFunction("constant", nativeFn_constant)
 	environment.AddNativeFunction("define", nativeFn_define)
 	environment.AddNativeFunction("defined", nativeFn_defined)
+	environment.AddNativeFunction("highlight_string", nativeFn_highlight_string)
 }
 
 // -------------------------------------- constant -------------------------------------- MARK: constant
@@ -67,6 +70,45 @@ func nativeFn_defined(args []values.RuntimeValue, context runtime.Context) (valu
 
 	_, err = context.Env.LookupConstant(args[0].(*values.Str).Value)
 	return values.NewBool(err == nil), nil
+}
+
+// -------------------------------------- highlight_string -------------------------------------- MARK: highlight_string
+
+func nativeFn_highlight_string(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
+	// Spec: https://www.php.net/manual/en/function.highlight-string.php
+
+	args, err := funcParamValidator.NewValidator("highlight_string").
+		AddParam("$string", []string{"string"}, nil).
+		AddParam("$return", []string{"bool"}, values.NewBool(false)).
+		Validate(args)
+	if err != nil {
+		return values.NewVoid(), err
+	}
+
+	code := args[0].(*values.Str).Value
+	ret := args[1].(*values.Bool).Value
+
+	var highlightedStr strings.Builder
+	highlightedStr.WriteString(fmt.Sprintf(`<pre><code style="color: %s">`, context.Interpreter.GetIni().GetStr("highlight.html")))
+
+	// tokens, lexerErr := lexer.NewLexer(context.Interpreter.GetIni()).Tokenize(code, "")
+	// if lexerErr != nil {
+	// 	return values.NewVoid(), phpError.NewError("%s", lexerErr.Error())
+	// }
+	// for _, token := range tokens {
+	// 	println(token.TokenType, " - ", token.Value)
+	// }
+	highlightedStr.WriteString(code)
+
+	highlightedStr.WriteString(`</code></pre>`)
+
+	if ret {
+		return values.NewStr(highlightedStr.String()), nil
+	} else {
+		context.Interpreter.Print(highlightedStr.String())
+		return values.NewBool(true), nil
+	}
+
 }
 
 // TODO connection_​aborted

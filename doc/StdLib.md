@@ -65,6 +65,7 @@
 - constant
 - define
 - defined
+- highlight_string
 
 ## Options/Info Functions
 - getenv
