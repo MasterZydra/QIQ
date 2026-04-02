@@ -2,9 +2,11 @@
 
 ## Array Functions
 - array_first
+- array_flip
 - array_key_exists
 - array_key_first
 - array_key_last
+- array_keys
 - array_last
 - array_pop
 - array_push

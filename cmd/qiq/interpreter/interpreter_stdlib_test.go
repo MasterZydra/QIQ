@@ -420,6 +420,15 @@ func TestLibClassesObject(t *testing.T) {
 // -------------------------------------- array -------------------------------------- MARK: array
 
 func TestLibArray(t *testing.T) {
+	// array_flip
+	testInputOutput(t, `<?= serialize(array_flip(["oranges", "apples", "pears"]));`, `a:3:{s:7:"oranges";i:0;s:6:"apples";i:1;s:5:"pears";i:2;}`)
+	testInputOutput(t, `<?= serialize(array_flip(["a" => 1, "b" => 1, "c" => 2]));`, `a:2:{i:1;s:1:"b";i:2;s:1:"c";}`)
+
+	// array_keys
+	testInputOutput(t, `<?= serialize(array_keys([0 => 100, "colors" => "red"]));`, `a:2:{i:0;i:0;i:1;s:6:"colors";}`)
+	testInputOutput(t, `<?= serialize(array_keys(["blue", "red", "green", "blue", "blue"]));`, `a:5:{i:0;i:0;i:1;i:1;i:2;i:2;i:3;i:3;i:4;i:4;}`)
+	testInputOutput(t, `<?= serialize(array_keys(["color" => ["blue", "red"], "size" => ["small", "medium"]]));`, `a:2:{i:0;s:5:"color";i:1;s:4:"size";}`)
+
 	// array_rand
 	testForError(t, `<?php $a = []; array_rand($a);`, phpError.NewError("Uncaught ValueError: array_rand(): Argument #1 ($array) must not be empty in %s:1:16", TEST_FILE_NAME))
 	testForError(t, `<?php $a = [1]; array_rand($a, 0);`, phpError.NewError("Uncaught ValueError: array_rand(): Argument #2 ($num) must be between 1 and the number of elements in argument #1 ($array) in %s:1:17", TEST_FILE_NAME))

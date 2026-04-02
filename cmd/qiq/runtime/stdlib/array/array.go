@@ -12,9 +12,11 @@ import (
 func Register(environment runtime.Environment) {
 	// Category: Array Functions
 	environment.AddNativeFunction("array_first", nativeFn_array_first)
+	environment.AddNativeFunction("array_flip", nativeFn_array_flip)
 	environment.AddNativeFunction("array_key_exists", nativeFn_array_key_exists)
 	environment.AddNativeFunction("array_key_first", nativeFn_array_key_first)
 	environment.AddNativeFunction("array_key_last", nativeFn_array_key_last)
+	environment.AddNativeFunction("array_keys", nativeFn_array_keys)
 	environment.AddNativeFunction("array_last", nativeFn_array_last)
 	environment.AddNativeFunction("array_pop", nativeFn_array_pop)
 	environment.AddNativeFunction("array_push", nativeFn_array_push)
@@ -41,6 +43,30 @@ func nativeFn_array_first(args []values.RuntimeValue, _ runtime.Context) (values
 
 	value, _ := array.GetElement(FirstKey(array))
 	return value.Value, nil
+}
+
+// -------------------------------------- array_flip -------------------------------------- MARK: array_flip
+
+func nativeFn_array_flip(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
+	// Spec: https://php.watch/versions/8.5/array_flip-array_last
+	args, err := funcParamValidator.NewValidator("array_flip").
+		AddParam("$array", []string{"array"}, nil).
+		Validate(args)
+	if err != nil {
+		return values.NewVoid(), err
+	}
+
+	result := values.NewArray()
+	array := args[0].(*values.Array)
+	for _, key := range array.Keys {
+		slot, _ := array.GetElement(key)
+		err := result.SetElement(slot.Value, key)
+		if err != nil {
+			return values.NewVoid(), err
+		}
+	}
+
+	return result, nil
 }
 
 // -------------------------------------- array_key_exists -------------------------------------- MARK: array_key_exists
@@ -117,6 +143,24 @@ func LastKey(array *values.Array) values.RuntimeValue {
 		return values.NewNull()
 	}
 	return array.Keys[len(array.Keys)-1]
+}
+
+// -------------------------------------- array_keys -------------------------------------- MARK: array_keys
+
+func nativeFn_array_keys(args []values.RuntimeValue, _ runtime.Context) (values.RuntimeValue, phpError.Error) {
+	// Spec: https://www.php.net/manual/en/function.array-keys.php
+	args, err := funcParamValidator.NewValidator("array_keys").
+		AddParam("$array", []string{"array"}, nil).
+		Validate(args)
+	if err != nil {
+		return values.NewVoid(), err
+	}
+
+	// TODO add support for alternative signature: array_keys(array $array, mixed $filter_value, bool $strict = false): array
+
+	result := values.NewArrayFromSlice(args[0].(*values.Array).Keys)
+
+	return result, nil
 }
 
 // -------------------------------------- array_last -------------------------------------- MARK: array_last
@@ -264,14 +308,12 @@ func nativeFn_count(args []values.RuntimeValue, _ runtime.Context) (values.Runti
 // TODO array_filter
 // TODO array_find
 // TODO array_find_key
-// TODO array_flip
 // TODO array_intersect
 // TODO array_intersect_assoc
 // TODO array_intersect_key
 // TODO array_intersect_uassoc
 // TODO array_intersect_ukey
 // TODO array_is_list
-// TODO array_keys
 // TODO array_map
 // TODO array_merge
 // TODO array_merge_recursive
