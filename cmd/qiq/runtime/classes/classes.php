@@ -202,7 +202,12 @@ class stdClass {
 // TODO Filter\FilterException
 // TODO Filter\FilterFailedException
 // TODO HashContext
-// TODO JsonException
+
+// -------------------------------------- JsonException -------------------------------------- MARK: JsonException
+
+// Spec: https://www.php.net/manual/en/class.jsonexception.php
+class JsonException extends Exception {}
+
 // TODO Random\RandomError
 // TODO Random\BrokenRandomEngineError
 // TODO Random\RandomException
@@ -212,7 +217,12 @@ class stdClass {
 // TODO Random\Engine\Secure
 // TODO Random\Randomizer
 // TODO Random\IntervalBoundary
-// TODO ReflectionException
+
+// -------------------------------------- ReflectionException -------------------------------------- MARK: ReflectionException
+
+// Spec: https://www.php.net/manual/en/class.reflectionexception.php
+class ReflectionException extends Exception {}
+
 // TODO Reflection
 // TODO ReflectionFunctionAbstract
 // TODO ReflectionFunction
@@ -246,19 +256,72 @@ class stdClass {
 // TODO Uri\WhatWg\InvalidUrlException
 // TODO Uri\WhatWg\UrlValidationError
 // TODO Uri\WhatWg\UrlValidationErrorType
-// TODO LogicException
-// TODO BadFunctionCallException
-// TODO BadMethodCallException
-// TODO DomainException
-// TODO InvalidArgumentException
-// TODO LengthException
-// TODO OutOfRangeException
-// TODO RuntimeException
-// TODO OutOfBoundsException
-// TODO OverflowException
-// TODO RangeException
-// TODO UnderflowException
-// TODO UnexpectedValueException
+
+// -------------------------------------- LogicException -------------------------------------- MARK: LogicException
+
+// Spec: https://www.php.net/manual/en/class.logicexception.php
+class LogicException extends Exception {}
+
+// -------------------------------------- BadFunctionCallException -------------------------------------- MARK: BadFunctionCallException
+
+// Spec: https://www.php.net/manual/en/class.badfunctioncallexception.php
+class BadFunctionCallException extends LogicException {}
+
+// -------------------------------------- BadMethodCallException -------------------------------------- MARK: BadMethodCallException
+
+// Spec: https://www.php.net/manual/en/class.badmethodcallexception.php
+class BadMethodCallException extends BadFunctionCallException {}
+
+// -------------------------------------- DomainException -------------------------------------- MARK: DomainException
+
+// Spec: https://www.php.net/manual/en/class.domainexception.php
+class DomainException extends LogicException {}
+
+// -------------------------------------- InvalidArgumentException -------------------------------------- MARK: InvalidArgumentException
+
+// Spec: https://www.php.net/manual/en/class.invalidargumentexception.php
+class InvalidArgumentException extends LogicException {}
+
+// -------------------------------------- LengthException -------------------------------------- MARK: LengthException
+
+// Spec: https://www.php.net/manual/en/class.lengthexception.php
+class LengthException extends LogicException {}
+
+// -------------------------------------- OutOfRangeException -------------------------------------- MARK: OutOfRangeException
+
+// Spec: https://www.php.net/manual/en/class.outofrangeexception.php
+class OutOfRangeException extends LogicException {}
+
+// -------------------------------------- RuntimeException -------------------------------------- MARK: RuntimeException
+
+// Spec: https://www.php.net/manual/en/class.runtimeexception.php
+class RuntimeException extends Exception {}
+
+// -------------------------------------- OutOfBoundsException -------------------------------------- MARK: OutOfBoundsException
+
+// Spec: https://www.php.net/manual/en/class.outofboundsexception.php
+class OutOfBoundsException extends RuntimeException {}
+
+// -------------------------------------- OverflowException -------------------------------------- MARK: OverflowException
+
+// Spec: https://www.php.net/manual/en/class.overflowexception.php
+class OverflowException extends RuntimeException {}
+
+// -------------------------------------- RangeException -------------------------------------- MARK: RangeException
+
+// Spec: https://www.php.net/manual/en/class.rangeexception.php
+class RangeException extends RuntimeException {}
+
+// -------------------------------------- UnderflowException -------------------------------------- MARK: UnderflowException
+
+// Spec: https://www.php.net/manual/en/class.underflowexception.php
+class UnderflowException extends RuntimeException {}
+
+// -------------------------------------- UnexpectedValueException -------------------------------------- MARK: UnexpectedValueException
+
+// Spec: https://www.php.net/manual/en/class.unexpectedvalueexception.php
+class UnexpectedValueException extends RuntimeException {}
+
 // TODO RecursiveIteratorIterator
 // TODO IteratorIterator
 // TODO FilterIterator

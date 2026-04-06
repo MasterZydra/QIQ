@@ -143,7 +143,6 @@ func RegisterDefaultClasses(interpreter runtime.Interpreter) {
 	// -------------------------------------- ClosedGeneratorException -------------------------------------- MARK: ClosedGeneratorException
 
 	// Spec: https://www.php.net/manual/en/class.closedgeneratorexception.php
-
 	ClosedGeneratorException := ast.NewClassDeclarationStmt(0, nil, "ClosedGeneratorException", false, false)
 	ClosedGeneratorException.BaseClass = "Exception"
 
@@ -163,6 +162,126 @@ func RegisterDefaultClasses(interpreter runtime.Interpreter) {
 	stdClass := ast.NewClassDeclarationStmt(0, nil, "stdClass", false, false)
 
 	interpreter.AddClass(stdClass.Name, stdClass)
+
+	// -------------------------------------- JsonException -------------------------------------- MARK: JsonException
+
+	// Spec: https://www.php.net/manual/en/class.jsonexception.php
+	JsonException := ast.NewClassDeclarationStmt(0, nil, "JsonException", false, false)
+	JsonException.BaseClass = "Exception"
+
+	interpreter.AddClass(JsonException.Name, JsonException)
+
+	// -------------------------------------- ReflectionException -------------------------------------- MARK: ReflectionException
+
+	// Spec: https://www.php.net/manual/en/class.reflectionexception.php
+	ReflectionException := ast.NewClassDeclarationStmt(0, nil, "ReflectionException", false, false)
+	ReflectionException.BaseClass = "Exception"
+
+	interpreter.AddClass(ReflectionException.Name, ReflectionException)
+
+	// -------------------------------------- LogicException -------------------------------------- MARK: LogicException
+
+	// Spec: https://www.php.net/manual/en/class.logicexception.php
+	LogicException := ast.NewClassDeclarationStmt(0, nil, "LogicException", false, false)
+	LogicException.BaseClass = "Exception"
+
+	interpreter.AddClass(LogicException.Name, LogicException)
+
+	// -------------------------------------- BadFunctionCallException -------------------------------------- MARK: BadFunctionCallException
+
+	// Spec: https://www.php.net/manual/en/class.badfunctioncallexception.php
+	BadFunctionCallException := ast.NewClassDeclarationStmt(0, nil, "BadFunctionCallException", false, false)
+	BadFunctionCallException.BaseClass = "LogicException"
+
+	interpreter.AddClass(BadFunctionCallException.Name, BadFunctionCallException)
+
+	// -------------------------------------- BadMethodCallException -------------------------------------- MARK: BadMethodCallException
+
+	// Spec: https://www.php.net/manual/en/class.badmethodcallexception.php
+	BadMethodCallException := ast.NewClassDeclarationStmt(0, nil, "BadMethodCallException", false, false)
+	BadMethodCallException.BaseClass = "BadFunctionCallException"
+
+	interpreter.AddClass(BadMethodCallException.Name, BadMethodCallException)
+
+	// -------------------------------------- DomainException -------------------------------------- MARK: DomainException
+
+	// Spec: https://www.php.net/manual/en/class.domainexception.php
+	DomainException := ast.NewClassDeclarationStmt(0, nil, "DomainException", false, false)
+	DomainException.BaseClass = "LogicException"
+
+	interpreter.AddClass(DomainException.Name, DomainException)
+
+	// -------------------------------------- InvalidArgumentException -------------------------------------- MARK: InvalidArgumentException
+
+	// Spec: https://www.php.net/manual/en/class.invalidargumentexception.php
+	InvalidArgumentException := ast.NewClassDeclarationStmt(0, nil, "InvalidArgumentException", false, false)
+	InvalidArgumentException.BaseClass = "LogicException"
+
+	interpreter.AddClass(InvalidArgumentException.Name, InvalidArgumentException)
+
+	// -------------------------------------- LengthException -------------------------------------- MARK: LengthException
+
+	// Spec: https://www.php.net/manual/en/class.lengthexception.php
+	LengthException := ast.NewClassDeclarationStmt(0, nil, "LengthException", false, false)
+	LengthException.BaseClass = "LogicException"
+
+	interpreter.AddClass(LengthException.Name, LengthException)
+
+	// -------------------------------------- OutOfRangeException -------------------------------------- MARK: OutOfRangeException
+
+	// Spec: https://www.php.net/manual/en/class.outofrangeexception.php
+	OutOfRangeException := ast.NewClassDeclarationStmt(0, nil, "OutOfRangeException", false, false)
+	OutOfRangeException.BaseClass = "LogicException"
+
+	interpreter.AddClass(OutOfRangeException.Name, OutOfRangeException)
+
+	// -------------------------------------- RuntimeException -------------------------------------- MARK: RuntimeException
+
+	// Spec: https://www.php.net/manual/en/class.runtimeexception.php
+	RuntimeException := ast.NewClassDeclarationStmt(0, nil, "RuntimeException", false, false)
+	RuntimeException.BaseClass = "Exception"
+
+	interpreter.AddClass(RuntimeException.Name, RuntimeException)
+
+	// -------------------------------------- OutOfBoundsException -------------------------------------- MARK: OutOfBoundsException
+
+	// Spec: https://www.php.net/manual/en/class.outofboundsexception.php
+	OutOfBoundsException := ast.NewClassDeclarationStmt(0, nil, "OutOfBoundsException", false, false)
+	OutOfBoundsException.BaseClass = "RuntimeException"
+
+	interpreter.AddClass(OutOfBoundsException.Name, OutOfBoundsException)
+
+	// -------------------------------------- OverflowException -------------------------------------- MARK: OverflowException
+
+	// Spec: https://www.php.net/manual/en/class.overflowexception.php
+	OverflowException := ast.NewClassDeclarationStmt(0, nil, "OverflowException", false, false)
+	OverflowException.BaseClass = "RuntimeException"
+
+	interpreter.AddClass(OverflowException.Name, OverflowException)
+
+	// -------------------------------------- RangeException -------------------------------------- MARK: RangeException
+
+	// Spec: https://www.php.net/manual/en/class.rangeexception.php
+	RangeException := ast.NewClassDeclarationStmt(0, nil, "RangeException", false, false)
+	RangeException.BaseClass = "RuntimeException"
+
+	interpreter.AddClass(RangeException.Name, RangeException)
+
+	// -------------------------------------- UnderflowException -------------------------------------- MARK: UnderflowException
+
+	// Spec: https://www.php.net/manual/en/class.underflowexception.php
+	UnderflowException := ast.NewClassDeclarationStmt(0, nil, "UnderflowException", false, false)
+	UnderflowException.BaseClass = "RuntimeException"
+
+	interpreter.AddClass(UnderflowException.Name, UnderflowException)
+
+	// -------------------------------------- UnexpectedValueException -------------------------------------- MARK: UnexpectedValueException
+
+	// Spec: https://www.php.net/manual/en/class.unexpectedvalueexception.php
+	UnexpectedValueException := ast.NewClassDeclarationStmt(0, nil, "UnexpectedValueException", false, false)
+	UnexpectedValueException.BaseClass = "RuntimeException"
+
+	interpreter.AddClass(UnexpectedValueException.Name, UnexpectedValueException)
 
 	// -------------------------------------- AssertionError -------------------------------------- MARK: AssertionError
 
