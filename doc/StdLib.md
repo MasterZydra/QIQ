@@ -134,5 +134,6 @@
 - print_r
 - serialize
 - strval
+- unserialize
 - var_dump
 - var_export

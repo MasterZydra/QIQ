@@ -34,6 +34,7 @@ func Register(environment runtime.Environment) {
 	environment.AddNativeFunction("print_r", nativeFn_print_r)
 	environment.AddNativeFunction("serialize", nativeFn_serialize)
 	environment.AddNativeFunction("strval", nativeFn_strval)
+	environment.AddNativeFunction("unserialize", nativeFn_unserialize)
 	environment.AddNativeFunction("var_dump", nativeFn_var_dump)
 	environment.AddNativeFunction("var_export", nativeFn_var_export)
 }
@@ -699,6 +700,168 @@ func StrVal(runtimeValue values.RuntimeValue) (string, phpError.Error) {
 	// If the source is a resource, the result value is an implementation-defined string.
 }
 
+// -------------------------------------- unserialize -------------------------------------- MARK: unserialize
+
+func nativeFn_unserialize(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
+	// Spec: https://www.php.net/manual/en/function.unserialize.php
+	args, err := funcParamValidator.NewValidator("unserialize").
+		AddParam("$data", []string{"string"}, nil).
+		Validate(args)
+	if err != nil {
+		return values.NewVoid(), err
+	}
+	// TODO unserialize - "array $options = []"
+
+	return Unserialize(args[0].(*values.Str).Value)
+}
+
+func Unserialize(data string) (values.RuntimeValue, phpError.Error) {
+	// Null
+	if after, ok := strings.CutPrefix(data, "N;"); ok {
+		data = after
+		if len(data) > 0 {
+			return values.NewNull(), phpError.NewWarning("Unexpected extra data")
+		}
+
+		return values.NewNull(), nil
+	}
+
+	// Boolean
+	if after, ok := strings.CutPrefix(data, "b:"); ok {
+		data = after
+		if len(data) < 2 {
+			return values.NewBool(false), phpError.NewWarning("Unserialize: Unexpected end of boolean data")
+		}
+
+		var result values.RuntimeValue
+		if data[0] == '1' && data[1] == ';' {
+			result = values.NewBool(true)
+		} else if data[0] == '0' && data[1] == ';' {
+			result = values.NewBool(false)
+		} else {
+			return values.NewBool(false), phpError.NewWarning("Unserialize: Invalid boolean value %q", data[0])
+		}
+		data = data[2:]
+
+		if len(data) > 0 {
+			return result, phpError.NewWarning("Unexpected extra data")
+		}
+
+		return result, nil
+	}
+
+	// Integer
+	if after, ok := strings.CutPrefix(data, "i:"); ok {
+		data = after
+		semicolonIndex := strings.IndexByte(data, ';')
+		if semicolonIndex == -1 {
+			return values.NewBool(false), phpError.NewWarning("Unserialize: Unexpected end of integer data")
+		}
+
+		intStr := data[:semicolonIndex]
+		data = data[semicolonIndex+1:]
+
+		intStr, isNegative := strings.CutPrefix(intStr, "-")
+		intValue, err := common.IntegerLiteralToInt64(intStr, false)
+		if err != nil {
+			return values.NewBool(false), phpError.NewWarning("Unserialize: Invalid integer value %q", intStr)
+		}
+		if isNegative {
+			intValue = -intValue
+		}
+
+		result := values.NewInt(intValue)
+
+		if len(data) > 0 {
+			return result, phpError.NewWarning("Unexpected extra data")
+		}
+
+		return result, nil
+	}
+
+	// TODO float
+
+	// TODO string
+
+	// TODO array
+
+	// TODO object
+
+	return values.NewVoid(), phpError.NewError("Unhandeled data '%s'", data)
+}
+
+// func unserialize(data string) (values.RuntimeValue, phpError.Error)
+// 	// Spec: https://www.php.net/manual/en/function.serialize.php#66147
+
+// 	switch runtimeValue.GetType() {
+// 	case values.FloatValue:
+// 		// d:<value>;
+// 		return fmt.Sprintf("d:%s;", runtimeValue.(*values.Float).ToPhpString()), nil
+// 	case values.StrValue:
+// 		// s:<size>:"<value>";
+// 		// String values are always in double quotes
+// 		str := runtimeValue.(*values.Str).Value
+// 		return fmt.Sprintf(`s:%d:"%s";`, len(str), str), nil
+
+// 	case values.ArrayValue:
+// 		// a:<size>:{<key definition><value definition>(repeated per element)}
+// 		array := runtimeValue.(*values.Array)
+// 		var result strings.Builder
+// 		fmt.Fprintf(&result, "a:%d:{", len(array.Keys))
+// 		for _, key := range array.Keys {
+// 			// Array key
+// 			valueStr, err := Serialize(key)
+// 			if err != nil {
+// 				return "", err
+// 			}
+// 			result.WriteString(valueStr)
+// 			// Array value
+// 			slot, _ := array.GetElement(key)
+// 			valueStr, err = Serialize(slot.Value)
+// 			if err != nil {
+// 				return "", err
+// 			}
+// 			result.WriteString(valueStr)
+// 		}
+// 		result.WriteString("}")
+// 		return result.String(), nil
+
+// 	case values.ObjectValue:
+// 		// O:<strlen(object name)>:"<object name>":<object size>:{<property name definition)><property value definition>(repeated per property)}
+// 		object := runtimeValue.(*values.Object)
+// 		var result strings.Builder
+// 		fmt.Fprintf(&result, `O:%d:"%s":%d:{`,
+// 			len(object.Class.GetQualifiedName()),
+// 			object.Class.GetQualifiedName(),
+// 			len(object.PropertyNames))
+// 		for _, property := range object.PropertyNames {
+// 			// Property name
+// 			// Remove the $ prefix
+// 			propertyName := property[1:]
+// 			switch object.Class.Properties[property].Visibility {
+// 			case "private":
+// 				propertyName = "\x00" + object.Class.Name + "\x00" + propertyName
+// 			case "protected":
+// 				propertyName = "\x00*\x00" + propertyName
+// 			}
+// 			fmt.Fprintf(&result, `s:%d:"%s";`, len(propertyName), propertyName)
+
+// 			// Property value
+// 			value, _ := object.GetProperty(property)
+// 			valueStr, err := Serialize(value)
+// 			if err != nil {
+// 				return "", err
+// 			}
+// 			result.WriteString(valueStr)
+// 		}
+// 		result.WriteString("}")
+// 		return result.String(), nil
+
+// 	default:
+// 		return "", phpError.NewError("Serialize: Unsupported runtime value %s", runtimeValue.GetType())
+// 	}
+// }
+
 // -------------------------------------- var_dump -------------------------------------- MARK: var_dump
 
 func nativeFn_var_dump(args []values.RuntimeValue, context runtime.Context) (values.RuntimeValue, phpError.Error) {
@@ -888,4 +1051,3 @@ func lib_var_export_var(value values.RuntimeValue, depth int) (string, phpError.
 // TODO is_​numeric
 // TODO is_​resource
 // TODO settype
-// TODO unserialize

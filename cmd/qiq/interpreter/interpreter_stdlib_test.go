@@ -554,6 +554,7 @@ func TestLibVariableHandling(t *testing.T) {
 	testInputOutput(t, `<?= serialize(false);`, "b:0;")
 	testInputOutput(t, `<?= serialize(true);`, "b:1;")
 	testInputOutput(t, `<?= serialize(3);`, "i:3;")
+	testInputOutput(t, `<?= serialize(-12);`, "i:-12;")
 	testInputOutput(t, `<?= serialize(3.5);`, "d:3.5;")
 	testInputOutput(t, `<?= serialize("abc");`, `s:3:"abc";`)
 	testInputOutput(t, `<?= serialize("abc");`, `s:3:"abc";`)
@@ -567,6 +568,14 @@ func TestLibVariableHandling(t *testing.T) {
 	testInputOutput(t, `<?php class C {}; $c = new C(); echo serialize($c);`, `O:1:"C":0:{}`)
 	testInputOutput(t, `<?php namespace N; class C {}; $c = new C(); echo serialize($c);`, `O:3:"N\C":0:{}`)
 	testInputOutput(t, `<?php class C { private $c; protected $b; public $a; }; $c = new C(); echo serialize($c);`, "O:1:\"C\":3:{s:4:\"\x00C\x00c\";N;s:4:\"\x00*\x00b\";N;s:1:\"a\";N;}")
+
+	// unserialize
+	testInputOutput(t, `<?php var_dump(unserialize('N;'));`, "NULL\n")
+	testInputOutput(t, `<?php var_dump(unserialize('b:1;'));`, "bool(true)\n")
+	testInputOutput(t, `<?php var_dump(unserialize('b:0;'));`, "bool(false)\n")
+	testInputOutput(t, `<?php var_dump(unserialize('i:3;'));`, "int(3)\n")
+	testInputOutput(t, `<?php var_dump(unserialize('i:42;'));`, "int(42)\n")
+	testInputOutput(t, `<?php var_dump(unserialize('i:-42;'));`, "int(-42)\n")
 
 	// var_dump
 	testInputOutput(t, `<?php var_dump("str");`, "string(3) \"str\"\n")
