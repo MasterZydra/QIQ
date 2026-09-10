@@ -1,6 +1,7 @@
 # Constants
 
 ## Core Constants
+- DIRECTORY_SEPARATOR
 - FALSE
 - NULL
 - PHP_BUILD_DATE
