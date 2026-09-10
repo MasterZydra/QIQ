@@ -1,4 +1,5 @@
 # Ini directives
+- allow_url_fopen
 - allow_url_include
 - always_populate_raw_post_data
 - error_reporting

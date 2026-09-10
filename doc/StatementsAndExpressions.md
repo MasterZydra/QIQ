@@ -1,4 +1,5 @@
 # Statements
+- anonymous function creation: `function ($param1) { ... }`
 - break statement: `break 1;`
 - class declaration: `class MyClass extends ParentC implements I, J {}`
 - compound statement: `{ doThis(); doThat(); }`
