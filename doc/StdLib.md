@@ -1,7 +1,6 @@
 # StdLib Functions
 
 ## Array Functions
-- array_first
 - array_flip
 - array_key_exists
 - array_key_first
