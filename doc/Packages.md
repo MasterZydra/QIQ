@@ -201,7 +201,4 @@ flowchart LR
 
     QIQ_cmd_qiqTester_phpt[QIQ/cmd/qiqTester/phpt] --> QIQ_cmd_qiq_common[QIQ/cmd/qiq/common]
     QIQ_cmd_qiqTester_phpt[QIQ/cmd/qiqTester/phpt] --> QIQ_cmd_qiqTester_replaceJson[QIQ/cmd/qiqTester/replaceJson]
-
-    QIQ_cmd_qiqTester_replaceJson[QIQ/cmd/qiqTester/replaceJson] --> QIQ_cmd_qiq_common_os[QIQ/cmd/qiq/common/os]
-
 ```
